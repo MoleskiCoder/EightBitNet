@@ -7,8 +7,9 @@
         {
         }
 
-        public override sealed ref byte Reference(ushort address) {
-	        return ref Bytes()[address];
+        public override sealed ref byte Reference(ushort address)
+        {
+            return ref Bytes()[address];
         }
 
         public new void Poke(ushort address, byte value)
