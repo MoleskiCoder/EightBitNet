@@ -4,9 +4,9 @@
 
     public abstract class Processor : ClockedChip
     {
-        private Bus bus;
+        private readonly Bus bus;
         private byte opcode;
-        private ushort pc;
+        private ushort pc = 0;
 
         private PinLevel resetLine;
         private PinLevel intLine;
@@ -14,7 +14,6 @@
         protected Processor(Bus memory)
         {
             bus = memory;
-            pc = 0;
         }
 
         public event EventHandler<EventArgs> RaisingRESET;
@@ -29,7 +28,7 @@
 
         public ushort PC { get => pc; set => pc = value; }
         protected byte OpCode { get => opcode; set => opcode = value; }
-        public Bus Bus { get => bus; set => bus = value; }
+        public Bus Bus { get => bus; }
 
         public ref PinLevel RESET() => ref resetLine;
         public ref PinLevel INT() => ref intLine;

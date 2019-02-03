@@ -6,11 +6,8 @@ namespace EightBit
     {
         private byte port;
 
-        public PortEventArgs(byte value)
-        {
-            port = value;
-        }
+        public PortEventArgs(byte value) => port = value;
 
-        public byte Port { get { return port; } }
+        public byte Port => port;
     }
 }

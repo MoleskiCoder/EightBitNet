@@ -11,9 +11,9 @@
 
         public Rom() : this(0) { }
 
-        public override int Size { get { return bytes.Length; } }
+        public override int Size => bytes.Length;
 
-        protected ref byte[] Bytes() { return ref bytes; }
+        protected ref byte[] Bytes() => ref bytes;
 
         static public int Load(FileStream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
