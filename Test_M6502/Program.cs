@@ -6,7 +6,7 @@
         {
             var configuration = new Configuration();
 
-            configuration.DebugMode = true;
+            //configuration.DebugMode = true;
 
             var harness = new TestHarness(configuration);
             harness.Run();

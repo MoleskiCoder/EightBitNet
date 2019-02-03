@@ -36,7 +36,7 @@
         public void TestClearFlag()
         {
             byte flags = 0xff;
-            EightBit.Chip.ClearFlag(ref flags, 0x80);
+            flags = Chip.ClearFlag(flags, 0x80);
             Assert.AreEqual(0x7f, flags);
         }
 
@@ -44,7 +44,7 @@
         public void TestClearFlagNonZero()
         {
             byte flags = 0xff;
-            EightBit.Chip.ClearFlag(ref flags, 0x80, 1);
+            flags = Chip.ClearFlag(flags, 0x80, 1);
             Assert.AreEqual(0x7f, flags);
         }
 
@@ -52,7 +52,7 @@
         public void TestClearFlagZero()
         {
             byte flags = 0xff;
-            EightBit.Chip.ClearFlag(ref flags, 0x80, 0);
+            flags = Chip.ClearFlag(flags, 0x80, 0);
             Assert.AreEqual(0xff, flags);
         }
 
@@ -60,7 +60,7 @@
         public void TestClearFlagFalse()
         {
             byte flags = 0xff;
-            EightBit.Chip.ClearFlag(ref flags, 0x80, false);
+            flags = Chip.ClearFlag(flags, 0x80, false);
             Assert.AreEqual(0xff, flags);
         }
 
@@ -68,7 +68,7 @@
         public void TestClearFlagTrue()
         {
             byte flags = 0xff;
-            EightBit.Chip.ClearFlag(ref flags, 0x80, true);
+            flags = Chip.ClearFlag(flags, 0x80, true);
             Assert.AreEqual(0x7f, flags);
         }
 
@@ -80,7 +80,7 @@
         public void TestSetFlag()
         {
             byte flags = 0x7f;
-            EightBit.Chip.SetFlag(ref flags, 0x80);
+            flags = Chip.SetFlag(flags, 0x80);
             Assert.AreEqual(0xff, flags);
         }
 
@@ -88,7 +88,7 @@
         public void TestSetFlagNonZero()
         {
             byte flags = 0x7f;
-            EightBit.Chip.SetFlag(ref flags, 0x80, 1);
+            flags = Chip.SetFlag(flags, 0x80, 1);
             Assert.AreEqual(0xff, flags);
         }
 
@@ -96,7 +96,7 @@
         public void TestSetFlagZero()
         {
             byte flags = 0x7f;
-            EightBit.Chip.SetFlag(ref flags, 0x80, 0);
+            flags = Chip.SetFlag(flags, 0x80, 0);
             Assert.AreEqual(0x7f, flags);
         }
 
@@ -104,7 +104,7 @@
         public void TestSetFlagFalse()
         {
             byte flags = 0x7f;
-            EightBit.Chip.SetFlag(ref flags, 0x80, false);
+            flags = Chip.SetFlag(flags, 0x80, false);
             Assert.AreEqual(0x7f, flags);
         }
 
@@ -112,7 +112,7 @@
         public void TestSetFlagTrue()
         {
             byte flags = 0x7f;
-            EightBit.Chip.SetFlag(ref flags, 0x80, true);
+            flags = Chip.SetFlag(flags, 0x80, true);
             Assert.AreEqual(0xff, flags);
         }
 

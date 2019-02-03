@@ -4,22 +4,13 @@
     {
         protected Chip() { }
 
-        public static void ClearFlag(ref byte f, byte flag) => f &= (byte)~flag;
-        public static void SetFlag(ref byte f, byte flag) => f |= flag;
+        public static byte SetFlag(byte input, byte flag) => (byte)(input | flag);
+        public static byte SetFlag(byte input, byte flag, int condition) => SetFlag(input, flag, condition != 0);
+        public static byte SetFlag(byte input, byte flag, bool condition) => condition ? SetFlag(input, flag) : ClearFlag(input, flag);
 
-        public static void SetFlag(ref byte f, byte flag, int condition) => SetFlag(ref f, flag, condition != 0);
-
-        public static void SetFlag(ref byte f, byte flag, bool condition)
-        {
-            if (condition)
-                SetFlag(ref f, flag);
-            else
-                ClearFlag(ref f, flag);
-        }
-
-        public static void ClearFlag(ref byte f, byte flag, int condition) => ClearFlag(ref f, flag, condition != 0);
-
-        public static void ClearFlag(ref byte f, byte flag, bool condition) => SetFlag(ref f, flag, !condition);
+        public static byte ClearFlag(byte input, byte flag) => (byte)(input & (byte)~flag);
+        public static byte ClearFlag(byte input, byte flag, int condition) => ClearFlag(input, flag, condition != 0);
+        public static byte ClearFlag(byte input, byte flag, bool condition) => SetFlag(input, flag, !condition);
 
         public static byte HighByte(int value) => (byte)(value >> 8);
         public static byte HighByte(ushort value) => HighByte((int)value);

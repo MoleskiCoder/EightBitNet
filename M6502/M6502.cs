@@ -54,10 +54,10 @@
         public event EventHandler<EventArgs> LoweredRDY;
 
         public byte X { get => x; set => x = value; }
-        public byte Y { get => y; set { y = value; } }
-        public byte A { get => a; set { a = value; } }
-        public byte S { get => s; set { s = value; } }
-        public byte P { get => p; set { p = value; } }
+        public byte Y { get => y; set => y = value; }
+        public byte A { get => a; set => a = value; }
+        public byte S { get => s; set => s = value; }
+        public byte P { get => p; set => p = value; }
 
         private int InterruptMasked => P & (byte)StatusBits.IF;
         private int Decimal => P & (byte)StatusBits.DF;
@@ -196,7 +196,7 @@
                 case 0x15: A = OrR(A, AM_ZeroPageX()); break;                                                   // ORA (zero page, X)
                 case 0x16: BusReadModifyWrite(ASL(AM_ZeroPageX())); break;                                      // ASL (zero page, X)
                 case 0x17: SLO(AM_ZeroPageX()); break;                                                          // *SLO (zero page, X)
-                case 0x18: BusRead(); ClearFlag(ref p, StatusBits.CF); break;                                   // CLC (implied)
+                case 0x18: BusRead(); P = ClearFlag(P, StatusBits.CF); break;                                   // CLC (implied)
                 case 0x19: A = OrR(A, AM_AbsoluteY()); break;                                                   // ORA (absolute, Y)
                 case 0x1a: BusRead(); break;                                                                    // *NOP (implied)
                 case 0x1b: SLO(AM_AbsoluteY()); break;                                                          // *SLO (absolute, Y)
@@ -230,7 +230,7 @@
                 case 0x35: A = AndR(A, AM_ZeroPageX()); break;                                                  // AND (zero page, X)
                 case 0x36: BusReadModifyWrite(ROL(AM_ZeroPageX())); break;                                      // ROL (zero page, X)
                 case 0x37: RLA(AM_ZeroPageX()); break;                                                          // *RLA (zero page, X)
-                case 0x38: BusRead(); SetFlag(ref p, StatusBits.CF); break;                                     // SEC (implied)
+                case 0x38: BusRead(); P = SetFlag(P, StatusBits.CF); break;                                     // SEC (implied)
                 case 0x39: A = AndR(A, AM_AbsoluteY()); break;                                                  // AND (absolute, Y)
                 case 0x3a: BusRead(); break;                                                                    // *NOP (implied)
                 case 0x3b: RLA(AM_AbsoluteY()); break;                                                          // *RLA (absolute, Y)
@@ -264,7 +264,7 @@
                 case 0x55: A = EorR(A, AM_ZeroPageX()); break;                                                  // EOR (zero page, X)
                 case 0x56: BusReadModifyWrite(LSR(AM_ZeroPageX())); break;                                      // LSR (zero page, X)
                 case 0x57: SRE(AM_ZeroPageX()); break;                                                          // *SRE (zero page, X)
-                case 0x58: BusRead(); ClearFlag(ref p, StatusBits.IF); break;                                   // CLI (implied)
+                case 0x58: BusRead(); P = ClearFlag(P, StatusBits.IF); break;                                   // CLI (implied)
                 case 0x59: A = EorR(A, AM_AbsoluteY()); break;                                                  // EOR (absolute, Y)
                 case 0x5a: BusRead(); break;                                                                    // *NOP (implied)
                 case 0x5b: SRE(AM_AbsoluteY()); break;                                                          // *SRE (absolute, Y)
@@ -298,7 +298,7 @@
                 case 0x75: A = ADC(A, AM_ZeroPageX()); break;                                                   // ADC (zero page, X)
                 case 0x76: BusReadModifyWrite(ROR(AM_ZeroPageX())); break;                                      // ROR (zero page, X)
                 case 0x77: RRA(AM_ZeroPageX()); break;                                                          // *RRA (zero page, X)
-                case 0x78: BusRead(); SetFlag(ref p, StatusBits.IF); break;                                     // SEI (implied)
+                case 0x78: BusRead(); P = SetFlag(P, StatusBits.IF); break;                                     // SEI (implied)
                 case 0x79: A = ADC(A, AM_AbsoluteY()); break;                                                   // ADC (absolute, Y)
                 case 0x7a: BusRead(); break;                                                                    // *NOP (implied)
                 case 0x7b: RRA(AM_AbsoluteY()); break;                                                          // *RRA (absolute, Y)
@@ -366,7 +366,7 @@
                 case 0xb5: A = Through(AM_ZeroPageX()); break;                                                  // LDA (zero page, X)
                 case 0xb6: X = Through(AM_ZeroPageY()); break;                                                  // LDX (zero page, Y)
                 case 0xb7: A = X = Through(AM_ZeroPageY()); break;                                              // *LAX (zero page, Y)
-                case 0xb8: BusRead(); ClearFlag(ref p, StatusBits.VF); break;                                   // CLV (implied)
+                case 0xb8: BusRead(); P = ClearFlag(P, StatusBits.VF); break;                                   // CLV (implied)
                 case 0xb9: A = Through(AM_AbsoluteY()); break;                                                  // LDA (absolute, Y)
                 case 0xba: BusRead(); X = Through(S); break;                                                    // TSX (implied)
                 case 0xbb: break;
@@ -400,7 +400,7 @@
                 case 0xd5: CMP(A, AM_ZeroPageX()); break;                                                       // CMP (zero page, X)
                 case 0xd6: BusReadModifyWrite(DEC(AM_ZeroPageX())); break;                                      // DEC (zero page, X)
                 case 0xd7: DCP(AM_ZeroPageX()); break;                                                          // *DCP (zero page, X)
-                case 0xd8: BusRead(); ClearFlag(ref p, StatusBits.DF); break;                                   // CLD (implied)
+                case 0xd8: BusRead(); P = ClearFlag(P, StatusBits.DF); break;                                   // CLD (implied)
                 case 0xd9: CMP(A, AM_AbsoluteY()); break;                                                       // CMP (absolute, Y)
                 case 0xda: BusRead(); break;                                                                    // *NOP (implied)
                 case 0xdb: DCP(AM_AbsoluteY()); break;                                                          // *DCP (absolute, Y)
@@ -433,7 +433,7 @@
                 case 0xf5: A = SBC(A, AM_ZeroPageX()); break;                                                   // SBC (zero page, X)
                 case 0xf6: BusReadModifyWrite(INC(AM_ZeroPageX())); break;                                      // INC (zero page, X)
                 case 0xf7: ISB(AM_ZeroPageX()); break;                                                          // *ISB (zero page, X)
-                case 0xf8: BusRead(); SetFlag(ref p, StatusBits.DF); break;                                     // SED (implied)
+                case 0xf8: BusRead(); P = SetFlag(P, StatusBits.DF); break;                                     // SED (implied)
                 case 0xf9: A = SBC(A, AM_AbsoluteY()); break;                                                   // SBC (absolute, Y)
                 case 0xfa: BusRead(); break;                                                                    // *NOP (implied)
                 case 0xfb: ISB(AM_AbsoluteY()); break;                                                          // *ISB (absolute, Y)
@@ -521,7 +521,7 @@
                 PushWord(PC);
                 Push((byte)(P | (int)(software ? StatusBits.BF : 0)));
             }
-            SetFlag(ref p, StatusBits.IF);   // Disable IRQ
+            P = SetFlag(P, StatusBits.IF);   // Disable IRQ
             var vector = reset ? RSTvector : (nmi ? NMIvector : IRQvector);
             Jump(GetWordPaged(0xff, vector));
             handlingRESET = handlingNMI = handlingINT = false;
@@ -644,15 +644,15 @@
 
         // Flag adjustment
 
-        public static void SetFlag(ref byte f, StatusBits flag) => SetFlag(ref f, (byte)flag);
-        private static void SetFlag(ref byte f, StatusBits flag, int condition) => SetFlag(ref f, (byte)flag, condition);
-        private static void SetFlag(ref byte f, StatusBits flag, bool condition) => SetFlag(ref f, (byte)flag, condition);
-        public static void ClearFlag(ref byte f, StatusBits flag) => ClearFlag(ref f, (byte)flag);
-        private static void ClearFlag(ref byte f, StatusBits flag, int condition) => ClearFlag(ref f, (byte)flag, condition);
-        private static void ClearFlag(ref byte f, StatusBits flag, bool condition) => ClearFlag(ref f, (byte)flag, condition);
+        public static byte SetFlag(byte f, StatusBits flag) => SetFlag(f, (byte)flag);
+        private static byte SetFlag(byte f, StatusBits flag, int condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetFlag(byte f, StatusBits flag, bool condition) => SetFlag(f, (byte)flag, condition);
+        public static byte ClearFlag(byte f, StatusBits flag) => ClearFlag(f, (byte)flag);
+        private static byte ClearFlag(byte f, StatusBits flag, int condition) => ClearFlag(f, (byte)flag, condition);
+        private static byte ClearFlag(byte f, StatusBits flag, bool condition) => ClearFlag(f, (byte)flag, condition);
 
-        private void AdjustZero(byte datum) => ClearFlag(ref p, StatusBits.ZF, datum);
-        private void AdjustNegative(byte datum) => SetFlag(ref p, StatusBits.NF, datum & (byte)StatusBits.NF);
+        private void AdjustZero(byte datum) => P = ClearFlag(P, StatusBits.ZF, datum);
+        private void AdjustNegative(byte datum) => P = SetFlag(P, StatusBits.NF, datum & (byte)StatusBits.NF);
 
         private void AdjustNZ(byte datum)
         {
@@ -697,8 +697,8 @@
 
             var difference = intermediate;
             AdjustNZ(LowByte(difference));
-            SetFlag(ref p, StatusBits.VF, (operand ^ data) & (operand ^ LowByte(difference)) & (int)StatusBits.NF);
-        	ClearFlag(ref p, StatusBits.CF, HighByte(difference));
+            P = SetFlag(P, StatusBits.VF, (operand ^ data) & (operand ^ LowByte(difference)) & (int)StatusBits.NF);
+            P = ClearFlag(P, StatusBits.CF, HighByte(difference));
 
         	return returned;
         }
@@ -747,8 +747,8 @@
         {
             intermediate = (ushort)(operand + data + carry);
 
-            SetFlag(ref p, StatusBits.VF, ~(operand ^ data) & (operand ^ LowByte(intermediate)) & (int)StatusBits.NF);
-            SetFlag(ref p, StatusBits.CF, HighByte(intermediate) & (int)StatusBits.CF);
+            P = SetFlag(P, StatusBits.VF, ~(operand ^ data) & (operand ^ LowByte(intermediate)) & (int)StatusBits.NF);
+            P = SetFlag(P, StatusBits.CF, HighByte(intermediate) & (int)StatusBits.CF);
 
             return LowByte(intermediate);
         }
@@ -762,12 +762,12 @@
                 low += 6;
 
             byte high = (byte)(HighNibble(operand) + HighNibble(data) + (low > 0xf ? 1 : 0));
-            SetFlag(ref p, StatusBits.VF, ~(operand ^ data) & (operand ^ PromoteNibble(high)) & (int)StatusBits.NF);
+            P = SetFlag(P, StatusBits.VF, ~(operand ^ data) & (operand ^ PromoteNibble(high)) & (int)StatusBits.NF);
 
             if (high > 9)
                 high += 6;
 
-            SetFlag(ref p, StatusBits.CF, high > 0xf);
+            P = SetFlag(P, StatusBits.CF, high > 0xf);
 
             return (byte)(PromoteNibble(high) | LowNibble(low));
         }
@@ -776,13 +776,13 @@
 
         private byte ASL(byte value)
         {
-            SetFlag(ref p, StatusBits.CF, value & (byte)Bits.Bit7);
+            P = SetFlag(P, StatusBits.CF, value & (byte)Bits.Bit7);
             return Through(value << 1);
         }
 
         private void BIT(byte operand, byte data)
         {
-            SetFlag(ref p, StatusBits.VF, data & (byte)StatusBits.VF);
+            P = SetFlag(P, StatusBits.VF, data & (byte)StatusBits.VF);
             AdjustZero((byte)(operand & data));
             AdjustNegative(data);
         }
@@ -791,7 +791,7 @@
         {
             intermediate = (ushort)(first - second);
             AdjustNZ(LowByte(intermediate));
-            ClearFlag(ref p, StatusBits.CF, HighByte(intermediate));
+            P = ClearFlag(P, StatusBits.CF, HighByte(intermediate));
         }
 
         private byte DEC(byte value) => Through(value - 1);
@@ -810,7 +810,7 @@
 
         private byte LSR(byte value)
         {
-            SetFlag(ref p, StatusBits.CF, value & (byte)Bits.Bit0);
+            P = SetFlag(P, StatusBits.CF, value & (byte)Bits.Bit0);
             return Through(value >> 1);
         }
 
@@ -823,7 +823,7 @@
         private byte ROL(byte operand)
         {
             var carryIn = Carry;
-            SetFlag(ref p, StatusBits.CF, operand & (byte)Bits.Bit7);
+            P = SetFlag(P, StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (operand << 1) | carryIn;
             return Through(result);
         }
@@ -831,7 +831,7 @@
         private byte ROR(byte operand)
         {
             var carryIn = Carry;
-            SetFlag(ref p, StatusBits.CF, operand & (byte)Bits.Bit0);
+            P = SetFlag(P, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (operand >> 1) | (carryIn << 7);
             return Through(result);
         }
@@ -855,15 +855,15 @@
         private void ANC(byte value)
         {
             A = AndR(A, value);
-            SetFlag(ref p, StatusBits.CF, A & (byte)Bits.Bit7);
+            P = SetFlag(P, StatusBits.CF, A & (byte)Bits.Bit7);
         }
 
         private void ARR(byte value)
         {
             A = AndR(A, value);
             A = ROR(A);
-            SetFlag(ref p, StatusBits.CF, A & (byte)Bits.Bit6);
-            SetFlag(ref p, StatusBits.VF, ((A & (byte)Bits.Bit6) >> 6) ^ ((A & (byte)Bits.Bit5) >> 5));
+            P = SetFlag(P, StatusBits.CF, A & (byte)Bits.Bit6);
+            P = SetFlag(P, StatusBits.VF, ((A & (byte)Bits.Bit6) >> 6) ^ ((A & (byte)Bits.Bit5) >> 5));
         }
 
         private void ASR(byte value)
@@ -875,7 +875,7 @@
         private void AXS(byte value)
         {
             X = Through(SUB((byte)(A & X), value));
-            ClearFlag(ref p, StatusBits.CF, HighByte(intermediate));
+            P = ClearFlag(P, StatusBits.CF, HighByte(intermediate));
         }
 
         private void DCP(byte value)
