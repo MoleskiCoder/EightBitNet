@@ -8,22 +8,22 @@
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
-        private byte x;
-        private byte y;
-        private byte a;
-        private byte s;
-        private byte p;
+        private byte x = 0;
+        private byte y = 0;
+        private byte a = 0;
+        private byte s = 0;
+        private byte p = 0;
 
         private ushort intermediate;
 
-        private bool handlingRESET;
-        private bool handlingNMI;
-        private bool handlingINT;
+        private bool handlingRESET = false;
+        private bool handlingNMI = false;
+        private bool handlingINT = false;
 
-        private PinLevel nmiLine;
-        private PinLevel soLine;
-        private PinLevel syncLine;
-        private PinLevel rdyLine;
+        private PinLevel nmiLine = PinLevel.Low;
+        private PinLevel soLine = PinLevel.Low;
+        private PinLevel syncLine = PinLevel.Low;
+        private PinLevel rdyLine = PinLevel.Low;
 
         public M6502(Bus bus)
         : base(bus)
@@ -70,6 +70,17 @@
         public ref PinLevel SO() => ref soLine;
         public ref PinLevel SYNC() => ref syncLine;
         public ref PinLevel RDY() => ref rdyLine;
+
+        public override void RaisePOWER()
+        {
+            base.RaisePOWER();
+            X = (byte)Bits.Bit7;
+            Y = 0;
+            A = 0;
+            P = (byte)StatusBits.RF;
+            S = (byte)Mask.Mask8;
+            LowerSYNC();
+        }
 
         public virtual void RaiseNMI()
         {
@@ -579,7 +590,8 @@
 
         private ushort Address_relative_byte()
         {
-            intermediate = (ushort)(PC + (byte)FetchByte());
+            var offset = (sbyte)FetchByte();
+            intermediate = (ushort)(PC + offset);
             return intermediate;
         }
 
