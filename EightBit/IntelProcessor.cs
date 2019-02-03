@@ -4,7 +4,7 @@
 
     public abstract class IntelProcessor : LittleEndianProcessor
     {
-        private readonly IntelOpCodeDecoded[] decodedOpCodes;
+        private readonly IntelOpCodeDecoded[] decodedOpCodes = new IntelOpCodeDecoded[0x100];
         private ushort sp;
         private ushort memptr;
 
@@ -13,7 +13,6 @@
         protected IntelProcessor(Bus bus)
         : base(bus)
         {
-            decodedOpCodes = new IntelOpCodeDecoded[0x100];
             sp = (ushort)Mask.Mask16;
             memptr = (ushort)Mask.Mask16;
 
@@ -26,7 +25,7 @@
         public event EventHandler<EventArgs> LoweringHALT;
         public event EventHandler<EventArgs> LoweredHALT;
 
-        public ref PinLevel HALT() { return ref haltLine; }
+        public ref PinLevel HALT() => ref haltLine;
 
         protected bool Halted => HALT().Lowered();
 
@@ -34,20 +33,20 @@
         public ushort MEMPTR { get => memptr; set => memptr = value; }
 
         public abstract ushort AF { get; set; }
-        public byte A { get { return HighByte(AF); } set { AF = (ushort)(LowerPart(AF) | PromoteByte(value)); } }
-        public byte F { get { return LowByte(AF); } set {  AF = (ushort)(HigherPart(AF) | value); } }
+        public byte A { get => HighByte(AF); set => AF = (ushort)(LowerPart(AF) | PromoteByte(value)); }
+        public byte F { get => LowByte(AF); set => AF = (ushort)(HigherPart(AF) | value); }
 
         public abstract ushort BC { get; set; }
-        public byte B { get { return HighByte(AF); } set { BC = (ushort)(LowerPart(BC) | PromoteByte(value)); } }
-        public byte C { get { return LowByte(AF); } set { BC = (ushort)(HigherPart(BC) | value); } }
+        public byte B { get => HighByte(AF); set => BC = (ushort)(LowerPart(BC) | PromoteByte(value)); }
+        public byte C { get => LowByte(AF); set => BC = (ushort)(HigherPart(BC) | value); }
 
         public abstract ushort DE { get; set; }
-        public byte D { get { return HighByte(AF); } set { DE = (ushort)(LowerPart(DE) | PromoteByte(value)); } }
-        public byte E { get { return LowByte(AF); } set { DE = (ushort)(HigherPart(DE) | value); } }
+        public byte D { get => HighByte(DE); set => DE = (ushort)(LowerPart(DE) | PromoteByte(value)); }
+        public byte E { get => LowByte(DE); set => DE = (ushort)(HigherPart(DE) | value); }
 
         public abstract ushort HL { get; set; }
-        public byte H { get { return HighByte(AF); } set { HL = (ushort)(LowerPart(AF) | PromoteByte(value)); } }
-        public byte L { get { return LowByte(AF); } set { HL = (ushort)(HigherPart(AF) | value); } }
+        public byte H { get => HighByte(HL); set => HL = (ushort)(LowerPart(HL) | PromoteByte(value)); }
+        public byte L { get => LowByte(HL); set { HL = (ushort)(HigherPart(HL) | value); } }
 
         public override void RaisePOWER()
         {

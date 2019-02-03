@@ -213,7 +213,7 @@
                 case 0x25: A = AndR(A, AM_ZeroPage()); break;                                                   // AND (zero page)
                 case 0x26: BusReadModifyWrite(ROL(AM_ZeroPage())); break;                                       // ROL (zero page)
                 case 0x27: RLA(AM_ZeroPage()); break;                                                           // *RLA (zero page)
-                case 0x28: BusRead(); GetBytePaged(1, S); PLP(); break;                                         // PLP (implied)
+                case 0x28: BusRead(); BusRead(S, 1); PLP(); break;                                         // PLP (implied)
                 case 0x29: A = AndR(A, AM_Immediate()); break;                                                  // AND (immediate)
                 case 0x2a: BusRead(); A = ROL(A); break;                                                        // ROL A (implied)
                 case 0x2b: ANC(AM_Immediate()); break;                                                          // *ANC (immediate)
@@ -281,7 +281,7 @@
                 case 0x65: A = ADC(A, AM_ZeroPage()); break;                                                    // ADC (zero page)
                 case 0x66: BusReadModifyWrite(ROR(AM_ZeroPage())); break;                                       // ROR (zero page)
                 case 0x67: RRA(AM_ZeroPage()); break;                                                           // *RRA (zero page)
-                case 0x68: BusRead(); GetBytePaged(1, S); A = Through(Pop()); break;                            // PLA (implied)
+                case 0x68: BusRead(); BusRead(S, 1); A = Through(Pop()); break;                            // PLA (implied)
                 case 0x69: A = ADC(A, AM_Immediate()); break;                                                   // ADC (immediate)
                 case 0x6a: BusRead(); A = ROR(A); break;                                                        // ROR A (implied)
                 case 0x6b: ARR(AM_Immediate()); break;                                                          // *ARR (immediate)
@@ -472,9 +472,9 @@
             return Cycles;
         }
 
-        protected override byte Pop() => GetBytePaged(1, ++S);
+        protected override byte Pop() => BusRead(++S, 1);
 
-        protected override void Push(byte value) => SetBytePaged(1, S--, value);
+        protected override void Push(byte value) => BusWrite(S--, 1, value);
 
         protected override sealed void HandleRESET()
         {
@@ -608,7 +608,7 @@
             var crossed = Address_AbsoluteX();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            var possible = GetBytePaged(page, LowByte(address));
+            var possible = BusRead(LowByte(address), page);
         	if ((behaviour == PageCrossingBehavior.AlwaysReadTwice) || (page != HighByte(address)))
 		        possible = BusRead(address);
 	        return possible;
@@ -619,7 +619,7 @@
             var crossed = Address_AbsoluteY();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            var possible = GetBytePaged(page, LowByte(address));
+            var possible = BusRead(LowByte(address), page);
             if (page != HighByte(address))
                 possible = BusRead(address);
             return possible;
@@ -636,7 +636,7 @@
             var crossed = Address_IndirectIndexedY();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            var possible = GetBytePaged(page, LowByte(address));
+            var possible = BusRead(LowByte(address), page);
             if (page != HighByte(address))
                 possible = BusRead(address);
             return possible;
@@ -803,7 +803,7 @@
         private void JSR()
         {
             var low = FetchByte();
-            GetBytePaged(1, S); // dummy read
+            BusRead(S, 1); // dummy read
             PushWord(PC);
             PC = MakeWord(low, FetchByte());
         }
@@ -838,14 +838,14 @@
 
         private void RTI()
         {
-            GetBytePaged(1, S); // dummy read
+            BusRead(S, 1); // dummy read
             PLP();
             Return();
         }
 
         private void RTS()
         {
-            GetBytePaged(1, S); // dummy read
+            BusRead(S, 1); // dummy read
             Return();
             FetchByte();
         }
@@ -921,7 +921,7 @@
             var crossed = Address_AbsoluteX();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            GetBytePaged(page, LowByte(address));
+            BusRead(LowByte(address), page);
             BusWrite(address, A);
         }
 
@@ -930,7 +930,7 @@
             var crossed = Address_AbsoluteY();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            GetBytePaged(page, LowByte(address));
+            BusRead(LowByte(address), page);
             BusWrite(address, A);
         }
     }

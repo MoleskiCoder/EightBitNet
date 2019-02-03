@@ -4,13 +4,11 @@
 
     public sealed class InputOutput
     {
-        private byte[] input;
-        private byte[] output;
+        private byte[] input = new byte[0x100];
+        private byte[] output = new byte[0x100];
 
         public InputOutput()
         {
-            input = new byte[0x100];
-            output = new byte[0x100];
         }
 
         public event EventHandler<PortEventArgs> ReadingPort;
@@ -19,8 +17,8 @@
         public event EventHandler<PortEventArgs> WritingPort;
         public event EventHandler<PortEventArgs> WrittenPort;
 
-        byte Read(byte port) { return ReadInputPort(port); }
-        void Write(byte port, byte value) { WriteOutputPort(port, value); }
+        byte Read(byte port) => ReadInputPort(port);
+        void Write(byte port, byte value) => WriteOutputPort(port, value);
 
         byte ReadInputPort(byte port)
         {

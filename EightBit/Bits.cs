@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace EightBit
+﻿namespace EightBit
 {
+    using System;
+
     [Flags]
     public enum Bits
     {

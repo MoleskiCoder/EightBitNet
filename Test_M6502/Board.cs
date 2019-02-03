@@ -56,8 +56,7 @@
             CPU.ExecutedInstruction += CPU_ExecutedInstruction;
 
             Poke(0x00, 0x4c);
-            Poke(0x01, Chip.LowByte(configuration.StartAddress));
-            Poke(0x02, Chip.HighByte(configuration.StartAddress));
+            cpu.PokeWord(0x01, configuration.StartAddress);
         }
 
         private void CPU_ExecutedInstruction(object sender, System.EventArgs e)

@@ -31,8 +31,8 @@
         protected byte OpCode { get => opcode; set => opcode = value; }
         public Bus Bus { get => bus; set => bus = value; }
 
-        public ref PinLevel RESET() { return ref resetLine; }
-        public ref PinLevel INT() { return ref intLine; }
+        public ref PinLevel RESET() => ref resetLine;
+        public ref PinLevel INT() => ref intLine;
 
         public abstract int Step();
         public abstract int Execute();
@@ -101,10 +101,7 @@
 
         #region BusWrite
 
-        protected void BusWrite(byte low, byte high, byte data)
-        {
-            BusWrite(MakeWord(low, high), data);
-        }
+        protected void BusWrite(byte low, byte high, byte data) => BusWrite(MakeWord(low, high), data);
 
         protected void BusWrite(ushort address, byte data)
         {
@@ -124,10 +121,7 @@
 
         #region BusRead
 
-        protected byte BusRead(byte low, byte high)
-        {
-            return BusRead(MakeWord(low, high));
-        }
+        protected byte BusRead(byte low, byte high) => BusRead(MakeWord(low, high));
 
         protected byte BusRead(ushort address)
         {
@@ -136,14 +130,6 @@
         }
 
         protected virtual byte BusRead() => Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
-
-        #endregion
-
-        #region Paged reader/writer wrappers
-
-        protected byte GetBytePaged(byte page, byte offset) => BusRead(offset, page);
-
-        protected void SetBytePaged(byte page, byte offset, byte value) => BusWrite(offset, page, value);
 
         #endregion
 
@@ -175,10 +161,7 @@
             SetWord(value);
         }
 
-        protected void Jump(ushort destination)
-        {
-			PC = destination;
-		}
+        protected void Jump(ushort destination) => PC = destination;
 
         protected void Call(ushort destination)
         {
@@ -186,9 +169,6 @@
             Jump(destination);
         }
 
-        protected virtual void Return()
-        {
-            Jump(PopWord());
-        }
+        protected virtual void Return() => Jump(PopWord());
     }
 }

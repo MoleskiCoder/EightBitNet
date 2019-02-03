@@ -37,8 +37,8 @@
 
         protected override ushort GetWordPaged(byte page, byte offset)
         {
-            var high = GetBytePaged(page, offset);
-            var low = GetBytePaged(page, (byte)(offset + 1));
+            var high = BusRead(offset, page);
+            var low = BusRead((byte)(offset + 1), page);
             return MakeWord(low, high);
         }
 
@@ -64,8 +64,8 @@
 
         protected override void SetWordPaged(byte page, byte offset, ushort value)
         {
-            SetBytePaged(page, offset, HighByte(value));
-            SetBytePaged(page, (byte)(offset + 1), LowByte(value));
+            BusWrite(offset, page, HighByte(value));
+            BusWrite((byte)(offset + 1), page, LowByte(value));
         }
     }
 }

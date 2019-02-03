@@ -13,17 +13,8 @@
         public event EventHandler<EventArgs> ReadingByte;
         public event EventHandler<EventArgs> ReadByte;
 
-        public byte Data
-        {
-            get { return data; }
-            set { data = value; }
-        }
-
-        public ushort Address
-        {
-            get { return address; }
-            set { address = value; }
-        }
+        public byte Data { get => data; set => data = value; }
+        public ushort Address { get => address; set => address = value; }
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
@@ -49,10 +40,7 @@
             return Read();
         }
 
-        public byte Read(byte low, byte high)
-        {
-            return Read(Chip.MakeWord(low, high));
-        }
+        public byte Read(byte low, byte high) => Read(Chip.MakeWord(low, high));
 
         public void Write()
         {
@@ -73,10 +61,7 @@
             Write(value);
         }
 
-        public void Write(byte low, byte high, byte value)
-        {
-            Write(Chip.MakeWord(low, high), value);
-        }
+        public void Write(byte low, byte high, byte value) => Write(Chip.MakeWord(low, high), value);
 
         public virtual void RaisePOWER() {}
         public virtual void LowerPOWER() {}
@@ -103,10 +88,7 @@
 
         protected ref byte Reference() => ref Reference(Address);
 
-        protected ref byte Reference(byte low, byte high)
-        {
-            return ref Reference(Chip.MakeWord(low, high));
-        }
+        protected ref byte Reference(byte low, byte high) => ref Reference(Chip.MakeWord(low, high));
 
         //[[nodiscard]] static std::map<uint16_t, std::vector<uint8_t>> parseHexFile(std::string path);
         //void loadHexFile(std::string path);

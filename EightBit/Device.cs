@@ -13,7 +13,7 @@
         public event EventHandler<EventArgs> LoweringPOWER;
         public event EventHandler<EventArgs> LoweredPOWER;
 
-        public ref PinLevel POWER() { return ref powerLine; }
+        public ref PinLevel POWER() => ref powerLine;
 
         public bool Powered => POWER().Raised();
 
