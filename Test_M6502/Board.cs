@@ -11,8 +11,7 @@
         private readonly Symbols symbols;
         private readonly Disassembly disassembler;
 
-        private Register16 oldPC;
-        private bool stopped;
+        private ushort oldPC;
 
         public Board(Configuration configuration)
         {
@@ -22,8 +21,7 @@
             this.symbols = new Symbols();
             this.disassembler = new Disassembly(this, this.cpu, this.symbols);
 
-            this.oldPC = new Register16((ushort)Mask.Mask16);
-            this.stopped = false;
+            this.oldPC = (ushort)Mask.Mask16;
         }
 
         public M6502 CPU { get { return this.cpu; } }
@@ -50,7 +48,7 @@
             var programFilename = configuration.Program;
             var programPath = configuration.RomDirectory + "/" + configuration.Program;
             var loadAddress = configuration.LoadAddress;
-            ram.Load(programPath, loadAddress.Word);
+            ram.Load(programPath, loadAddress);
 
             if (configuration.DebugMode)
                 CPU.ExecutingInstruction += CPU_ExecutingInstruction;
@@ -58,8 +56,8 @@
             CPU.ExecutedInstruction += CPU_ExecutedInstruction;
 
             Poke(0x00, 0x4c);
-            Poke(0x01, configuration.StartAddress.Low);
-            Poke(0x02, configuration.StartAddress.High);
+            Poke(0x01, Chip.LowByte(configuration.StartAddress));
+            Poke(0x02, Chip.HighByte(configuration.StartAddress));
         }
 
         private void CPU_ExecutedInstruction(object sender, System.EventArgs e)
@@ -110,12 +108,12 @@
             output.Append(Disassembly.Dump_ByteValue(CPU.S));
             output.Append("\t");
 
-            output.Append(disassembler.Disassemble(address.Word));
+            output.Append(disassembler.Disassemble(address));
 
             System.Console.Out.WriteLine(output.ToString());
         }
 
-        public override MemoryMapping Mapping(Register16 absolute)
+        public override MemoryMapping Mapping(ushort absolute)
         {
             return new MemoryMapping(ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
         }

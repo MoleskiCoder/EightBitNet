@@ -14,7 +14,7 @@
         private byte s;
         private byte p;
 
-        private Register16 intermediate;
+        private ushort intermediate;
 
         private bool handlingRESET;
         private bool handlingNMI;
@@ -28,7 +28,6 @@
         public M6502(Bus bus)
         : base(bus)
         {
-            intermediate = new Register16();
         }
 
         public event EventHandler<EventArgs> ExecutingInstruction;
@@ -502,8 +501,8 @@
             var software = !hardware;
             if (reset)
             {
-                DummyPush(PC.High);
-                DummyPush(PC.Low);
+                DummyPush(HighByte(PC));
+                DummyPush(LowByte(PC));
                 DummyPush(P);
             }
             else
@@ -521,67 +520,66 @@
         {
             Tick();
             Bus.Data = value;
-            Bus.Address.Low = S--;
-            Bus.Address.High = 1;
+            Bus.Address = MakeWord(S--, 1);
         }
 
         // Addressing modes
 
-        private Register16 Address_Absolute() => FetchWord();
+        private ushort Address_Absolute() => FetchWord();
 
         private byte Address_ZeroPage() => FetchByte();
 
-        private Register16 Address_ZeroPageIndirect() => GetWordPaged(0, Address_ZeroPage());
+        private ushort Address_ZeroPageIndirect() => GetWordPaged(0, Address_ZeroPage());
 
-        private Register16 Address_Indirect()
+        private ushort Address_Indirect()
         {
             var address = Address_Absolute();
-            return GetWordPaged(address.High, address.Low);
+            return GetWordPaged(HighByte(address), LowByte(address));
         }
 
         private byte Address_ZeroPageX()
         {
             var address = Address_ZeroPage();
             BusRead(address);
-            return (byte)LowByte(address + X);
+            return LowByte(address + X);
         }
 
         private byte Address_ZeroPageY()
         {
             var address = Address_ZeroPage();
             BusRead(address);
-            return (byte)LowByte(address + Y);
+            return LowByte(address + Y);
         }
 
-        private Tuple<Register16, byte> Address_AbsoluteX()
+        private Tuple<ushort, byte> Address_AbsoluteX()
         {
             var address = Address_Absolute();
-            var page = address.High;
-            address.Word += X;
-            return new Tuple<Register16, byte>(address, page);
+            var page = HighByte(address);
+            address += X;
+            return new Tuple<ushort, byte>(address, page);
         }
 
-        private Tuple<Register16, byte> Address_AbsoluteY()
+        private Tuple<ushort, byte> Address_AbsoluteY()
         {
             var address = Address_Absolute();
-            var page = address.High;
-            address.Word += Y;
-            return new Tuple<Register16, byte>(address, page);
+            var page = HighByte(address);
+            address += Y;
+            return new Tuple<ushort, byte>(address, page);
         }
 
-        private Register16 Address_IndexedIndirectX() => GetWordPaged(0, Address_ZeroPageX());
+        private ushort Address_IndexedIndirectX() => GetWordPaged(0, Address_ZeroPageX());
 
-        private Tuple<Register16, byte> Address_IndirectIndexedY()
+        private Tuple<ushort, byte> Address_IndirectIndexedY()
         {
             var address = Address_ZeroPageIndirect();
-            var page = address.High;
-            address.Word += Y;
-            return new Tuple<Register16, byte>(address, page);
+            var page = HighByte(address);
+            address += Y;
+            return new Tuple<ushort, byte>(address, page);
         }
 
-        private Register16 Address_relative_byte()
+        private ushort Address_relative_byte()
         {
-            intermediate.Word = (ushort)(PC + (byte)FetchByte());
+            intermediate = (ushort)(PC + (byte)FetchByte());
             return intermediate;
         }
 
@@ -598,8 +596,8 @@
             var crossed = Address_AbsoluteX();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            var possible = GetBytePaged(page, address.Low);
-        	if ((behaviour == PageCrossingBehavior.AlwaysReadTwice) || (page != address.High))
+            var possible = GetBytePaged(page, LowByte(address));
+        	if ((behaviour == PageCrossingBehavior.AlwaysReadTwice) || (page != HighByte(address)))
 		        possible = BusRead(address);
 	        return possible;
         }
@@ -609,8 +607,8 @@
             var crossed = Address_AbsoluteY();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            var possible = GetBytePaged(page, address.Low);
-            if (page != address.High)
+            var possible = GetBytePaged(page, LowByte(address));
+            if (page != HighByte(address))
                 possible = BusRead(address);
             return possible;
         }
@@ -626,8 +624,8 @@
             var crossed = Address_IndirectIndexedY();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            var possible = GetBytePaged(page, address.Low);
-            if (page != address.High)
+            var possible = GetBytePaged(page, LowByte(address));
+            if (page != HighByte(address))
                 possible = BusRead(address);
             return possible;
         }
@@ -657,10 +655,10 @@
             var destination = Address_relative_byte();
             if (condition) {
                 BusRead();
-                var page = PC.High;
+                var page = HighByte(PC);
                 Jump(destination);
-                if (PC.High != page)
-                    BusRead(PC.Low, page);
+                if (HighByte(PC) != page)
+                    BusRead(LowByte(PC), page);
             }
         }
 
@@ -686,9 +684,9 @@
             var returned = SUB(operand, data, ~P & (int)StatusBits.CF);
 
             var difference = intermediate;
-            AdjustNZ(difference.Low);
-            SetFlag(ref p, StatusBits.VF, (operand ^ data) & (operand ^ difference.Low) & (int)StatusBits.NF);
-        	ClearFlag(ref p, StatusBits.CF, difference.High);
+            AdjustNZ(LowByte(difference));
+            SetFlag(ref p, StatusBits.VF, (operand ^ data) & (operand ^ LowByte(difference)) & (int)StatusBits.NF);
+        	ClearFlag(ref p, StatusBits.CF, HighByte(difference));
 
         	return returned;
         }
@@ -700,13 +698,13 @@
 
         private byte SUB_b(byte operand, byte data, int borrow)
         {
-            intermediate.Word = (ushort)(operand - data - borrow);
-            return intermediate.Low;
+            intermediate = (ushort)(operand - data - borrow);
+            return LowByte(intermediate);
         }
 
         private byte SUB_d(byte operand, byte data, int borrow)
         {
-            intermediate.Word = (ushort)(operand - data - borrow);
+            intermediate = (ushort)(operand - data - borrow);
 
             byte low = (byte)(LowNibble(operand) - LowNibble(data) - borrow);
             var lowNegative = low & (byte)StatusBits.NF;
@@ -724,7 +722,7 @@
         private byte ADC(byte operand, byte data)
         {
             var returned = ADD(operand, data, Carry);
-            AdjustNZ(intermediate.Low);
+            AdjustNZ(LowByte(intermediate));
             return returned;
         }
 
@@ -735,17 +733,17 @@
 
         private byte ADD_b(byte operand, byte data, int carry)
         {
-            intermediate.Word = (ushort)(operand + data + carry);
+            intermediate = (ushort)(operand + data + carry);
 
-            SetFlag(ref p, StatusBits.VF, ~(operand ^ data) & (operand ^ intermediate.Low) & (int)StatusBits.NF);
-            SetFlag(ref p, StatusBits.CF, intermediate.High & (int)StatusBits.CF);
+            SetFlag(ref p, StatusBits.VF, ~(operand ^ data) & (operand ^ LowByte(intermediate)) & (int)StatusBits.NF);
+            SetFlag(ref p, StatusBits.CF, HighByte(intermediate) & (int)StatusBits.CF);
 
-            return intermediate.Low;
+            return LowByte(intermediate);
         }
 
         private byte ADD_d(byte operand, byte data, int carry)
         {
-            intermediate.Word = (ushort)(operand + data + carry);
+            intermediate = (ushort)(operand + data + carry);
 
             byte low = (byte)(LowNibble(operand) + LowNibble(data) + carry);
             if (low > 9)
@@ -779,9 +777,9 @@
 
         private void CMP(byte first, byte second)
         {
-            intermediate.Word = (ushort)(first - second);
-            AdjustNZ(intermediate.Low);
-            ClearFlag(ref p, StatusBits.CF, intermediate.High);
+            intermediate = (ushort)(first - second);
+            AdjustNZ(LowByte(intermediate));
+            ClearFlag(ref p, StatusBits.CF, HighByte(intermediate));
         }
 
         private byte DEC(byte value) => Through(value - 1);
@@ -795,8 +793,7 @@
             var low = FetchByte();
             GetBytePaged(1, S); // dummy read
             PushWord(PC);
-            PC.High = FetchByte();
-            PC.Low = low;
+            PC = MakeWord(low, FetchByte());
         }
 
         private byte LSR(byte value)
@@ -866,7 +863,7 @@
         private void AXS(byte value)
         {
             X = Through(SUB((byte)(A & X), value));
-            ClearFlag(ref p, StatusBits.CF, intermediate.High);
+            ClearFlag(ref p, StatusBits.CF, HighByte(intermediate));
         }
 
         private void DCP(byte value)
@@ -912,7 +909,7 @@
             var crossed = Address_AbsoluteX();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            GetBytePaged(page, address.Low);
+            GetBytePaged(page, LowByte(address));
             BusWrite(address, A);
         }
 
@@ -921,7 +918,7 @@
             var crossed = Address_AbsoluteY();
             var address = crossed.Item1;
             var page = crossed.Item2;
-            GetBytePaged(page, address.Low);
+            GetBytePaged(page, LowByte(address));
             BusWrite(address, A);
         }
     }

@@ -6,7 +6,7 @@
     {
         private Bus bus;
         private byte opcode;
-        private Register16 pc;
+        private ushort pc;
 
         private PinLevel resetLine;
         private PinLevel intLine;
@@ -14,7 +14,7 @@
         protected Processor(Bus memory)
         {
             bus = memory;
-            pc = new Register16();
+            pc = 0;
         }
 
         public event EventHandler<EventArgs> RaisingRESET;
@@ -27,7 +27,7 @@
         public event EventHandler<EventArgs> LoweringINT;
         public event EventHandler<EventArgs> LoweredINT;
 
-        public Register16 PC { get => pc; set => pc = value; }
+        public ushort PC { get => pc; set => pc = value; }
         protected byte OpCode { get => opcode; set => opcode = value; }
         public Bus Bus { get => bus; set => bus = value; }
 
@@ -51,11 +51,10 @@
 	        return Execute();
         }
 
-        public abstract Register16 PeekWord(Register16 address);
-        public abstract void PokeWord(Register16 address, Register16 value);
+        public abstract ushort PeekWord(ushort address);
+        public abstract void PokeWord(ushort address, ushort value);
 
-        public Register16 PeekWord(byte low, byte high) => PeekWord(new Register16(low, high));
-        public Register16 PeekWord(ushort address) => PeekWord(LowByte(address), HighByte(address));
+        public ushort PeekWord(byte low, byte high) => PeekWord((ushort)(PromoteByte(high) | low));
 
         public virtual void RaiseRESET()
         {
@@ -100,14 +99,16 @@
         protected virtual void HandleRESET() => RaiseRESET();
         protected virtual void HandleINT() => RaiseINT();
 
-        protected void BusWrite(byte low, byte data) => BusWrite(low, 0, data);
-
-        protected void BusWrite(Register16 address, byte data) => BusWrite(address.Low, address.High, data);
+        #region BusWrite
 
         protected void BusWrite(byte low, byte high, byte data)
         {
-            Bus.Address.Low = low;
-            Bus.Address.High = high;
+            BusWrite(MakeWord(low, high), data);
+        }
+
+        protected void BusWrite(ushort address, byte data)
+        {
+            Bus.Address = address;
             BusWrite(data);
         }
 
@@ -117,59 +118,69 @@
             BusWrite();
         }
 
-        protected virtual void BusWrite() => Bus.Write();
+        protected virtual void BusWrite() => Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
-        protected byte BusRead(byte low) => BusRead(low, 0);
+        #endregion
 
-        protected byte BusRead(Register16 address) => BusRead(address.Low, address.High);
+        #region BusRead
 
         protected byte BusRead(byte low, byte high)
         {
-            Bus.Address.Low = low;
-            Bus.Address.High = high;
+            return BusRead(MakeWord(low, high));
+        }
+
+        protected byte BusRead(ushort address)
+        {
+            Bus.Address = address;
             return BusRead();
         }
 
-        protected virtual byte BusRead() => Bus.Read();
+        protected virtual byte BusRead() => Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte GetBytePaged(byte page, byte offset) => BusRead(new Register16(offset, page));
+        #endregion
 
-        protected void SetBytePaged(byte page, byte offset, byte value) => BusWrite(new Register16(offset, page), value);
+        #region Paged reader/writer wrappers
+
+        protected byte GetBytePaged(byte page, byte offset) => BusRead(offset, page);
+
+        protected void SetBytePaged(byte page, byte offset, byte value) => BusWrite(offset, page, value);
+
+        #endregion
 
         protected byte FetchByte() => BusRead(PC++);
 
-        protected abstract Register16 GetWord();
-		protected abstract void SetWord(Register16 value);
+        protected abstract ushort GetWord();
+		protected abstract void SetWord(ushort value);
 
-		protected abstract Register16 GetWordPaged(byte page, byte offset);
-		protected abstract void SetWordPaged(byte page, byte offset, Register16 value);
+		protected abstract ushort GetWordPaged(byte page, byte offset);
+		protected abstract void SetWordPaged(byte page, byte offset, ushort value);
 
-		protected abstract Register16 FetchWord();
+		protected abstract ushort FetchWord();
 
 		protected abstract void Push(byte value);
 		protected abstract byte Pop();
 
-		protected abstract void PushWord(Register16 value);
-		protected abstract Register16 PopWord();
+		protected abstract void PushWord(ushort value);
+		protected abstract ushort PopWord();
 
-        protected Register16 GetWord(Register16 address)
+        protected ushort GetWord(ushort address)
         {
-            Bus.Address.Word = address.Word;
+            Bus.Address = address;
 			return GetWord();
         }
 
-        protected void SetWord(Register16 address, Register16 value)
+        protected void SetWord(ushort address, ushort value)
         {
-            Bus.Address.Word = address.Word;
+            Bus.Address = address;
             SetWord(value);
         }
 
-        protected void Jump(Register16 destination)
+        protected void Jump(ushort destination)
         {
 			PC = destination;
 		}
 
-        protected void Call(Register16 destination)
+        protected void Call(ushort destination)
         {
             PushWord(PC);
             Jump(destination);

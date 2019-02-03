@@ -28,7 +28,7 @@
             output.Append(" ");
 
             var next = bus.Peek((ushort)(current + 1));
-            var relative = (ushort)(processor.PC.Word + 2 + (sbyte)next);
+            var relative = (ushort)(processor.PC + 2 + (sbyte)next);
 
             var aaa = (cell & 0b11100000) >> 5;
             var bbb = (cell & 0b00011100) >> 2;

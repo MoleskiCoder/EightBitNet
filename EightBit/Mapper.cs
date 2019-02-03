@@ -2,6 +2,6 @@
 {
     public interface IMapper
     {
-        MemoryMapping Mapping(Register16 address);
+        MemoryMapping Mapping(ushort address);
     }
 }

@@ -5,7 +5,7 @@
     abstract public class Bus : IMapper
     {
         private byte data;
-        private Register16 address = new Register16();
+        private ushort address;
 
         public event EventHandler<EventArgs> WritingByte;
         public event EventHandler<EventArgs> WrittenByte;
@@ -19,22 +19,21 @@
             set { data = value; }
         }
 
-        public Register16 Address
+        public ushort Address
         {
             get { return address; }
+            set { address = value; }
         }
 
-        public abstract MemoryMapping Mapping(Register16 absolute);
+        public abstract MemoryMapping Mapping(ushort absolute);
 
         public byte Peek() => Reference();
-        public byte Peek(Register16 absolute) => Reference(absolute);
-        public byte Peek(ushort absolute) => Peek(Chip.LowByte(absolute), Chip.HighByte(absolute));
-        public byte Peek(byte low, byte high) => Reference(new Register16(low, high));
+        public byte Peek(ushort absolute) => Reference(absolute);
+        public byte Peek(byte low, byte high) => Reference(low, high);
 
         public void Poke(byte value) => Reference() = value;
-        public void Poke(Register16 absolute, byte value) => Reference(absolute) = value;
-        public byte Poke(ushort absolute, byte value) => Poke(Chip.LowByte(absolute), Chip.HighByte(absolute), value);
-        public byte Poke(byte low, byte high, byte value) => Reference(new Register16(low, high)) = value;
+        public byte Poke(ushort absolute, byte value) => Reference(absolute) = value;
+        public byte Poke(byte low, byte high, byte value) => Reference(low, high) = value;
 
         public byte Read()
         {
@@ -44,10 +43,15 @@
             return returned;
         }
 
-        public byte Read(Register16 absolute)
+        public byte Read(ushort absolute)
         {
-            Address.Word = absolute.Word;
+            Address = absolute;
             return Read();
+        }
+
+        public byte Read(byte low, byte high)
+        {
+            return Read(Chip.MakeWord(low, high));
         }
 
         public void Write()
@@ -63,10 +67,15 @@
             Write();
         }
 
-        public void Write(Register16 absolute, byte value)
+        public void Write(ushort absolute, byte value)
         {
-            Address.Word = absolute.Word;
+            Address = absolute;
             Write(value);
+        }
+
+        public void Write(byte low, byte high, byte value)
+        {
+            Write(Chip.MakeWord(low, high), value);
         }
 
         public virtual void RaisePOWER() {}
@@ -80,7 +89,7 @@
         protected virtual void OnReadingByte() => ReadingByte?.Invoke(this, EventArgs.Empty);
         protected virtual void OnReadByte() => ReadByte?.Invoke(this, EventArgs.Empty);
 
-        protected ref byte Reference(Register16 absolute)
+        protected ref byte Reference(ushort absolute)
         {
             var mapped = Mapping(absolute);
             var offset = (ushort)((absolute - mapped.Begin) & mapped.Mask);
@@ -94,13 +103,9 @@
 
         protected ref byte Reference() => ref Reference(Address);
 
-        protected ref byte Reference(ushort absolute) => ref Reference(Chip.LowByte(absolute), Chip.HighByte(absolute));
-
         protected ref byte Reference(byte low, byte high)
         {
-            Address.Low = low;
-            Address.High = high;
-            return ref Reference();
+            return ref Reference(Chip.MakeWord(low, high));
         }
 
         //[[nodiscard]] static std::map<uint16_t, std::vector<uint8_t>> parseHexFile(std::string path);

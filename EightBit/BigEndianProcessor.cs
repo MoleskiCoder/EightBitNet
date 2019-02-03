@@ -7,67 +7,65 @@
         {
         }
 
-        public override Register16 PeekWord(Register16 address)
+        public override ushort PeekWord(ushort address)
         {
             var high = Bus.Peek(address);
             var low = Bus.Peek(++address);
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        public override void PokeWord(Register16 address, Register16 value)
+        public override void PokeWord(ushort address, ushort value)
         {
-            Bus.Poke(address, value.High);
-            Bus.Poke(++address, value.Low);
+            Bus.Poke(address, LowByte(value));
+            Bus.Poke(++address, HighByte(value));
         }
 
-        protected override Register16 FetchWord()
+        protected override ushort FetchWord()
         {
             var high = FetchByte();
             var low = FetchByte();
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        protected override Register16 GetWord()
+        protected override ushort GetWord()
         {
             var high = BusRead();
-            ++Bus.Address.Word;
+            ++Bus.Address;
             var low = BusRead();
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        protected override Register16 GetWordPaged(byte page, byte offset)
+        protected override ushort GetWordPaged(byte page, byte offset)
         {
             var high = GetBytePaged(page, offset);
-            ++Bus.Address.Low;
-            var low = BusRead();
-            return new Register16(low, high);
+            var low = GetBytePaged(page, (byte)(offset + 1));
+            return MakeWord(low, high);
         }
 
-        protected override Register16 PopWord()
+        protected override ushort PopWord()
         {
             var high = Pop();
             var low = Pop();
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        protected override void PushWord(Register16 value)
+        protected override void PushWord(ushort value)
         {
-            Push(value.Low);
-            Push(value.High);
+            Push(LowByte(value));
+            Push(HighByte(value));
         }
 
-        protected override void SetWord(Register16 value)
+        protected override void SetWord(ushort value)
         {
-            BusWrite(value.High);
-            ++Bus.Address.Word;
-            BusWrite(value.Low);
+            BusWrite(HighByte(value));
+            ++Bus.Address;
+            BusWrite(LowByte(value));
         }
 
-        protected override void SetWordPaged(byte page, byte offset, Register16 value)
+        protected override void SetWordPaged(byte page, byte offset, ushort value)
         {
-            SetBytePaged(page, offset, value.High);
-            ++Bus.Address.Low;
-            BusWrite(value.Low);
+            SetBytePaged(page, offset, HighByte(value));
+            SetBytePaged(page, (byte)(offset + 1), LowByte(value));
         }
     }
 }

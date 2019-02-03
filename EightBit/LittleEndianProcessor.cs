@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace EightBit
+﻿namespace EightBit
 {
     public abstract class LittleEndianProcessor : Processor
     {
@@ -9,75 +7,65 @@ namespace EightBit
         {
         }
 
-        public override Register16 PeekWord(Register16 address)
+        public override ushort PeekWord(ushort address)
         {
             var low = Bus.Peek(address);
             var high = Bus.Peek(++address);
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        public override void PokeWord(Register16 address, Register16 value)
+        public override void PokeWord(ushort address, ushort value)
         {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-            Bus.Poke(address, value.Low);
-            Bus.Poke(++address, value.High);
+            Bus.Poke(address, LowByte(value));
+            Bus.Poke(++address, HighByte(value));
         }
 
-        protected override Register16 FetchWord()
+        protected override ushort FetchWord()
         {
             var low = FetchByte();
             var high = FetchByte();
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        protected override Register16 GetWord()
+        protected override ushort GetWord()
         {
             var low = BusRead();
-            ++Bus.Address.Word;
+            ++Bus.Address;
             var high = BusRead();
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        protected override Register16 GetWordPaged(byte page, byte offset)
+        protected override ushort GetWordPaged(byte page, byte offset)
         {
             var low = GetBytePaged(page, offset);
-            ++Bus.Address.Low;
-            var high = BusRead();
-            return new Register16(low, high);
+            var high = GetBytePaged(page, (byte)(offset + 1));
+            return MakeWord(low, high);
         }
 
-        protected override Register16 PopWord()
+        protected override ushort PopWord()
         {
             var low = Pop();
             var high = Pop();
-            return new Register16(low, high);
+            return MakeWord(low, high);
         }
 
-        protected override void PushWord(Register16 value)
+        protected override void PushWord(ushort value)
         {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-            Push(value.High);
-            Push(value.Low);
+            Push(HighByte(value));
+            Push(LowByte(value));
         }
 
-        protected override void SetWord(Register16 value)
+        protected override void SetWord(ushort value)
         {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-            BusWrite(value.Low);
-            ++Bus.Address.Word;
-            BusWrite(value.High);
+            BusWrite(LowByte(value));
+            ++Bus.Address;
+            BusWrite(HighByte(value));
         }
 
-        protected override void SetWordPaged(byte page, byte offset, Register16 value)
+        protected override void SetWordPaged(byte page, byte offset, ushort value)
         {
-            if (value == null)
-                throw new ArgumentNullException(nameof(value));
-            SetBytePaged(page, offset, value.Low);
-            ++Bus.Address.Low;
-            BusWrite(value.High);
+            SetBytePaged(page, offset, LowByte(value));
+            SetBytePaged(page, (byte)(offset + 1), HighByte(value));
         }
     }
 }
