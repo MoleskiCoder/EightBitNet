@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="PinLevelExtensions.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     public static class PinLevelExtensions
     {

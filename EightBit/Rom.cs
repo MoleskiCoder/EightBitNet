@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="Rom.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
     using System.IO;
@@ -7,23 +11,28 @@
     {
         private byte[] bytes;
 
-        public Rom(int size) => bytes = new byte[size];
+        public Rom(int size) => this.bytes = new byte[size];
 
-        public Rom() : this(0) { }
+        public Rom()
+        : this(0)
+        {
+        }
 
-        public override int Size => bytes.Length;
+        public override int Size => this.bytes.Length;
 
-        protected ref byte[] Bytes() => ref bytes;
-
-        static public int Load(FileStream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
+        public static int Load(FileStream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
             var size = (int)file.Length;
 
             if ((maximumSize > 0) && ((size - readOffset) > maximumSize))
+            {
                 throw new InvalidOperationException("File is too large");
+            }
 
             if ((limit < 0) || (limit > size))
+            {
                 limit = (int)size;
+            }
 
             var extent = limit + writeOffset;
             if (output.Length < extent)
@@ -52,36 +61,40 @@
 
         public override int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
-            var maximumSize = Size - writeOffset;
-            return Load(file, ref Bytes(), writeOffset, readOffset, limit, maximumSize);
+            var maximumSize = this.Size - writeOffset;
+            return Load(file, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(string path, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
-            var maximumSize = Size - writeOffset;
-            return Load(path, ref Bytes(), writeOffset, readOffset, limit, maximumSize);
+            var maximumSize = this.Size - writeOffset;
+            return Load(path, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
             if (limit < 0)
-                limit = Size - readOffset;
-
-            var extent = limit + writeOffset;
-            if (Size < extent)
             {
-                var updated = new byte[extent];
-                Array.Copy(Bytes(), updated, Size);
-                Bytes() = updated;
+                limit = this.Size - readOffset;
             }
 
-            Array.Copy(from, readOffset, Bytes(), writeOffset, limit);
+            var extent = limit + writeOffset;
+            if (this.Size < extent)
+            {
+                var updated = new byte[extent];
+                Array.Copy(this.Bytes(), updated, this.Size);
+                this.Bytes() = updated;
+            }
+
+            Array.Copy(from, readOffset, this.Bytes(), writeOffset, limit);
 
             return limit;
         }
 
-        public override byte Peek(ushort address) => Bytes()[address];
+        public override byte Peek(ushort address) => this.Bytes()[address];
 
-        protected override void Poke(ushort address, byte value) => Bytes()[address] = value;
+        protected ref byte[] Bytes() => ref this.bytes;
+
+        protected override void Poke(ushort address, byte value) => this.Bytes()[address] = value;
     }
 }

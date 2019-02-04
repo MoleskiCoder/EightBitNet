@@ -1,13 +1,15 @@
-﻿namespace UnitTestEightBit
+﻿// <copyright file="ChipUnitTest.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace UnitTestEightBit
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using EightBit;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class ChipUnitTest
     {
-        #region LowByte
-
         [TestMethod]
         public void TestLowByte()
         {
@@ -16,10 +18,6 @@
             Assert.AreEqual(0xf, low);
         }
 
-        #endregion
-
-        #region HighByte
-
         [TestMethod]
         public void TestHighByte()
         {
@@ -27,10 +25,6 @@
             byte high = Chip.HighByte(input);
             Assert.AreEqual(0xf0, high);
         }
-
-        #endregion
-
-        #region ClearFlag
 
         [TestMethod]
         public void TestClearFlag()
@@ -72,10 +66,6 @@
             Assert.AreEqual(0x7f, flags);
         }
 
-        #endregion
-
-        #region SetFlag
-
         [TestMethod]
         public void TestSetFlag()
         {
@@ -116,10 +106,6 @@
             Assert.AreEqual(0xff, flags);
         }
 
-        #endregion
-
-        #region LowerPart
-
         [TestMethod]
         public void TestLowerPart()
         {
@@ -127,10 +113,6 @@
             ushort lower = Chip.LowerPart(input);
             Assert.AreEqual(0xf, lower);
         }
-
-        #endregion
-
-        #region HigherPart
 
         [TestMethod]
         public void TestHigherPart()
@@ -140,10 +122,6 @@
             Assert.AreEqual(0xf000, higher);
         }
 
-        #endregion
-
-        #region DemoteByte
-
         [TestMethod]
         public void TestDemoteByte()
         {
@@ -151,10 +129,6 @@
             byte demoted = Chip.DemoteByte(input);
             Assert.AreEqual(0xf0, demoted);
         }
-
-        #endregion
-
-        #region PromoteByte
 
         [TestMethod]
         public void TestPromoteByte()
@@ -164,10 +138,6 @@
             Assert.AreEqual(0xf000, promoted);
         }
 
-        #endregion
-
-        #region LowNibble
-
         [TestMethod]
         public void TestLowNibble()
         {
@@ -175,10 +145,6 @@
             int nibble = Chip.LowNibble(input);
             Assert.AreEqual(0xb, nibble);
         }
-
-        #endregion
-
-        #region HighNibble
 
         [TestMethod]
         public void TestHighNibble()
@@ -188,10 +154,6 @@
             Assert.AreEqual(0xa, nibble);
         }
 
-        #endregion
-
-        #region DemoteNibble
-
         [TestMethod]
         public void TestDemoteNibble()
         {
@@ -199,10 +161,6 @@
             int nibble = Chip.DemoteNibble(input);
             Assert.AreEqual(0xa, nibble);
         }
-
-        #endregion
-
-        #region PromoteNibble
 
         [TestMethod]
         public void TestPromoteNibble()
@@ -212,10 +170,6 @@
             Assert.AreEqual(0xb0, nibble);
         }
 
-        #endregion
-
-        #region HigherNibble
-
         [TestMethod]
         public void TestHigherNibble()
         {
@@ -223,10 +177,6 @@
             int nibble = Chip.HigherNibble(input);
             Assert.AreEqual(0xa0, nibble);
         }
-
-        #endregion
-
-        #region LowerNibble
 
         [TestMethod]
         public void TestLowerNibble()
@@ -236,18 +186,11 @@
             Assert.AreEqual(0xb, nibble);
         }
 
-        #endregion
-
-        #region MakeWord
-
         [TestMethod]
         public void TestMakeWord()
         {
             ushort word = Chip.MakeWord(0xcd, 0xab);
             Assert.AreEqual(0xabcd, word);
         }
-
-        #endregion
-
     }
 }

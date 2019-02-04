@@ -1,96 +1,115 @@
-﻿namespace EightBit
+﻿// <copyright file="Bus.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
-    abstract public class Bus : IMapper
+    public abstract class Bus : IMapper
     {
         private byte data;
         private ushort address;
 
         public event EventHandler<EventArgs> WritingByte;
+
         public event EventHandler<EventArgs> WrittenByte;
 
         public event EventHandler<EventArgs> ReadingByte;
+
         public event EventHandler<EventArgs> ReadByte;
 
-        public byte Data { get => data; set => data = value; }
-        public ushort Address { get => address; set => address = value; }
+        public byte Data { get => this.data; set => this.data = value; }
+
+        public ushort Address { get => this.address; set => this.address = value; }
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
-        public byte Peek() => Reference();
-        public byte Peek(ushort absolute) => Reference(absolute);
-        public byte Peek(byte low, byte high) => Reference(low, high);
+        public byte Peek() => this.Reference();
 
-        public void Poke(byte value) => Reference() = value;
-        public byte Poke(ushort absolute, byte value) => Reference(absolute) = value;
-        public byte Poke(byte low, byte high, byte value) => Reference(low, high) = value;
+        public byte Peek(ushort absolute) => this.Reference(absolute);
+
+        public byte Peek(byte low, byte high) => this.Reference(low, high);
+
+        public void Poke(byte value) => this.Reference() = value;
+
+        public byte Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
+
+        public byte Poke(byte low, byte high, byte value) => this.Reference(low, high) = value;
 
         public byte Read()
         {
-            OnReadingByte();
-            var returned = Data = Reference();
-            OnReadByte();
+            this.OnReadingByte();
+            var returned = this.Data = this.Reference();
+            this.OnReadByte();
             return returned;
         }
 
         public byte Read(ushort absolute)
         {
-            Address = absolute;
-            return Read();
+            this.Address = absolute;
+            return this.Read();
         }
 
-        public byte Read(byte low, byte high) => Read(Chip.MakeWord(low, high));
+        public byte Read(byte low, byte high) => this.Read(Chip.MakeWord(low, high));
 
         public void Write()
         {
-            OnWritingByte();
-            Reference() = Data;
-            OnWrittenByte();
+            this.OnWritingByte();
+            this.Reference() = this.Data;
+            this.OnWrittenByte();
         }
 
         public void Write(byte value)
         {
-            Data = value;
-            Write();
+            this.Data = value;
+            this.Write();
         }
 
         public void Write(ushort absolute, byte value)
         {
-            Address = absolute;
-            Write(value);
+            this.Address = absolute;
+            this.Write(value);
         }
 
-        public void Write(byte low, byte high, byte value) => Write(Chip.MakeWord(low, high), value);
+        public void Write(byte low, byte high, byte value) => this.Write(Chip.MakeWord(low, high), value);
 
-        public virtual void RaisePOWER() {}
-        public virtual void LowerPOWER() {}
+        public virtual void RaisePOWER()
+        {
+        }
+
+        public virtual void LowerPOWER()
+        {
+        }
 
         public abstract void Initialize();
 
-        protected virtual void OnWritingByte() => WritingByte?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnWrittenByte() => WrittenByte?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnWritingByte() => this.WritingByte?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnReadingByte() => ReadingByte?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnReadByte() => ReadByte?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnWrittenByte() => this.WrittenByte?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnReadingByte() => this.ReadingByte?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnReadByte() => this.ReadByte?.Invoke(this, EventArgs.Empty);
 
         protected ref byte Reference(ushort absolute)
         {
-            var mapped = Mapping(absolute);
+            var mapped = this.Mapping(absolute);
             var offset = (ushort)((absolute - mapped.Begin) & mapped.Mask);
             if (mapped.Access == AccessLevel.ReadOnly)
             {
-                Data = mapped.Memory.Peek(offset);
-                return ref data;
+                this.Data = mapped.Memory.Peek(offset);
+                return ref this.data;
             }
+
             return ref mapped.Memory.Reference(offset);
         }
 
-        protected ref byte Reference() => ref Reference(Address);
+        protected ref byte Reference() => ref this.Reference(this.Address);
 
-        protected ref byte Reference(byte low, byte high) => ref Reference(Chip.MakeWord(low, high));
+        protected ref byte Reference(byte low, byte high) => ref this.Reference(Chip.MakeWord(low, high));
 
-        //[[nodiscard]] static std::map<uint16_t, std::vector<uint8_t>> parseHexFile(std::string path);
-        //void loadHexFile(std::string path);
+        ////[[nodiscard]] static std::map<uint16_t, std::vector<uint8_t>> parseHexFile(std::string path);
+        ////void loadHexFile(std::string path);
     }
 }

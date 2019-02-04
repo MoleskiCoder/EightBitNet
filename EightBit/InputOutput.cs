@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="InputOutput.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -12,37 +16,42 @@
         }
 
         public event EventHandler<PortEventArgs> ReadingPort;
+
         public event EventHandler<PortEventArgs> ReadPort;
 
         public event EventHandler<PortEventArgs> WritingPort;
+
         public event EventHandler<PortEventArgs> WrittenPort;
 
-        byte Read(byte port) => ReadInputPort(port);
-        void Write(byte port, byte value) => WriteOutputPort(port, value);
+        public byte Read(byte port) => this.ReadInputPort(port);
 
-        byte ReadInputPort(byte port)
+        public void Write(byte port, byte value) => this.WriteOutputPort(port, value);
+
+        public byte ReadInputPort(byte port)
         {
-            OnReadingPort(port);
-            var value = input[port];
-            OnReadPort(port);
+            this.OnReadingPort(port);
+            var value = this.input[port];
+            this.OnReadPort(port);
             return value;
         }
 
-        void WriteInputPort(byte port, byte value) => input[port] = value;
+        public void WriteInputPort(byte port, byte value) => this.input[port] = value;
 
-        byte ReadOutputPort(byte port) => output[port];
+        public byte ReadOutputPort(byte port) => this.output[port];
 
-        void WriteOutputPort(byte port, byte value)
+        public void WriteOutputPort(byte port, byte value)
         {
-            OnWritingPort(port);
-            output[port] = value;
-            OnWrittenPort(port);
+            this.OnWritingPort(port);
+            this.output[port] = value;
+            this.OnWrittenPort(port);
         }
 
-        private void OnReadingPort(byte port) => ReadingPort?.Invoke(this, new PortEventArgs(port));
-        private void OnReadPort(byte port) => ReadPort?.Invoke(this, new PortEventArgs(port));
+        private void OnReadingPort(byte port) => this.ReadingPort?.Invoke(this, new PortEventArgs(port));
 
-        private void OnWritingPort(byte port) => WritingPort?.Invoke(this, new PortEventArgs(port));
-        private void OnWrittenPort(byte port) => WrittenPort?.Invoke(this, new PortEventArgs(port));
+        private void OnReadPort(byte port) => this.ReadPort?.Invoke(this, new PortEventArgs(port));
+
+        private void OnWritingPort(byte port) => this.WritingPort?.Invoke(this, new PortEventArgs(port));
+
+        private void OnWrittenPort(byte port) => this.WrittenPort?.Invoke(this, new PortEventArgs(port));
     }
 }

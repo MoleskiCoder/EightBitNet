@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="Processor.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -13,161 +17,176 @@
 
         protected Processor(Bus memory)
         {
-            bus = memory;
+            this.bus = memory;
         }
 
         public event EventHandler<EventArgs> RaisingRESET;
+
         public event EventHandler<EventArgs> RaisedRESET;
+
         public event EventHandler<EventArgs> LoweringRESET;
+
         public event EventHandler<EventArgs> LoweredRESET;
 
         public event EventHandler<EventArgs> RaisingINT;
+
         public event EventHandler<EventArgs> RaisedINT;
+
         public event EventHandler<EventArgs> LoweringINT;
+
         public event EventHandler<EventArgs> LoweredINT;
 
-        public ushort PC { get => pc; set => pc = value; }
-        protected byte OpCode { get => opcode; set => opcode = value; }
-        public Bus Bus { get => bus; }
+        public ushort PC { get => this.pc; set => this.pc = value; }
 
-        public ref PinLevel RESET() => ref resetLine;
-        public ref PinLevel INT() => ref intLine;
+        public Bus Bus { get => this.bus; }
+
+        protected byte OpCode { get => this.opcode; set => this.opcode = value; }
+
+        public ref PinLevel RESET() => ref this.resetLine;
+
+        public ref PinLevel INT() => ref this.intLine;
 
         public abstract int Step();
+
         public abstract int Execute();
 
         public int Run(int limit)
         {
             int current = 0;
-            while (Powered && (current < limit))
-                current += Step();
+            while (this.Powered && (current < limit))
+            {
+                current += this.Step();
+            }
+
             return current;
         }
 
         public int Execute(byte value)
         {
-            OpCode = value;
-	        return Execute();
+            this.OpCode = value;
+            return this.Execute();
         }
 
         public abstract ushort PeekWord(ushort address);
+
         public abstract void PokeWord(ushort address, ushort value);
 
-        public ushort PeekWord(byte low, byte high) => PeekWord((ushort)(PromoteByte(high) | low));
+        public ushort PeekWord(byte low, byte high) => this.PeekWord((ushort)(Chip.PromoteByte(high) | low));
 
         public virtual void RaiseRESET()
         {
-            OnRaisingRESET();
-            RESET().Raise();
-            OnRaisedRESET();
+            this.OnRaisingRESET();
+            this.RESET().Raise();
+            this.OnRaisedRESET();
         }
 
         public virtual void LowerRESET()
         {
-            OnLoweringRESET();
-            RESET().Lower();
-            OnLoweredRESET();
+            this.OnLoweringRESET();
+            this.RESET().Lower();
+            this.OnLoweredRESET();
         }
 
         public virtual void RaiseINT()
         {
-            OnRaisingINT();
-            INT().Raise();
-            OnRaisedINT();
+            this.OnRaisingINT();
+            this.INT().Raise();
+            this.OnRaisedINT();
         }
 
         public virtual void LowerINT()
         {
-            OnLoweringINT();
-            INT().Lower();
-            OnLoweredINT();
+            this.OnLoweringINT();
+            this.INT().Lower();
+            this.OnLoweredINT();
         }
 
-        protected virtual void OnRaisingRESET() => RaisingRESET?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedRESET() => RaisedRESET?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisingRESET() => this.RaisingRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringRESET() => LoweringRESET?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredRESET() => LoweredRESET?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedRESET() => this.RaisedRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnRaisingINT() => RaisingINT?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedINT() => RaisedINT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringRESET() => this.LoweringRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringINT() => LoweringINT?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredINT() => LoweredINT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredRESET() => this.LoweredRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void HandleRESET() => RaiseRESET();
-        protected virtual void HandleINT() => RaiseINT();
+        protected virtual void OnRaisingINT() => this.RaisingINT?.Invoke(this, EventArgs.Empty);
 
-        #region BusWrite
+        protected virtual void OnRaisedINT() => this.RaisedINT?.Invoke(this, EventArgs.Empty);
 
-        protected void BusWrite(byte low, byte high, byte data) => BusWrite(MakeWord(low, high), data);
+        protected virtual void OnLoweringINT() => this.LoweringINT?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredINT() => this.LoweredINT?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void HandleRESET() => this.RaiseRESET();
+
+        protected virtual void HandleINT() => this.RaiseINT();
+
+        protected void BusWrite(byte low, byte high, byte data) => this.BusWrite(Chip.MakeWord(low, high), data);
 
         protected void BusWrite(ushort address, byte data)
         {
-            Bus.Address = address;
-            BusWrite(data);
+            this.Bus.Address = address;
+            this.BusWrite(data);
         }
 
         protected void BusWrite(byte data)
         {
-            Bus.Data = data;
-            BusWrite();
+            this.Bus.Data = data;
+            this.BusWrite();
         }
 
-        protected virtual void BusWrite() => Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
+        protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
-        #endregion
-
-        #region BusRead
-
-        protected byte BusRead(byte low, byte high) => BusRead(MakeWord(low, high));
+        protected byte BusRead(byte low, byte high) => this.BusRead(Chip.MakeWord(low, high));
 
         protected byte BusRead(ushort address)
         {
-            Bus.Address = address;
-            return BusRead();
+            this.Bus.Address = address;
+            return this.BusRead();
         }
 
-        protected virtual byte BusRead() => Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
+        protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        #endregion
-
-        protected byte FetchByte() => BusRead(PC++);
+        protected byte FetchByte() => this.BusRead(this.PC++);
 
         protected abstract ushort GetWord();
-		protected abstract void SetWord(ushort value);
 
-		protected abstract ushort GetWordPaged(byte page, byte offset);
-		protected abstract void SetWordPaged(byte page, byte offset, ushort value);
+        protected abstract void SetWord(ushort value);
 
-		protected abstract ushort FetchWord();
+        protected abstract ushort GetWordPaged(byte page, byte offset);
 
-		protected abstract void Push(byte value);
-		protected abstract byte Pop();
+        protected abstract void SetWordPaged(byte page, byte offset, ushort value);
 
-		protected abstract void PushWord(ushort value);
-		protected abstract ushort PopWord();
+        protected abstract ushort FetchWord();
+
+        protected abstract void Push(byte value);
+
+        protected abstract byte Pop();
+
+        protected abstract void PushWord(ushort value);
+
+        protected abstract ushort PopWord();
 
         protected ushort GetWord(ushort address)
         {
-            Bus.Address = address;
-			return GetWord();
+            this.Bus.Address = address;
+            return this.GetWord();
         }
 
         protected void SetWord(ushort address, ushort value)
         {
-            Bus.Address = address;
-            SetWord(value);
+            this.Bus.Address = address;
+            this.SetWord(value);
         }
 
-        protected void Jump(ushort destination) => PC = destination;
+        protected void Jump(ushort destination) => this.PC = destination;
 
         protected void Call(ushort destination)
         {
-            PushWord(PC);
-            Jump(destination);
+            this.PushWord(this.PC);
+            this.Jump(destination);
         }
 
-        protected virtual void Return() => Jump(PopWord());
+        protected virtual void Return() => this.Jump(this.PopWord());
     }
 }

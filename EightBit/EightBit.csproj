@@ -33,6 +33,7 @@
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -55,13 +56,12 @@
     <Compile Include="Chip.cs" />
     <Compile Include="ClockedChip.cs" />
     <Compile Include="Device.cs" />
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IntelOpCodeDecoded.cs" />
     <Compile Include="Memory.cs" />
     <Compile Include="InputOutput.cs" />
     <Compile Include="IntelProcessor.cs" />
     <Compile Include="LittleEndianProcessor.cs" />
-    <Compile Include="Mapper.cs" />
+    <Compile Include="IMapper.cs" />
     <Compile Include="Mask.cs" />
     <Compile Include="MemoryMapping.cs" />
     <Compile Include="PinLevel.cs" />
@@ -72,6 +72,14 @@
     <Compile Include="Ram.cs" />
     <Compile Include="Rom.cs" />
     <Compile Include="UnusedMemory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\StyleCop.Analyzers.Unstable.1.1.1.61\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="..\packages\StyleCop.Analyzers.Unstable.1.1.1.61\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

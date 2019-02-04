@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="MemoryMapping.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     public class MemoryMapping
     {
@@ -15,9 +19,12 @@
             this.access = access;
         }
 
-        public Memory Memory { get => memory; set => memory = value; }
-        public ushort Begin { get => begin; set => begin = value; }
-        public ushort Mask { get => mask; set => mask = value; }
-        public AccessLevel Access { get => access; set => access = value; }
+        public Memory Memory { get => this.memory; set => this.memory = value; }
+
+        public ushort Begin { get => this.begin; set => this.begin = value; }
+
+        public ushort Mask { get => this.mask; set => this.mask = value; }
+
+        public AccessLevel Access { get => this.access; set => this.access = value; }
     }
 }

@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="Device.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -6,35 +10,42 @@
     {
         private PinLevel powerLine;
 
-        protected Device() { }
+        protected Device()
+        {
+        }
 
         public event EventHandler<EventArgs> RaisingPOWER;
+
         public event EventHandler<EventArgs> RaisedPOWER;
+
         public event EventHandler<EventArgs> LoweringPOWER;
+
         public event EventHandler<EventArgs> LoweredPOWER;
 
-        public ref PinLevel POWER() => ref powerLine;
+        public bool Powered => this.POWER().Raised();
 
-        public bool Powered => POWER().Raised();
+        public ref PinLevel POWER() => ref this.powerLine;
 
         public virtual void RaisePOWER()
         {
-            OnRaisingPOWER();
-            POWER().Raise();
-            OnRaisedPOWER();
+            this.OnRaisingPOWER();
+            this.POWER().Raise();
+            this.OnRaisedPOWER();
         }
 
         public virtual void LowerPOWER()
         {
-            OnLoweringPOWER();
-            POWER().Lower();
-            OnLoweredPOWER();
+            this.OnLoweringPOWER();
+            this.POWER().Lower();
+            this.OnLoweredPOWER();
         }
 
-        protected virtual void OnRaisingPOWER() => RaisingPOWER?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedPOWER() => RaisedPOWER?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisingPOWER() => this.RaisingPOWER?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringPOWER() => LoweringPOWER?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredPOWER() => LoweredPOWER?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedPOWER() => this.RaisedPOWER?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweringPOWER() => this.LoweringPOWER?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredPOWER() => this.LoweredPOWER?.Invoke(this, EventArgs.Empty);
     }
 }

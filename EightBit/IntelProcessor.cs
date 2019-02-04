@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="IntelProcessor.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -13,151 +17,180 @@
         protected IntelProcessor(Bus bus)
         : base(bus)
         {
-            sp = (ushort)Mask.Mask16;
-            memptr = (ushort)Mask.Mask16;
+            this.sp = (ushort)Mask.Mask16;
+            this.memptr = (ushort)Mask.Mask16;
 
             for (int i = 0; i < 0x100; ++i)
-                decodedOpCodes[i] = new IntelOpCodeDecoded((byte)i);
+            {
+                this.decodedOpCodes[i] = new IntelOpCodeDecoded((byte)i);
+            }
         }
 
         public event EventHandler<EventArgs> RaisingHALT;
+
         public event EventHandler<EventArgs> RaisedHALT;
+
         public event EventHandler<EventArgs> LoweringHALT;
+
         public event EventHandler<EventArgs> LoweredHALT;
 
-        public ref PinLevel HALT() => ref haltLine;
+        public ushort SP { get => this.sp; set => this.sp = value; }
 
-        protected bool Halted => HALT().Lowered();
-
-        public ushort SP { get => sp; set => sp = value; }
-        public ushort MEMPTR { get => memptr; set => memptr = value; }
+        public ushort MEMPTR { get => this.memptr; set => this.memptr = value; }
 
         public abstract ushort AF { get; set; }
-        public byte A { get => HighByte(AF); set => AF = (ushort)(LowerPart(AF) | PromoteByte(value)); }
-        public byte F { get => LowByte(AF); set => AF = (ushort)(HigherPart(AF) | value); }
+
+        public byte A { get => Chip.HighByte(this.AF); set => this.AF = (ushort)(Chip.LowerPart(this.AF) | Chip.PromoteByte(value)); }
+
+        public byte F { get => Chip.LowByte(this.AF); set => this.AF = (ushort)(Chip.HigherPart(this.AF) | value); }
 
         public abstract ushort BC { get; set; }
-        public byte B { get => HighByte(AF); set => BC = (ushort)(LowerPart(BC) | PromoteByte(value)); }
-        public byte C { get => LowByte(AF); set => BC = (ushort)(HigherPart(BC) | value); }
+
+        public byte B { get => Chip.HighByte(this.BC); set => this.BC = (ushort)(Chip.LowerPart(this.BC) | Chip.PromoteByte(value)); }
+
+        public byte C { get => Chip.LowByte(this.BC); set => this.BC = (ushort)(Chip.HigherPart(this.BC) | value); }
 
         public abstract ushort DE { get; set; }
-        public byte D { get => HighByte(DE); set => DE = (ushort)(LowerPart(DE) | PromoteByte(value)); }
-        public byte E { get => LowByte(DE); set => DE = (ushort)(HigherPart(DE) | value); }
+
+        public byte D { get => Chip.HighByte(this.DE); set => this.DE = (ushort)(Chip.LowerPart(this.DE) | Chip.PromoteByte(value)); }
+
+        public byte E { get => Chip.LowByte(this.DE); set => this.DE = (ushort)(Chip.HigherPart(this.DE) | value); }
 
         public abstract ushort HL { get; set; }
-        public byte H { get => HighByte(HL); set => HL = (ushort)(LowerPart(HL) | PromoteByte(value)); }
-        public byte L { get => LowByte(HL); set { HL = (ushort)(HigherPart(HL) | value); } }
+
+        public byte H { get => Chip.HighByte(this.HL); set => this.HL = (ushort)(Chip.LowerPart(this.HL) | Chip.PromoteByte(value)); }
+
+        public byte L { get => Chip.LowByte(this.HL); set => this.HL = (ushort)(Chip.HigherPart(this.HL) | value); }
+
+        protected bool Halted => this.HALT().Lowered();
+
+        public ref PinLevel HALT() => ref this.haltLine;
 
         public override void RaisePOWER()
         {
             base.RaisePOWER();
-            RaiseHALT();
-            SP = AF = BC = DE = HL = (ushort)Mask.Mask16;
+            this.RaiseHALT();
+            this.SP = this.AF = this.BC = this.DE = this.HL = (ushort)Mask.Mask16;
         }
 
         public virtual void RaiseHALT()
         {
-            OnRaisingHALT();
-            HALT().Raise();
-            OnRaisedHALT();
+            this.OnRaisingHALT();
+            this.HALT().Raise();
+            this.OnRaisedHALT();
         }
 
         public virtual void LowerHALT()
         {
-            OnLoweringHALT();
-            HALT().Lower();
-            OnLoweredHALT();
+            this.OnLoweringHALT();
+            this.HALT().Lower();
+            this.OnLoweredHALT();
         }
 
-        protected virtual void OnRaisingHALT() => RaisingHALT?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedHALT() => RaisedHALT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisingHALT() => this.RaisingHALT?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringHALT() => LoweringHALT?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredHALT() => LoweredHALT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedHALT() => this.RaisedHALT?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweringHALT() => this.LoweringHALT?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredHALT() => this.LoweredHALT?.Invoke(this, EventArgs.Empty);
 
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            PC = 0;
+            this.PC = 0;
         }
 
-        protected sealed override void Push(byte value) => Bus.Write(--SP, value);
-        protected sealed override byte Pop() => Bus.Read(SP++);
+        protected sealed override void Push(byte value) => this.Bus.Write(--this.SP, value);
+
+        protected sealed override byte Pop() => this.Bus.Read(this.SP++);
 
         protected sealed override ushort GetWord()
         {
             var returned = base.GetWord();
-            MEMPTR = Bus.Address;
-	        return returned;
+            this.MEMPTR = this.Bus.Address;
+            return returned;
         }
 
         protected sealed override void SetWord(ushort value)
         {
             base.SetWord(value);
-            MEMPTR = Bus.Address;
+            this.MEMPTR = this.Bus.Address;
         }
 
-        //
+        ////
 
         protected void Restart(byte address)
         {
-            MEMPTR = address;
-            Call(MEMPTR);
+            this.MEMPTR = address;
+            this.Call(this.MEMPTR);
         }
 
         protected bool CallConditional(bool condition)
         {
-            MEMPTR = FetchWord();
+            this.MEMPTR = this.FetchWord();
             if (condition)
-                Call(MEMPTR);
+            {
+                this.Call(this.MEMPTR);
+            }
+
             return condition;
         }
 
         protected bool JumpConditional(bool condition)
         {
-            MEMPTR = FetchWord();
+            this.MEMPTR = this.FetchWord();
             if (condition)
-                Jump(MEMPTR);
+            {
+                this.Jump(this.MEMPTR);
+            }
+
             return condition;
         }
 
         protected bool ReturnConditional(bool condition)
         {
             if (condition)
-                Return();
+            {
+                this.Return();
+            }
+
             return condition;
         }
 
         protected void JumpRelative(sbyte offset)
         {
-            MEMPTR = (ushort)(PC + offset);
-            Jump(MEMPTR);
+            this.MEMPTR = (ushort)(this.PC + offset);
+            this.Jump(this.MEMPTR);
         }
 
         protected bool JumpRelativeConditional(bool condition)
         {
-            var offset = (sbyte)FetchByte();
+            var offset = (sbyte)this.FetchByte();
             if (condition)
-                JumpRelative(offset);
+            {
+                this.JumpRelative(offset);
+            }
+
             return condition;
         }
 
         protected override sealed void Return()
         {
             base.Return();
-            MEMPTR = PC;
+            this.MEMPTR = this.PC;
         }
 
         protected void Halt()
         {
-            --PC;
-            LowerHALT();
+            --this.PC;
+            this.LowerHALT();
         }
 
         protected void Proceed()
         {
-            ++PC;
-            RaiseHALT();
+            ++this.PC;
+            this.RaiseHALT();
         }
     }
 }

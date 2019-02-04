@@ -1,7 +1,11 @@
-﻿namespace Test
+﻿// <copyright file="Board.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace Test
 {
-    using EightBit;
     using System.Text;
+    using EightBit;
 
     internal class Board : Bus
     {
@@ -24,52 +28,59 @@
             this.oldPC = (ushort)Mask.Mask16;
         }
 
-        public M6502 CPU { get { return this.cpu; } }
+        public M6502 CPU { get => this.cpu; }
 
         public override void RaisePOWER()
         {
             base.RaisePOWER();
-            CPU.RaisePOWER();
-            CPU.RaiseRESET();
-            CPU.RaiseINT();
-            CPU.RaiseNMI();
-            CPU.RaiseSO();
-            CPU.RaiseRDY();
+            this.CPU.RaisePOWER();
+            this.CPU.RaiseRESET();
+            this.CPU.RaiseINT();
+            this.CPU.RaiseNMI();
+            this.CPU.RaiseSO();
+            this.CPU.RaiseRDY();
         }
 
         public override void LowerPOWER()
         {
-            CPU.LowerPOWER();
+            this.CPU.LowerPOWER();
             base.LowerPOWER();
         }
 
         public override void Initialize()
         {
-            var programFilename = configuration.Program;
-            var programPath = configuration.RomDirectory + "/" + configuration.Program;
-            var loadAddress = configuration.LoadAddress;
-            ram.Load(programPath, loadAddress);
+            var programFilename = this.configuration.Program;
+            var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
+            var loadAddress = this.configuration.LoadAddress;
+            this.ram.Load(programPath, loadAddress);
 
-            if (configuration.DebugMode)
-                CPU.ExecutingInstruction += CPU_ExecutingInstruction;
+            if (this.configuration.DebugMode)
+            {
+                this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction;
+            }
 
-            CPU.ExecutedInstruction += CPU_ExecutedInstruction;
+            this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
 
-            Poke(0x00, 0x4c);
-            cpu.PokeWord(0x01, configuration.StartAddress);
+            this.Poke(0x00, 0x4c);
+            this.cpu.PokeWord(0x01, this.configuration.StartAddress);
+        }
+
+        public override MemoryMapping Mapping(ushort absolute)
+        {
+            return new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
         }
 
         private void CPU_ExecutedInstruction(object sender, System.EventArgs e)
         {
-            var pc = CPU.PC;
-            if (oldPC != pc)
+            var pc = this.CPU.PC;
+            if (this.oldPC != pc)
             {
-                oldPC = pc;
+                this.oldPC = pc;
             }
             else
             {
-                LowerPOWER();
-                var test = Peek(0x0200);
+                this.LowerPOWER();
+                var test = this.Peek(0x0200);
                 System.Console.Out.WriteLine();
                 System.Console.Out.Write("** Test=");
                 System.Console.Out.WriteLine(Disassembly.Dump_ByteValue(test));
@@ -78,8 +89,8 @@
 
         private void CPU_ExecutingInstruction(object sender, System.EventArgs e)
         {
-            var address = CPU.PC;
-            var cell = Peek(address);
+            var address = this.CPU.PC;
+            var cell = this.Peek(address);
 
             var output = new StringBuilder();
 
@@ -88,33 +99,28 @@
             output.Append(":");
 
             output.Append("P=");
-            output.Append(Disassembly.Dump_Flags(CPU.P));
+            output.Append(Disassembly.Dump_Flags(this.CPU.P));
             output.Append(", ");
 
             output.Append("A=");
-            output.Append(Disassembly.Dump_ByteValue(CPU.A));
+            output.Append(Disassembly.Dump_ByteValue(this.CPU.A));
             output.Append(", ");
 
             output.Append("X=");
-            output.Append(Disassembly.Dump_ByteValue(CPU.X));
+            output.Append(Disassembly.Dump_ByteValue(this.CPU.X));
             output.Append(", ");
 
             output.Append("Y=");
-            output.Append(Disassembly.Dump_ByteValue(CPU.Y));
+            output.Append(Disassembly.Dump_ByteValue(this.CPU.Y));
             output.Append(", ");
 
             output.Append("S=");
-            output.Append(Disassembly.Dump_ByteValue(CPU.S));
+            output.Append(Disassembly.Dump_ByteValue(this.CPU.S));
             output.Append("\t");
 
-            output.Append(disassembler.Disassemble(address));
+            output.Append(this.disassembler.Disassemble(address));
 
             System.Console.Out.WriteLine(output.ToString());
-        }
-
-        public override MemoryMapping Mapping(ushort absolute)
-        {
-            return new MemoryMapping(ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
         }
     }
 }

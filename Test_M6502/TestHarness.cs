@@ -1,4 +1,8 @@
-﻿namespace Test
+﻿// <copyright file="TestHarness.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace Test
 {
     internal class TestHarness
     {
@@ -6,18 +10,20 @@
 
         public TestHarness(Configuration configuration)
         {
-            board = new Board(configuration);
+            this.board = new Board(configuration);
         }
 
         public void Run()
         {
-            board.Initialize();
-            board.RaisePOWER();
+            this.board.Initialize();
+            this.board.RaisePOWER();
 
-            var cpu = board.CPU;
+            var cpu = this.board.CPU;
 
             while (cpu.Powered)
+            {
                 cpu.Step();
+            }
         }
     }
 }

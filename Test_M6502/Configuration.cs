@@ -1,26 +1,35 @@
-﻿namespace Test
+﻿// <copyright file="Configuration.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace Test
 {
     using EightBit;
 
     internal class Configuration
     {
-        private bool debugMode = false;
         private readonly ushort loadAddress = 0x400;
         private readonly ushort startAddress = 0x400;
         private readonly string romDirectory = "roms";
         private readonly string program = "6502_functional_test.bin";
+        private bool debugMode = false;
 
-        public Configuration() {}
-
-        public bool DebugMode {
-            get { return debugMode; }
-            set { debugMode = value; }
+        public Configuration()
+        {
         }
 
-        public ushort LoadAddress { get { return loadAddress; } }
-        public ushort StartAddress { get { return startAddress; } }
+        public bool DebugMode
+        {
+            get => this.debugMode;
+            set => this.debugMode = value;
+        }
 
-        public string RomDirectory { get { return romDirectory; } }
-        public string Program { get { return program; } }
+        public ushort LoadAddress { get => this.loadAddress; }
+
+        public ushort StartAddress { get => this.startAddress; }
+
+        public string RomDirectory { get => this.romDirectory; }
+
+        public string Program { get => this.program; }
     }
 }

@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="ClockedChip.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -6,26 +10,30 @@
     {
         private int cycles;
 
-        protected ClockedChip() { }
-
-        public int Cycles { get => cycles; protected set => cycles = value; }
+        protected ClockedChip()
+        {
+        }
 
         public event EventHandler<EventArgs> Ticked;
-  
+
+        public int Cycles { get => this.cycles; protected set => this.cycles = value; }
+
         public void Tick(int extra)
         {
             for (int i = 0; i < extra; ++i)
-                Tick();
+            {
+                this.Tick();
+            }
         }
 
         public void Tick()
         {
-            ++Cycles;
-            OnTicked();
+            ++this.Cycles;
+            this.OnTicked();
         }
 
-        protected virtual void OnTicked() => Ticked?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnTicked() => this.Ticked?.Invoke(this, EventArgs.Empty);
 
-        protected void ResetCycles() => Cycles = 0;
+        protected void ResetCycles() => this.Cycles = 0;
     }
 }

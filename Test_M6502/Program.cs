@@ -1,12 +1,16 @@
-﻿namespace Test
+﻿// <copyright file="Program.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace Test
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             var configuration = new Configuration();
 
-            //configuration.DebugMode = true;
+            ////configuration.DebugMode = true;
 
             var harness = new TestHarness(configuration);
             harness.Run();

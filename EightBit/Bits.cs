@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="Bits.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -21,6 +25,6 @@
         Bit13 = Bit12 << 1,
         Bit14 = Bit13 << 1,
         Bit15 = Bit14 << 1,
-        Bit16 = Bit15 << 1
+        Bit16 = Bit15 << 1,
     }
 }

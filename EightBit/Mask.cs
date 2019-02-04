@@ -1,7 +1,11 @@
-﻿using System;
+﻿// <copyright file="Mask.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
 
 namespace EightBit
 {
+    using System;
+
     public enum Mask
     {
         None = 0,
@@ -20,6 +24,6 @@ namespace EightBit
         Mask13 = Bits.Bit13 - 1,
         Mask14 = Bits.Bit14 - 1,
         Mask15 = Bits.Bit15 - 1,
-        Mask16 = Bits.Bit16 - 1
+        Mask16 = Bits.Bit16 - 1,
     }
 }
