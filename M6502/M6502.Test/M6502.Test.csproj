@@ -54,22 +54,24 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EightBit\EightBit.csproj">
+    <ProjectReference Include="..\..\EightBit\EightBit.csproj">
       <Project>{6ebf8857-62a3-4ef4-af21-c1844031d7e4}</Project>
       <Name>EightBit</Name>
     </ProjectReference>
-    <ProjectReference Include="..\M6502\M6502.csproj">
+    <ProjectReference Include="..\M6502.csproj">
       <Project>{3af29a4f-4294-4a9d-aac3-d9a48076bd19}</Project>
       <Name>M6502</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\StyleCop.Analyzers.Unstable.1.1.1.61\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="..\packages\StyleCop.Analyzers.Unstable.1.1.1.61\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
+    <Analyzer Include="..\..\packages\StyleCop.Analyzers.Unstable.1.1.1.61\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="..\..\packages\StyleCop.Analyzers.Unstable.1.1.1.61\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -59,7 +59,7 @@
     <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EightBit\EightBit.csproj">
+    <ProjectReference Include="..\EightBit.csproj">
       <Project>{6ebf8857-62a3-4ef4-af21-c1844031d7e4}</Project>
       <Name>EightBit</Name>
     </ProjectReference>
