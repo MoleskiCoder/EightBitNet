@@ -10,10 +10,6 @@ namespace EightBit
 
     public class Symbols
     {
-        private readonly Dictionary<ushort, string> labels;
-        private readonly Dictionary<ushort, string> constants;
-        private readonly Dictionary<string, ushort> scopes;
-        private readonly Dictionary<string, ushort> addresses;
         private readonly Dictionary<string, Dictionary<string, Dictionary<string, string>>> parsed;
 
         public Symbols()
@@ -23,10 +19,10 @@ namespace EightBit
 
         public Symbols(string path)
         {
-            this.labels = new Dictionary<ushort, string>();
-            this.constants = new Dictionary<ushort, string>();
-            this.scopes = new Dictionary<string, ushort>();
-            this.addresses = new Dictionary<string, ushort>();
+            this.Labels = new Dictionary<ushort, string>();
+            this.Constants = new Dictionary<ushort, string>();
+            this.Scopes = new Dictionary<string, ushort>();
+            this.Addresses = new Dictionary<string, ushort>();
             this.parsed = new Dictionary<string, Dictionary<string, Dictionary<string, string>>>();
 
             if (path.Length > 0)
@@ -37,13 +33,13 @@ namespace EightBit
             }
         }
 
-        public Dictionary<ushort, string> Labels => this.labels;
+        public Dictionary<ushort, string> Labels { get; }
 
-        public Dictionary<ushort, string> Constants => this.constants;
+        public Dictionary<ushort, string> Constants { get; }
 
-        public Dictionary<string, ushort> Scopes => this.scopes;
+        public Dictionary<string, ushort> Scopes { get; }
 
-        public Dictionary<string, ushort> Addresses => this.addresses;
+        public Dictionary<string, ushort> Addresses { get; }
 
         private void AssignScopes()
         {
@@ -54,7 +50,7 @@ namespace EightBit
                 var name = parsedScope["name"];
                 var trimmedName = name.Substring(1, name.Length - 2);
                 var size = parsedScope["size"];
-                this.scopes[trimmedName] = ushort.Parse(size);
+                this.Scopes[trimmedName] = ushort.Parse(size);
             }
         }
 
@@ -71,12 +67,12 @@ namespace EightBit
                 var symbolType = symbol["type"];
                 if (symbolType == "lab")
                 {
-                    this.labels[number] = trimmedName;
-                    this.addresses[trimmedName] = number;
+                    this.Labels[number] = trimmedName;
+                    this.Addresses[trimmedName] = number;
                 }
                 else if (symbolType == "equ")
                 {
-                    this.constants[number] = trimmedName;
+                    this.Constants[number] = trimmedName;
                 }
             }
         }

@@ -12,12 +12,6 @@ namespace EightBit
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
-        private byte x = 0;
-        private byte y = 0;
-        private byte a = 0;
-        private byte s = 0;
-        private byte p = 0;
-
         private ushort intermediate;
 
         private bool handlingRESET = false;
@@ -70,15 +64,15 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredRDY;
 
-        public byte X { get => this.x; set => this.x = value; }
+        public byte X { get; set; } = 0;
 
-        public byte Y { get => this.y; set => this.y = value; }
+        public byte Y { get; set; } = 0;
 
-        public byte A { get => this.a; set => this.a = value; }
+        public byte A { get; set; } = 0;
 
-        public byte S { get => this.s; set => this.s = value; }
+        public byte S { get; set; } = 0;
 
-        public byte P { get => this.p; set => this.p = value; }
+        public byte P { get; set; } = 0;
 
         private int InterruptMasked => this.P & (byte)StatusBits.IF;
 

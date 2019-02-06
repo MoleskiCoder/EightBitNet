@@ -8,9 +8,9 @@ namespace EightBit
 
     public class Disassembly
     {
-        private Bus bus;
-        private M6502 processor;
-        private Symbols symbols;
+        private readonly Bus bus;
+        private readonly M6502 processor;
+        private readonly Symbols symbols;
         private ushort address;
 
         public Disassembly(Bus bus, M6502 processor, Symbols symbols)
