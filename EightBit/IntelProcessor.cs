@@ -9,16 +9,14 @@ namespace EightBit
     public abstract class IntelProcessor : LittleEndianProcessor
     {
         private readonly IntelOpCodeDecoded[] decodedOpCodes = new IntelOpCodeDecoded[0x100];
-        private ushort sp;
-        private ushort memptr;
 
         private PinLevel haltLine;
 
         protected IntelProcessor(Bus bus)
         : base(bus)
         {
-            this.sp = (ushort)Mask.Mask16;
-            this.memptr = (ushort)Mask.Mask16;
+            this.SP = (ushort)Mask.Mask16;
+            this.MEMPTR = (ushort)Mask.Mask16;
 
             for (int i = 0; i < 0x100; ++i)
             {
@@ -34,9 +32,9 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredHALT;
 
-        public ushort SP { get => this.sp; set => this.sp = value; }
+        public ushort SP { get; set; }
 
-        public ushort MEMPTR { get => this.memptr; set => this.memptr = value; }
+        public ushort MEMPTR { get; set; }
 
         public abstract ushort AF { get; set; }
 

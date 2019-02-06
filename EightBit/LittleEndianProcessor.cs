@@ -42,7 +42,7 @@ namespace EightBit
         protected override ushort GetWordPaged(byte page, byte offset)
         {
             var low = this.BusRead(offset, page);
-            var high = this.BusRead((byte)(offset + 1), page);
+            var high = this.BusRead(++offset, page);
             return Chip.MakeWord(low, high);
         }
 
@@ -69,7 +69,7 @@ namespace EightBit
         protected override void SetWordPaged(byte page, byte offset, ushort value)
         {
             this.BusWrite(offset, page, Chip.LowByte(value));
-            this.BusWrite((byte)(offset + 1), page, Chip.HighByte(value));
+            this.BusWrite(++offset, page, Chip.HighByte(value));
         }
     }
 }

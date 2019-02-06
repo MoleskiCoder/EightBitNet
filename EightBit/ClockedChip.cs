@@ -8,15 +8,13 @@ namespace EightBit
 
     public class ClockedChip : Chip
     {
-        private int cycles;
-
         protected ClockedChip()
         {
         }
 
         public event EventHandler<EventArgs> Ticked;
 
-        public int Cycles { get => this.cycles; protected set => this.cycles = value; }
+        public int Cycles { get; protected set; }
 
         public void Tick(int extra)
         {

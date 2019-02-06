@@ -9,7 +9,6 @@ namespace EightBit
     public abstract class Bus : IMapper
     {
         private byte data;
-        private ushort address;
 
         public event EventHandler<EventArgs> WritingByte;
 
@@ -21,7 +20,7 @@ namespace EightBit
 
         public byte Data { get => this.data; set => this.data = value; }
 
-        public ushort Address { get => this.address; set => this.address = value; }
+        public ushort Address { get; set; }
 
         public abstract MemoryMapping Mapping(ushort absolute);
 

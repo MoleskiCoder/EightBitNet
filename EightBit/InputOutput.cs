@@ -8,8 +8,8 @@ namespace EightBit
 
     public sealed class InputOutput
     {
-        private byte[] input = new byte[0x100];
-        private byte[] output = new byte[0x100];
+        private readonly byte[] input = new byte[0x100];
+        private readonly byte[] output = new byte[0x100];
 
         public InputOutput()
         {

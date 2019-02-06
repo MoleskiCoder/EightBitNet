@@ -8,16 +8,12 @@ namespace EightBit
 
     public abstract class Processor : ClockedChip
     {
-        private readonly Bus bus;
-        private byte opcode;
-        private ushort pc = 0;
-
         private PinLevel resetLine;
         private PinLevel intLine;
 
         protected Processor(Bus memory)
         {
-            this.bus = memory;
+            this.Bus = memory;
         }
 
         public event EventHandler<EventArgs> RaisingRESET;
@@ -36,11 +32,11 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredINT;
 
-        public ushort PC { get => this.pc; set => this.pc = value; }
+        public ushort PC { get; set; }
 
-        public Bus Bus { get => this.bus; }
+        public Bus Bus { get; }
 
-        protected byte OpCode { get => this.opcode; set => this.opcode = value; }
+        protected byte OpCode { get; set; }
 
         public ref PinLevel RESET() => ref this.resetLine;
 
