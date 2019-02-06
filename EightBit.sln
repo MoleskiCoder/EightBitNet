@@ -7,14 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EightBit", "EightBit\EightB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M6502", "M6502\M6502.csproj", "{3AF29A4F-4294-4A9D-AAC3-D9A48076BD19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test_M6502", "Test_M6502\Test_M6502.csproj", "{854EDE2F-B54D-425C-8F68-EDA68BDC797E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M6502.Test", "Test_M6502\M6502.Test.csproj", "{854EDE2F-B54D-425C-8F68-EDA68BDC797E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestEightBit", "UnitTestEightBit\UnitTestEightBit.csproj", "{AA8282A3-212A-42DE-B778-BBAEB7E6D986}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EightBit.UnitTest", "UnitTestEightBit\EightBit.UnitTest.csproj", "{AA8282A3-212A-42DE-B778-BBAEB7E6D986}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64

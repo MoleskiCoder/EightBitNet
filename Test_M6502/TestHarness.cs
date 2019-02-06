@@ -2,7 +2,7 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Test
+namespace M6502.Test
 {
     internal class TestHarness
     {
