@@ -854,11 +854,11 @@ namespace EightBit
             this.P = ClearFlag(this.P, StatusBits.CF, Chip.HighByte(this.intermediate));
         }
 
-        private byte DEC(byte value) => this.Through(value - 1);
+        private byte DEC(byte value) => this.Through(--value);
 
         private byte EorR(byte operand, byte data) => this.Through(operand ^ data);
 
-        private byte INC(byte value) => this.Through(value + 1);
+        private byte INC(byte value) => this.Through(++value);
 
         private void JSR()
         {
