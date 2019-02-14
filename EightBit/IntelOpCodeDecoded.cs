@@ -6,11 +6,11 @@ namespace EightBit
 {
     public class IntelOpCodeDecoded
     {
-        private int x;
-        private int y;
-        private int z;
-        private int p;
-        private int q;
+        private readonly int x;
+        private readonly int y;
+        private readonly int z;
+        private readonly int p;
+        private readonly int q;
 
         public IntelOpCodeDecoded()
         {

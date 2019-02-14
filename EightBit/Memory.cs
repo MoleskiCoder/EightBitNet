@@ -16,10 +16,7 @@ namespace EightBit
 
         public abstract byte Peek(ushort address);
 
-        public virtual ref byte Reference(ushort address)
-        {
-            throw new NotImplementedException();
-        }
+        public virtual ref byte Reference(ushort address) => throw new NotImplementedException();
 
         public abstract int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1);
 

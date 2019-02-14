@@ -6,6 +6,6 @@ namespace EightBit
 {
     public interface IMapper
     {
-        MemoryMapping Mapping(ushort address);
+        MemoryMapping Mapping(ushort absolute);
     }
 }

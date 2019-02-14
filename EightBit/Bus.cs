@@ -55,10 +55,7 @@ namespace EightBit
             return this.Read();
         }
 
-        public byte Read(Register16 absolute)
-        {
-            return this.Read(absolute.Word);
-        }
+        public byte Read(Register16 absolute) => this.Read(absolute.Word);
 
         public byte Read(byte low, byte high)
         {
@@ -86,10 +83,7 @@ namespace EightBit
             this.Write(value);
         }
 
-        public void Write(Register16 absolute, byte value)
-        {
-            this.Write(absolute.Word, value);
-        }
+        public void Write(Register16 absolute, byte value) => this.Write(absolute.Word, value);
 
         public void Write(byte low, byte high, byte value)
         {

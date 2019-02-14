@@ -48,25 +48,13 @@ namespace EightBit
             this.Word = rhs.Word;
         }
 
-        public static Register16 operator ++(Register16 value)
-        {
-            return Increment(value);
-        }
+        public static Register16 operator ++(Register16 value) => Increment(value);
 
-        public static Register16 operator --(Register16 value)
-        {
-            return Decrement(value);
-        }
+        public static Register16 operator --(Register16 value) => Decrement(value);
 
-        public static bool operator ==(Register16 left, Register16 right)
-        {
-            return left.Equals(right);
-        }
+        public static bool operator ==(Register16 left, Register16 right) => left.Equals(right);
 
-        public static bool operator !=(Register16 left, Register16 right)
-        {
-            return !(left == right);
-        }
+        public static bool operator !=(Register16 left, Register16 right) => !(left == right);
 
         public static Register16 Increment(Register16 value)
         {
@@ -91,9 +79,6 @@ namespace EightBit
             return rhs.Word == this.Word;
         }
 
-        public override int GetHashCode()
-        {
-            return this.Word;
-        }
+        public override int GetHashCode() => this.Word;
     }
 }
