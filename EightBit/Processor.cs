@@ -10,6 +10,7 @@ namespace EightBit
     {
         private PinLevel resetLine;
         private PinLevel intLine;
+        private Register16 pc;
 
         protected Processor(Bus memory)
         {
@@ -32,11 +33,11 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredINT;
 
-        public ushort PC { get; set; }
-
         public Bus Bus { get; }
 
         protected byte OpCode { get; set; }
+
+        public ref Register16 PC() => ref this.pc;
 
         public ref PinLevel RESET() => ref this.resetLine;
 
@@ -63,11 +64,9 @@ namespace EightBit
             return this.Execute();
         }
 
-        public abstract ushort PeekWord(ushort address);
+        public abstract Register16 PeekWord(ushort address);
 
-        public abstract void PokeWord(ushort address, ushort value);
-
-        public ushort PeekWord(byte low, byte high) => this.PeekWord((ushort)(Chip.PromoteByte(high) | low));
+        public abstract void PokeWord(ushort address, Register16 value);
 
         public virtual void RaiseRESET()
         {
@@ -117,11 +116,16 @@ namespace EightBit
 
         protected virtual void HandleINT() => this.RaiseINT();
 
-        protected void BusWrite(byte low, byte high, byte data) => this.BusWrite(Chip.MakeWord(low, high), data);
+        protected void BusWrite(byte low, byte high, byte data)
+        {
+            this.Bus.Address().Low = low;
+            this.Bus.Address().High = high;
+            this.BusWrite(data);
+        }
 
         protected void BusWrite(ushort address, byte data)
         {
-            this.Bus.Address = address;
+            this.Bus.Address().Word = address;
             this.BusWrite(data);
         }
 
@@ -133,56 +137,61 @@ namespace EightBit
 
         protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
-        protected byte BusRead(byte low, byte high) => this.BusRead(Chip.MakeWord(low, high));
+        protected byte BusRead(byte low, byte high)
+        {
+            this.Bus.Address().Low = low;
+            this.Bus.Address().High = high;
+            return this.BusRead();
+        }
 
         protected byte BusRead(ushort address)
         {
-            this.Bus.Address = address;
+            this.Bus.Address().Word = address;
             return this.BusRead();
         }
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte FetchByte() => this.BusRead(this.PC++);
+        protected byte FetchByte() => this.BusRead(this.PC().Word++);
 
-        protected abstract ushort GetWord();
+        protected abstract Register16 GetWord();
 
-        protected abstract void SetWord(ushort value);
+        protected abstract void SetWord(Register16 value);
 
-        protected abstract ushort GetWordPaged(byte page, byte offset);
+        protected abstract Register16 GetWordPaged(byte page, byte offset);
 
-        protected abstract void SetWordPaged(byte page, byte offset, ushort value);
+        protected abstract void SetWordPaged(byte page, byte offset, Register16 value);
 
-        protected abstract ushort FetchWord();
+        protected abstract Register16 FetchWord();
 
         protected abstract void Push(byte value);
 
         protected abstract byte Pop();
 
-        protected abstract void PushWord(ushort value);
+        protected abstract void PushWord(Register16 value);
 
-        protected abstract ushort PopWord();
+        protected abstract Register16 PopWord();
 
-        protected ushort GetWord(ushort address)
+        protected Register16 GetWord(ushort address)
         {
-            this.Bus.Address = address;
+            this.Bus.Address().Word = address;
             return this.GetWord();
         }
 
-        protected void SetWord(ushort address, ushort value)
+        protected void SetWord(ushort address, Register16 value)
         {
-            this.Bus.Address = address;
+            this.Bus.Address().Word = address;
             this.SetWord(value);
         }
 
-        protected void Jump(ushort destination) => this.PC = destination;
+        protected void Jump(ushort destination) => this.PC().Word = destination;
 
         protected void Call(ushort destination)
         {
-            this.PushWord(this.PC);
+            this.PushWord(this.PC());
             this.Jump(destination);
         }
 
-        protected virtual void Return() => this.Jump(this.PopWord());
+        protected virtual void Return() => this.Jump(this.PopWord().Word);
     }
 }

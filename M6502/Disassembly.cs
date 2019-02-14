@@ -56,7 +56,7 @@ namespace EightBit
             output.Append(" ");
 
             var next = this.bus.Peek((ushort)(current + 1));
-            var relative = (ushort)(this.processor.PC + 2 + (sbyte)next);
+            var relative = (ushort)(this.processor.PC().Word + 2 + (sbyte)next);
 
             var aaa = (cell & 0b11100000) >> 5;
             var bbb = (cell & 0b00011100) >> 2;
@@ -550,7 +550,7 @@ namespace EightBit
 
         private ushort GetWord(ushort absolute)
         {
-            return this.processor.PeekWord(absolute);
+            return this.processor.PeekWord(absolute).Word;
         }
 
         private string Dump_Byte(ushort absolute)

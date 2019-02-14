@@ -8,6 +8,7 @@ namespace EightBit
 
     public abstract class Bus : IMapper
     {
+        private Register16 address;
         private byte data;
 
         public event EventHandler<EventArgs> WritingByte;
@@ -20,7 +21,7 @@ namespace EightBit
 
         public byte Data { get => this.data; set => this.data = value; }
 
-        public ushort Address { get; set; }
+        public ref Register16 Address() => ref this.address;
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
@@ -28,11 +29,15 @@ namespace EightBit
 
         public byte Peek(ushort absolute) => this.Reference(absolute);
 
+        public byte Peek(Register16 absolute) => this.Peek(absolute.Word);
+
         public byte Peek(byte low, byte high) => this.Reference(low, high);
 
         public void Poke(byte value) => this.Reference() = value;
 
         public byte Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
+
+        public byte Poke(Register16 absolute, byte value) => this.Poke(absolute.Word, value);
 
         public byte Poke(byte low, byte high, byte value) => this.Reference(low, high) = value;
 
@@ -46,11 +51,21 @@ namespace EightBit
 
         public byte Read(ushort absolute)
         {
-            this.Address = absolute;
+            this.Address().Word = absolute;
             return this.Read();
         }
 
-        public byte Read(byte low, byte high) => this.Read(Chip.MakeWord(low, high));
+        public byte Read(Register16 absolute)
+        {
+            return this.Read(absolute.Word);
+        }
+
+        public byte Read(byte low, byte high)
+        {
+            this.Address().Low = low;
+            this.Address().High = high;
+            return this.Read();
+        }
 
         public void Write()
         {
@@ -67,11 +82,21 @@ namespace EightBit
 
         public void Write(ushort absolute, byte value)
         {
-            this.Address = absolute;
+            this.Address().Word = absolute;
             this.Write(value);
         }
 
-        public void Write(byte low, byte high, byte value) => this.Write(Chip.MakeWord(low, high), value);
+        public void Write(Register16 absolute, byte value)
+        {
+            this.Write(absolute.Word, value);
+        }
+
+        public void Write(byte low, byte high, byte value)
+        {
+            this.Address().Low = low;
+            this.Address().High = high;
+            this.Write(value);
+        }
 
         public virtual void RaisePOWER()
         {
@@ -104,9 +129,11 @@ namespace EightBit
             return ref mapped.Memory.Reference(offset);
         }
 
-        protected ref byte Reference() => ref this.Reference(this.Address);
+        protected ref byte Reference(Register16 absolute) => ref this.Reference(absolute.Word);
 
-        protected ref byte Reference(byte low, byte high) => ref this.Reference(Chip.MakeWord(low, high));
+        protected ref byte Reference() => ref this.Reference(this.Address());
+
+        protected ref byte Reference(byte low, byte high) => ref this.Reference(new Register16(low, high).Word);
 
         ////[[nodiscard]] static std::map<uint16_t, std::vector<uint8_t>> parseHexFile(std::string path);
         ////void loadHexFile(std::string path);

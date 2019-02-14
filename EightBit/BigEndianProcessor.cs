@@ -10,65 +10,65 @@ namespace EightBit
         {
         }
 
-        public override ushort PeekWord(ushort address)
+        public override Register16 PeekWord(ushort address)
         {
             var high = this.Bus.Peek(address);
             var low = this.Bus.Peek(++address);
-            return Chip.MakeWord(low, high);
+            return new Register16(low, high);
         }
 
-        public override void PokeWord(ushort address, ushort value)
+        public override void PokeWord(ushort address, Register16 value)
         {
-            this.Bus.Poke(address, Chip.LowByte(value));
-            this.Bus.Poke(++address, Chip.HighByte(value));
+            this.Bus.Poke(address, value.Low);
+            this.Bus.Poke(++address, value.High);
         }
 
-        protected override ushort FetchWord()
+        protected override Register16 FetchWord()
         {
             var high = this.FetchByte();
             var low = this.FetchByte();
-            return Chip.MakeWord(low, high);
+            return new Register16(low, high);
         }
 
-        protected override ushort GetWord()
+        protected override Register16 GetWord()
         {
             var high = this.BusRead();
-            ++this.Bus.Address;
+            ++this.Bus.Address();
             var low = this.BusRead();
-            return Chip.MakeWord(low, high);
+            return new Register16(low, high);
         }
 
-        protected override ushort GetWordPaged(byte page, byte offset)
+        protected override Register16 GetWordPaged(byte page, byte offset)
         {
             var high = this.BusRead(offset, page);
             var low = this.BusRead(++offset, page);
-            return Chip.MakeWord(low, high);
+            return new Register16(low, high);
         }
 
-        protected override ushort PopWord()
+        protected override Register16 PopWord()
         {
             var high = this.Pop();
             var low = this.Pop();
-            return Chip.MakeWord(low, high);
+            return new Register16(low, high);
         }
 
-        protected override void PushWord(ushort value)
+        protected override void PushWord(Register16 value)
         {
-            this.Push(Chip.LowByte(value));
-            this.Push(Chip.HighByte(value));
+            this.Push(value.Low);
+            this.Push(value.High);
         }
 
-        protected override void SetWord(ushort value)
+        protected override void SetWord(Register16 value)
         {
-            this.BusWrite(Chip.HighByte(value));
-            ++this.Bus.Address;
-            this.BusWrite(Chip.LowByte(value));
+            this.BusWrite(value.High);
+            ++this.Bus.Address();
+            this.BusWrite(value.Low);
         }
 
-        protected override void SetWordPaged(byte page, byte offset, ushort value)
+        protected override void SetWordPaged(byte page, byte offset, Register16 value)
         {
-            this.BusWrite(offset, page, Chip.HighByte(value));
-            this.BusWrite(++offset, page, Chip.LowByte(value));
+            this.BusWrite(offset, page, value.High);
+            this.BusWrite(++offset, page, value.Low);
         }
     }
 }

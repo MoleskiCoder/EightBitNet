@@ -8,8 +8,8 @@ namespace M6502.Test
 
     internal class Configuration
     {
-        private readonly ushort loadAddress = 0x400;
-        private readonly ushort startAddress = 0x400;
+        private readonly Register16 loadAddress = new Register16(0x400);
+        private readonly Register16 startAddress = new Register16(0x400);
         private readonly string romDirectory = "roms";
         private readonly string program = "6502_functional_test.bin";
         private bool debugMode = false;
@@ -24,9 +24,9 @@ namespace M6502.Test
             set => this.debugMode = value;
         }
 
-        public ushort LoadAddress { get => this.loadAddress; }
+        public Register16 LoadAddress { get => this.loadAddress; }
 
-        public ushort StartAddress { get => this.startAddress; }
+        public Register16 StartAddress { get => this.startAddress; }
 
         public string RomDirectory { get => this.romDirectory; }
 

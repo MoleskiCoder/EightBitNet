@@ -52,7 +52,7 @@ namespace M6502.Test
             var programFilename = this.configuration.Program;
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress);
+            this.ram.Load(programPath, loadAddress.Word);
 
             if (this.configuration.DebugMode)
             {
@@ -72,7 +72,7 @@ namespace M6502.Test
 
         private void CPU_ExecutedInstruction(object sender, System.EventArgs e)
         {
-            var pc = this.CPU.PC;
+            var pc = this.CPU.PC().Word;
             if (this.oldPC != pc)
             {
                 this.oldPC = pc;
@@ -89,7 +89,7 @@ namespace M6502.Test
 
         private void CPU_ExecutingInstruction(object sender, System.EventArgs e)
         {
-            var address = this.CPU.PC;
+            var address = this.CPU.PC().Word;
             var cell = this.Peek(address);
 
             var output = new StringBuilder();
