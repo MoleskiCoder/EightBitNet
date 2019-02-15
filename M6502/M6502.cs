@@ -233,7 +233,7 @@ namespace EightBit
                 case 0x49: this.A = this.EorR(this.A, this.AM_Immediate()); break;                                              // EOR (immediate)
                 case 0x4a: this.BusRead(); this.A = this.LSR(this.A); break;                                                    // LSR A (implied)
                 case 0x4b: this.ASR(this.AM_Immediate()); break;                                                                // *ASR (immediate)
-                case 0x4c: this.Jump(this.Address_Absolute().Word); break;                                                      // JMP (absolute)
+                case 0x4c: this.Jump(this.Address_Absolute()); break;                                                           // JMP (absolute)
                 case 0x4d: this.A = this.EorR(this.A, this.AM_Absolute()); break;                                               // EOR (absolute)
                 case 0x4e: this.BusReadModifyWrite(this.LSR(this.AM_Absolute())); break;                                        // LSR (absolute)
                 case 0x4f: this.SRE(this.AM_Absolute()); break;                                                                 // *SRE (absolute)
@@ -267,7 +267,7 @@ namespace EightBit
                 case 0x69: this.A = this.ADC(this.A, this.AM_Immediate()); break;                                               // ADC (immediate)
                 case 0x6a: this.BusRead(); this.A = this.ROR(this.A); break;                                                    // ROR A (implied)
                 case 0x6b: this.ARR(this.AM_Immediate()); break;                                                                // *ARR (immediate)
-                case 0x6c: this.Jump(this.Address_Indirect().Word); break;                                                      // JMP (indirect)
+                case 0x6c: this.Jump(this.Address_Indirect()); break;                                                           // JMP (indirect)
                 case 0x6d: this.A = this.ADC(this.A, this.AM_Absolute()); break;                                                // ADC (absolute)
                 case 0x6e: this.BusReadModifyWrite(this.ROR(this.AM_Absolute())); break;                                        // ROR (absolute)
                 case 0x6f: this.RRA(this.AM_Absolute()); break;                                                                 // *RRA (absolute)
@@ -290,9 +290,9 @@ namespace EightBit
                 case 0x7f: this.RRA(this.AM_AbsoluteX()); break;                                                                // *RRA (absolute, X)
 
                 case 0x80: this.AM_Immediate(); break;                                                                          // *NOP (immediate)
-                case 0x81: this.BusWrite(this.Address_IndexedIndirectX().Word, this.A); break;                                  // STA (indexed indirect X)
+                case 0x81: this.BusWrite(this.Address_IndexedIndirectX(), this.A); break;                                       // STA (indexed indirect X)
                 case 0x82: this.AM_Immediate(); break;                                                                          // *NOP (immediate)
-                case 0x83: this.BusWrite(this.Address_IndexedIndirectX().Word, (byte)(this.A & this.X)); break;                 // *SAX (indexed indirect X)
+                case 0x83: this.BusWrite(this.Address_IndexedIndirectX(), (byte)(this.A & this.X)); break;                      // *SAX (indexed indirect X)
                 case 0x84: this.BusWrite(this.Address_ZeroPage(), this.Y); break;                                               // STY (zero page)
                 case 0x85: this.BusWrite(this.Address_ZeroPage(), this.A); break;                                               // STA (zero page)
                 case 0x86: this.BusWrite(this.Address_ZeroPage(), this.X); break;                                               // STX (zero page)
@@ -301,10 +301,10 @@ namespace EightBit
                 case 0x89: this.AM_Immediate(); break;                                                                          // *NOP (immediate)
                 case 0x8a: this.BusRead(); this.A = this.Through(this.X); break;                                                // TXA (implied)
                 case 0x8b: break;
-                case 0x8c: this.BusWrite(this.Address_Absolute().Word, this.Y); break;                                          // STY (absolute)
-                case 0x8d: this.BusWrite(this.Address_Absolute().Word, this.A); break;                                          // STA (absolute)
-                case 0x8e: this.BusWrite(this.Address_Absolute().Word, this.X); break;                                          // STX (absolute)
-                case 0x8f: this.BusWrite(this.Address_Absolute().Word, (byte)(this.A & this.X)); break;                         // *SAX (absolute)
+                case 0x8c: this.BusWrite(this.Address_Absolute(), this.Y); break;                                               // STY (absolute)
+                case 0x8d: this.BusWrite(this.Address_Absolute(), this.A); break;                                               // STA (absolute)
+                case 0x8e: this.BusWrite(this.Address_Absolute(), this.X); break;                                               // STX (absolute)
+                case 0x8f: this.BusWrite(this.Address_Absolute(), (byte)(this.A & this.X)); break;                              // *SAX (absolute)
 
                 case 0x90: this.Branch(this.Carry == 0); break;                                                                 // BCC (relative)
                 case 0x91: this.AM_IndirectIndexedY(); this.BusWrite(this.A); break;                                            // STA (indirect indexed Y)
@@ -579,7 +579,7 @@ namespace EightBit
 
             this.P = SetFlag(this.P, StatusBits.IF);   // Disable IRQ
             var vector = reset ? RSTvector : (nmi ? NMIvector : IRQvector);
-            this.Jump(this.GetWordPaged(0xff, vector).Word);
+            this.Jump(this.GetWordPaged(0xff, vector));
             this.handlingRESET = this.handlingNMI = this.handlingINT = false;
         }
 
@@ -652,7 +652,7 @@ namespace EightBit
 
         private byte AM_Immediate() => this.FetchByte();
 
-        private byte AM_Absolute() => this.BusRead(this.Address_Absolute().Word);
+        private byte AM_Absolute() => this.BusRead(this.Address_Absolute());
 
         private byte AM_ZeroPage() => this.BusRead(this.Address_ZeroPage());
 
@@ -688,7 +688,7 @@ namespace EightBit
 
         private byte AM_ZeroPageY() => this.BusRead(this.Address_ZeroPageY());
 
-        private byte AM_IndexedIndirectX() => this.BusRead(this.Address_IndexedIndirectX().Word);
+        private byte AM_IndexedIndirectX() => this.BusRead(this.Address_IndexedIndirectX());
 
         private byte AM_IndirectIndexedY()
         {
@@ -698,7 +698,7 @@ namespace EightBit
             var possible = this.BusRead(address.Low, page);
             if (page != address.High)
             {
-                possible = this.BusRead(address.Word);
+                possible = this.BusRead(address);
             }
 
             return possible;
@@ -981,7 +981,7 @@ namespace EightBit
             var address = crossed.Item1;
             var page = crossed.Item2;
             this.BusRead(address.Low, page);
-            this.BusWrite(address.Word, this.A);
+            this.BusWrite(address, this.A);
         }
 
         private void STA_AbsoluteY()
@@ -990,7 +990,7 @@ namespace EightBit
             var address = crossed.Item1;
             var page = crossed.Item2;
             this.BusRead(address.Low, page);
-            this.BusWrite(address.Word, this.A);
+            this.BusWrite(address, this.A);
         }
     }
 }

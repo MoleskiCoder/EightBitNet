@@ -97,7 +97,7 @@ namespace EightBit
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.PC().Word = 0;
+            this.Jump(0);
         }
 
         protected sealed override void Push(byte value) => this.Bus.Write(--this.SP(), value);
@@ -123,7 +123,7 @@ namespace EightBit
         {
             this.MEMPTR().Low = address;
             this.MEMPTR().High = 0;
-            this.Call(this.MEMPTR().Word);
+            this.Call(this.MEMPTR());
         }
 
         protected bool CallConditional(bool condition)
@@ -131,7 +131,7 @@ namespace EightBit
             this.MEMPTR().Word = this.FetchWord().Word;
             if (condition)
             {
-                this.Call(this.MEMPTR().Word);
+                this.Call(this.MEMPTR());
             }
 
             return condition;
@@ -142,7 +142,7 @@ namespace EightBit
             this.MEMPTR().Word = this.FetchWord().Word;
             if (condition)
             {
-                this.Jump(this.MEMPTR().Word);
+                this.Jump(this.MEMPTR());
             }
 
             return condition;
@@ -161,7 +161,7 @@ namespace EightBit
         protected void JumpRelative(sbyte offset)
         {
             this.MEMPTR().Word = (ushort)(this.PC().Word + offset);
-            this.Jump(this.MEMPTR().Word);
+            this.Jump(this.MEMPTR());
         }
 
         protected bool JumpRelativeConditional(bool condition)

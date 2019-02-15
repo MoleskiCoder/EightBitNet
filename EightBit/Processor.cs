@@ -129,6 +129,8 @@ namespace EightBit
             this.BusWrite(data);
         }
 
+        protected void BusWrite(Register16 address, byte data) => this.BusWrite(address.Word, data);
+
         protected void BusWrite(byte data)
         {
             this.Bus.Data = data;
@@ -150,9 +152,11 @@ namespace EightBit
             return this.BusRead();
         }
 
+        protected byte BusRead(Register16 address) => this.BusRead(address.Word);
+
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte FetchByte() => this.BusRead(this.PC().Word++);
+        protected byte FetchByte() => this.BusRead(this.PC()++);
 
         protected abstract Register16 GetWord();
 
@@ -186,11 +190,15 @@ namespace EightBit
 
         protected void Jump(ushort destination) => this.PC().Word = destination;
 
+        protected void Jump(Register16 destination) => this.Jump(destination.Word);
+
         protected void Call(ushort destination)
         {
             this.PushWord(this.PC());
             this.Jump(destination);
         }
+
+        protected void Call(Register16 destination) => this.Call(destination.Word);
 
         protected virtual void Return() => this.Jump(this.PopWord().Word);
     }
