@@ -14,6 +14,7 @@ namespace M6502.Test
         private readonly M6502 cpu;
         private readonly Symbols symbols;
         private readonly Disassembly disassembler;
+        private readonly MemoryMapping mapping;
 
         private ushort oldPC;
 
@@ -24,6 +25,7 @@ namespace M6502.Test
             this.cpu = new M6502(this);
             this.symbols = new Symbols();
             this.disassembler = new Disassembly(this, this.cpu, this.symbols);
+            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
 
             this.oldPC = (ushort)Mask.Mask16;
         }
@@ -65,10 +67,7 @@ namespace M6502.Test
             this.cpu.PokeWord(0x01, this.configuration.StartAddress);
         }
 
-        public override MemoryMapping Mapping(ushort absolute)
-        {
-            return new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
-        }
+        public override MemoryMapping Mapping(ushort absolute) => this.mapping;
 
         private void CPU_ExecutedInstruction(object sender, System.EventArgs e)
         {
