@@ -27,8 +27,9 @@ namespace EightBit
         }
 
         public Register16(ushort value)
-        : this(Chip.LowByte(value), Chip.HighByte(value))
         {
+            this.Low = this.High = 0;
+            this.Word = value;
         }
 
         public Register16(int value)
