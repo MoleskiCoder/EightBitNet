@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     public enum Mask
     {
         None = 0,

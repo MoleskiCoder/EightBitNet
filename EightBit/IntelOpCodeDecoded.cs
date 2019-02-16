@@ -6,23 +6,27 @@ namespace EightBit
 {
     public class IntelOpCodeDecoded
     {
-        private readonly int x;
-        private readonly int y;
-        private readonly int z;
-        private readonly int p;
-        private readonly int q;
-
         public IntelOpCodeDecoded()
         {
         }
 
         public IntelOpCodeDecoded(byte opCode)
         {
-            this.x = (opCode & 0b11000000) >> 6;    // 0 - 3
-            this.y = (opCode & 0b00111000) >> 3;    // 0 - 7
-            this.z = opCode & 0b00000111;           // 0 - 7
-            this.p = (this.y & 0b110) >> 1;         // 0 - 3
-            this.q = this.y & 1;                    // 0 - 1
+            this.X = (opCode & 0b11000000) >> 6;    // 0 - 3
+            this.Y = (opCode & 0b00111000) >> 3;    // 0 - 7
+            this.Z = opCode & 0b00000111;           // 0 - 7
+            this.P = (this.Y & 0b110) >> 1;         // 0 - 3
+            this.Q = this.Y & 1;                    // 0 - 1
         }
+
+        public int X { get; }
+
+        public int Y { get; }
+
+        public int Z { get; }
+
+        public int P { get; }
+
+        public int Q { get; }
     }
 }

@@ -51,5 +51,23 @@ namespace EightBit
         public static int PromoteNibble(byte value) => LowByte(value << 4);
 
         public static int DemoteNibble(byte value) => HighNibble(value);
+
+        public static int CountBits(int value)
+        {
+            int count = 0;
+            while (value != 0)
+            {
+                ++count;
+                value &= value - 1;
+            }
+
+            return count;
+        }
+
+        public static int CountBits(byte value) => CountBits((int)value);
+
+        public static bool EvenParity(int value) => CountBits(value) % 2 == 0;
+
+        public static bool EvenParity(byte value) => EvenParity((int)value);
     }
 }

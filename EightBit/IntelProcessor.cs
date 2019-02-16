@@ -8,6 +8,9 @@ namespace EightBit
 
     public abstract class IntelProcessor : LittleEndianProcessor
     {
+        private static readonly int[] HalfCarryTableAdd = new int[8] { 0, 0, 1, 0, 1, 0, 1, 1 };
+        private static readonly int[] HalfCarryTableSub = new int[8] { 0, 1, 1, 1, 0, 0, 0, 1 };
+
         private readonly IntelOpCodeDecoded[] decodedOpCodes = new IntelOpCodeDecoded[0x100];
 
         private Register16 sp = new Register16((ushort)Mask.Mask16);
@@ -84,6 +87,23 @@ namespace EightBit
             this.OnLoweringHALT();
             this.HALT().Lower();
             this.OnLoweredHALT();
+        }
+
+        protected static int BuildHalfCarryIndex(byte before, byte value, int calculation)
+        {
+            return ((before & 0x88) >> 1) | ((value & 0x88) >> 2) | ((calculation & 0x88) >> 3);
+        }
+
+        protected static int CalculateHalfCarryAdd(byte before, byte value, int calculation)
+        {
+            var index = BuildHalfCarryIndex(before, value, calculation);
+            return HalfCarryTableAdd[index & (int)Mask.Mask3];
+        }
+
+        protected static int CalculateHalfCarrySub(byte before, byte value, int calculation)
+        {
+            var index = BuildHalfCarryIndex(before, value, calculation);
+            return HalfCarryTableSub[index & (int)Mask.Mask3];
         }
 
         protected virtual void OnRaisingHALT() => this.RaisingHALT?.Invoke(this, EventArgs.Empty);
@@ -192,5 +212,7 @@ namespace EightBit
             ++this.PC();
             this.RaiseHALT();
         }
+
+        protected IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this.decodedOpCodes[opCode];
     }
 }

@@ -76,7 +76,7 @@ namespace EightBit
                 return false;
             }
 
-            Register16 rhs = (Register16)obj;
+            var rhs = (Register16)obj;
             return rhs.Word == this.Word;
         }
 
