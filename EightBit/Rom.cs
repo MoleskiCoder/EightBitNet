@@ -20,7 +20,7 @@ namespace EightBit
 
         public override int Size => this.bytes.Length;
 
-        public static int Load(FileStream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
+        public static int Load(Stream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
             var size = (int)file.Length;
 

@@ -533,6 +533,18 @@ namespace EightBit
             this.OpCode = 0x00; // BRK
         }
 
+        protected override sealed void BusWrite()
+        {
+            this.Tick();
+            base.BusWrite();
+        }
+
+        protected override sealed byte BusRead()
+        {
+            this.Tick();
+            return base.BusRead();
+        }
+
         private static byte SetFlag(byte f, StatusBits flag) => SetFlag(f, (byte)flag);
 
         private static byte SetFlag(byte f, StatusBits flag, int condition) => SetFlag(f, (byte)flag, condition);

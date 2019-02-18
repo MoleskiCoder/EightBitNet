@@ -68,6 +68,8 @@ namespace EightBit
 
         public ref PinLevel HALT() => ref this.haltLine;
 
+        public IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this.decodedOpCodes[opCode];
+
         public override void RaisePOWER()
         {
             base.RaisePOWER();
@@ -212,7 +214,5 @@ namespace EightBit
             ++this.PC();
             this.RaiseHALT();
         }
-
-        protected IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this.decodedOpCodes[opCode];
     }
 }
