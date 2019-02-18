@@ -6,30 +6,21 @@ namespace EightBit
 {
     using System.Runtime.InteropServices;
 
-    // This'll only work for little endian host processors...
-    [StructLayout(LayoutKind.Explicit)]
     public struct Register16
     {
-        [FieldOffset(0)]
         public byte Low;
-
-        [FieldOffset(1)]
         public byte High;
-
-        [FieldOffset(0)]
-        public ushort Word;
 
         public Register16(byte low, byte high)
         {
-            this.Word = 0;
             this.Low = low;
             this.High = high;
         }
 
         public Register16(ushort value)
         {
-            this.Low = this.High = 0;
-            this.Word = value;
+            this.Low = Chip.LowByte(value);
+            this.High = Chip.HighByte(value);
         }
 
         public Register16(int value)
@@ -44,9 +35,22 @@ namespace EightBit
 
         public Register16(Register16 rhs)
         {
-            this.Low = 0;
-            this.High = 0;
-            this.Word = rhs.Word;
+            this.Low = rhs.Low;
+            this.High = rhs.High;
+        }
+
+        public ushort Word
+        {
+            get
+            {
+                return (ushort)(this.Low | Chip.PromoteByte(this.High));
+            }
+
+            set
+            {
+                this.Low = Chip.LowByte(value);
+                this.High = Chip.HighByte(value);
+            }
         }
 
         public static Register16 operator ++(Register16 value) => Increment(value);
@@ -77,7 +81,7 @@ namespace EightBit
             }
 
             var rhs = (Register16)obj;
-            return rhs.Word == this.Word;
+            return rhs.Low == this.Low && rhs.High == this.High;
         }
 
         public override int GetHashCode() => this.Word;
