@@ -12,7 +12,7 @@ namespace EightBit
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
-        private ushort intermediate;
+        private Register16 intermediate;
 
         private bool handlingRESET = false;
         private bool handlingNMI = false;
@@ -658,8 +658,8 @@ namespace EightBit
         private ushort Address_relative_byte()
         {
             var offset = (sbyte)this.FetchByte();
-            this.intermediate = (ushort)(this.PC().Word + offset);
-            return this.intermediate;
+            this.intermediate.Word = (ushort)(this.PC().Word + offset);
+            return this.intermediate.Word;
         }
 
         private byte AM_Immediate() => this.FetchByte();
@@ -760,10 +760,9 @@ namespace EightBit
         {
             var returned = this.SUB(operand, data, ~this.P & (int)StatusBits.CF);
 
-            var difference = this.intermediate;
-            this.AdjustNZ(Chip.LowByte(difference));
-            this.P = SetFlag(this.P, StatusBits.VF, (operand ^ data) & (operand ^ Chip.LowByte(difference)) & (int)StatusBits.NF);
-            this.P = ClearFlag(this.P, StatusBits.CF, Chip.HighByte(difference));
+            this.AdjustNZ(this.intermediate.Low);
+            this.P = SetFlag(this.P, StatusBits.VF, (operand ^ data) & (operand ^ this.intermediate.Low) & (int)StatusBits.NF);
+            this.P = ClearFlag(this.P, StatusBits.CF, this.intermediate.High);
 
             return returned;
         }
@@ -775,13 +774,13 @@ namespace EightBit
 
         private byte SUB_b(byte operand, byte data, int borrow)
         {
-            this.intermediate = (ushort)(operand - data - borrow);
-            return Chip.LowByte(this.intermediate);
+            this.intermediate.Word = (ushort)(operand - data - borrow);
+            return this.intermediate.Low;
         }
 
         private byte SUB_d(byte operand, byte data, int borrow)
         {
-            this.intermediate = (ushort)(operand - data - borrow);
+            this.intermediate.Word = (ushort)(operand - data - borrow);
 
             var low = (byte)(LowNibble(operand) - LowNibble(data) - borrow);
             var lowNegative = low & (byte)StatusBits.NF;
@@ -803,7 +802,7 @@ namespace EightBit
         private byte ADC(byte operand, byte data)
         {
             var returned = this.ADD(operand, data, this.Carry);
-            this.AdjustNZ(Chip.LowByte(this.intermediate));
+            this.AdjustNZ(this.intermediate.Low);
             return returned;
         }
 
@@ -814,17 +813,17 @@ namespace EightBit
 
         private byte ADD_b(byte operand, byte data, int carry)
         {
-            this.intermediate = (ushort)(operand + data + carry);
+            this.intermediate.Word = (ushort)(operand + data + carry);
 
-            this.P = SetFlag(this.P, StatusBits.VF, ~(operand ^ data) & (operand ^ Chip.LowByte(this.intermediate)) & (int)StatusBits.NF);
-            this.P = SetFlag(this.P, StatusBits.CF, Chip.HighByte(this.intermediate) & (int)StatusBits.CF);
+            this.P = SetFlag(this.P, StatusBits.VF, ~(operand ^ data) & (operand ^ this.intermediate.Low) & (int)StatusBits.NF);
+            this.P = SetFlag(this.P, StatusBits.CF, this.intermediate.High & (int)StatusBits.CF);
 
-            return Chip.LowByte(this.intermediate);
+            return this.intermediate.Low;
         }
 
         private byte ADD_d(byte operand, byte data, int carry)
         {
-            this.intermediate = (ushort)(operand + data + carry);
+            this.intermediate.Word = (ushort)(operand + data + carry);
 
             var low = (byte)(LowNibble(operand) + LowNibble(data) + carry);
             if (low > 9)
@@ -862,9 +861,9 @@ namespace EightBit
 
         private void CMP(byte first, byte second)
         {
-            this.intermediate = (ushort)(first - second);
-            this.AdjustNZ(Chip.LowByte(this.intermediate));
-            this.P = ClearFlag(this.P, StatusBits.CF, Chip.HighByte(this.intermediate));
+            this.intermediate.Word = (ushort)(first - second);
+            this.AdjustNZ(this.intermediate.Low);
+            this.P = ClearFlag(this.P, StatusBits.CF, this.intermediate.High);
         }
 
         private byte DEC(byte value) => this.Through(--value);
@@ -948,7 +947,7 @@ namespace EightBit
         private void AXS(byte value)
         {
             this.X = this.Through(this.SUB((byte)(this.A & this.X), value));
-            this.P = ClearFlag(this.P, StatusBits.CF, Chip.HighByte(this.intermediate));
+            this.P = ClearFlag(this.P, StatusBits.CF, this.intermediate.High);
         }
 
         private void DCP(byte value)
