@@ -12,8 +12,10 @@ namespace M6502.Test
 
             ////configuration.DebugMode = true;
 
-            var harness = new TestHarness(configuration);
-            harness.Run();
+            using (var harness = new TestHarness(configuration))
+            {
+                harness.Run();
+            }
         }
     }
 }

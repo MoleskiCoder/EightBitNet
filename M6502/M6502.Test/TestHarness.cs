@@ -4,13 +4,27 @@
 
 namespace M6502.Test
 {
-    internal class TestHarness
+    using System;
+    using System.Diagnostics;
+
+    internal class TestHarness : IDisposable
     {
-        private Board board;
+        private readonly Stopwatch timer = new Stopwatch();
+        private readonly Board board;
+        private long totalCycles = 0;
+        private long instructions = 0;
+
+        private bool disposed = false;
 
         public TestHarness(Configuration configuration)
         {
             this.board = new Board(configuration);
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public void Run()
@@ -20,9 +34,27 @@ namespace M6502.Test
 
             var cpu = this.board.CPU;
 
+            this.timer.Start();
             while (cpu.Powered)
             {
-                cpu.Step();
+                this.totalCycles += cpu.Step();
+                ++this.instructions;
+            }
+
+            this.timer.Stop();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.disposed)
+            {
+                if (disposing)
+                {
+                    System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles}");
+                    System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
+                }
+
+                this.disposed = true;
             }
         }
     }
