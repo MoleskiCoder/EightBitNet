@@ -1,19 +1,15 @@
-﻿// <copyright file="AssemblyInfo.cs" company="Adrian Conlon">
-// Copyright (c) Adrian Conlon. All rights reserved.
-// </copyright>
-
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Z80")]
+[assembly: AssemblyTitle("Z80.Test")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Z80")]
+[assembly: AssemblyProduct("Z80.Test")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -24,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c00648c1-bac1-4efb-816f-e87c091619d7")]
+[assembly: Guid("f749beae-8903-400b-875c-1220adcfef08")]
 
 // Version information for an assembly consists of the following four values:
 //
