@@ -21,6 +21,12 @@
             return FromByte(input);
         }
 
+        public static RefreshRegister operator ++(RefreshRegister value) => Increment(value);
+
+        public static bool operator ==(RefreshRegister left, RefreshRegister right) => left.Equals(right);
+
+        public static bool operator !=(RefreshRegister left, RefreshRegister right) => !(left == right);
+
         public static byte ToByte(RefreshRegister input)
         {
             return (byte)((input.high << 7) | input.variable);
@@ -30,12 +36,6 @@
         {
             return new RefreshRegister(input);
         }
-
-        public static RefreshRegister operator ++(RefreshRegister value) => Increment(value);
-
-        public static bool operator ==(RefreshRegister left, RefreshRegister right) => left.Equals(right);
-
-        public static bool operator !=(RefreshRegister left, RefreshRegister right) => !(left == right);
 
         public static RefreshRegister Increment(RefreshRegister value)
         {

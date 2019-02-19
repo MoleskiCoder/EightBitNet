@@ -13,7 +13,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestLowByte()
         {
-            ushort input = 0xf00f;
+            const ushort input = 0xf00f;
             byte low = Chip.LowByte(input);
             Assert.AreEqual(0xf, low);
         }
@@ -21,7 +21,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestHighByte()
         {
-            ushort input = 0xf00f;
+            const ushort input = 0xf00f;
             byte high = Chip.HighByte(input);
             Assert.AreEqual(0xf0, high);
         }
@@ -109,7 +109,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestLowerPart()
         {
-            ushort input = 0xf00f;
+            const ushort input = 0xf00f;
             ushort lower = Chip.LowerPart(input);
             Assert.AreEqual(0xf, lower);
         }
@@ -117,7 +117,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestHigherPart()
         {
-            ushort input = 0xf00f;
+            const ushort input = 0xf00f;
             ushort higher = Chip.HigherPart(input);
             Assert.AreEqual(0xf000, higher);
         }
@@ -125,7 +125,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestDemoteByte()
         {
-            ushort input = 0xf00f;
+            const ushort input = 0xf00f;
             byte demoted = Chip.DemoteByte(input);
             Assert.AreEqual(0xf0, demoted);
         }
@@ -133,7 +133,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestPromoteByte()
         {
-            byte input = 0xf0;
+            const byte input = 0xf0;
             ushort promoted = Chip.PromoteByte(input);
             Assert.AreEqual(0xf000, promoted);
         }
@@ -141,7 +141,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestLowNibble()
         {
-            byte input = 0xab;
+            const byte input = 0xab;
             int nibble = Chip.LowNibble(input);
             Assert.AreEqual(0xb, nibble);
         }
@@ -149,7 +149,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestHighNibble()
         {
-            byte input = 0xab;
+            const byte input = 0xab;
             int nibble = Chip.HighNibble(input);
             Assert.AreEqual(0xa, nibble);
         }
@@ -157,7 +157,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestDemoteNibble()
         {
-            byte input = 0xab;
+            const byte input = 0xab;
             int nibble = Chip.DemoteNibble(input);
             Assert.AreEqual(0xa, nibble);
         }
@@ -165,7 +165,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestPromoteNibble()
         {
-            byte input = 0xab;
+            const byte input = 0xab;
             int nibble = Chip.PromoteNibble(input);
             Assert.AreEqual(0xb0, nibble);
         }
@@ -173,7 +173,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestHigherNibble()
         {
-            byte input = 0xab;
+            const byte input = 0xab;
             int nibble = Chip.HigherNibble(input);
             Assert.AreEqual(0xa0, nibble);
         }
@@ -181,7 +181,7 @@ namespace UnitTestEightBit
         [TestMethod]
         public void TestLowerNibble()
         {
-            byte input = 0xab;
+            const byte input = 0xab;
             int nibble = Chip.LowerNibble(input);
             Assert.AreEqual(0xb, nibble);
         }
