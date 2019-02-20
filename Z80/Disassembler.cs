@@ -55,12 +55,12 @@
             var im = cpu.IM;
 
             return
-                  $"PC={pc.Word:X4} SP={sp.Word:X4} "
-                + $"A={a:X2} F={AsFlags(f)} "
-                + $"B={b:X2} C={c:X2} "
-                + $"D={d:X2} E={e:X2} "
-                + $"H={h:X2} L={l:X2} "
-                + $"I={i:X2} R={(byte)r:X2} "
+                  $"PC={pc.Word:x4} SP={sp.Word:x4} "
+                + $"A={a:x2} F={AsFlags(f)} "
+                + $"B={b:x2} C={c:x2} "
+                + $"D={d:x2} E={e:x2} "
+                + $"H={h:x2} L={l:x2} "
+                + $"I={i:x2} R={(byte)r:x2} "
                 + $"IM={im}";
         }
 
@@ -141,7 +141,7 @@
 
             var dumpCount = 0;
 
-            var output = $"{opCode:X2}";
+            var output = $"{opCode:x2}";
 
             string specification = string.Empty;
             if (this.prefixCB)
@@ -159,7 +159,7 @@
 
             for (int i = 0; i < dumpCount; ++i)
             {
-                output += $"{this.Bus.Peek((ushort)(pc + i + 1)):X2}";
+                output += $"{this.Bus.Peek((ushort)(pc + i + 1)):x2}";
             }
 
             var outputFormatSpecification = !this.prefixDD;
