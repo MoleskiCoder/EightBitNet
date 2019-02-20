@@ -37,6 +37,11 @@
             return new RefreshRegister(input);
         }
 
+        public byte ToByte()
+        {
+            return ToByte(this);
+        }
+
         public static RefreshRegister Increment(RefreshRegister value)
         {
             ++value.variable;
