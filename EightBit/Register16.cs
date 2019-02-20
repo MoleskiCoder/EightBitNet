@@ -4,8 +4,10 @@
 
 namespace EightBit
 {
+    using System.Diagnostics;
     using System.Runtime.InteropServices;
 
+    [DebuggerDisplay("Word = {Word}")]
     public struct Register16
     {
         public byte Low;
