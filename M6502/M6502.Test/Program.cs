@@ -4,14 +4,15 @@
 
 namespace M6502.Test
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
             var configuration = new Configuration();
 
-            ////configuration.DebugMode = true;
-
+#if DEBUG
+            configuration.DebugMode = true;
+#endif
             using (var harness = new TestHarness(configuration))
             {
                 harness.Run();

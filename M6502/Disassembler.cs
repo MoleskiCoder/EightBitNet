@@ -6,14 +6,14 @@ namespace EightBit
 {
     using System.Text;
 
-    public class Disassembly
+    public class Disassembler
     {
         private readonly Bus bus;
         private readonly M6502 processor;
         private readonly Symbols symbols;
         private ushort address;
 
-        public Disassembly(Bus bus, M6502 processor, Symbols symbols)
+        public Disassembler(Bus bus, M6502 processor, Symbols symbols)
         {
             this.bus = bus;
             this.processor = processor;
@@ -555,7 +555,7 @@ namespace EightBit
 
         private string Dump_Byte(ushort absolute)
         {
-            return Disassembly.Dump_ByteValue(this.GetByte(absolute));
+            return Disassembler.Dump_ByteValue(this.GetByte(absolute));
         }
 
         private string Dump_DByte(ushort absolute)
@@ -565,7 +565,7 @@ namespace EightBit
 
         private string Dump_Word(ushort absolute)
         {
-            return Disassembly.Dump_WordValue(this.GetWord(absolute));
+            return Disassembler.Dump_WordValue(this.GetWord(absolute));
         }
 
         private string Disassemble_Implied(string instruction)
@@ -585,7 +585,7 @@ namespace EightBit
 
         private string Disassemble_Relative(string instruction, ushort absolute)
         {
-            return this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembly.Dump_WordValue(absolute);
+            return this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembler.Dump_WordValue(absolute);
         }
 
         private string Disassemble_Immediate(string instruction)

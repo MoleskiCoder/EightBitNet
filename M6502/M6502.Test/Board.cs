@@ -11,9 +11,8 @@ namespace M6502.Test
     {
         private readonly Configuration configuration;
         private readonly Ram ram;
-        private readonly M6502 cpu;
         private readonly Symbols symbols;
-        private readonly Disassembly disassembler;
+        private readonly Disassembler disassembler;
         private readonly MemoryMapping mapping;
 
         private ushort oldPC;
@@ -22,15 +21,15 @@ namespace M6502.Test
         {
             this.configuration = configuration;
             this.ram = new Ram(0x10000);
-            this.cpu = new M6502(this);
+            this.CPU = new M6502(this);
             this.symbols = new Symbols();
-            this.disassembler = new Disassembly(this, this.cpu, this.symbols);
+            this.disassembler = new Disassembler(this, this.CPU, this.symbols);
             this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
 
             this.oldPC = (ushort)Mask.Mask16;
         }
 
-        public M6502 CPU { get => this.cpu; }
+        public M6502 CPU { get; }
 
         public override void RaisePOWER()
         {
@@ -64,7 +63,7 @@ namespace M6502.Test
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
 
             this.Poke(0x00, 0x4c);
-            this.cpu.PokeWord(0x01, this.configuration.StartAddress);
+            this.CPU.PokeWord(0x01, this.configuration.StartAddress);
         }
 
         public override MemoryMapping Mapping(ushort absolute) => this.mapping;
@@ -82,7 +81,7 @@ namespace M6502.Test
                 var test = this.Peek(0x0200);
                 System.Console.Out.WriteLine();
                 System.Console.Out.Write("** Test=");
-                System.Console.Out.WriteLine(Disassembly.Dump_ByteValue(test));
+                System.Console.Out.WriteLine(Disassembler.Dump_ByteValue(test));
             }
         }
 
@@ -94,27 +93,27 @@ namespace M6502.Test
             var output = new StringBuilder();
 
             output.Append("PC=");
-            output.Append(Disassembly.Dump_WordValue(address));
+            output.Append(Disassembler.Dump_WordValue(address));
             output.Append(":");
 
             output.Append("P=");
-            output.Append(Disassembly.Dump_Flags(this.CPU.P));
+            output.Append(Disassembler.Dump_Flags(this.CPU.P));
             output.Append(", ");
 
             output.Append("A=");
-            output.Append(Disassembly.Dump_ByteValue(this.CPU.A));
+            output.Append(Disassembler.Dump_ByteValue(this.CPU.A));
             output.Append(", ");
 
             output.Append("X=");
-            output.Append(Disassembly.Dump_ByteValue(this.CPU.X));
+            output.Append(Disassembler.Dump_ByteValue(this.CPU.X));
             output.Append(", ");
 
             output.Append("Y=");
-            output.Append(Disassembly.Dump_ByteValue(this.CPU.Y));
+            output.Append(Disassembler.Dump_ByteValue(this.CPU.Y));
             output.Append(", ");
 
             output.Append("S=");
-            output.Append(Disassembly.Dump_ByteValue(this.CPU.S));
+            output.Append(Disassembler.Dump_ByteValue(this.CPU.S));
             output.Append("\t");
 
             output.Append(this.disassembler.Disassemble(address));
