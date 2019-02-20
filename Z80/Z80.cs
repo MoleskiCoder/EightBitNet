@@ -1874,7 +1874,7 @@ namespace EightBit
             return ((this.F() & (byte)StatusBits.PF) != 0) && ((this.F() & (byte)StatusBits.ZF) == 0); // See CPD
         }
 
-        private void BlockLoad(Register16 source, Register16 destination, Register16 counter)
+        private void BlockLoad(Register16 source, Register16 destination, ref Register16 counter)
         {
             var value = this.Bus.Read(source);
             this.Bus.Write(destination, value);
@@ -1887,7 +1887,7 @@ namespace EightBit
 
         private void LDI()
         {
-            this.BlockLoad(this.HL()++, this.DE()++, this.BC());
+            this.BlockLoad(this.HL()++, this.DE()++, ref this.BC());
         }
 
         private bool LDIR()
@@ -1898,7 +1898,7 @@ namespace EightBit
 
         private void LDD()
         {
-            this.BlockLoad(this.HL()--, this.DE()--, this.BC());
+            this.BlockLoad(this.HL()--, this.DE()--, ref this.BC());
         }
 
         private bool LDDR()
