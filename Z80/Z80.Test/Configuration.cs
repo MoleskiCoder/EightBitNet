@@ -1,12 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="Configuration.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
 
 namespace Z80.Test
 {
-    class Configuration
+    using EightBit;
+
+    internal class Configuration
     {
+        public Configuration()
+        {
+        }
+
+        public bool DebugMode { get; set; } = false;
+
+        public Register16 LoadAddress { get; } = new Register16(0x100);
+
+        public Register16 StartAddress { get; } = new Register16(0x100);
+
+        public string RomDirectory { get; } = "roms";
+
+        public string Program { get; } = "zexall.com";
     }
 }

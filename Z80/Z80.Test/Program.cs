@@ -1,12 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="Program.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
 
 namespace Z80.Test
 {
-    class Program
+    public static class Program
     {
+        public static void Main(string[] args)
+        {
+            var configuration = new Configuration();
+
+#if DEBUG
+            configuration.DebugMode = true;
+#endif
+
+            using (var harness = new TestHarness(configuration))
+            {
+                harness.Run();
+            }
+        }
     }
 }
