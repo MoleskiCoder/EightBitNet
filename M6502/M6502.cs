@@ -204,7 +204,7 @@ namespace EightBit
                 case 0x2e: this.BusReadModifyWrite(this.ROL(this.AM_Absolute())); break;                                        // ROL (absolute)
                 case 0x2f: this.RLA(this.AM_Absolute()); break;                                                                 // *RLA (absolute)
 
-                case 0x30: this.Branch(this.Negative != 0); break;                                                              // BMI (relative)
+                case 0x30: this.Branch(this.Negative); break;                                                              // BMI (relative)
                 case 0x31: this.A = this.AndR(this.A, this.AM_IndirectIndexedY()); break;                                       // AND (indirect indexed Y)
                 case 0x32: break;
                 case 0x33: this.RLA(this.AM_IndirectIndexedY()); break;                                                         // *RLA (indirect indexed Y)
@@ -272,7 +272,7 @@ namespace EightBit
                 case 0x6e: this.BusReadModifyWrite(this.ROR(this.AM_Absolute())); break;                                        // ROR (absolute)
                 case 0x6f: this.RRA(this.AM_Absolute()); break;                                                                 // *RRA (absolute)
 
-                case 0x70: this.Branch(this.Overflow != 0); break;                                                              // BVS (relative)
+                case 0x70: this.Branch(this.Overflow); break;                                                              // BVS (relative)
                 case 0x71: this.A = this.ADC(this.A, this.AM_IndirectIndexedY()); break;                                        // ADC (indirect indexed Y)
                 case 0x72: break;
                 case 0x73: this.RRA(this.AM_IndirectIndexedY()); break;                                                         // *RRA (indirect indexed Y)
@@ -340,7 +340,7 @@ namespace EightBit
                 case 0xae: this.X = this.Through(this.AM_Absolute()); break;                                                    // LDX (absolute)
                 case 0xaf: this.A = this.X = this.Through(this.AM_Absolute()); break;                                           // *LAX (absolute)
 
-                case 0xb0: this.Branch(this.Carry != 0); break;                                                                 // BCS (relative)
+                case 0xb0: this.Branch(this.Carry); break;                                                                 // BCS (relative)
                 case 0xb1: this.A = this.Through(this.AM_IndirectIndexedY()); break;                                            // LDA (indirect indexed Y)
                 case 0xb2: break;
                 case 0xb3: this.A = this.X = this.Through(this.AM_IndirectIndexedY()); break;                                   // *LAX (indirect indexed Y)
@@ -407,7 +407,7 @@ namespace EightBit
                 case 0xed: this.A = this.SBC(this.A, this.AM_Absolute()); break;                                                // SBC (absolute)
                 case 0xee: this.BusReadModifyWrite(this.INC(this.AM_Absolute())); break;                                        // *ISB (absolute)
 
-                case 0xf0: this.Branch(this.Zero != 0); break;                                                                  // BEQ (relative)
+                case 0xf0: this.Branch(this.Zero); break;                                                                  // BEQ (relative)
                 case 0xf1: this.A = this.SBC(this.A, this.AM_IndirectIndexedY()); break;                                        // SBC (indirect indexed Y)
                 case 0xf2: break;
                 case 0xf3: this.ISB(this.AM_IndirectIndexedY()); break;                                                         // *ISB (indirect indexed Y)
@@ -725,6 +725,8 @@ namespace EightBit
             this.AdjustZero(datum);
             this.AdjustNegative(datum);
         }
+
+        private void Branch(int condition) => this.Branch(condition != 0);
 
         private void Branch(bool condition)
         {
