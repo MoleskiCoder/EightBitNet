@@ -29,7 +29,7 @@
 
         public static byte ToByte(RefreshRegister input)
         {
-            return (byte)((input.high << 7) | input.variable);
+            return (byte)((input.high << 7) | (input.variable & (byte)Mask.Mask7));
         }
 
         public static RefreshRegister FromByte(byte input)
