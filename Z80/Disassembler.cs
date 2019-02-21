@@ -261,7 +261,7 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD (nn),rp
-                                    specification = "LD ({1:X4H)," + this.RP(p);
+                                    specification = "LD ({1:X4}H)," + this.RP(p);
                                     break;
                                 case 1: // LD rp,(nn)
                                     specification = "LD " + this.RP(p) + ",(%2$04XH)";
