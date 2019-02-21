@@ -50,7 +50,7 @@ namespace Z80.Test
             {
                 if (disposing)
                 {
-                    System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles}");
+                    System.Console.Out.WriteLine($"\n\nGuest cycles = {this.totalCycles}");
                     System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
                 }
 
