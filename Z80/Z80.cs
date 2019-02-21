@@ -1673,7 +1673,7 @@ namespace EightBit
 
         private void Compare(byte value)
         {
-            this.F() = this.Subtract(this.A(), value);
+            this.Subtract(this.A(), value);
             this.F() = AdjustXY(this.F(), value);
         }
 
