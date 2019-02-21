@@ -1833,7 +1833,7 @@ namespace EightBit
             this.HL2().High = this.MEMPTR().High;
         }
 
-        private void BlockCompare(Register16 source, Register16 counter)
+        private void BlockCompare(Register16 source, ref Register16 counter)
         {
             var value = this.Bus.Read(source);
             var result = (byte)(this.A() - value);
@@ -1852,7 +1852,7 @@ namespace EightBit
 
         private void CPI()
         {
-            this.BlockCompare(this.HL()++, this.BC());
+            this.BlockCompare(this.HL()++, ref this.BC());
             ++this.MEMPTR();
         }
 
@@ -1864,7 +1864,7 @@ namespace EightBit
 
         private void CPD()
         {
-            this.BlockCompare(this.HL()--, this.BC());
+            this.BlockCompare(this.HL()--, ref this.BC());
             --this.MEMPTR();
         }
 
@@ -1904,7 +1904,7 @@ namespace EightBit
         private bool LDDR()
         {
             this.LDD();
-            return (this.F() & (byte)StatusBits.PF) == 0; // See LDD
+            return (this.F() & (byte)StatusBits.PF) != 0; // See LDD
         }
 
         private void BlockIn(Register16 source, Register16 destination)
@@ -2010,7 +2010,7 @@ namespace EightBit
             var memory = this.Bus.Read();
             this.Bus.Write((byte)(PromoteNibble(memory) | LowNibble(this.A())));
             this.A() = (byte)(HigherNibble(this.A()) | HighNibble(memory));
-            AdjustSZPXY(this.F(), this.A());
+            F() = AdjustSZPXY(this.F(), this.A());
             this.F() = ClearFlag(this.F(), StatusBits.NF | StatusBits.HC);
         }
 
