@@ -13,10 +13,6 @@ namespace EightBit
 
         private readonly IntelOpCodeDecoded[] decodedOpCodes = new IntelOpCodeDecoded[0x100];
 
-        private Register16 sp = new Register16((ushort)Mask.Mask16);
-
-        private Register16 memptr = new Register16((ushort)Mask.Mask16);
-
         private PinLevel haltLine;
 
         protected IntelProcessor(Bus bus)
@@ -36,35 +32,35 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredHALT;
 
+        public Register16 SP { get; } = new Register16((ushort)Mask.Mask16);
+
+        public Register16 MEMPTR { get; } = new Register16((ushort)Mask.Mask16);
+
+        public abstract Register16 AF { get; }
+
+        public byte A { get => this.AF.High; set => this.AF.High = value; }
+
+        public byte F { get => this.AF.Low; set => this.AF.Low = value; }
+
+        public abstract Register16 BC { get; }
+
+        public byte B { get => this.BC.High; set => this.BC.High = value; }
+
+        public byte C { get => this.BC.Low; set => this.BC.Low = value; }
+
+        public abstract Register16 DE { get; }
+
+        public byte D { get => this.DE.High; set => this.DE.High = value; }
+
+        public byte E { get => this.DE.Low; set => this.DE.Low = value; }
+
+        public abstract Register16 HL { get; }
+
+        public byte H { get => this.HL.High; set => this.HL.High = value; }
+
+        public byte L { get => this.HL.Low; set => this.HL.Low = value; }
+
         protected bool Halted => this.HALT().Lowered();
-
-        public ref Register16 SP() => ref this.sp;
-
-        public ref Register16 MEMPTR() => ref this.memptr;
-
-        public abstract ref Register16 AF();
-
-        public ref byte A() => ref this.AF().High;
-
-        public ref byte F() => ref this.AF().Low;
-
-        public abstract ref Register16 BC();
-
-        public ref byte B() => ref this.BC().High;
-
-        public ref byte C() => ref this.BC().Low;
-
-        public abstract ref Register16 DE();
-
-        public ref byte D() => ref this.DE().High;
-
-        public ref byte E() => ref this.DE().Low;
-
-        public abstract ref Register16 HL();
-
-        public ref byte H() => ref this.HL().High;
-
-        public ref byte L() => ref this.HL().Low;
 
         public ref PinLevel HALT() => ref this.haltLine;
 
@@ -74,7 +70,7 @@ namespace EightBit
         {
             base.RaisePOWER();
             this.RaiseHALT();
-            this.SP().Word = this.AF().Word = this.BC().Word = this.DE().Word = this.HL().Word = (ushort)Mask.Mask16;
+            this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
         }
 
         public virtual void RaiseHALT()
@@ -122,38 +118,38 @@ namespace EightBit
             this.Jump(0);
         }
 
-        protected sealed override void Push(byte value) => this.Bus.Write(--this.SP(), value);
+        protected sealed override void Push(byte value) => this.Bus.Write(--this.SP.Word, value);
 
-        protected sealed override byte Pop() => this.Bus.Read(this.SP()++);
+        protected sealed override byte Pop() => this.Bus.Read(this.SP.Word++);
 
         protected sealed override Register16 GetWord()
         {
             var returned = base.GetWord();
-            this.MEMPTR().Word = this.Bus.Address().Word;
+            this.MEMPTR.Word = this.Bus.Address.Word;
             return returned;
         }
 
         protected sealed override void SetWord(Register16 value)
         {
             base.SetWord(value);
-            this.MEMPTR().Word = this.Bus.Address().Word;
+            this.MEMPTR.Word = this.Bus.Address.Word;
         }
 
         ////
 
         protected void Restart(byte address)
         {
-            this.MEMPTR().Low = address;
-            this.MEMPTR().High = 0;
-            this.Call(this.MEMPTR());
+            this.MEMPTR.Low = address;
+            this.MEMPTR.High = 0;
+            this.Call(this.MEMPTR);
         }
 
         protected bool CallConditional(bool condition)
         {
-            this.MEMPTR().Word = this.FetchWord().Word;
+            this.MEMPTR.Word = this.FetchWord().Word;
             if (condition)
             {
-                this.Call(this.MEMPTR());
+                this.Call(this.MEMPTR);
             }
 
             return condition;
@@ -161,10 +157,10 @@ namespace EightBit
 
         protected bool JumpConditional(bool condition)
         {
-            this.MEMPTR().Word = this.FetchWord().Word;
+            this.MEMPTR.Word = this.FetchWord().Word;
             if (condition)
             {
-                this.Jump(this.MEMPTR());
+                this.Jump(this.MEMPTR);
             }
 
             return condition;
@@ -182,8 +178,8 @@ namespace EightBit
 
         protected void JumpRelative(sbyte offset)
         {
-            this.MEMPTR().Word = (ushort)(this.PC().Word + offset);
-            this.Jump(this.MEMPTR());
+            this.MEMPTR.Word = (ushort)(this.PC.Word + offset);
+            this.Jump(this.MEMPTR);
         }
 
         protected bool JumpRelativeConditional(bool condition)
@@ -200,18 +196,18 @@ namespace EightBit
         protected override sealed void Return()
         {
             base.Return();
-            this.MEMPTR().Word = this.PC().Word;
+            this.MEMPTR.Word = this.PC.Word;
         }
 
         protected void Halt()
         {
-            --this.PC();
+            --this.PC.Word;
             this.LowerHALT();
         }
 
         protected void Proceed()
         {
-            ++this.PC();
+            ++this.PC.Word;
             this.RaiseHALT();
         }
     }

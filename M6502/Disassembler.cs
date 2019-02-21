@@ -1,4 +1,4 @@
-﻿// <copyright file="Disassembly.cs" company="Adrian Conlon">
+﻿// <copyright file="Disassembler.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
@@ -56,7 +56,7 @@ namespace EightBit
             output.Append(" ");
 
             var next = this.bus.Peek((ushort)(current + 1));
-            var relative = (ushort)(this.processor.PC().Word + 2 + (sbyte)next);
+            var relative = (ushort)(this.processor.PC.Word + 2 + (sbyte)next);
 
             var aaa = (cell & 0b11100000) >> 5;
             var bbb = (cell & 0b00011100) >> 2;

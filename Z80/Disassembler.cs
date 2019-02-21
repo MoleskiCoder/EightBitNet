@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="Disassembler.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System.Text;
 
@@ -34,20 +38,20 @@
 
         public static string State(Z80 cpu)
         {
-            var pc = cpu.PC();
-            var sp = cpu.SP();
+            var pc = cpu.PC;
+            var sp = cpu.SP;
 
-            var a = cpu.A();
-            var f = cpu.F();
+            var a = cpu.A;
+            var f = cpu.F;
 
-            var b = cpu.B();
-            var c = cpu.C();
+            var b = cpu.B;
+            var c = cpu.C;
 
-            var d = cpu.D();
-            var e = cpu.E();
+            var d = cpu.D;
+            var e = cpu.E;
 
-            var h = cpu.H();
-            var l = cpu.L();
+            var h = cpu.H;
+            var l = cpu.L;
 
             var i = cpu.IV;
             var r = cpu.REFRESH();
@@ -67,7 +71,7 @@
         public string Disassemble(Z80 cpu)
         {
             this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
-            return this.Disassemble(cpu, cpu.PC().Word);
+            return this.Disassemble(cpu, cpu.PC.Word);
         }
 
         private static string CC(int flag)

@@ -12,7 +12,7 @@ namespace EightBit
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
-        private Register16 intermediate;
+        private readonly Register16 intermediate = new Register16();
 
         private bool handlingRESET = false;
         private bool handlingNMI = false;
@@ -204,7 +204,7 @@ namespace EightBit
                 case 0x2e: this.BusReadModifyWrite(this.ROL(this.AM_Absolute())); break;                                        // ROL (absolute)
                 case 0x2f: this.RLA(this.AM_Absolute()); break;                                                                 // *RLA (absolute)
 
-                case 0x30: this.Branch(this.Negative); break;                                                              // BMI (relative)
+                case 0x30: this.Branch(this.Negative); break;                                                                   // BMI (relative)
                 case 0x31: this.A = this.AndR(this.A, this.AM_IndirectIndexedY()); break;                                       // AND (indirect indexed Y)
                 case 0x32: break;
                 case 0x33: this.RLA(this.AM_IndirectIndexedY()); break;                                                         // *RLA (indirect indexed Y)
@@ -272,7 +272,7 @@ namespace EightBit
                 case 0x6e: this.BusReadModifyWrite(this.ROR(this.AM_Absolute())); break;                                        // ROR (absolute)
                 case 0x6f: this.RRA(this.AM_Absolute()); break;                                                                 // *RRA (absolute)
 
-                case 0x70: this.Branch(this.Overflow); break;                                                              // BVS (relative)
+                case 0x70: this.Branch(this.Overflow); break;                                                                   // BVS (relative)
                 case 0x71: this.A = this.ADC(this.A, this.AM_IndirectIndexedY()); break;                                        // ADC (indirect indexed Y)
                 case 0x72: break;
                 case 0x73: this.RRA(this.AM_IndirectIndexedY()); break;                                                         // *RRA (indirect indexed Y)
@@ -340,7 +340,7 @@ namespace EightBit
                 case 0xae: this.X = this.Through(this.AM_Absolute()); break;                                                    // LDX (absolute)
                 case 0xaf: this.A = this.X = this.Through(this.AM_Absolute()); break;                                           // *LAX (absolute)
 
-                case 0xb0: this.Branch(this.Carry); break;                                                                 // BCS (relative)
+                case 0xb0: this.Branch(this.Carry); break;                                                                      // BCS (relative)
                 case 0xb1: this.A = this.Through(this.AM_IndirectIndexedY()); break;                                            // LDA (indirect indexed Y)
                 case 0xb2: break;
                 case 0xb3: this.A = this.X = this.Through(this.AM_IndirectIndexedY()); break;                                   // *LAX (indirect indexed Y)
@@ -407,7 +407,7 @@ namespace EightBit
                 case 0xed: this.A = this.SBC(this.A, this.AM_Absolute()); break;                                                // SBC (absolute)
                 case 0xee: this.BusReadModifyWrite(this.INC(this.AM_Absolute())); break;                                        // *ISB (absolute)
 
-                case 0xf0: this.Branch(this.Zero); break;                                                                  // BEQ (relative)
+                case 0xf0: this.Branch(this.Zero); break;                                                                       // BEQ (relative)
                 case 0xf1: this.A = this.SBC(this.A, this.AM_IndirectIndexedY()); break;                                        // SBC (indirect indexed Y)
                 case 0xf2: break;
                 case 0xf3: this.ISB(this.AM_IndirectIndexedY()); break;                                                         // *ISB (indirect indexed Y)
@@ -443,7 +443,7 @@ namespace EightBit
                 if (this.RDY().Raised())
                 {
                     this.LowerSYNC();    // Instruction fetch beginning
-                    this.OpCode = this.Bus.Read(this.PC()++);  // can't use fetchByte
+                    this.OpCode = this.Bus.Read(this.PC.Word++);  // can't use fetchByte
                     if (this.RESET().Lowered())
                     {
                         this.HandleRESET();
@@ -579,13 +579,13 @@ namespace EightBit
             var software = !hardware;
             if (reset)
             {
-                this.DummyPush(this.PC().High);
-                this.DummyPush(this.PC().Low);
+                this.DummyPush(this.PC.High);
+                this.DummyPush(this.PC.Low);
                 this.DummyPush(this.P);
             }
             else
             {
-                this.PushWord(this.PC());
+                this.PushWord(this.PC);
                 this.Push((byte)(this.P | (int)(software ? StatusBits.BF : 0)));
             }
 
@@ -599,8 +599,8 @@ namespace EightBit
         {
             this.Tick();
             this.Bus.Data = value;
-            this.Bus.Address().Low = this.S--;
-            this.Bus.Address().High = 1;
+            this.Bus.Address.Low = this.S--;
+            this.Bus.Address.High = 1;
         }
 
         private Register16 Address_Absolute() => this.FetchWord();
@@ -658,7 +658,7 @@ namespace EightBit
         private ushort Address_relative_byte()
         {
             var offset = (sbyte)this.FetchByte();
-            this.intermediate.Word = (ushort)(this.PC().Word + offset);
+            this.intermediate.Word = (ushort)(this.PC.Word + offset);
             return this.intermediate.Word;
         }
 
@@ -734,11 +734,11 @@ namespace EightBit
             if (condition)
             {
                 this.BusRead();
-                var page = this.PC().High;
+                var page = this.PC.High;
                 this.Jump(destination);
-                if (this.PC().High != page)
+                if (this.PC.High != page)
                 {
-                    this.BusRead(this.PC().Low, page);
+                    this.BusRead(this.PC.Low, page);
                 }
             }
         }
@@ -878,10 +878,10 @@ namespace EightBit
         {
             var low = this.FetchByte();
             this.BusRead(this.S, 1); // dummy read
-            this.PushWord(this.PC());
+            this.PushWord(this.PC);
             var high = this.FetchByte();
-            this.PC().Low = low;
-            this.PC().High = high;
+            this.PC.Low = low;
+            this.PC.High = high;
         }
 
         private byte LSR(byte value)

@@ -8,7 +8,6 @@ namespace EightBit
 
     public abstract class Bus : IMapper
     {
-        private Register16 address;
         private byte data;
 
         public event EventHandler<EventArgs> WritingByte;
@@ -21,7 +20,7 @@ namespace EightBit
 
         public byte Data { get => this.data; set => this.data = value; }
 
-        public ref Register16 Address() => ref this.address;
+        public Register16 Address { get; } = new Register16();
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
@@ -51,7 +50,7 @@ namespace EightBit
 
         public byte Read(ushort absolute)
         {
-            this.Address().Word = absolute;
+            this.Address.Word = absolute;
             return this.Read();
         }
 
@@ -59,8 +58,8 @@ namespace EightBit
 
         public byte Read(byte low, byte high)
         {
-            this.Address().Low = low;
-            this.Address().High = high;
+            this.Address.Low = low;
+            this.Address.High = high;
             return this.Read();
         }
 
@@ -79,7 +78,7 @@ namespace EightBit
 
         public void Write(ushort absolute, byte value)
         {
-            this.Address().Word = absolute;
+            this.Address.Word = absolute;
             this.Write(value);
         }
 
@@ -87,8 +86,8 @@ namespace EightBit
 
         public void Write(byte low, byte high, byte value)
         {
-            this.Address().Low = low;
-            this.Address().High = high;
+            this.Address.Low = low;
+            this.Address.High = high;
             this.Write(value);
         }
 
@@ -125,7 +124,7 @@ namespace EightBit
 
         protected ref byte Reference(Register16 absolute) => ref this.Reference(absolute.Word);
 
-        protected ref byte Reference() => ref this.Reference(this.Address());
+        protected ref byte Reference() => ref this.Reference(this.Address);
 
         protected ref byte Reference(byte low, byte high) => ref this.Reference(new Register16(low, high).Word);
 

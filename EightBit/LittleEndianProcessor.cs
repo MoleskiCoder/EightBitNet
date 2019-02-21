@@ -34,7 +34,7 @@ namespace EightBit
         protected override Register16 GetWord()
         {
             var low = this.BusRead();
-            ++this.Bus.Address();
+            ++this.Bus.Address.Word;
             var high = this.BusRead();
             return new Register16(low, high);
         }
@@ -62,7 +62,7 @@ namespace EightBit
         protected override void SetWord(Register16 value)
         {
             this.BusWrite(value.Low);
-            ++this.Bus.Address();
+            ++this.Bus.Address.Word;
             this.BusWrite(value.High);
         }
 

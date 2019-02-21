@@ -8,11 +8,8 @@ namespace EightBit
     using System.Runtime.InteropServices;
 
     [DebuggerDisplay("Word = {Word}")]
-    public struct Register16
+    public class Register16
     {
-        public byte Low;
-        public byte High;
-
         public Register16(byte low, byte high)
         {
             this.Low = low;
@@ -23,6 +20,11 @@ namespace EightBit
         {
             this.Low = Chip.LowByte(value);
             this.High = Chip.HighByte(value);
+        }
+
+        public Register16()
+        : this((ushort)0)
+        {
         }
 
         public Register16(int value)
@@ -55,6 +57,10 @@ namespace EightBit
             }
         }
 
+        public byte Low { get; set; }
+
+        public byte High { get; set; }
+
         public static Register16 operator ++(Register16 value) => Increment(value);
 
         public static Register16 operator --(Register16 value) => Decrement(value);
@@ -77,12 +83,12 @@ namespace EightBit
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Register16))
+            var rhs = obj as Register16;
+            if (rhs == null)
             {
                 return false;
             }
 
-            var rhs = (Register16)obj;
             return rhs.Low == this.Low && rhs.High == this.High;
         }
 

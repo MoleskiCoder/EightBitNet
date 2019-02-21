@@ -10,7 +10,6 @@ namespace EightBit
     {
         private PinLevel resetLine;
         private PinLevel intLine;
-        private Register16 pc;
 
         protected Processor(Bus memory)
         {
@@ -35,9 +34,9 @@ namespace EightBit
 
         public Bus Bus { get; }
 
-        protected byte OpCode { get; set; }
+        public Register16 PC { get; } = new Register16();
 
-        public ref Register16 PC() => ref this.pc;
+        protected byte OpCode { get; set; }
 
         public ref PinLevel RESET() => ref this.resetLine;
 
@@ -118,14 +117,14 @@ namespace EightBit
 
         protected void BusWrite(byte low, byte high, byte data)
         {
-            this.Bus.Address().Low = low;
-            this.Bus.Address().High = high;
+            this.Bus.Address.Low = low;
+            this.Bus.Address.High = high;
             this.BusWrite(data);
         }
 
         protected void BusWrite(ushort address, byte data)
         {
-            this.Bus.Address().Word = address;
+            this.Bus.Address.Word = address;
             this.BusWrite(data);
         }
 
@@ -141,14 +140,14 @@ namespace EightBit
 
         protected byte BusRead(byte low, byte high)
         {
-            this.Bus.Address().Low = low;
-            this.Bus.Address().High = high;
+            this.Bus.Address.Low = low;
+            this.Bus.Address.High = high;
             return this.BusRead();
         }
 
         protected byte BusRead(ushort address)
         {
-            this.Bus.Address().Word = address;
+            this.Bus.Address.Word = address;
             return this.BusRead();
         }
 
@@ -156,7 +155,7 @@ namespace EightBit
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte FetchByte() => this.BusRead(this.PC()++);
+        protected byte FetchByte() => this.BusRead(this.PC.Word++);
 
         protected abstract Register16 GetWord();
 
@@ -178,23 +177,23 @@ namespace EightBit
 
         protected Register16 GetWord(ushort address)
         {
-            this.Bus.Address().Word = address;
+            this.Bus.Address.Word = address;
             return this.GetWord();
         }
 
         protected void SetWord(ushort address, Register16 value)
         {
-            this.Bus.Address().Word = address;
+            this.Bus.Address.Word = address;
             this.SetWord(value);
         }
 
-        protected void Jump(ushort destination) => this.PC().Word = destination;
+        protected void Jump(ushort destination) => this.PC.Word = destination;
 
         protected void Jump(Register16 destination) => this.Jump(destination.Word);
 
         protected void Call(ushort destination)
         {
-            this.PushWord(this.PC());
+            this.PushWord(this.PC);
             this.Jump(destination);
         }
 

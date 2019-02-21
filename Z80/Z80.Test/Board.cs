@@ -68,13 +68,13 @@ namespace Z80.Test
 
         private void BDOS()
         {
-            switch (CPU.C())
+            switch (CPU.C)
             {
                 case 0x2:
-                    System.Console.Out.Write(CPU.E().ToString());
+                    System.Console.Out.Write(CPU.E.ToString());
                     break;
                 case 0x9:
-                    for (ushort i = CPU.DE().Word; Peek(i) != '$'; ++i)
+                    for (ushort i = CPU.DE.Word; Peek(i) != '$'; ++i)
                     {
                         System.Console.Out.Write((char)Peek(i));
                     }
@@ -85,7 +85,7 @@ namespace Z80.Test
 
         private void CPU_ExecutingInstruction_CPM(object sender, System.EventArgs e)
         {
-            switch (this.CPU.PC().Word)
+            switch (this.CPU.PC.Word)
             {
                 case 0x0:   // CP/M warm start
                     if (++this.warmstartCount == 2)
