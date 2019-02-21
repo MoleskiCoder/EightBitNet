@@ -32,6 +32,12 @@
             return (byte)((input.high << 7) | (input.variable & (byte)Mask.Mask7));
         }
 
+        public static RefreshRegister Increment(RefreshRegister value)
+        {
+            ++value.variable;
+            return value;
+        }
+
         public static RefreshRegister FromByte(byte input)
         {
             return new RefreshRegister(input);
@@ -40,12 +46,6 @@
         public byte ToByte()
         {
             return ToByte(this);
-        }
-
-        public static RefreshRegister Increment(RefreshRegister value)
-        {
-            ++value.variable;
-            return value;
         }
 
         public override bool Equals(object obj)
