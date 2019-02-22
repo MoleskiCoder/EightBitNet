@@ -455,7 +455,7 @@ namespace EightBit
                 case 5:
                     return this.HL2().Low;
                 case 6:
-                    return this.Bus.Read(this.displaced ? this.DisplacedAddress : this.HL.Word);
+                    return this.BusRead(this.displaced ? this.DisplacedAddress : this.HL.Word);
                 case 7:
                     return this.A;
                 default:
@@ -486,7 +486,7 @@ namespace EightBit
                     this.HL2().Low = value;
                     break;
                 case 6:
-                    this.Bus.Write(this.displaced ? this.DisplacedAddress : this.HL.Word, value);
+                    this.BusWrite(this.displaced ? this.DisplacedAddress : this.HL.Word, value);
                     break;
                 case 7:
                     this.A = value;
@@ -519,7 +519,7 @@ namespace EightBit
                     this.L = value;
                     break;
                 case 6:
-                    this.Bus.Write(this.HL, value);
+                    this.BusWrite(this.HL, value);
                     break;
                 case 7:
                     this.A = value;
@@ -535,7 +535,7 @@ namespace EightBit
             var memoryZ = z == 6;
             var indirect = (!this.displaced && memoryZ) || this.displaced;
             var direct = !indirect;
-            var operand = !this.displaced ? this.R(z) : this.Bus.Read(this.DisplacedAddress);
+            var operand = !this.displaced ? this.R(z) : this.BusRead(this.DisplacedAddress);
             var update = x != 1; // BIT does not update
             switch (x)
             {
@@ -611,7 +611,7 @@ namespace EightBit
                 }
                 else
                 {
-                    this.Bus.Write(operand);
+                    this.BusWrite(operand);
                     this.R2(z, operand);
                     this.Tick(15);
                 }
@@ -978,14 +978,14 @@ namespace EightBit
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.Bus.Write();
+                                            this.BusWrite();
                                             this.Tick(7);
                                             break;
                                         case 1: // LD (DE),A
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.Bus.Write();
+                                            this.BusWrite();
                                             this.Tick(7);
                                             break;
                                         case 2: // LD (nn),HL
@@ -997,7 +997,7 @@ namespace EightBit
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.Bus.Write();
+                                            this.BusWrite();
                                             this.Tick(13);
                                             break;
                                         default:
@@ -1011,13 +1011,13 @@ namespace EightBit
                                         case 0: // LD A,(BC)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                                             ++this.MEMPTR.Word;
-                                            this.A = this.Bus.Read();
+                                            this.A = this.BusRead();
                                             this.Tick(7);
                                             break;
                                         case 1: // LD A,(DE)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
-                                            this.A = this.Bus.Read();
+                                            this.A = this.BusRead();
                                             this.Tick(7);
                                             break;
                                         case 2: // LD HL,(nn)
@@ -1028,7 +1028,7 @@ namespace EightBit
                                         case 3: // LD A,(nn)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
-                                            this.A = this.Bus.Read();
+                                            this.A = this.BusRead();
                                             this.Tick(13);
                                             break;
                                         default:
@@ -1830,18 +1830,18 @@ namespace EightBit
 
         private void XHTL()
         {
-            this.MEMPTR.Low = this.Bus.Read(this.SP);
-            this.Bus.Write(this.HL2().Low);
+            this.MEMPTR.Low = this.BusRead(this.SP);
+            this.BusWrite(this.HL2().Low);
             this.HL2().Low = this.MEMPTR.Low;
             ++this.Bus.Address.Word;
-            this.MEMPTR.High = this.Bus.Read();
-            this.Bus.Write(this.HL2().High);
+            this.MEMPTR.High = this.BusRead();
+            this.BusWrite(this.HL2().High);
             this.HL2().High = this.MEMPTR.High;
         }
 
         private void BlockCompare(Register16 source, Register16 counter)
         {
-            var value = this.Bus.Read(source);
+            var value = this.BusRead(source);
             var result = (byte)(this.A - value);
 
             this.F = SetFlag(this.F, StatusBits.PF, --counter.Word);
@@ -1884,8 +1884,8 @@ namespace EightBit
 
         private void BlockLoad(Register16 source, Register16 destination, Register16 counter)
         {
-            var value = this.Bus.Read(source);
-            this.Bus.Write(destination, value);
+            var value = this.BusRead(source);
+            this.BusWrite(destination, value);
             var xy = this.A + value;
             this.F = SetFlag(this.F, StatusBits.XF, xy & (int)Bits.Bit3);
             this.F = SetFlag(this.F, StatusBits.YF, xy & (int)Bits.Bit1);
@@ -1923,7 +1923,7 @@ namespace EightBit
         {
             this.MEMPTR.Word = this.Bus.Address.Word = source.Word;
             var value = this.ReadPort();
-            this.Bus.Write(destination, value);
+            this.BusWrite(destination, value);
             source.High = this.Decrement(source.High);
             this.F = SetFlag(this.F, StatusBits.NF);
         }
@@ -1956,7 +1956,7 @@ namespace EightBit
 
         private void BlockOut(Register16 source, Register16 destination)
         {
-            var value = this.Bus.Read(source);
+            var value = this.BusRead(source);
             this.Bus.Address.Word = destination.Word;
             this.WritePort();
             destination.High = this.Decrement(destination.High);
@@ -2012,8 +2012,8 @@ namespace EightBit
         {
             this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
             ++this.MEMPTR.Word;
-            var memory = this.Bus.Read();
-            this.Bus.Write((byte)(PromoteNibble(this.A) | HighNibble(memory)));
+            var memory = this.BusRead();
+            this.BusWrite((byte)(PromoteNibble(this.A) | HighNibble(memory)));
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
             this.F = ClearFlag(this.F, StatusBits.NF | StatusBits.HC);
@@ -2023,8 +2023,8 @@ namespace EightBit
         {
             this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
             ++this.MEMPTR.Word;
-            var memory = this.Bus.Read();
-            this.Bus.Write((byte)(PromoteNibble(memory) | LowNibble(this.A)));
+            var memory = this.BusRead();
+            this.BusWrite((byte)(PromoteNibble(memory) | LowNibble(this.A)));
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
             this.F = ClearFlag(this.F, StatusBits.NF | StatusBits.HC);

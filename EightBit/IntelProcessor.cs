@@ -118,9 +118,9 @@ namespace EightBit
             this.Jump(0);
         }
 
-        protected sealed override void Push(byte value) => this.Bus.Write(--this.SP.Word, value);
+        protected sealed override void Push(byte value) => this.BusWrite(--this.SP.Word, value);
 
-        protected sealed override byte Pop() => this.Bus.Read(this.SP.Word++);
+        protected sealed override byte Pop() => this.BusRead(this.SP.Word++);
 
         protected sealed override Register16 GetWord()
         {
