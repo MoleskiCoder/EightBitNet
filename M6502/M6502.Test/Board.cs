@@ -50,7 +50,6 @@ namespace M6502.Test
 
         public override void Initialize()
         {
-            var programFilename = this.configuration.Program;
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
             this.ram.Load(programPath, loadAddress.Word);
@@ -88,7 +87,6 @@ namespace M6502.Test
         private void CPU_ExecutingInstruction(object sender, System.EventArgs e)
         {
             var address = this.CPU.PC.Word;
-            var cell = this.Peek(address);
 
             var output = new StringBuilder();
 

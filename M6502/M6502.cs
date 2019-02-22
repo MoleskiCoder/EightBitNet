@@ -555,8 +555,6 @@ namespace EightBit
 
         private static byte ClearFlag(byte f, StatusBits flag, int condition) => ClearFlag(f, (byte)flag, condition);
 
-        private static byte ClearFlag(byte f, StatusBits flag, bool condition) => ClearFlag(f, (byte)flag, condition);
-
         private void HandleNMI()
         {
             this.RaiseNMI();
@@ -769,10 +767,7 @@ namespace EightBit
             return returned;
         }
 
-        private byte SUB(byte operand, byte data, int borrow = 0)
-        {
-            return this.Decimal != 0 ? this.SUB_d(operand, data, borrow) : this.SUB_b(operand, data, borrow);
-        }
+        private byte SUB(byte operand, byte data, int borrow = 0) => this.Decimal != 0 ? this.SUB_d(operand, data, borrow) : this.SUB_b(operand, data, borrow);
 
         private byte SUB_b(byte operand, byte data, int borrow)
         {
@@ -808,10 +803,7 @@ namespace EightBit
             return returned;
         }
 
-        private byte ADD(byte operand, byte data, int carry = 0)
-        {
-            return this.Decimal != 0 ? this.ADD_d(operand, data, carry) : this.ADD_b(operand, data, carry);
-        }
+        private byte ADD(byte operand, byte data, int carry = 0) => this.Decimal != 0 ? this.ADD_d(operand, data, carry) : this.ADD_b(operand, data, carry);
 
         private byte ADD_b(byte operand, byte data, int carry)
         {

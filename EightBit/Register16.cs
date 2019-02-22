@@ -45,10 +45,7 @@ namespace EightBit
 
         public ushort Word
         {
-            get
-            {
-                return (ushort)(this.Low | Chip.PromoteByte(this.High));
-            }
+            get => (ushort)(this.Low | Chip.PromoteByte(this.High));
 
             set
             {
@@ -84,12 +81,7 @@ namespace EightBit
         public override bool Equals(object obj)
         {
             var rhs = obj as Register16;
-            if (rhs == null)
-            {
-                return false;
-            }
-
-            return rhs.Low == this.Low && rhs.High == this.High;
+            return rhs == null ? false : rhs.Low == this.Low && rhs.High == this.High;
         }
 
         public override int GetHashCode() => this.Word;

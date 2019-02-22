@@ -12,14 +12,10 @@ namespace M6502.Test
         private readonly Stopwatch timer = new Stopwatch();
         private readonly Board board;
         private long totalCycles = 0;
-        private long instructions = 0;
 
         private bool disposed = false;
 
-        public TestHarness(Configuration configuration)
-        {
-            this.board = new Board(configuration);
-        }
+        public TestHarness(Configuration configuration) => this.board = new Board(configuration);
 
         public void Dispose()
         {
@@ -38,7 +34,6 @@ namespace M6502.Test
             while (cpu.Powered)
             {
                 this.totalCycles += cpu.Step();
-                ++this.instructions;
             }
 
             this.timer.Stop();

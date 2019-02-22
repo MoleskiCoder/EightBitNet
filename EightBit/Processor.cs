@@ -48,7 +48,7 @@ namespace EightBit
 
         public int Run(int limit)
         {
-            int current = 0;
+            var current = 0;
             while (this.Powered && (current < limit))
             {
                 current += this.Step();

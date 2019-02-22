@@ -18,7 +18,7 @@ namespace EightBit
 
         public void Tick(int extra)
         {
-            for (int i = 0; i < extra; ++i)
+            for (var i = 0; i < extra; ++i)
             {
                 this.Tick();
             }

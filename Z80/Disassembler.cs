@@ -4,29 +4,21 @@
 
 namespace EightBit
 {
-    using System.Text;
-
     public class Disassembler
     {
-        private readonly Bus bus;
-
         private bool prefixCB = false;
         private bool prefixDD = false;
         private bool prefixED = false;
         private bool prefixFD = false;
 
-        public Disassembler(Bus bus)
-        {
-            this.bus = bus;
-        }
+        public Disassembler(Bus bus) => this.Bus = bus;
 
-        public Bus Bus => this.bus;
+        public Bus Bus { get; }
 
         public static string AsFlag(byte value, StatusBits flag, string represents) => (value & (byte)flag) != 0 ? represents : "-";
 
-        public static string AsFlags(byte value)
-        {
-            return $"{AsFlag(value, StatusBits.SF, "S")}"
+        public static string AsFlags(byte value) =>
+                   $"{AsFlag(value, StatusBits.SF, "S")}"
                  + $"{AsFlag(value, StatusBits.ZF, "Z")}"
                  + $"{AsFlag(value, StatusBits.YF, "Y")}"
                  + $"{AsFlag(value, StatusBits.HC, "H")}"
@@ -34,7 +26,6 @@ namespace EightBit
                  + $"{AsFlag(value, StatusBits.PF, "P")}"
                  + $"{AsFlag(value, StatusBits.NF, "N")}"
                  + $"{AsFlag(value, StatusBits.CF, "C")}";
-        }
 
         public static string State(Z80 cpu)
         {
@@ -147,10 +138,10 @@ namespace EightBit
 
             var output = $"{opCode:x2}";
 
-            string specification = string.Empty;
+            var specification = string.Empty;
             if (this.prefixCB)
             {
-                output += this.DisassembleCB(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
+                output += this.DisassembleCB(ref specification, x, y, z);
             }
             else if (this.prefixED)
             {
@@ -161,7 +152,7 @@ namespace EightBit
                 output += this.DisassembleOther(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
             }
 
-            for (int i = 0; i < dumpCount; ++i)
+            for (var i = 0; i < dumpCount; ++i)
             {
                 output += $"{this.Bus.Peek((ushort)(pc + i + 1)):x2}";
             }
@@ -184,9 +175,9 @@ namespace EightBit
             return output;
         }
 
-        private string DisassembleCB(Z80 cpu, ushort pc, ref string specification, ref int dumpCount, int x, int y, int z, int p, int q)
+        private string DisassembleCB(ref string specification, int x, int y, int z)
         {
-            string output = string.Empty;
+            var output = string.Empty;
             switch (x)
             {
                 case 0: // rot[y] r[z]

@@ -34,15 +34,9 @@ namespace EightBit
             return returned.ToString();
         }
 
-        public static string Dump_ByteValue(byte value)
-        {
-            return value.ToString("X2");
-        }
+        public static string Dump_ByteValue(byte value) => value.ToString("X2");
 
-        public static string Dump_WordValue(ushort value)
-        {
-            return value.ToString("X4");
-        }
+        public static string Dump_WordValue(ushort value) => value.ToString("X4");
 
         public string Disassemble(ushort current)
         {
@@ -503,215 +497,81 @@ namespace EightBit
             return output.ToString();
         }
 
-        private string ConvertAddress(ushort absolute)
-        {
-            if (this.symbols.Labels.TryGetValue(absolute, out string label))
-            {
-                return label;
-            }
+        private string ConvertAddress(ushort absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + Dump_WordValue(absolute);
 
-            return "$" + Dump_WordValue(absolute);
-        }
+        private string ConvertAddress(byte absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + Dump_ByteValue(absolute);
 
-        private string ConvertAddress(byte absolute)
-        {
-            if (this.symbols.Labels.TryGetValue(absolute, out string label))
-            {
-                return label;
-            }
+        private string ConvertConstant(ushort constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : this.Dump_DByte(constant);
 
-            return "$" + Dump_ByteValue(absolute);
-        }
+        private string ConvertConstant(byte constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : Dump_ByteValue(constant);
 
-        private string ConvertConstant(ushort constant)
-        {
-            if (this.symbols.Constants.TryGetValue(constant, out string label))
-            {
-                return label;
-            }
+        private byte GetByte(ushort absolute) => this.bus.Peek(absolute);
 
-            return this.Dump_DByte(constant);
-        }
+        private ushort GetWord(ushort absolute) => this.processor.PeekWord(absolute).Word;
 
-        private string ConvertConstant(byte constant)
-        {
-            if (this.symbols.Constants.TryGetValue(constant, out string label))
-            {
-                return label;
-            }
+        private string Dump_Byte(ushort absolute) => Disassembler.Dump_ByteValue(this.GetByte(absolute));
 
-            return Dump_ByteValue(constant);
-        }
+        private string Dump_DByte(ushort absolute) => this.Dump_Byte(absolute) + " " + this.Dump_Byte(++absolute);
 
-        private byte GetByte(ushort absolute)
-        {
-            return this.bus.Peek(absolute);
-        }
+        private string Dump_Word(ushort absolute) => Disassembler.Dump_WordValue(this.GetWord(absolute));
 
-        private ushort GetWord(ushort absolute)
-        {
-            return this.processor.PeekWord(absolute).Word;
-        }
+        private string Disassemble_Implied(string instruction) => "\t" + instruction;
 
-        private string Dump_Byte(ushort absolute)
-        {
-            return Disassembler.Dump_ByteValue(this.GetByte(absolute));
-        }
+        private string Disassemble_Absolute(string instruction) => this.AM_Absolute_dump() + "\t" + instruction + " " + this.AM_Absolute();
 
-        private string Dump_DByte(ushort absolute)
-        {
-            return this.Dump_Byte(absolute) + " " + this.Dump_Byte(++absolute);
-        }
+        private string Disassemble_Indirect(string instruction) => this.AM_Absolute_dump() + "\t" + instruction + " (" + this.AM_Absolute() + ")";
 
-        private string Dump_Word(ushort absolute)
-        {
-            return Disassembler.Dump_WordValue(this.GetWord(absolute));
-        }
+        private string Disassemble_Relative(string instruction, ushort absolute) => this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembler.Dump_WordValue(absolute);
 
-        private string Disassemble_Implied(string instruction)
-        {
-            return "\t" + instruction;
-        }
+        private string Disassemble_Immediate(string instruction) => this.AM_Immediate_dump() + "\t" + instruction + " " + this.AM_Immediate();
 
-        private string Disassemble_Absolute(string instruction)
-        {
-            return this.AM_Absolute_dump() + "\t" + instruction + " " + this.AM_Absolute();
-        }
+        private string Disassemble_AM_00(int bbb, string instruction) => this.AM_00_dump(bbb) + "\t" + instruction + " " + this.AM_00(bbb);
 
-        private string Disassemble_Indirect(string instruction)
-        {
-            return this.AM_Absolute_dump() + "\t" + instruction + " (" + this.AM_Absolute() + ")";
-        }
+        private string Disassemble_AM_01(int bbb, string instruction) => this.AM_01_dump(bbb) + "\t" + instruction + " " + this.AM_01(bbb);
 
-        private string Disassemble_Relative(string instruction, ushort absolute)
-        {
-            return this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembler.Dump_WordValue(absolute);
-        }
+        private string Disassemble_AM_10(int bbb, string instruction) => this.AM_10_dump(bbb) + "\t" + instruction + " " + this.AM_10(bbb);
 
-        private string Disassemble_Immediate(string instruction)
-        {
-            return this.AM_Immediate_dump() + "\t" + instruction + " " + this.AM_Immediate();
-        }
+        private string Disassemble_AM_10_x(int bbb, string instruction) => this.AM_10_x_dump(bbb) + "\t" + instruction + " " + this.AM_10_x(bbb);
 
-        private string Disassemble_AM_00(int bbb, string instruction)
-        {
-            return this.AM_00_dump(bbb) + "\t" + instruction + " " + this.AM_00(bbb);
-        }
+        private string Disassemble_AM_11(int bbb, string instruction) => this.AM_11_dump(bbb) + "\t" + instruction + " " + this.AM_11(bbb);
 
-        private string Disassemble_AM_01(int bbb, string instruction)
-        {
-            return this.AM_01_dump(bbb) + "\t" + instruction + " " + this.AM_01(bbb);
-        }
+        private string Disassemble_AM_11_x(int bbb, string instruction) => this.AM_11_x_dump(bbb) + "\t" + instruction + " " + this.AM_11_x(bbb);
 
-        private string Disassemble_AM_10(int bbb, string instruction)
-        {
-            return this.AM_10_dump(bbb) + "\t" + instruction + " " + this.AM_10(bbb);
-        }
+        private string AM_Immediate_dump() => this.Dump_Byte((ushort)(this.address + 1));
 
-        private string Disassemble_AM_10_x(int bbb, string instruction)
-        {
-            return this.AM_10_x_dump(bbb) + "\t" + instruction + " " + this.AM_10_x(bbb);
-        }
+        private string AM_Immediate() => "#$" + this.AM_Immediate_dump();
 
-        private string Disassemble_AM_11(int bbb, string instruction)
-        {
-            return this.AM_11_dump(bbb) + "\t" + instruction + " " + this.AM_11(bbb);
-        }
+        private string AM_Absolute_dump() => this.Dump_DByte((ushort)(this.address + 1));
 
-        private string Disassemble_AM_11_x(int bbb, string instruction)
-        {
-            return this.AM_11_x_dump(bbb) + "\t" + instruction + " " + this.AM_11_x(bbb);
-        }
+        private string AM_Absolute() => "$" + this.Dump_Word((ushort)(this.address + 1));
 
-        private string AM_Immediate_dump()
-        {
-            return this.Dump_Byte((ushort)(this.address + 1));
-        }
+        private string AM_ZeroPage_dump() => this.Dump_Byte((ushort)(this.address + 1));
 
-        private string AM_Immediate()
-        {
-            return "#$" + this.AM_Immediate_dump();
-        }
+        private string AM_ZeroPage() => "$" + this.Dump_Byte((ushort)(this.address + 1));
 
-        private string AM_Absolute_dump()
-        {
-            return this.Dump_DByte((ushort)(this.address + 1));
-        }
+        private string AM_ZeroPageX_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_Absolute()
-        {
-            return "$" + this.Dump_Word((ushort)(this.address + 1));
-        }
+        private string AM_ZeroPageX() => this.AM_ZeroPage() + ",X";
 
-        private string AM_ZeroPage_dump()
-        {
-            return this.Dump_Byte((ushort)(this.address + 1));
-        }
+        private string AM_ZeroPageY_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_ZeroPage()
-        {
-            return "$" + this.Dump_Byte((ushort)(this.address + 1));
-        }
+        private string AM_ZeroPageY() => this.AM_ZeroPage() + ",Y";
 
-        private string AM_ZeroPageX_dump()
-        {
-            return this.AM_ZeroPage_dump();
-        }
+        private string AM_AbsoluteX_dump() => this.AM_Absolute_dump();
 
-        private string AM_ZeroPageX()
-        {
-            return this.AM_ZeroPage() + ",X";
-        }
+        private string AM_AbsoluteX() => this.AM_Absolute() + ",X";
 
-        private string AM_ZeroPageY_dump()
-        {
-            return this.AM_ZeroPage_dump();
-        }
+        private string AM_AbsoluteY_dump() => this.AM_Absolute_dump();
 
-        private string AM_ZeroPageY()
-        {
-            return this.AM_ZeroPage() + ",Y";
-        }
+        private string AM_AbsoluteY() => this.AM_Absolute() + ",Y";
 
-        private string AM_AbsoluteX_dump()
-        {
-            return this.AM_Absolute_dump();
-        }
+        private string AM_IndexedIndirectX_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_AbsoluteX()
-        {
-            return this.AM_Absolute() + ",X";
-        }
+        private string AM_IndexedIndirectX() => "($" + this.Dump_Byte((ushort)(this.address + 1)) + ",X)";
 
-        private string AM_AbsoluteY_dump()
-        {
-            return this.AM_Absolute_dump();
-        }
+        private string AM_IndirectIndexedY_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_AbsoluteY()
-        {
-            return this.AM_Absolute() + ",Y";
-        }
-
-        private string AM_IndexedIndirectX_dump()
-        {
-            return this.AM_ZeroPage_dump();
-        }
-
-        private string AM_IndexedIndirectX()
-        {
-            return "($" + this.Dump_Byte((ushort)(this.address + 1)) + ",X)";
-        }
-
-        private string AM_IndirectIndexedY_dump()
-        {
-            return this.AM_ZeroPage_dump();
-        }
-
-        private string AM_IndirectIndexedY()
-        {
-            return "($" + this.Dump_Byte((ushort)(this.address + 1)) + "),Y";
-        }
+        private string AM_IndirectIndexedY() => "($" + this.Dump_Byte((ushort)(this.address + 1)) + "),Y";
 
         private string AM_00_dump(int bbb)
         {

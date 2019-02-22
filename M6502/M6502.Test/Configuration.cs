@@ -8,28 +8,18 @@ namespace M6502.Test
 
     internal class Configuration
     {
-        private readonly Register16 loadAddress = new Register16(0x400);
-        private readonly Register16 startAddress = new Register16(0x400);
-        private readonly string romDirectory = "roms";
-        private readonly string program = "6502_functional_test.bin";
-        private bool debugMode = false;
-
         public Configuration()
         {
         }
 
-        public bool DebugMode
-        {
-            get => this.debugMode;
-            set => this.debugMode = value;
-        }
+        public bool DebugMode { get; set; } = false;
 
-        public Register16 LoadAddress { get => this.loadAddress; }
+        public Register16 LoadAddress { get; } = new Register16(0x400);
 
-        public Register16 StartAddress { get => this.startAddress; }
+        public Register16 StartAddress { get; } = new Register16(0x400);
 
-        public string RomDirectory { get => this.romDirectory; }
+        public string RomDirectory { get; } = "roms";
 
-        public string Program { get => this.program; }
+        public string Program { get; } = "6502_functional_test.bin";
     }
 }

@@ -18,7 +18,7 @@ namespace EightBit
         protected IntelProcessor(Bus bus)
         : base(bus)
         {
-            for (int i = 0; i < 0x100; ++i)
+            for (var i = 0; i < 0x100; ++i)
             {
                 this.decodedOpCodes[i] = new IntelOpCodeDecoded((byte)i);
             }
@@ -87,10 +87,7 @@ namespace EightBit
             this.OnLoweredHALT();
         }
 
-        protected static int BuildHalfCarryIndex(byte before, byte value, int calculation)
-        {
-            return ((before & 0x88) >> 1) | ((value & 0x88) >> 2) | ((calculation & 0x88) >> 3);
-        }
+        protected static int BuildHalfCarryIndex(byte before, byte value, int calculation) => ((before & 0x88) >> 1) | ((value & 0x88) >> 2) | ((calculation & 0x88) >> 3);
 
         protected static int CalculateHalfCarryAdd(byte before, byte value, int calculation)
         {

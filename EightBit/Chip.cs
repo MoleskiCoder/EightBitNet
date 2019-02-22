@@ -54,7 +54,7 @@ namespace EightBit
 
         public static int CountBits(int value)
         {
-            int count = 0;
+            var count = 0;
             while (value != 0)
             {
                 ++count;

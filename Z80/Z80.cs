@@ -28,7 +28,6 @@ namespace EightBit
         private bool prefixCB = false;
         private bool prefixDD = false;
         private bool prefixED = false;
-        private bool prefixFD = false;
 
         private PinLevel nmiLine = PinLevel.Low;
         private PinLevel m1Line = PinLevel.Low;
@@ -40,10 +39,7 @@ namespace EightBit
         private bool displaced = false;
 
         public Z80(Bus bus, InputOutput ports)
-        : base(bus)
-        {
-            this.ports = ports;
-        }
+        : base(bus) => this.ports = ports;
 
         public event EventHandler<EventArgs> ExecutingInstruction;
 
@@ -130,7 +126,7 @@ namespace EightBit
             this.Exx();
             this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
 
-            this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
+            this.prefixCB = this.prefixDD = this.prefixED = false;
         }
 
         public virtual void RaiseNMI()
@@ -204,7 +200,7 @@ namespace EightBit
             this.OnExecutingInstruction();
             if (this.Powered)
             {
-                this.displaced = this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
+                this.displaced = this.prefixCB = this.prefixDD = this.prefixED = false;
                 this.LowerM1();
                 if (this.RESET().Lowered())
                 {
@@ -295,22 +291,11 @@ namespace EightBit
 
         private static byte ClearFlag(byte f, StatusBits flag, int condition) => ClearFlag(f, (byte)flag, condition);
 
-        private static byte ClearFlag(byte f, StatusBits flag, bool condition) => ClearFlag(f, (byte)flag, condition);
+        private static byte AdjustSign(byte input, byte value) => SetFlag(input, StatusBits.SF, value & (byte)StatusBits.SF);
 
-        private static byte AdjustSign(byte input, byte value)
-        {
-            return SetFlag(input, StatusBits.SF, value & (byte)StatusBits.SF);
-        }
+        private static byte AdjustZero(byte input, byte value) => ClearFlag(input, StatusBits.ZF, value);
 
-        private static byte AdjustZero(byte input, byte value)
-        {
-            return ClearFlag(input, StatusBits.ZF, value);
-        }
-
-        private static byte AdjustParity(byte input, byte value)
-        {
-            return SetFlag(input, StatusBits.PF, EvenParity(value));
-        }
+        private static byte AdjustParity(byte input, byte value) => SetFlag(input, StatusBits.PF, EvenParity(value));
 
         private static byte AdjustSZ(byte input, byte value)
         {
@@ -342,15 +327,9 @@ namespace EightBit
             return AdjustXY(input, value);
         }
 
-        private static byte AdjustHalfCarryAdd(byte input, byte before, byte value, int calculation)
-        {
-            return SetFlag(input, StatusBits.HC, CalculateHalfCarryAdd(before, value, calculation));
-        }
+        private static byte AdjustHalfCarryAdd(byte input, byte before, byte value, int calculation) => SetFlag(input, StatusBits.HC, CalculateHalfCarryAdd(before, value, calculation));
 
-        private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation)
-        {
-            return SetFlag(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
-        }
+        private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetFlag(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
 
         private static byte AdjustOverflowAdd(byte input, int beforeNegative, int valueNegative, int afterNegative)
         {
@@ -358,10 +337,7 @@ namespace EightBit
             return SetFlag(input, StatusBits.VF, overflow);
         }
 
-        private static byte AdjustOverflowAdd(byte input, byte before, byte value, byte calculation)
-        {
-            return AdjustOverflowAdd(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
-        }
+        private static byte AdjustOverflowAdd(byte input, byte before, byte value, byte calculation) => AdjustOverflowAdd(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
 
         private static byte AdjustOverflowSub(byte input, int beforeNegative, int valueNegative, int afterNegative)
         {
@@ -369,20 +345,11 @@ namespace EightBit
             return SetFlag(input, StatusBits.VF, overflow);
         }
 
-        private static byte AdjustOverflowSub(byte input, byte before, byte value, byte calculation)
-        {
-            return AdjustOverflowSub(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
-        }
+        private static byte AdjustOverflowSub(byte input, byte before, byte value, byte calculation) => AdjustOverflowSub(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
 
-        private static byte RES(int n, byte operand)
-        {
-            return (byte)(operand & ~(1 << n));
-        }
+        private static byte RES(int n, byte operand) => (byte)(operand & ~(1 << n));
 
-        private static byte SET(int n, byte operand)
-        {
-            return (byte)(operand | (1 << n));
-        }
+        private static byte SET(int n, byte operand) => (byte)(operand | (1 << n));
 
         private void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
 
@@ -531,7 +498,6 @@ namespace EightBit
 
         private void ExecuteCB(int x, int y, int z)
         {
-            var memoryY = y == 6;
             var memoryZ = z == 6;
             var indirect = (!this.displaced && memoryZ) || this.displaced;
             var direct = !indirect;
@@ -620,8 +586,6 @@ namespace EightBit
 
         private void ExecuteED(int x, int y, int z, int p, int q)
         {
-            var memoryY = y == 6;
-            var memoryZ = z == 6;
             switch (x)
             {
                 case 0:
@@ -647,14 +611,7 @@ namespace EightBit
                         case 1: // Output to port with 16-bit address
                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                             this.MEMPTR.Word++;
-                            if (y != 6)
-                            {
-                                this.Bus.Data = this.R(y); // OUT (C),r[y]
-                            }
-                            else
-                            {
-                                this.Bus.Data = 0; // OUT (C),0
-                            }
+                            this.Bus.Data = y != 6 ? this.R(y) : (byte)0;
 
                             this.WritePort();
                             this.Tick(12);
@@ -1132,7 +1089,7 @@ namespace EightBit
                 case 1: // 8-bit loading
                     if (!(memoryZ && memoryY))
                     {
-                        bool normal = true;
+                        var normal = true;
                         if (this.displaced)
                         {
                             if (memoryZ || memoryY)
@@ -1365,7 +1322,7 @@ namespace EightBit
                                             this.Execute(this.FetchByte());
                                             break;
                                         case 3: // FD prefix
-                                            this.displaced = this.prefixFD = true;
+                                            this.displaced = true;
                                             this.LowerM1();
                                             this.Execute(this.FetchByte());
                                             break;
@@ -2038,10 +1995,7 @@ namespace EightBit
             ++this.MEMPTR.Low;
         }
 
-        private void WritePort()
-        {
-            this.ports.Write(this.Bus.Address.Low, this.Bus.Data);
-        }
+        private void WritePort() => this.ports.Write(this.Bus.Address.Low, this.Bus.Data);
 
         private byte ReadPort(byte port)
         {
@@ -2050,9 +2004,6 @@ namespace EightBit
             return this.ReadPort();
         }
 
-        private byte ReadPort()
-        {
-            return this.Bus.Data = this.ports.Read(this.Bus.Address.Low);
-        }
+        private byte ReadPort() => this.Bus.Data = this.ports.Read(this.Bus.Address.Low);
     }
 }

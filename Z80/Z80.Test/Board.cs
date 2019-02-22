@@ -46,7 +46,6 @@ namespace Z80.Test
 
         public override void Initialize()
         {
-            var programFilename = this.configuration.Program;
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
             this.ram.Load(programPath, loadAddress.Word);
@@ -68,15 +67,15 @@ namespace Z80.Test
 
         private void BDOS()
         {
-            switch (CPU.C)
+            switch (this.CPU.C)
             {
                 case 0x2:
-                    System.Console.Out.Write(CPU.E.ToString());
+                    System.Console.Out.Write(this.CPU.E.ToString());
                     break;
                 case 0x9:
-                    for (ushort i = CPU.DE.Word; Peek(i) != '$'; ++i)
+                    for (var i = this.CPU.DE.Word; this.Peek(i) != '$'; ++i)
                     {
-                        System.Console.Out.Write((char)Peek(i));
+                        System.Console.Out.Write((char)this.Peek(i));
                     }
 
                     break;
@@ -95,21 +94,15 @@ namespace Z80.Test
 
                     break;
                 case 0x5:   // BDOS
-                    BDOS();
+                    this.BDOS();
                     break;
                 default:
                     break;
             }
         }
 
-        private void CPU_LoweredHALT(object sender, System.EventArgs e)
-        {
-            this.LowerPOWER();
-        }
+        private void CPU_LoweredHALT(object sender, System.EventArgs e) => this.LowerPOWER();
 
-        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e)
-        {
-            System.Console.Error.WriteLine($"{EightBit.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
-        }
+        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
     }
 }

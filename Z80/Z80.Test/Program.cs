@@ -13,7 +13,6 @@ namespace Z80.Test
 #if DEBUG
             configuration.DebugMode = true;
 #endif
-           // configuration.DebugMode = true;
 
             using (var harness = new TestHarness(configuration))
             {
