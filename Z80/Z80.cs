@@ -17,7 +17,7 @@ namespace EightBit
                 new Register16(), new Register16(), new Register16(),
             },
             {
-                new Register16(0), new Register16(0), new Register16(0),
+                new Register16(), new Register16(), new Register16(),
             },
         };
 
@@ -1533,62 +1533,65 @@ namespace EightBit
 
         private void SBC(Register16 value)
         {
-            this.MEMPTR.Word = this.HL2().Word;
+            var hl2 = this.HL2();
+            this.MEMPTR.Word = hl2.Word;
 
             var beforeNegative = this.MEMPTR.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
 
             var result = this.MEMPTR.Word - value.Word - (this.F & (byte)StatusBits.CF);
-            this.HL2().Word = (ushort)result;
+            hl2.Word = (ushort)result;
 
-            var afterNegative = this.HL2().High & (byte)StatusBits.SF;
+            var afterNegative = hl2.High & (byte)StatusBits.SF;
 
             this.F = SetFlag(this.F, StatusBits.SF, afterNegative);
-            this.F = ClearFlag(this.F, StatusBits.ZF, this.HL2().Word);
-            this.F = AdjustHalfCarrySub(this.F, this.MEMPTR.High, value.High, this.HL2().High);
+            this.F = ClearFlag(this.F, StatusBits.ZF, hl2.Word);
+            this.F = AdjustHalfCarrySub(this.F, this.MEMPTR.High, value.High, hl2.High);
             this.F = AdjustOverflowSub(this.F, beforeNegative, valueNegative, afterNegative);
             this.F = SetFlag(this.F, StatusBits.NF);
             this.F = SetFlag(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustXY(this.F, this.HL2().High);
+            this.F = AdjustXY(this.F, hl2.High);
 
             ++this.MEMPTR.Word;
         }
 
         private void ADC(Register16 value)
         {
-            this.MEMPTR.Word = this.HL2().Word;
+            var hl2 = this.HL2();
+            this.MEMPTR.Word = hl2.Word;
 
             var beforeNegative = this.MEMPTR.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
 
             var result = this.MEMPTR.Word + value.Word + (this.F & (byte)StatusBits.CF);
-            this.HL2().Word = (ushort)result;
+            hl2.Word = (ushort)result;
 
-            var afterNegative = this.HL2().High & (byte)StatusBits.SF;
+            var afterNegative = hl2.High & (byte)StatusBits.SF;
 
             this.F = SetFlag(this.F, StatusBits.SF, afterNegative);
-            this.F = ClearFlag(this.F, StatusBits.ZF, this.HL2().Word);
-            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, this.HL2().High);
+            this.F = ClearFlag(this.F, StatusBits.ZF, hl2.Word);
+            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, hl2.High);
             this.F = AdjustOverflowAdd(this.F, beforeNegative, valueNegative, afterNegative);
             this.F = ClearFlag(this.F, StatusBits.NF);
             this.F = SetFlag(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustXY(this.F, this.HL2().High);
+            this.F = AdjustXY(this.F, hl2.High);
 
             ++this.MEMPTR.Word;
         }
 
         private void Add(Register16 value)
         {
-            this.MEMPTR.Word = this.HL2().Word;
+            var hl2 = this.HL2();
+            this.MEMPTR.Word = hl2.Word;
 
             var result = this.MEMPTR.Word + value.Word;
 
-            this.HL2().Word = (ushort)result;
+            hl2.Word = (ushort)result;
 
             this.F = ClearFlag(this.F, StatusBits.NF);
             this.F = SetFlag(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, this.HL2().High);
-            this.F = AdjustXY(this.F, this.HL2().High);
+            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, hl2.High);
+            this.F = AdjustXY(this.F, hl2.High);
 
             ++this.MEMPTR.Word;
         }
@@ -1787,13 +1790,14 @@ namespace EightBit
 
         private void XHTL()
         {
+            var hl2 = this.HL2();
             this.MEMPTR.Low = this.BusRead(this.SP);
-            this.BusWrite(this.HL2().Low);
-            this.HL2().Low = this.MEMPTR.Low;
+            this.BusWrite(hl2.Low);
+            hl2.Low = this.MEMPTR.Low;
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.BusRead();
-            this.BusWrite(this.HL2().High);
-            this.HL2().High = this.MEMPTR.High;
+            this.BusWrite(hl2.High);
+            hl2.High = this.MEMPTR.High;
         }
 
         private void BlockCompare(Register16 source, Register16 counter)
