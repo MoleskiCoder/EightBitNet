@@ -58,7 +58,7 @@ namespace Intel8080.Test
 
             this.Poke(0, 0xc3);  // JMP
             this.CPU.PokeWord(1, this.configuration.StartAddress);
-            this.Poke(5, 0xc9);	// ret
+            this.Poke(5, 0xc9); // ret
         }
 
         public override MemoryMapping Mapping(ushort absolute) => this.mapping;
@@ -84,14 +84,14 @@ namespace Intel8080.Test
         {
             switch (this.CPU.PC.Word)
             {
-                case 0x0:   // CP/M warm start
+                case 0x0: // CP/M warm start
                     if (++this.warmstartCount == 2)
                     {
                         this.LowerPOWER();
                     }
 
                     break;
-                case 0x5:   // BDOS
+                case 0x5: // BDOS
                     this.BDOS();
                     break;
                 default:

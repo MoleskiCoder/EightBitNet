@@ -246,6 +246,7 @@ namespace EightBit
                                     this.Tick(4);
                                     break;
                             }
+
                             break;
                         case 1: // 16-bit load immediate/add
                             switch (q)
@@ -261,6 +262,7 @@ namespace EightBit
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             break;
                         case 2: // Indirect loading
                             switch (q)
@@ -289,6 +291,7 @@ namespace EightBit
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
                                     }
+
                                     break;
                                 case 1:
                                     switch (p)
@@ -314,10 +317,12 @@ namespace EightBit
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
                                     }
+
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             break;
                         case 3: // 16-bit INC/DEC
                             switch (q)
@@ -331,6 +336,7 @@ namespace EightBit
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             this.Tick(6);
                             break;
                         case 4: // 8-bit INC
@@ -385,25 +391,28 @@ namespace EightBit
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             this.Tick(4);
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
                     }
+
                     break;
                 case 1: // 8-bit loading
-                    if (z == 6 && y == 6) // Exception (replaces LD (HL), (HL))
+                    if (z == 6 && y == 6)
                     {
-                        this.Halt();
+                        this.Halt(); // Exception (replaces LD (HL), (HL))
                     }
                     else
                     {
                         this.R(y, this.R(z));
-                        if ((y == 6) || (z == 6)) // M operations
+                        if ((y == 6) || (z == 6))
                         {
-                            this.Tick(3);
+                            this.Tick(3); // M operations
                         }
                     }
+
                     this.Tick(4);
                     break;
                 case 2: // Operate on accumulator and register/memory location
@@ -436,6 +445,7 @@ namespace EightBit
                         default:
                             throw new NotSupportedException("Invalid operation mode");
                     }
+
                     this.Tick(4);
                     if (z == 6)
                     {
@@ -477,10 +487,12 @@ namespace EightBit
                                             this.Tick(4);
                                             break;
                                     }
+
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             break;
                         case 2: // Conditional jump
                             this.JumpConditionalFlag(y);
@@ -518,6 +530,7 @@ namespace EightBit
                                     this.Tick(4);
                                     break;
                             }
+
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
                             if (this.CallConditionalFlag(y))
@@ -542,10 +555,12 @@ namespace EightBit
                                             this.Tick(17);
                                             break;
                                     }
+
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             break;
                         case 6: // Operate on accumulator and immediate operand: alu[y] n
                             switch (y)
@@ -577,6 +592,7 @@ namespace EightBit
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
+
                             this.Tick(7);
                             break;
                         case 7: // Restart: RST y * 8
@@ -586,6 +602,7 @@ namespace EightBit
                         default:
                             throw new NotSupportedException("Invalid operation mode");
                     }
+
                     break;
             }
         }
@@ -776,11 +793,13 @@ namespace EightBit
             {
                 addition = 0x6;
             }
+
             if (((this.F & (byte)StatusBits.CF) != 0) || HighNibble(before) > 9 || (HighNibble(before) >= 9 && LowNibble(before) > 9))
             {
                 addition |= 0x60;
                 carry = true;
             }
+
             this.Add(addition);
             this.F = SetFlag(this.F, StatusBits.CF, carry);
         }

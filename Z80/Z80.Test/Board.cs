@@ -4,7 +4,6 @@
 
 namespace Z80.Test
 {
-    using System.Text;
     using EightBit;
 
     internal class Board : Bus

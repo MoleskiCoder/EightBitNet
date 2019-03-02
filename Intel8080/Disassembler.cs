@@ -4,6 +4,8 @@
 
 namespace EightBit
 {
+    using System;
+
     public class Disassembler
     {
         public Disassembler(Bus bus) => this.Bus = bus;
@@ -124,46 +126,10 @@ namespace EightBit
             throw new System.ArgumentOutOfRangeException(nameof(which));
         }
 
-        private string Disassemble(Intel8080 cpu, ushort pc)
+        private static Tuple<string, int> Disassemble(int x, int y, int z, int p, int q)
         {
-            var opCode = this.Bus.Peek(pc);
-
-            var decoded = cpu.GetDecodedOpCode(opCode);
-
-            var x = decoded.X;
-            var y = decoded.Y;
-            var z = decoded.Z;
-
-            var p = decoded.P;
-            var q = decoded.Q;
-
-            var immediate = this.Bus.Peek((ushort)(pc + 1));
-            var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
-            var displacement = (sbyte)immediate;
-            var relative = pc + displacement + 2;
-            var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));
-
             var dumpCount = 0;
-
-            var output = $"{opCode:x2}";
-
             var specification = string.Empty;
-            output += Disassemble(ref specification, ref dumpCount, x, y, z, p, q);
-
-            for (var i = 0; i < dumpCount; ++i)
-            {
-                output += $"{this.Bus.Peek((ushort)(pc + i + 1)):x2}";
-            }
-
-            output += '\t';
-            output += string.Format(specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
-
-            return output;
-        }
-
-        private static string Disassemble(ref string specification, ref int dumpCount, int x, int y, int z, int p, int q)
-        {
-            var output = string.Empty;
             switch (x)
             {
                 case 0:
@@ -190,7 +156,7 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    specification = "LXI " + RP(p) + ",{1:X4}H";
+                                    specification = $"LXI {RP(p)}" + ",{1:X4}H";
                                     dumpCount += 2;
                                     break;
                                 case 1: // ADD HL,rp
@@ -415,7 +381,7 @@ namespace EightBit
                     break;
             }
 
-            return output;
+            return new Tuple<string, int>(specification, dumpCount);
         }
 
         private static string RP(int rp)
@@ -475,6 +441,41 @@ namespace EightBit
             }
 
             throw new System.ArgumentOutOfRangeException(nameof(r));
+        }
+
+        private string Disassemble(Intel8080 cpu, ushort pc)
+        {
+            var opCode = this.Bus.Peek(pc);
+
+            var decoded = cpu.GetDecodedOpCode(opCode);
+
+            var x = decoded.X;
+            var y = decoded.Y;
+            var z = decoded.Z;
+
+            var p = decoded.P;
+            var q = decoded.Q;
+
+            var immediate = this.Bus.Peek((ushort)(pc + 1));
+            var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
+            var displacement = (sbyte)immediate;
+            var relative = pc + displacement + 2;
+            var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));
+
+            var disassembled = Disassemble(x, y, z, p, q);
+            var specification = disassembled.Item1;
+            var dumpCount = disassembled.Item2;
+
+            var output = $"{opCode:x2}";
+            for (var i = 0; i < dumpCount; ++i)
+            {
+                output += $"{this.Bus.Peek((ushort)(pc + i + 1)):x2}";
+            }
+
+            output += '\t';
+            output += string.Format(specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
+
+            return output;
         }
     }
 }
