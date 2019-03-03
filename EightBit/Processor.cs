@@ -11,10 +11,7 @@ namespace EightBit
         private PinLevel resetLine;
         private PinLevel intLine;
 
-        protected Processor(Bus memory)
-        {
-            this.Bus = memory;
-        }
+        protected Processor(Bus memory) => this.Bus = memory;
 
         public event EventHandler<EventArgs> RaisingRESET;
 
