@@ -233,7 +233,7 @@ namespace EightBit
                 case 0x49: this.A = this.EorR(this.A, this.AM_Immediate()); break;                                              // EOR (immediate)
                 case 0x4a: this.BusRead(); this.A = this.LSR(this.A); break;                                                    // LSR A (implied)
                 case 0x4b: this.ASR(this.AM_Immediate()); break;                                                                // *ASR (immediate)
-                case 0x4c: this.Jump(this.Address_Absolute()); break;                                                           // JMP (absolute)
+                case 0x4c: this.Jump(this.Address_Absolute().Word); break;                                                      // JMP (absolute)
                 case 0x4d: this.A = this.EorR(this.A, this.AM_Absolute()); break;                                               // EOR (absolute)
                 case 0x4e: this.BusReadModifyWrite(this.LSR(this.AM_Absolute())); break;                                        // LSR (absolute)
                 case 0x4f: this.SRE(this.AM_Absolute()); break;                                                                 // *SRE (absolute)
@@ -267,7 +267,7 @@ namespace EightBit
                 case 0x69: this.A = this.ADC(this.A, this.AM_Immediate()); break;                                               // ADC (immediate)
                 case 0x6a: this.BusRead(); this.A = this.ROR(this.A); break;                                                    // ROR A (implied)
                 case 0x6b: this.ARR(this.AM_Immediate()); break;                                                                // *ARR (immediate)
-                case 0x6c: this.Jump(this.Address_Indirect()); break;                                                           // JMP (indirect)
+                case 0x6c: this.Jump(this.Address_Indirect().Word); break;                                                      // JMP (indirect)
                 case 0x6d: this.A = this.ADC(this.A, this.AM_Absolute()); break;                                                // ADC (absolute)
                 case 0x6e: this.BusReadModifyWrite(this.ROR(this.AM_Absolute())); break;                                        // ROR (absolute)
                 case 0x6f: this.RRA(this.AM_Absolute()); break;                                                                 // *RRA (absolute)
@@ -589,7 +589,7 @@ namespace EightBit
 
             this.P = SetFlag(this.P, StatusBits.IF);   // Disable IRQ
             var vector = reset ? RSTvector : (nmi ? NMIvector : IRQvector);
-            this.Jump(this.GetWordPaged(0xff, vector));
+            this.Jump(this.GetWordPaged(0xff, vector).Word);
             this.handlingRESET = this.handlingNMI = this.handlingINT = false;
         }
 

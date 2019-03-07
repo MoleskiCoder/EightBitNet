@@ -186,15 +186,11 @@ namespace EightBit
 
         protected void Jump(ushort destination) => this.PC.Word = destination;
 
-        protected void Jump(Register16 destination) => this.Jump(destination.Word);
-
         protected void Call(ushort destination)
         {
             this.PushWord(this.PC);
             this.Jump(destination);
         }
-
-        protected void Call(Register16 destination) => this.Call(destination.Word);
 
         protected virtual void Return() => this.Jump(this.PopWord().Word);
     }

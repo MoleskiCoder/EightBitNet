@@ -1222,7 +1222,7 @@ namespace EightBit
                                             this.Tick(4);
                                             break;
                                         case 2: // JP HL
-                                            this.Jump(this.HL2());
+                                            this.Jump(this.HL2().Word);
                                             this.Tick(4);
                                             break;
                                         case 3: // LD SP,HL
@@ -1800,12 +1800,12 @@ namespace EightBit
             hl2.High = this.MEMPTR.High;
         }
 
-        private void BlockCompare(ushort source, Register16 counter)
+        private void BlockCompare(ushort source, ushort counter)
         {
             var value = this.BusRead(source);
             var result = (byte)(this.A - value);
 
-            this.F = SetFlag(this.F, StatusBits.PF, --counter.Word);
+            this.F = SetFlag(this.F, StatusBits.PF, counter);
 
             this.F = AdjustSZ(this.F, result);
             this.F = AdjustHalfCarrySub(this.F, this.A, value, result);
@@ -1819,7 +1819,7 @@ namespace EightBit
 
         private void CPI()
         {
-            this.BlockCompare(this.HL.Word++, this.BC);
+            this.BlockCompare(this.HL.Word++, --this.BC.Word);
             ++this.MEMPTR.Word;
         }
 
@@ -1831,7 +1831,7 @@ namespace EightBit
 
         private void CPD()
         {
-            this.BlockCompare(this.HL.Word--, this.BC);
+            this.BlockCompare(this.HL.Word--, --this.BC.Word);
             --this.MEMPTR.Word;
         }
 
@@ -1841,7 +1841,7 @@ namespace EightBit
             return ((this.F & (byte)StatusBits.PF) != 0) && ((this.F & (byte)StatusBits.ZF) == 0); // See CPD
         }
 
-        private void BlockLoad(ushort source, ushort destination, Register16 counter)
+        private void BlockLoad(ushort source, ushort destination, ushort counter)
         {
             var value = this.BusRead(source);
             this.BusWrite(destination, value);
@@ -1849,10 +1849,10 @@ namespace EightBit
             this.F = SetFlag(this.F, StatusBits.XF, xy & (int)Bits.Bit3);
             this.F = SetFlag(this.F, StatusBits.YF, xy & (int)Bits.Bit1);
             this.F = ClearFlag(this.F, StatusBits.NF | StatusBits.HC);
-            this.F = SetFlag(this.F, StatusBits.PF, --counter.Word);
+            this.F = SetFlag(this.F, StatusBits.PF, counter);
         }
 
-        private void LDI() => this.BlockLoad(this.HL.Word++, this.DE.Word++, this.BC);
+        private void LDI() => this.BlockLoad(this.HL.Word++, this.DE.Word++, --this.BC.Word);
 
         private bool LDIR()
         {
@@ -1860,7 +1860,7 @@ namespace EightBit
             return (this.F & (byte)StatusBits.PF) != 0; // See LDI
         }
 
-        private void LDD() => this.BlockLoad(this.HL.Word--, this.DE.Word--, this.BC);
+        private void LDD() => this.BlockLoad(this.HL.Word--, this.DE.Word--, --this.BC.Word);
 
         private bool LDDR()
         {
@@ -1868,7 +1868,7 @@ namespace EightBit
             return (this.F & (byte)StatusBits.PF) != 0; // See LDD
         }
 
-        private void BlockIn(Register16 source, Register16 destination)
+        private void BlockIn(Register16 source, ushort destination)
         {
             this.MEMPTR.Word = this.Bus.Address.Word = source.Word;
             var value = this.ReadPort();
@@ -1879,8 +1879,7 @@ namespace EightBit
 
         private void INI()
         {
-            this.BlockIn(this.BC, this.HL);
-            ++this.HL.Word;
+            this.BlockIn(this.BC, this.HL.Word++);
             ++this.MEMPTR.Word;
         }
 
@@ -1892,8 +1891,7 @@ namespace EightBit
 
         private void IND()
         {
-            this.BlockIn(this.BC, this.HL);
-            --this.HL.Word;
+            this.BlockIn(this.BC, this.HL.Word--);
             --this.MEMPTR.Word;
         }
 
@@ -1903,7 +1901,7 @@ namespace EightBit
             return (this.F & (byte)StatusBits.ZF) == 0; // See IND
         }
 
-        private void BlockOut(Register16 source, Register16 destination)
+        private void BlockOut(ushort source, Register16 destination)
         {
             var value = this.BusRead(source);
             this.Bus.Address.Word = destination.Word;
@@ -1917,8 +1915,7 @@ namespace EightBit
 
         private void OUTI()
         {
-            this.BlockOut(this.HL, this.BC);
-            ++this.HL.Word;
+            this.BlockOut(this.HL.Word++, this.BC);
             ++this.MEMPTR.Word;
         }
 
@@ -1930,8 +1927,7 @@ namespace EightBit
 
         private void OUTD()
         {
-            this.BlockOut(this.HL, this.BC);
-            --this.HL.Word;
+            this.BlockOut(this.HL.Word--, this.BC);
             --this.MEMPTR.Word;
         }
 
