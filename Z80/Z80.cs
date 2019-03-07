@@ -1800,7 +1800,7 @@ namespace EightBit
             hl2.High = this.MEMPTR.High;
         }
 
-        private void BlockCompare(Register16 source, Register16 counter)
+        private void BlockCompare(ushort source, Register16 counter)
         {
             var value = this.BusRead(source);
             var result = (byte)(this.A - value);
@@ -1819,8 +1819,7 @@ namespace EightBit
 
         private void CPI()
         {
-            this.BlockCompare(this.HL, this.BC);
-            ++this.HL.Word;
+            this.BlockCompare(this.HL.Word++, this.BC);
             ++this.MEMPTR.Word;
         }
 
@@ -1832,8 +1831,7 @@ namespace EightBit
 
         private void CPD()
         {
-            this.BlockCompare(this.HL, this.BC);
-            --this.HL.Word;
+            this.BlockCompare(this.HL.Word--, this.BC);
             --this.MEMPTR.Word;
         }
 
@@ -1843,7 +1841,7 @@ namespace EightBit
             return ((this.F & (byte)StatusBits.PF) != 0) && ((this.F & (byte)StatusBits.ZF) == 0); // See CPD
         }
 
-        private void BlockLoad(Register16 source, Register16 destination, Register16 counter)
+        private void BlockLoad(ushort source, ushort destination, Register16 counter)
         {
             var value = this.BusRead(source);
             this.BusWrite(destination, value);
@@ -1854,12 +1852,7 @@ namespace EightBit
             this.F = SetFlag(this.F, StatusBits.PF, --counter.Word);
         }
 
-        private void LDI()
-        {
-            this.BlockLoad(this.HL, this.DE, this.BC);
-            ++this.HL.Word;
-            ++this.DE.Word;
-        }
+        private void LDI() => this.BlockLoad(this.HL.Word++, this.DE.Word++, this.BC);
 
         private bool LDIR()
         {
@@ -1867,12 +1860,7 @@ namespace EightBit
             return (this.F & (byte)StatusBits.PF) != 0; // See LDI
         }
 
-        private void LDD()
-        {
-            this.BlockLoad(this.HL, this.DE, this.BC);
-            --this.HL.Word;
-            --this.DE.Word;
-        }
+        private void LDD() => this.BlockLoad(this.HL.Word--, this.DE.Word--, this.BC);
 
         private bool LDDR()
         {
