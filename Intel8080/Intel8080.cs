@@ -479,7 +479,7 @@ namespace EightBit
                                             this.Tick(10);
                                             break;
                                         case 2: // JP HL
-                                            this.Jump(this.HL);
+                                            this.Jump(this.HL.Word);
                                             this.Tick(4);
                                             break;
                                         case 3: // LD SP,HL
@@ -502,7 +502,7 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0: // JP nn
-                                    this.Jump(this.FetchWord());
+                                    this.Jump(this.FetchWord().Word);
                                     this.Tick(10);
                                     break;
                                 case 2: // OUT (n),A
@@ -551,7 +551,7 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            this.Call(this.FetchWord());
+                                            this.Call(this.FetchWord().Word);
                                             this.Tick(17);
                                             break;
                                     }

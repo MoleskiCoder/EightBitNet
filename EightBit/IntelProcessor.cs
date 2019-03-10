@@ -138,7 +138,7 @@ namespace EightBit
         {
             this.MEMPTR.Low = address;
             this.MEMPTR.High = 0;
-            this.Call(this.MEMPTR);
+            this.Call(this.MEMPTR.Word);
         }
 
         protected bool CallConditional(bool condition)
@@ -146,7 +146,7 @@ namespace EightBit
             this.MEMPTR.Word = this.FetchWord().Word;
             if (condition)
             {
-                this.Call(this.MEMPTR);
+                this.Call(this.MEMPTR.Word);
             }
 
             return condition;
@@ -157,7 +157,7 @@ namespace EightBit
             this.MEMPTR.Word = this.FetchWord().Word;
             if (condition)
             {
-                this.Jump(this.MEMPTR);
+                this.Jump(this.MEMPTR.Word);
             }
 
             return condition;
@@ -176,7 +176,7 @@ namespace EightBit
         protected void JumpRelative(sbyte offset)
         {
             this.MEMPTR.Word = (ushort)(this.PC.Word + offset);
-            this.Jump(this.MEMPTR);
+            this.Jump(this.MEMPTR.Word);
         }
 
         protected bool JumpRelativeConditional(bool condition)
