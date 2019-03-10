@@ -14,6 +14,11 @@ namespace EightBit
             this.Access = access;
         }
 
+        public MemoryMapping(Memory memory, ushort begin, Mask mask, AccessLevel access)
+        : this(memory, begin, (ushort)mask, access)
+        {
+        }
+
         public Memory Memory { get; set; }
 
         public ushort Begin { get; set; }
