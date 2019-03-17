@@ -26,8 +26,8 @@ namespace EightBit
 
         public static string State(Intel8080 cpu)
         {
-            var pc = cpu.PC;
-            var sp = cpu.SP;
+            var pc = cpu.PC.Word;
+            var sp = cpu.SP.Word;
 
             var a = cpu.A;
             var f = cpu.F;
@@ -42,7 +42,7 @@ namespace EightBit
             var l = cpu.L;
 
             return
-                  $"PC={pc.Word:x4} SP={sp.Word:x4} "
+                  $"PC={pc:x4} SP={sp:x4} "
                 + $"A={a:x2} F={AsFlags(f)} "
                 + $"B={b:x2} C={c:x2} "
                 + $"D={d:x2} E={e:x2} "
