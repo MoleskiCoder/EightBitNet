@@ -19,10 +19,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intel8080", "Intel8080\Inte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intel8080.Test", "Intel8080\Intel8080.Test\Intel8080.Test.csproj", "{B09091A2-43A6-4729-9EE2-047895ECAF30}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MC6809", "MC6809\MC6809.csproj", "{3A63972B-AB50-4A01-8A10-0D2165580FAD}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -128,11 +127,26 @@ Global
 		{B09091A2-43A6-4729-9EE2-047895ECAF30}.Release|x64.Build.0 = Release|Any CPU
 		{B09091A2-43A6-4729-9EE2-047895ECAF30}.Release|x86.ActiveCfg = Release|Any CPU
 		{B09091A2-43A6-4729-9EE2-047895ECAF30}.Release|x86.Build.0 = Release|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Debug|x64.Build.0 = Debug|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Debug|x86.Build.0 = Debug|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Release|x64.ActiveCfg = Release|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Release|x64.Build.0 = Release|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Release|x86.ActiveCfg = Release|Any CPU
+		{3A63972B-AB50-4A01-8A10-0D2165580FAD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E120AD0F-5939-4F8B-B454-7920E565FA7E}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

@@ -35,6 +35,15 @@ namespace EightBit
 
         protected byte OpCode { get; set; }
 
+        // http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
+        public static sbyte SignExtend(int b, byte x)
+        {
+            var m = (byte)(1 << (b - 1)); // mask can be pre-computed if b is fixed
+            x = (byte)(x & ((1 << b) - 1));  // (Skip this if bits in x above position b are already zero.)
+            var result = (x ^ m) - m;
+            return (sbyte)result;
+        }
+
         public ref PinLevel RESET() => ref this.resetLine;
 
         public ref PinLevel INT() => ref this.intLine;
@@ -178,11 +187,15 @@ namespace EightBit
             return this.GetWord();
         }
 
+        protected Register16 GetWord(Register16 address) => this.GetWord(address.Word);
+
         protected void SetWord(ushort address, Register16 value)
         {
             this.Bus.Address.Word = address;
             this.SetWord(value);
         }
+
+        protected void SetWord(Register16 address, Register16 value) => this.SetWord(address.Word, value);
 
         protected void Jump(ushort destination) => this.PC.Word = destination;
 

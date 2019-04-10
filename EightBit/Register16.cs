@@ -5,11 +5,13 @@
 namespace EightBit
 {
     using System.Diagnostics;
-    using System.Runtime.InteropServices;
 
     [DebuggerDisplay("Word = {Word}")]
     public class Register16
     {
+        private byte low;
+        private byte high;
+
         public Register16(byte low, byte high)
         {
             this.Low = low;
@@ -28,6 +30,11 @@ namespace EightBit
         }
 
         public Register16(int value)
+        : this((ushort)value)
+        {
+        }
+
+        public Register16(uint value)
         : this((ushort)value)
         {
         }
@@ -54,9 +61,9 @@ namespace EightBit
             }
         }
 
-        public byte Low { get; set; }
+        public ref byte Low => ref this.low;
 
-        public byte High { get; set; }
+        public ref byte High => ref this.high;
 
         public static Register16 operator ++(Register16 value) => Increment(value);
 
