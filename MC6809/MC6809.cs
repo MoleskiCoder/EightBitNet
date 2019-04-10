@@ -1339,7 +1339,6 @@
             var specifier2 = Chip.LowNibble(data);
 
             var type8 = (specifier1 & (int)Bits.Bit3) == 0;  // 8 bit exchange?
-
             if (type8)
             {
                 ref var register1 = ref this.ReferenceTransfer8(specifier1);
@@ -1356,11 +1355,11 @@
 
         private byte INC(byte operand)
         {
-            const register16_t addition = operand + 1;
-            const auto result = addition.low;
-            adjustNZ(result);
-            adjustOverflow(operand, 1, addition);
-            adjustHalfCarry(operand, 1, result);
+            var addition = new Register16(operand + 1);
+            var result = addition.Low;
+            this.AdjustNZ(result);
+            this.AdjustOverflow(operand, 1, addition);
+            this.AdjustHalfCarry(operand, 1, result);
             return result;
         }
 
@@ -1370,26 +1369,26 @@
 
         private byte LSR(byte operand)
         {
-            setFlag(CC(), CF, operand & Bit0);
-            adjustNZ(operand >>= 1);
+            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.AdjustNZ(operand >>= 1);
             return operand;
         }
 
         private Register16 MUL(byte first, byte second)
         {
-            const register16_t result = first * second;
-            adjustZero(result);
-            setFlag(CC(), CF, result.low & Bit7);
+            var result = new Register16(first * second);
+            this.AdjustZero(result);
+            SetFlag(this.CC, StatusBits.CF, result.Low & (byte)Bits.Bit7);
             return result;
         }
 
         private byte NEG(byte operand)
         {
-            setFlag(CC(), VF, operand == Bit7);
-            const register16_t result = 0 - operand;
-            operand = result.low;
-            adjustNZ(operand);
-            adjustCarry(result);
+            SetFlag(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
+            var result = new Register16(0 - operand);
+            operand = result.Low;
+            this.AdjustNZ(operand);
+            this.AdjustCarry(result);
             return operand;
         }
 
@@ -1501,20 +1500,20 @@
 
         private byte ROL(byte operand)
         {
-            const auto carryIn = carry();
-            setFlag(CC(), CF, operand & Bit7);
-            setFlag(CC(), VF, ((operand & Bit7) >> 7) ^ ((operand & Bit6) >> 6));
-            const uint8_t result = (operand << 1) | carryIn;
-            adjustNZ(result);
+            var carryIn = this.Carry;
+            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
+            SetFlag(this.CC, StatusBits.VF, ((operand & (byte)Bits.Bit7) >> 7) ^ ((operand & (byte)Bits.Bit6) >> 6));
+            var result = (byte)((operand << 1) | carryIn);
+            this.AdjustNZ(result);
             return result;
         }
 
         private byte ROR(byte operand)
         {
-            const auto carryIn = carry();
-            setFlag(CC(), CF, operand & Bit0);
-            const uint8_t result = (operand >> 1) | (carryIn << 7);
-            adjustNZ(result);
+            var carryIn = this.Carry;
+            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
+            var result = (byte)((operand >> 1) | (carryIn << 7));
+            this.AdjustNZ(result);
             return result;
         }
 
@@ -1526,56 +1525,62 @@
 
         private byte SUB(byte operand, byte data, byte carry = 0)
         {
-            const register16_t subtraction = operand - data - carry;
-            adjustSubtraction(operand, data, subtraction);
-            return subtraction.low;
+            var subtraction = new Register16(operand - data - carry);
+            this.AdjustSubtraction(operand, data, subtraction);
+            return subtraction.Low;
         }
 
         private Register16 SUB(Register16 operand, Register16 data)
         {
-            const uint32_t subtraction = operand.word - data.word;
-            adjustSubtraction(operand, data, subtraction);
-            return subtraction & Mask16;
+            var subtraction = (uint)(operand.Word - data.Word);
+            this.AdjustSubtraction(operand, data, subtraction);
+            return new Register16(subtraction & (uint)Mask.Mask16);
         }
 
         private byte SEX(byte from)
         {
-            adjustNZ(from);
-            return from & Bit7 ? Mask8 : 0;
+            this.AdjustNZ(from);
+            return (from & (byte)Bits.Bit7) != 0 ? (byte)Mask.Mask8 : (byte)0;
         }
 
         private void SWI()
         {
-            saveEntireRegisterState();
-            setFlag(CC(), IF);  // Disable IRQ
-            setFlag(CC(), FF);  // Disable FIRQ
-            jump(getWordPaged(0xff, SWIvector));
+            this.SaveEntireRegisterState();
+            SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
+            SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.Jump(this.GetWordPaged(0xff, SWIvector));
         }
 
         private void SWI2()
         {
-            saveEntireRegisterState();
-            jump(getWordPaged(0xff, SWI2vector));
+            this.SaveEntireRegisterState();
+            this.Jump(this.GetWordPaged(0xff, SWI2vector));
         }
 
         private void SWI3()
         {
-            saveEntireRegisterState();
-            jump(getWordPaged(0xff, SWI3vector));
+            this.SaveEntireRegisterState();
+            this.Jump(this.GetWordPaged(0xff, SWI3vector));
         }
 
         private void TFR(byte data)
         {
-            const auto reg1 = highNibble(data);
-            const auto reg2 = lowNibble(data);
+            var specifier1 = Chip.HighNibble(data);
+            var specifier2 = Chip.LowNibble(data);
 
-            const bool type8 = !!(reg1 & Bit3); // 8 bit transfer?
-            ASSUME(type8 == !!(reg2 & Bit3));   // Regardless, the register transfer must be equivalent
-
+            var type8 = (specifier1 & (int)Bits.Bit3) == 0;  // 8 bit transfer?
             if (type8)
-                referenceTransfer8(reg2) = referenceTransfer8(reg1);
+            {
+                ref var register1 = ref this.ReferenceTransfer8(specifier1);
+                ref var register2 = ref this.ReferenceTransfer8(specifier2);
+                register2 = register1;
+            }
             else
-                referenceTransfer16(reg2) = referenceTransfer16(reg1);
+            {
+                var register1 = this.ReferenceTransfer16(specifier1);
+                var register2 = this.ReferenceTransfer16(specifier2);
+                register2 = register1;
+            }
         }
 
         private void TST(byte data) => this.CMP(data, 0);
