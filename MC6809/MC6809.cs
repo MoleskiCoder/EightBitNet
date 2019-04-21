@@ -5,16 +5,16 @@
     // Uses some information from:
     // http://www.cpu-world.com/Arch/6809.html
 
-    //	|---------------|-----------------------------------|
-    //	|	MPU State	|									|
-    //	|_______________|	MPU State Definition			|
-    //	|	BA  |	BS	|									|
-    //	|_______|_______|___________________________________|
-    //	|	0	|	0	|	Normal (running)				|
-    //	|	0	|	1	|	Interrupt or RESET Acknowledge	|
-    //	|	1	|	0	|	SYNC Acknowledge				|
-    //	|	1	|	1	|	HALT Acknowledge				|
-    //	|-------|-------|-----------------------------------|
+    //  |---------------|-----------------------------------|
+    //  |   MPU State   |                                   |
+    //  |_______________|   MPU State Definition            |
+    //  |   BA  |   BS  |                                   |
+    //  |_______|_______|___________________________________|
+    //  |   0   |   0   |   Normal (running)                |
+    //  |   0   |   1   |   Interrupt or RESET Acknowledge  |
+    //  |   1   |   0   |   SYNC Acknowledge                |
+    //  |   1   |   1   |   HALT Acknowledge                |
+    //  |-------|-------|-----------------------------------|
 
     public sealed class MC6809 : BigEndianProcessor
     {
@@ -413,23 +413,15 @@
 
         private void PushS(byte value) => this.Push(this.S, value);
 
-        //private void PushU(byte value) => this.Push(this.U, value);
-
         private void PushWord(Register16 stack, Register16 value)
         {
             this.Push(stack, value.Low);
             this.Push(stack, value.High);
         }
 
-        //private void PushWordS(Register16 value) => this.PushWord(this.S, value);
-
-        //private void PushWordU(Register16 value) => this.PushWord(this.U, value);
-
         private byte Pop(Register16 stack) => this.BusRead(stack++);
 
         private byte PopS() => this.Pop(this.S);
-
-        //private byte PopU() => this.Pop(this.U);
 
         private Register16 PopWord(Register16 stack)
         {
@@ -438,16 +430,12 @@
             return new Register16(low, high);
         }
 
-        //private Register16 PopWordS() => this.PopWord(this.S);
-
-        //private Register16 PopWordU() => this.PopWord(this.U);
-
         private Register16 RR(int which)
         {
-	        switch (which) {
-	            case 0b00:
-		            return this.X;
-	            case 0b01:
+            switch (which) {
+                case 0b00:
+                    return this.X;
+                case 0b01:
                     return this.Y;
                 case 0b10:
                     return this.U;
@@ -455,7 +443,7 @@
                     return this.S;
                 default:
                     throw new ArgumentOutOfRangeException("which", which, "Which does not specify a valid register");
-	        }
+            }
         }
 
         private Register16 Address_relative_byte() => new Register16(this.PC.Word + (sbyte)this.FetchByte());
@@ -575,8 +563,6 @@
 
         private byte AdjustNegative(ushort datum) => SetFlag(this.CC, StatusBits.NF, datum & (ushort)Bits.Bit15);
 
-        //private void AdjustNegative(Register16 datum) => this.AdjustNegative(datum.Word);
-
         private byte AdjustNZ(byte datum)
         {
             this.CC = this.AdjustZero(datum);
@@ -597,12 +583,6 @@
 
         private byte AdjustCarry(Register16 datum) => this.AdjustCarry(datum.Word);
 
-        //private void AdjustBorrow(ushort datum) => ClearFlag(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);        // 8-bit subtraction
-
-        //private void AdjustBorrow(uint datum) => ClearFlag(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));    // 16-bit subtraction
-
-        //private void AdjustBorrow(Register16 datum) => this.AdjustBorrow(datum.Word);
-
         private byte AdjustOverflow(byte before, byte data, Register16 after)
         {
             var lowAfter = after.Low;
@@ -616,8 +596,6 @@
             var highAfter = (ushort)(after >> 16);
             return SetFlag(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 15)) & (int)Bits.Bit15);
         }
-
-        //private void AdjustOverflow(Register16 before, Register16 data, Register16 after) => this.AdjustOverflow(before.Word, data.Word, after.Word);
 
         private byte AdjustHalfCarry(byte before, byte data, byte after) => SetFlag(this.CC, StatusBits.HF, (before ^ data ^ after) & (int)Bits.Bit4);
 
@@ -665,13 +643,6 @@
             return data;
         }
 
-        //private ushort Through(ushort data)
-        //{
-        //    ClearFlag(this.CC, StatusBits.VF);
-        //    this.AdjustNZ(data);
-        //    return data;
-        //}
-
         private Register16 Through(Register16 data)
         {
             this.CC = ClearFlag(this.CC, StatusBits.VF);
@@ -681,13 +652,9 @@
 
         private byte LD(byte data) => this.Through(data);
 
-        //private ushort LD(ushort data) => this.Through(data);
-
         private Register16 LD(Register16 data) => this.Through(data);
 
         private byte ST(byte data) => this.Through(data);
-
-        //private ushort ST(ushort data) => this.Through(data);
 
         private Register16 ST(Register16 data) => this.Through(data);
 
@@ -701,14 +668,10 @@
             }
 
             return condition;
-		}
+        }
 
         private bool Branch(Register16 destination, bool condition) => this.Branch(destination.Word, condition);
  
-        //private void Branch(ushort destination, int condition) => this.Branch(destination, condition != 0);
-
-        //private void Branch(Register16 destination, int condition) => this.Branch(destination.Word, condition);
-
         private void BranchShort(bool condition) => this.Branch(this.Address_relative_byte(), condition);
 
         private void BranchLong(bool condition)
@@ -754,22 +717,22 @@
 
         Register16 ReferenceTransfer16(int specifier)
         {
-        	switch (specifier) {
-        	    case 0b0000:
-        		    return this.D;
-        	    case 0b0001:
-        		    return this.X;
-        	    case 0b0010:
-        		    return this.Y;
-        	    case 0b0011:
-        		    return this.U;
-        	    case 0b0100:
-        		    return this.S;
-        	    case 0b0101:
-        		    return this.PC;
-        	    default:
+            switch (specifier) {
+                case 0b0000:
+                    return this.D;
+                case 0b0001:
+                    return this.X;
+                case 0b0010:
+                    return this.Y;
+                case 0b0011:
+                    return this.U;
+                case 0b0100:
+                    return this.S;
+                case 0b0101:
+                    return this.PC;
+                default:
                     throw new ArgumentOutOfRangeException("specifier", specifier, "Invalid specifier");
-        	}
+            }
         }
 
         private void ExecuteUnprefixed()
@@ -1329,10 +1292,17 @@
         private void EXG(byte data)
         {
             var specifier1 = Chip.HighNibble(data);
-            var specifier2 = Chip.LowNibble(data);
+            var type1 = specifier1 & (int)Bits.Bit3;  // transfer type, part 1
 
-            var type8 = (specifier1 & (int)Bits.Bit3) == 0;  // 8 bit exchange?
-            if (type8)
+            var specifier2 = Chip.LowNibble(data);
+            var type2 = specifier2 & (int)Bits.Bit3;  // transfer type, part 2
+
+            if (type1 != type2)
+            {
+                throw new ArgumentOutOfRangeException("data", data, "Type specifications do not match");
+            }
+
+            if (type1 == 0)
             {
                 ref var register1 = ref this.ReferenceTransfer8(specifier1);
                 ref var register2 = ref this.ReferenceTransfer8(specifier2);
@@ -1559,10 +1529,17 @@
         private void TFR(byte data)
         {
             var specifier1 = Chip.HighNibble(data);
-            var specifier2 = Chip.LowNibble(data);
+            var type1 = specifier1 & (int)Bits.Bit3;  // transfer type, part 1
 
-            var type8 = (specifier1 & (int)Bits.Bit3) == 0;  // 8 bit transfer?
-            if (type8)
+            var specifier2 = Chip.LowNibble(data);
+            var type2 = specifier2 & (int)Bits.Bit3;  // transfer type, part 2
+
+            if (type1 != type2)
+            {
+                throw new ArgumentOutOfRangeException("data", data, "Type specifications do not match");
+            }
+
+            if (type1 == 0)
             {
                 ref var register1 = ref this.ReferenceTransfer8(specifier1);
                 ref var register2 = ref this.ReferenceTransfer8(specifier2);
