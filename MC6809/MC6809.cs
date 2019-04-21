@@ -700,7 +700,7 @@
                 this.Jump(destination);
             }
 
-			return condition;
+            return condition;
 		}
 
         private bool Branch(Register16 destination, bool condition) => this.Branch(destination.Word, condition);
