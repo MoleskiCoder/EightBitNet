@@ -73,6 +73,8 @@ namespace EightBit
 
         public abstract void PokeWord(ushort address, Register16 value);
 
+        public void PokeWord(ushort address, ushort value) => this.PokeWord(address, new Register16(value));
+
         public virtual void RaiseRESET()
         {
             this.OnRaisingRESET();

@@ -21,8 +21,8 @@ namespace EightBit
 
         public override void PokeWord(ushort address, Register16 value)
         {
-            this.Bus.Poke(address, value.Low);
-            this.Bus.Poke(++address, value.High);
+            this.Bus.Poke(address, value.High);
+            this.Bus.Poke(++address, value.Low);
         }
 
         protected override Register16 FetchWord()

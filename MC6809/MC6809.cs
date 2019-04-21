@@ -27,12 +27,6 @@
         private const byte SWI3vector = 0xf2;       // SWI3 vector
         private const byte RESERVEDvector = 0xf0;   // RESERVED vector
 
-        private readonly Register16 d = new Register16();
-        private readonly Register16 x = new Register16();
-        private readonly Register16 y = new Register16();
-        private readonly Register16 u = new Register16();
-        private readonly Register16 s = new Register16();
-
         private byte cc = 0;
         private byte dp = 0;
 
@@ -94,19 +88,19 @@
 
         public event EventHandler<EventArgs> LoweredBS;
 
-        public Register16 D => this.d;
+        public Register16 D { get; } = new Register16();
 
         public ref byte A => ref this.D.High;
 
         public ref byte B => ref this.D.Low;
 
-        public Register16 X => this.x;
+        public Register16 X { get; } = new Register16();
 
-        public Register16 Y => this.y;
+        public Register16 Y { get; } = new Register16();
 
-        public Register16 U => this.u;
+        public Register16 U { get; } = new Register16();
 
-        public Register16 S => this.s;
+        public Register16 S { get; } = new Register16();
 
         public ref byte DP => ref this.dp;
 
@@ -114,27 +108,27 @@
 
         public bool Halted => this.HALT().Lowered();
 
-        private int EntireRegisterSet => this.CC & (byte)StatusBits.EF;
+        public int EntireRegisterSet => this.CC & (byte)StatusBits.EF;
 
-        private int FastInterruptMasked => this.CC & (byte)StatusBits.FF;
+        public int FastInterruptMasked => this.CC & (byte)StatusBits.FF;
 
-        private int HalfCarry => this.CC & (byte)StatusBits.HF;
+        public int HalfCarry => this.CC & (byte)StatusBits.HF;
 
-        private int InterruptMasked => this.CC & (byte)StatusBits.IF;
+        public int InterruptMasked => this.CC & (byte)StatusBits.IF;
 
-        private int Negative => this.CC & (byte)StatusBits.NF;
+        public int Negative => this.CC & (byte)StatusBits.NF;
 
-        private int Zero => this.CC & (byte)StatusBits.ZF;
+        public int Zero => this.CC & (byte)StatusBits.ZF;
 
-        private int Overflow => this.CC & (byte)StatusBits.VF;
+        public int Overflow => this.CC & (byte)StatusBits.VF;
 
-        private int Carry => this.CC & (byte)StatusBits.CF;
+        public int Carry => this.CC & (byte)StatusBits.CF;
 
         private bool LS => (this.Carry != 0) || (this.Zero != 0);               // (C OR Z)
 
         private bool HI => !this.LS;                                            // !(C OR Z)
 
-        private bool LT => ((this.Negative >> 3) ^ (this.Overflow >> 3)) != 0;  // (N XOR V)
+        private bool LT => ((this.Negative >> 3) ^ (this.Overflow >> 1)) != 0;  // (N XOR V)
 
         private bool GE => !this.LT;                                            // !(N XOR V)
 
@@ -331,7 +325,6 @@
 
         protected override void Push(byte value) => this.PushS(value);
 
-
         private void HandleHALT()
         {
             this.RaiseBA();
@@ -420,7 +413,7 @@
 
         private void PushS(byte value) => this.Push(this.S, value);
 
-        private void PushU(byte value) => this.Push(this.U, value);
+        //private void PushU(byte value) => this.Push(this.U, value);
 
         private void PushWord(Register16 stack, Register16 value)
         {
@@ -428,15 +421,15 @@
             this.Push(stack, value.High);
         }
 
-        private void PushWordS(Register16 value) => this.PushWord(this.S, value);
+        //private void PushWordS(Register16 value) => this.PushWord(this.S, value);
 
-        private void PushWordU(Register16 value) => this.PushWord(this.U, value);
+        //private void PushWordU(Register16 value) => this.PushWord(this.U, value);
 
         private byte Pop(Register16 stack) => this.BusRead(stack++);
 
         private byte PopS() => this.Pop(this.S);
 
-        private byte PopU() => this.Pop(this.U);
+        //private byte PopU() => this.Pop(this.U);
 
         private Register16 PopWord(Register16 stack)
         {
@@ -445,9 +438,9 @@
             return new Register16(low, high);
         }
 
-        private Register16 PopWordS() => this.PopWord(this.S);
+        //private Register16 PopWordS() => this.PopWord(this.S);
 
-        private Register16 PopWordU() => this.PopWord(this.U);
+        //private Register16 PopWordU() => this.PopWord(this.U);
 
         private Register16 RR(int which)
         {
@@ -485,7 +478,7 @@
                 {
                     case 0b0000:    // ,R+
                         this.Tick(2);
-                        address.Word = r++.Word;
+                        address.Word = r.Word++;
                         break;
                     case 0b0001:    // ,R++
                         this.Tick(3);
@@ -572,129 +565,129 @@
 
         private Register16 AM_extended_word() => this.GetWord(this.Address_extended());
 
-        private void AdjustZero(byte datum) => ClearFlag(this.CC, StatusBits.ZF, datum);
+        private byte AdjustZero(byte datum) => ClearFlag(this.CC, StatusBits.ZF, datum);
 
-        private void AdjustZero(ushort datum) => ClearFlag(this.CC, StatusBits.ZF, datum);
+        private byte AdjustZero(ushort datum) => ClearFlag(this.CC, StatusBits.ZF, datum);
 
-        private void AdjustZero(Register16 datum) => this.AdjustZero(datum.Word);
+        private byte AdjustZero(Register16 datum) => this.AdjustZero(datum.Word);
 
-        private void AdjustNegative(byte datum) => SetFlag(this.CC, StatusBits.NF, datum & (byte)Bits.Bit7);
+        private byte AdjustNegative(byte datum) => SetFlag(this.CC, StatusBits.NF, datum & (byte)Bits.Bit7);
 
-        private void AdjustNegative(ushort datum) => SetFlag(this.CC, StatusBits.NF, datum & (ushort)Bits.Bit15);
+        private byte AdjustNegative(ushort datum) => SetFlag(this.CC, StatusBits.NF, datum & (ushort)Bits.Bit15);
 
-        private void AdjustNegative(Register16 datum) => this.AdjustNegative(datum.Word);
+        //private void AdjustNegative(Register16 datum) => this.AdjustNegative(datum.Word);
 
-        private void AdjustNZ(byte datum)
+        private byte AdjustNZ(byte datum)
         {
-            this.AdjustZero(datum);
-            this.AdjustNegative(datum);
+            this.CC = this.AdjustZero(datum);
+            return this.AdjustNegative(datum);
         }
 
-        private void AdjustNZ(ushort datum)
+        private byte AdjustNZ(ushort datum)
         {
-            this.AdjustZero(datum);
-            this.AdjustNegative(datum);
+            this.CC = this.AdjustZero(datum);
+            return this.AdjustNegative(datum);
         }
 
-        private void AdjustNZ(Register16 datum) => this.AdjustNZ(datum.Word);
+        private byte AdjustNZ(Register16 datum) => this.AdjustNZ(datum.Word);
 
-        private void AdjustCarry(ushort datum) => SetFlag(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);           // 8-bit addition
+        private byte AdjustCarry(ushort datum) => SetFlag(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);           // 8-bit addition
 
-        private void AdjustCarry(uint datum) => SetFlag(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));       // 16-bit addition
+        private byte AdjustCarry(uint datum) => SetFlag(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));       // 16-bit addition
 
-        private void AdjustCarry(Register16 datum) => this.AdjustCarry(datum.Word);
+        private byte AdjustCarry(Register16 datum) => this.AdjustCarry(datum.Word);
 
-        private void AdjustBorrow(ushort datum) => ClearFlag(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);        // 8-bit subtraction
+        //private void AdjustBorrow(ushort datum) => ClearFlag(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);        // 8-bit subtraction
 
-        private void AdjustBorrow(uint datum) => ClearFlag(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));    // 16-bit subtraction
+        //private void AdjustBorrow(uint datum) => ClearFlag(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));    // 16-bit subtraction
 
-        private void AdjustBorrow(Register16 datum) => this.AdjustBorrow(datum.Word);
+        //private void AdjustBorrow(Register16 datum) => this.AdjustBorrow(datum.Word);
 
-        private void AdjustOverflow(byte before, byte data, Register16 after)
+        private byte AdjustOverflow(byte before, byte data, Register16 after)
         {
             var lowAfter = after.Low;
             var highAfter = after.High;
-            SetFlag(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 7)) & (int)Bits.Bit7);
+            return SetFlag(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 7)) & (int)Bits.Bit7);
         }
 
-        private void AdjustOverflow(ushort before, ushort data, uint after)
+        private byte AdjustOverflow(ushort before, ushort data, uint after)
         {
             var lowAfter = (ushort)(after & (uint)Mask.Mask16);
             var highAfter = (ushort)(after >> 16);
-            SetFlag(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 15)) & (int)Bits.Bit15);
+            return SetFlag(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 15)) & (int)Bits.Bit15);
         }
 
-        private void AdjustOverflow(Register16 before, Register16 data, Register16 after) => this.AdjustOverflow(before.Word, data.Word, after.Word);
+        //private void AdjustOverflow(Register16 before, Register16 data, Register16 after) => this.AdjustOverflow(before.Word, data.Word, after.Word);
 
-        private void AdjustHalfCarry(byte before, byte data, byte after) => SetFlag(this.CC, StatusBits.HF, (before ^ data ^ after) & (int)Bits.Bit4);
+        private byte AdjustHalfCarry(byte before, byte data, byte after) => SetFlag(this.CC, StatusBits.HF, (before ^ data ^ after) & (int)Bits.Bit4);
 
-        private void AdjustAddition(byte before, byte data, Register16 after)
+        private byte AdjustAddition(byte before, byte data, Register16 after)
         {
             var result = after.Low;
-            this.AdjustNZ(result);
-            this.AdjustCarry(after);
-            this.AdjustOverflow(before, data, after);
-            this.AdjustHalfCarry(before, data, result);
+            this.CC = this.AdjustNZ(result);
+            this.CC = this.AdjustCarry(after);
+            this.CC = this.AdjustOverflow(before, data, after);
+            return this.AdjustHalfCarry(before, data, result);
         }
 
-        private void AdjustAddition(ushort before, ushort data, uint after)
+        private byte AdjustAddition(ushort before, ushort data, uint after)
         {
             var result = new Register16(after & (uint)Mask.Mask16);
-            this.AdjustNZ(result);
-            this.AdjustCarry(after);
-            this.AdjustOverflow(before, data, after);
+            this.CC = this.AdjustNZ(result);
+            this.CC = this.AdjustCarry(after);
+            return this.AdjustOverflow(before, data, after);
         }
 
-        private void AdjustAddition(Register16 before, Register16 data, uint after) => this.AdjustAddition(before.Word, data.Word, after);
+        private byte AdjustAddition(Register16 before, Register16 data, uint after) => this.AdjustAddition(before.Word, data.Word, after);
 
-        private void AdjustSubtraction(byte before, byte data, Register16 after)
+        private byte AdjustSubtraction(byte before, byte data, Register16 after)
         {
             var result = after.Low;
-            this.AdjustNZ(result);
-            this.AdjustCarry(after);
-            this.AdjustOverflow(before, data, after);
+            this.CC = this.AdjustNZ(result);
+            this.CC = this.AdjustCarry(after);
+            return this.AdjustOverflow(before, data, after);
         }
 
-        private void AdjustSubtraction(ushort before, ushort data, uint after)
+        private byte AdjustSubtraction(ushort before, ushort data, uint after)
         {
             var result = new Register16(after & (uint)Mask.Mask16);
-            this.AdjustNZ(result);
-            this.AdjustCarry(after);
-            this.AdjustOverflow(before, data, after);
+            this.CC = this.AdjustNZ(result);
+            this.CC = this.AdjustCarry(after);
+            return this.AdjustOverflow(before, data, after);
         }
 
-        private void AdjustSubtraction(Register16 before, Register16 data, uint after) => this.AdjustSubtraction(before.Word, data.Word, after);
+        private byte AdjustSubtraction(Register16 before, Register16 data, uint after) => this.AdjustSubtraction(before.Word, data.Word, after);
 
         private byte Through(byte data)
         {
-            ClearFlag(this.CC, StatusBits.VF);
-            this.AdjustNZ(data);
+            this.CC = ClearFlag(this.CC, StatusBits.VF);
+            this.CC = this.AdjustNZ(data);
             return data;
         }
 
-        private ushort Through(ushort data)
-        {
-            ClearFlag(this.CC, StatusBits.VF);
-            this.AdjustNZ(data);
-            return data;
-        }
+        //private ushort Through(ushort data)
+        //{
+        //    ClearFlag(this.CC, StatusBits.VF);
+        //    this.AdjustNZ(data);
+        //    return data;
+        //}
 
         private Register16 Through(Register16 data)
         {
-            ClearFlag(this.CC, StatusBits.VF);
-            this.AdjustNZ(data);
+            this.CC = ClearFlag(this.CC, StatusBits.VF);
+            this.CC = this.AdjustNZ(data);
             return data;
         }
 
         private byte LD(byte data) => this.Through(data);
 
-        private ushort LD(ushort data) => this.Through(data);
+        //private ushort LD(ushort data) => this.Through(data);
 
         private Register16 LD(Register16 data) => this.Through(data);
 
         private byte ST(byte data) => this.Through(data);
 
-        private ushort ST(ushort data) => this.Through(data);
+        //private ushort ST(ushort data) => this.Through(data);
 
         private Register16 ST(Register16 data) => this.Through(data);
 
@@ -712,9 +705,9 @@
 
         private bool Branch(Register16 destination, bool condition) => this.Branch(destination.Word, condition);
  
-        private void Branch(ushort destination, int condition) => this.Branch(destination, condition != 0);
+        //private void Branch(ushort destination, int condition) => this.Branch(destination, condition != 0);
 
-        private void Branch(Register16 destination, int condition) => this.Branch(destination.Word, condition);
+        //private void Branch(Register16 destination, int condition) => this.Branch(destination.Word, condition);
 
         private void BranchShort(bool condition) => this.Branch(this.Address_relative_byte(), condition);
 
@@ -728,13 +721,13 @@
 
         private void SaveEntireRegisterState()
         {
-            SetFlag(this.CC, StatusBits.EF);
+            this.CC = SetFlag(this.CC, StatusBits.EF);
             this.SaveRegisterState();
         }
 
         private void SavePartialRegisterState()
         {
-            ClearFlag(this.CC, StatusBits.EF);
+            this.CC = ClearFlag(this.CC, StatusBits.EF);
             this.SaveRegisterState();
         }
 
@@ -968,8 +961,8 @@
                 case 0xbe: this.Tick(6); this.X.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDX extended)
 
                 // LEA
-                case 0x30: this.Tick(4); this.AdjustZero(this.X.Word = this.Address_indexed().Word); break;     // LEA (LEAX indexed)
-                case 0x31: this.Tick(4); this.AdjustZero(this.Y.Word = this.Address_indexed().Word); break;     // LEA (LEAY indexed)
+                case 0x30: this.Tick(4); this.CC = this.AdjustZero(this.X.Word = this.Address_indexed().Word); break;     // LEA (LEAX indexed)
+                case 0x31: this.Tick(4); this.CC = this.AdjustZero(this.Y.Word = this.Address_indexed().Word); break;     // LEA (LEAY indexed)
                 case 0x32: this.Tick(4); this.S.Word = this.Address_indexed().Word; break;                      // LEA (LEAS indexed)
                 case 0x33: this.Tick(4); this.U.Word = this.Address_indexed().Word; break;                      // LEA (LEAU indexed)
 
@@ -1247,14 +1240,14 @@
         private byte ADD(byte operand, byte data, byte carry = 0)
         {
             var addition = new Register16(operand + data + carry);
-            this.AdjustAddition(operand, data, addition);
+            this.CC = this.AdjustAddition(operand, data, addition);
             return addition.Low;
         }
 
         private Register16 ADD(Register16 operand, Register16 data)
         {
             var addition = (uint)(operand.Word + data.Word);
-            this.AdjustAddition(operand, data, addition);
+            this.CC = this.AdjustAddition(operand, data, addition);
             return new Register16(addition & (uint)Mask.Mask16);
         }
 
@@ -1262,18 +1255,18 @@
 
         private byte ASL(byte operand)
         {
-            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
-            this.AdjustNZ(operand <<= 1);
+            this.CC = SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.CC = this.AdjustNZ(operand <<= 1);
             var overflow = this.Carry ^ (this.Negative >> 3);
-            SetFlag(this.CC, StatusBits.VF, overflow);
+            this.CC = SetFlag(this.CC, StatusBits.VF, overflow);
             return operand;
         }
 
         private byte ASR(byte operand)
         {
-            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.CC = SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) | (int)Bits.Bit7);
-            this.AdjustNZ(result);
+            this.CC = this.AdjustNZ(result);
             return result;
         }
 
@@ -1281,7 +1274,7 @@
 
         private byte CLR()
         {
-            ClearFlag(this.CC, StatusBits.CF);
+            this.CC = ClearFlag(this.CC, StatusBits.CF);
             return this.Through((byte)0U);
         }
 
@@ -1291,7 +1284,7 @@
 
         private byte COM(byte operand)
         {
-            SetFlag(this.CC, StatusBits.CF);
+            this.CC = SetFlag(this.CC, StatusBits.CF);
             return this.Through((byte)~operand);
         }
 
@@ -1304,7 +1297,7 @@
 
         private byte DA(byte operand)
         {
-            SetFlag(this.CC, StatusBits.CF, operand > 0x99);
+            this.CC = SetFlag(this.CC, StatusBits.CF, operand > 0x99);
 
             var lowAdjust = (this.HalfCarry != 0) || (Chip.LowNibble(operand) > 9);
             var highAdjust = (this.Carry != 0) || (operand > 0x99);
@@ -1326,8 +1319,8 @@
         {
             var subtraction = new Register16(operand - 1);
             var result = subtraction.Low;
-            this.AdjustNZ(result);
-            this.AdjustOverflow(operand, 1, subtraction);
+            this.CC = this.AdjustNZ(result);
+            this.CC = this.AdjustOverflow(operand, 1, subtraction);
             return result;
         }
 
@@ -1357,9 +1350,9 @@
         {
             var addition = new Register16(operand + 1);
             var result = addition.Low;
-            this.AdjustNZ(result);
-            this.AdjustOverflow(operand, 1, addition);
-            this.AdjustHalfCarry(operand, 1, result);
+            this.CC = this.AdjustNZ(result);
+            this.CC = this.AdjustOverflow(operand, 1, addition);
+            this.CC = this.AdjustHalfCarry(operand, 1, result);
             return result;
         }
 
@@ -1369,26 +1362,26 @@
 
         private byte LSR(byte operand)
         {
-            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
-            this.AdjustNZ(operand >>= 1);
+            this.CC = SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.CC = this.AdjustNZ(operand >>= 1);
             return operand;
         }
 
         private Register16 MUL(byte first, byte second)
         {
             var result = new Register16(first * second);
-            this.AdjustZero(result);
-            SetFlag(this.CC, StatusBits.CF, result.Low & (byte)Bits.Bit7);
+            this.CC = this.AdjustZero(result);
+            this.CC = SetFlag(this.CC, StatusBits.CF, result.Low & (byte)Bits.Bit7);
             return result;
         }
 
         private byte NEG(byte operand)
         {
-            SetFlag(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
+            this.CC = SetFlag(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
             var result = new Register16(0 - operand);
             operand = result.Low;
-            this.AdjustNZ(operand);
-            this.AdjustCarry(result);
+            this.CC = this.AdjustNZ(operand);
+            this.CC = this.AdjustCarry(result);
             return operand;
         }
 
@@ -1501,19 +1494,19 @@
         private byte ROL(byte operand)
         {
             var carryIn = this.Carry;
-            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
-            SetFlag(this.CC, StatusBits.VF, ((operand & (byte)Bits.Bit7) >> 7) ^ ((operand & (byte)Bits.Bit6) >> 6));
+            this.CC = SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.CC = SetFlag(this.CC, StatusBits.VF, ((operand & (byte)Bits.Bit7) >> 7) ^ ((operand & (byte)Bits.Bit6) >> 6));
             var result = (byte)((operand << 1) | carryIn);
-            this.AdjustNZ(result);
+            this.CC = this.AdjustNZ(result);
             return result;
         }
 
         private byte ROR(byte operand)
         {
             var carryIn = this.Carry;
-            SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.CC = SetFlag(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) | (carryIn << 7));
-            this.AdjustNZ(result);
+            this.CC = this.AdjustNZ(result);
             return result;
         }
 
@@ -1526,28 +1519,28 @@
         private byte SUB(byte operand, byte data, byte carry = 0)
         {
             var subtraction = new Register16(operand - data - carry);
-            this.AdjustSubtraction(operand, data, subtraction);
+            this.CC = this.AdjustSubtraction(operand, data, subtraction);
             return subtraction.Low;
         }
 
         private Register16 SUB(Register16 operand, Register16 data)
         {
             var subtraction = (uint)(operand.Word - data.Word);
-            this.AdjustSubtraction(operand, data, subtraction);
+            this.CC = this.AdjustSubtraction(operand, data, subtraction);
             return new Register16(subtraction & (uint)Mask.Mask16);
         }
 
         private byte SEX(byte from)
         {
-            this.AdjustNZ(from);
+            this.CC = this.AdjustNZ(from);
             return (from & (byte)Bits.Bit7) != 0 ? (byte)Mask.Mask8 : (byte)0;
         }
 
         private void SWI()
         {
             this.SaveEntireRegisterState();
-            SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
-            SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.CC = SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
             this.Jump(this.GetWordPaged(0xff, SWIvector));
         }
 
