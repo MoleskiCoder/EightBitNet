@@ -6,7 +6,7 @@
     public class BleTests
     {
         private readonly Board board = new Board();
-        private MC6809 cpu;
+        private readonly MC6809 cpu;
 
         public BleTests()
         {
