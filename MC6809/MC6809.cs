@@ -169,7 +169,7 @@
                 {
                     this.HandleHALT();
                 }
-                else if (this.RESET().Lowered())
+                else if (this.RESET.Lowered())
                 {
                     this.HandleRESET();
                 }
@@ -181,7 +181,7 @@
                 {
                     this.HandleFIRQ();
                 }
-                else if (this.INT().Lowered() && (this.InterruptMasked == 0))
+                else if (this.INT.Lowered() && (this.InterruptMasked == 0))
                 {
                     this.HandleINT();
                 }

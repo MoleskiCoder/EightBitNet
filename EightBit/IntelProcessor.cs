@@ -60,9 +60,9 @@ namespace EightBit
 
         public byte L { get => this.HL.Low; set => this.HL.Low = value; }
 
-        protected bool Halted => this.HALT().Lowered();
+        public ref PinLevel HALT => ref this.haltLine;
 
-        public ref PinLevel HALT() => ref this.haltLine;
+        protected bool Halted => this.HALT.Lowered();
 
         public IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this.decodedOpCodes[opCode];
 
@@ -76,14 +76,14 @@ namespace EightBit
         public virtual void RaiseHALT()
         {
             this.OnRaisingHALT();
-            this.HALT().Raise();
+            this.HALT.Raise();
             this.OnRaisedHALT();
         }
 
         public virtual void LowerHALT()
         {
             this.OnLoweringHALT();
-            this.HALT().Lower();
+            this.HALT.Lower();
             this.OnLoweredHALT();
         }
 

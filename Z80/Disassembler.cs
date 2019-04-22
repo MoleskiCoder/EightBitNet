@@ -45,7 +45,7 @@ namespace EightBit
             var l = cpu.L;
 
             var i = cpu.IV;
-            var r = cpu.REFRESH();
+            var r = cpu.REFRESH;
 
             var im = cpu.IM;
 
@@ -226,7 +226,7 @@ namespace EightBit
 
         private string DisassembleED(Z80 cpu, ushort pc, ref string specification, ref int dumpCount, int x, int y, int z, int p, int q)
         {
-            string output = string.Empty;
+            var output = string.Empty;
             switch (x)
             {
                 case 0:
@@ -377,7 +377,7 @@ namespace EightBit
 
         private string DisassembleOther(Z80 cpu, ushort pc, ref string specification, ref int dumpCount, int x, int y, int z, int p, int q)
         {
-            string output = string.Empty;
+            var output = string.Empty;
             switch (x)
             {
                 case 0:

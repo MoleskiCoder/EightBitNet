@@ -59,11 +59,11 @@ namespace EightBit
             this.OnExecutingInstruction();
             if (this.Powered)
             {
-                if (this.RESET().Lowered())
+                if (this.RESET.Lowered())
                 {
                     this.HandleRESET();
                 }
-                else if (this.INT().Lowered())
+                else if (this.INT.Lowered())
                 {
                     this.HandleINT();
                 }

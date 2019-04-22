@@ -64,6 +64,14 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredRDY;
 
+        public ref PinLevel NMI => ref this.nmiLine;
+
+        public ref PinLevel SO => ref this.soLine;
+
+        public ref PinLevel SYNC => ref this.syncLine;
+
+        public ref PinLevel RDY => ref this.rdyLine;
+
         public byte X { get; set; } = 0;
 
         public byte Y { get; set; } = 0;
@@ -86,14 +94,6 @@ namespace EightBit
 
         private int Carry => this.P & (byte)StatusBits.CF;
 
-        public ref PinLevel NMI() => ref this.nmiLine;
-
-        public ref PinLevel SO() => ref this.soLine;
-
-        public ref PinLevel SYNC() => ref this.syncLine;
-
-        public ref PinLevel RDY() => ref this.rdyLine;
-
         public override void RaisePOWER()
         {
             base.RaisePOWER();
@@ -108,42 +108,42 @@ namespace EightBit
         public virtual void RaiseNMI()
         {
             this.OnRaisingNMI();
-            this.NMI().Raise();
+            this.NMI.Raise();
             this.OnRaisedNMI();
         }
 
         public virtual void LowerNMI()
         {
             this.OnLoweringNMI();
-            this.NMI().Lower();
+            this.NMI.Lower();
             this.OnLoweredNMI();
         }
 
         public virtual void RaiseSO()
         {
             this.OnRaisingSO();
-            this.SO().Raise();
+            this.SO.Raise();
             this.OnRaisedSO();
         }
 
         public virtual void LowerSO()
         {
             this.OnLoweringSO();
-            this.SO().Lower();
+            this.SO.Lower();
             this.OnLoweredSO();
         }
 
         public virtual void RaiseRDY()
         {
             this.OnRaisingRDY();
-            this.RDY().Raise();
+            this.RDY.Raise();
             this.OnRaisedRDY();
         }
 
         public virtual void LowerRDY()
         {
             this.OnLoweringRDY();
-            this.RDY().Lower();
+            this.RDY.Lower();
             this.OnLoweredRDY();
         }
 
@@ -435,24 +435,24 @@ namespace EightBit
             if (this.Powered)
             {
                 this.Tick();
-                if (this.SO().Lowered())
+                if (this.SO.Lowered())
                 {
                     this.HandleSO();
                 }
 
-                if (this.RDY().Raised())
+                if (this.RDY.Raised())
                 {
                     this.LowerSYNC();    // Instruction fetch beginning
                     this.OpCode = this.Bus.Read(this.PC.Word++);  // can't use fetchByte
-                    if (this.RESET().Lowered())
+                    if (this.RESET.Lowered())
                     {
                         this.HandleRESET();
                     }
-                    else if (this.NMI().Lowered())
+                    else if (this.NMI.Lowered())
                     {
                         this.HandleNMI();
                     }
-                    else if (this.INT().Lowered() && (this.InterruptMasked == 0))
+                    else if (this.INT.Lowered() && (this.InterruptMasked == 0))
                     {
                         this.HandleINT();
                     }
@@ -508,14 +508,14 @@ namespace EightBit
         protected virtual void RaiseSYNC()
         {
             this.OnRaisingSYNC();
-            this.SYNC().Raise();
+            this.SYNC.Raise();
             this.OnRaisedSYNC();
         }
 
         protected virtual void LowerSYNC()
         {
             this.OnLoweringSYNC();
-            this.SYNC().Lower();
+            this.SYNC.Lower();
             this.OnLoweredSYNC();
         }
 

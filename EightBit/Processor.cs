@@ -29,6 +29,10 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredINT;
 
+        public ref PinLevel RESET => ref this.resetLine;
+
+        public ref PinLevel INT => ref this.intLine;
+
         public Bus Bus { get; }
 
         public Register16 PC { get; } = new Register16();
@@ -43,10 +47,6 @@ namespace EightBit
             var result = (x ^ m) - m;
             return (sbyte)result;
         }
-
-        public ref PinLevel RESET() => ref this.resetLine;
-
-        public ref PinLevel INT() => ref this.intLine;
 
         public abstract int Step();
 
@@ -78,28 +78,28 @@ namespace EightBit
         public virtual void RaiseRESET()
         {
             this.OnRaisingRESET();
-            this.RESET().Raise();
+            this.RESET.Raise();
             this.OnRaisedRESET();
         }
 
         public virtual void LowerRESET()
         {
             this.OnLoweringRESET();
-            this.RESET().Lower();
+            this.RESET.Lower();
             this.OnLoweredRESET();
         }
 
         public virtual void RaiseINT()
         {
             this.OnRaisingINT();
-            this.INT().Raise();
+            this.INT.Raise();
             this.OnRaisedINT();
         }
 
         public virtual void LowerINT()
         {
             this.OnLoweringINT();
-            this.INT().Lower();
+            this.INT.Lower();
             this.OnLoweredINT();
         }
 

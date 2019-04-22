@@ -22,21 +22,21 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredPOWER;
 
-        public bool Powered => this.POWER().Raised();
+        public bool Powered => this.POWER.Raised();
 
-        public ref PinLevel POWER() => ref this.powerLine;
+        public ref PinLevel POWER => ref this.powerLine;
 
         public virtual void RaisePOWER()
         {
             this.OnRaisingPOWER();
-            this.POWER().Raise();
+            this.POWER.Raise();
             this.OnRaisedPOWER();
         }
 
         public virtual void LowerPOWER()
         {
             this.OnLoweringPOWER();
-            this.POWER().Lower();
+            this.POWER.Lower();
             this.OnLoweredPOWER();
         }
 

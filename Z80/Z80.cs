@@ -89,6 +89,12 @@ namespace EightBit
 
         public byte IYL { get => this.IY.Low; set => this.IY.Low = value; }
 
+        public ref RefreshRegister REFRESH => ref this.refresh;
+
+        public ref PinLevel NMI => ref this.nmiLine;
+
+        public ref PinLevel M1 => ref this.m1Line;
+
         private ushort DisplacedAddress
         {
             get
@@ -97,12 +103,6 @@ namespace EightBit
                 return this.MEMPTR.Word = (ushort)returned;
             }
         }
-
-        public ref RefreshRegister REFRESH() => ref this.refresh;
-
-        public ref PinLevel NMI() => ref this.nmiLine;
-
-        public ref PinLevel M1() => ref this.m1Line;
 
         public void Exx() => this.registerSet ^= 1;
 
@@ -117,7 +117,7 @@ namespace EightBit
             this.DisableInterrupts();
             this.IM = 0;
 
-            this.REFRESH() = new RefreshRegister(0);
+            this.REFRESH = new RefreshRegister(0);
             this.IV = (byte)Mask.Mask8;
 
             this.ExxAF();
@@ -132,28 +132,28 @@ namespace EightBit
         public virtual void RaiseNMI()
         {
             this.OnRaisingNMI();
-            this.NMI().Raise();
+            this.NMI.Raise();
             this.OnRaisedNMI();
         }
 
         public virtual void LowerNMI()
         {
             this.OnLoweringNMI();
-            this.NMI().Lower();
+            this.NMI.Lower();
             this.OnLoweredNMI();
         }
 
         public virtual void RaiseM1()
         {
             this.OnRaisingM1();
-            this.M1().Raise();
+            this.M1.Raise();
             this.OnRaisedM1();
         }
 
         public virtual void LowerM1()
         {
             this.OnLoweringM1();
-            this.M1().Lower();
+            this.M1.Lower();
             this.OnLoweredM1();
         }
 
@@ -161,7 +161,7 @@ namespace EightBit
         {
             if (!(this.prefixCB && this.displaced))
             {
-                ++this.REFRESH();
+                ++this.REFRESH;
                 this.RaiseM1();
             }
 
@@ -202,15 +202,15 @@ namespace EightBit
             {
                 this.displaced = this.prefixCB = this.prefixDD = this.prefixED = false;
                 this.LowerM1();
-                if (this.RESET().Lowered())
+                if (this.RESET.Lowered())
                 {
                     this.HandleRESET();
                 }
-                else if (this.NMI().Lowered())
+                else if (this.NMI.Lowered())
                 {
                     this.HandleNMI();
                 }
-                else if (this.INT().Lowered())
+                else if (this.INT.Lowered())
                 {
                     this.HandleINT();
                 }
@@ -695,7 +695,7 @@ namespace EightBit
                                     this.Tick(9);
                                     break;
                                 case 1: // LD R,A
-                                    this.REFRESH() = this.A;
+                                    this.REFRESH = this.A;
                                     this.Tick(9);
                                     break;
                                 case 2: // LD A,I
@@ -705,7 +705,7 @@ namespace EightBit
                                     this.Tick(9);
                                     break;
                                 case 3: // LD A,R
-                                    this.F = AdjustSZXY(this.F, this.A = this.REFRESH());
+                                    this.F = AdjustSZXY(this.F, this.A = this.REFRESH);
                                     this.F = ClearFlag(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetFlag(this.F, StatusBits.PF, this.IFF2);
                                     this.Tick(9);
