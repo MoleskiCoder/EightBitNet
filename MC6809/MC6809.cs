@@ -106,7 +106,7 @@
 
         public ref byte CC => ref this.cc;
 
-        public bool Halted => this.HALT().Lowered();
+        public bool Halted => this.HALT.Lowered();
 
         public int EntireRegisterSet => this.CC & (byte)StatusBits.EF;
 
@@ -136,15 +136,15 @@
 
         private bool GT => !this.LE;                                            // !(Z OR (N XOR V))
 
-        public ref PinLevel NMI() => ref this.nmiLine;
+        public ref PinLevel NMI => ref this.nmiLine;
 
-        public ref PinLevel FIRQ() => ref this.firqLine;
+        public ref PinLevel FIRQ => ref this.firqLine;
 
-        public ref PinLevel HALT() => ref this.haltLine;
+        public ref PinLevel HALT => ref this.haltLine;
 
-        public ref PinLevel BA() => ref this.baLine;
+        public ref PinLevel BA => ref this.baLine;
 
-        public ref PinLevel BS() => ref this.bsLine;
+        public ref PinLevel BS => ref this.bsLine;
 
         public void Halt()
         {
@@ -173,11 +173,11 @@
                 {
                     this.HandleRESET();
                 }
-                else if (this.NMI().Lowered())
+                else if (this.NMI.Lowered())
                 {
                     this.HandleNMI();
                 }
-                else if (this.FIRQ().Lowered() && (this.FastInterruptMasked == 0))
+                else if (this.FIRQ.Lowered() && (this.FastInterruptMasked == 0))
                 {
                     this.HandleFIRQ();
                 }
@@ -230,70 +230,70 @@
         public void RaiseNMI()
         {
             this.OnRaisingNMI();
-            this.NMI().Raise();
+            this.NMI.Raise();
             this.OnRaisedNMI();
         }
 
         public void LowerNMI()
         {
             this.OnLoweringNMI();
-            this.NMI().Lower();
+            this.NMI.Lower();
             this.OnLoweredNMI();
         }
 
         public void RaiseFIRQ()
         {
             this.OnRaisingFIRQ();
-            this.FIRQ().Raise();
+            this.FIRQ.Raise();
             this.OnRaisedFIRQ();
         }
 
         public void LowerFIRQ()
         {
             this.OnLoweringFIRQ();
-            this.FIRQ().Lower();
+            this.FIRQ.Lower();
             this.OnLoweredFIRQ();
         }
 
         public void RaiseHALT()
         {
             this.OnRaisingHALT();
-            this.HALT().Raise();
+            this.HALT.Raise();
             this.OnRaisedHALT();
         }
 
         public void LowerHALT()
         {
             this.OnLoweringHALT();
-            this.HALT().Lower();
+            this.HALT.Lower();
             this.OnLoweredHALT();
         }
 
         public void RaiseBA()
         {
             this.OnRaisingBA();
-            this.BA().Raise();
+            this.BA.Raise();
             this.OnRaisedBA();
         }
 
         public void LowerBA()
         {
             this.OnLoweringBA();
-            this.BA().Lower();
+            this.BA.Lower();
             this.OnLoweredBA();
         }
 
         public void RaiseBS()
         {
             this.OnRaisingBS();
-            this.BS().Raise();
+            this.BS.Raise();
             this.OnRaisedBS();
         }
 
         public void LowerBS()
         {
             this.OnLoweringBS();
-            this.BS().Lower();
+            this.BS.Lower();
             this.OnLoweredBS();
         }
 
