@@ -442,7 +442,7 @@
                 case 0b11:
                     return this.S;
                 default:
-                    throw new ArgumentOutOfRangeException("which", which, "Which does not specify a valid register");
+                    throw new ArgumentOutOfRangeException(nameof(which), which, "Which does not specify a valid register");
             }
         }
 
@@ -671,7 +671,7 @@
         }
 
         private bool Branch(Register16 destination, bool condition) => this.Branch(destination.Word, condition);
- 
+
         private void BranchShort(bool condition) => this.Branch(this.Address_relative_byte(), condition);
 
         private void BranchLong(bool condition)
@@ -711,11 +711,11 @@
                 case 0b1011:
                     return ref this.DP;
                 default:
-                    throw new ArgumentOutOfRangeException("specifier", specifier, "Invalid specifier");
+                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "Invalid specifier");
             }
         }
 
-        Register16 ReferenceTransfer16(int specifier)
+        private Register16 ReferenceTransfer16(int specifier)
         {
             switch (specifier) {
                 case 0b0000:
@@ -731,7 +731,7 @@
                 case 0b0101:
                     return this.PC;
                 default:
-                    throw new ArgumentOutOfRangeException("specifier", specifier, "Invalid specifier");
+                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "Invalid specifier");
             }
         }
 
@@ -1106,7 +1106,6 @@
         {
             switch (this.OpCode)
             {
-
                 // CMP
 
                 // CMPD
@@ -1175,7 +1174,6 @@
         {
             switch (this.OpCode)
             {
-
                 // CMP
 
                 // CMPU
@@ -1299,7 +1297,7 @@
 
             if (type1 != type2)
             {
-                throw new ArgumentOutOfRangeException("data", data, "Type specifications do not match");
+                throw new ArgumentOutOfRangeException(nameof(data), data, "Type specifications do not match");
             }
 
             if (type1 == 0)
@@ -1536,7 +1534,7 @@
 
             if (type1 != type2)
             {
-                throw new ArgumentOutOfRangeException("data", data, "Type specifications do not match");
+                throw new ArgumentOutOfRangeException(nameof(data), data, "Type specifications do not match");
             }
 
             if (type1 == 0)

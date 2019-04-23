@@ -45,7 +45,6 @@ namespace EightBit
     //      * Leading bit = LSB = Bit 0
     //     ** Data bit will be zero in 7-bit plus parity modes
     //    *** Data bit is "don't care" in 7-bit plus parity modes
-
     public sealed class MC6850 : ClockedChip
     {
         private PinLevel rxdataLine = PinLevel.Low;
@@ -102,8 +101,10 @@ namespace EightBit
 
         public event EventHandler<EventArgs> Received;
 
+        [Flags]
         public enum ControlRegisters
         {
+            None = 0,
             CR0 = 0b1,          // Counter divide
             CR1 = 0b10,         //      "
             CR2 = 0b100,        // Word select
@@ -158,8 +159,11 @@ namespace EightBit
         // Information stored in this register indicates the status of the
         // Transmit Data Register, the Receive Data Register and error logic,
         // and the peripheral/modem status inputs of the ACIA
+        [Flags]
         public enum StatusRegisters
         {
+            None = 0,
+
             // Receive Data Register Full (RDRF), Bit 0 - Receive Data
             // Register Full indicates that received data has been
             // transferred to the Receive Data Register. RDRF is cleared
@@ -318,22 +322,21 @@ namespace EightBit
 
         private bool TransmitReadyHigh => this.transmitControl == TransmitterControl.ReadyHighInterruptDisabled;
 
-        private bool TransmitReadyLow => !this.TransmitReadyHigh;
+        //// private bool TransmitReadyLow => !this.TransmitReadyHigh;
 
         private byte Status
         {
             get
             {
                 byte status = 0;
-                SetFlag(status, StatusRegisters.STATUS_RDRF, this.statusRDRF);
-                SetFlag(status, StatusRegisters.STATUS_TDRE, this.statusTDRE);
-                SetFlag(status, StatusRegisters.STATUS_DCD, this.DCD.Lowered());
-                SetFlag(status, StatusRegisters.STATUS_CTS, this.CTS.Raised());
-                ClearFlag(status, StatusRegisters.STATUS_FE);
-                SetFlag(status, StatusRegisters.STATUS_OVRN, this.statusOVRN);
-                ClearFlag(status, StatusRegisters.STATUS_PE);
-                SetFlag(status, StatusRegisters.STATUS_IRQ, this.IRQ.Lowered());
-                return status;
+                status = SetFlag(status, StatusRegisters.STATUS_RDRF, this.statusRDRF);
+                status = SetFlag(status, StatusRegisters.STATUS_TDRE, this.statusTDRE);
+                status = SetFlag(status, StatusRegisters.STATUS_DCD, this.DCD.Lowered());
+                status = SetFlag(status, StatusRegisters.STATUS_CTS, this.CTS.Raised());
+                status = ClearFlag(status, StatusRegisters.STATUS_FE);
+                status = SetFlag(status, StatusRegisters.STATUS_OVRN, this.statusOVRN);
+                status = ClearFlag(status, StatusRegisters.STATUS_PE);
+                return SetFlag(status, StatusRegisters.STATUS_IRQ, this.IRQ.Lowered());
             }
         }
 
@@ -451,15 +454,15 @@ namespace EightBit
             return returned;
         }
 
-        private static byte SetFlag(byte f, StatusRegisters flag) => SetFlag(f, (byte)flag);
+        ////private static byte SetFlag(byte f, StatusRegisters flag) => SetFlag(f, (byte)flag);
 
-        private static byte SetFlag(byte f, StatusRegisters flag, int condition) => SetFlag(f, (byte)flag, condition);
+        ////private static byte SetFlag(byte f, StatusRegisters flag, int condition) => SetFlag(f, (byte)flag, condition);
 
         private static byte SetFlag(byte f, StatusRegisters flag, bool condition) => SetFlag(f, (byte)flag, condition);
 
         private static byte ClearFlag(byte f, StatusRegisters flag) => ClearFlag(f, (byte)flag);
 
-        private static byte ClearFlag(byte f, StatusRegisters flag, int condition) => ClearFlag(f, (byte)flag, condition);
+        ////private static byte ClearFlag(byte f, StatusRegisters flag, int condition) => ClearFlag(f, (byte)flag, condition);
 
         private void OnAccessing() => this.Accessing?.Invoke(this, EventArgs.Empty);
 
