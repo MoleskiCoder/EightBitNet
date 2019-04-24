@@ -1,7 +1,6 @@
 ﻿// <copyright file="MC6850.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
 namespace EightBit
 {
     using System;
@@ -102,7 +101,7 @@ namespace EightBit
         public event EventHandler<EventArgs> Received;
 
         [Flags]
-        public enum ControlRegisters
+        public enum ControlRegister
         {
             None = 0,
             CR0 = 0b1,          // Counter divide
@@ -160,7 +159,7 @@ namespace EightBit
         // Transmit Data Register, the Receive Data Register and error logic,
         // and the peripheral/modem status inputs of the ACIA
         [Flags]
-        public enum StatusRegisters
+        public enum StatusRegister
         {
             None = 0,
 
@@ -329,14 +328,14 @@ namespace EightBit
             get
             {
                 byte status = 0;
-                status = SetFlag(status, StatusRegisters.STATUS_RDRF, this.statusRDRF);
-                status = SetFlag(status, StatusRegisters.STATUS_TDRE, this.statusTDRE);
-                status = SetFlag(status, StatusRegisters.STATUS_DCD, this.DCD.Lowered());
-                status = SetFlag(status, StatusRegisters.STATUS_CTS, this.CTS.Raised());
-                status = ClearFlag(status, StatusRegisters.STATUS_FE);
-                status = SetFlag(status, StatusRegisters.STATUS_OVRN, this.statusOVRN);
-                status = ClearFlag(status, StatusRegisters.STATUS_PE);
-                return SetFlag(status, StatusRegisters.STATUS_IRQ, this.IRQ.Lowered());
+                status = SetFlag(status, StatusRegister.STATUS_RDRF, this.statusRDRF);
+                status = SetFlag(status, StatusRegister.STATUS_TDRE, this.statusTDRE);
+                status = SetFlag(status, StatusRegister.STATUS_DCD, this.DCD.Lowered());
+                status = SetFlag(status, StatusRegister.STATUS_CTS, this.CTS.Raised());
+                status = ClearFlag(status, StatusRegister.STATUS_FE);
+                status = SetFlag(status, StatusRegister.STATUS_OVRN, this.statusOVRN);
+                status = ClearFlag(status, StatusRegister.STATUS_PE);
+                return SetFlag(status, StatusRegister.STATUS_IRQ, this.IRQ.Lowered());
             }
         }
 
@@ -364,16 +363,16 @@ namespace EightBit
             {
                 if (writing)
                 {
-                    this.counterDivide = (CounterDivideSelect)(this.DATA & (byte)(ControlRegisters.CR0 | ControlRegisters.CR1));
+                    this.counterDivide = (CounterDivideSelect)(this.DATA & (byte)(ControlRegister.CR0 | ControlRegister.CR1));
                     if (this.counterDivide == CounterDivideSelect.MasterReset)
                     {
                         this.Reset();
                     }
                     else
                     {
-                        this.wordSelect = (WordSelect)((this.DATA & (byte)(ControlRegisters.CR2 | ControlRegisters.CR3 | ControlRegisters.CR4)) >> 2);
-                        this.transmitControl = (TransmitterControl)((this.DATA & (byte)(ControlRegisters.CR5 | ControlRegisters.CR6)) >> 5);
-                        this.receiveControl = (ReceiveControl)((this.DATA & (byte)ControlRegisters.CR7) >> 7);
+                        this.wordSelect = (WordSelect)((this.DATA & (byte)(ControlRegister.CR2 | ControlRegister.CR3 | ControlRegister.CR4)) >> 2);
+                        this.transmitControl = (TransmitterControl)((this.DATA & (byte)(ControlRegister.CR5 | ControlRegister.CR6)) >> 5);
+                        this.receiveControl = (ReceiveControl)((this.DATA & (byte)ControlRegister.CR7) >> 7);
                         if (this.TransmitReadyHigh)
                         {
                             this.RTS.Raise();
@@ -442,14 +441,14 @@ namespace EightBit
             var value = this.Status;
             var returned = string.Empty;
             returned += "(";
-            returned += (value & (byte)StatusRegisters.STATUS_IRQ) != 0 ? "IRQ" : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_PE) != 0 ? "PE " : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_OVRN) != 0 ? "OVRN " : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_FE) != 0 ? "FE " : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_CTS) != 0 ? "CTS " : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_DCD) != 0 ? "DCD " : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_TDRE) != 0 ? "TDRE " : "- ";
-            returned += (value & (byte)StatusRegisters.STATUS_RDRF) != 0 ? "RDRF " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_IRQ) != 0 ? "IRQ" : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_PE) != 0 ? "PE " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_OVRN) != 0 ? "OVRN " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_FE) != 0 ? "FE " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_CTS) != 0 ? "CTS " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_DCD) != 0 ? "DCD " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_TDRE) != 0 ? "TDRE " : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_RDRF) != 0 ? "RDRF " : "- ";
             returned += ") ";
             return returned;
         }
@@ -458,9 +457,9 @@ namespace EightBit
 
         ////private static byte SetFlag(byte f, StatusRegisters flag, int condition) => SetFlag(f, (byte)flag, condition);
 
-        private static byte SetFlag(byte f, StatusRegisters flag, bool condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetFlag(byte f, StatusRegister flag, bool condition) => SetFlag(f, (byte)flag, condition);
 
-        private static byte ClearFlag(byte f, StatusRegisters flag) => ClearFlag(f, (byte)flag);
+        private static byte ClearFlag(byte f, StatusRegister flag) => ClearFlag(f, (byte)flag);
 
         ////private static byte ClearFlag(byte f, StatusRegisters flag, int condition) => ClearFlag(f, (byte)flag, condition);
 
