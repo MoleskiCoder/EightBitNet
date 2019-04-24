@@ -1310,7 +1310,7 @@
             {
                 var register1 = this.ReferenceTransfer16(specifier1);
                 var register2 = this.ReferenceTransfer16(specifier2);
-                (register1, register2) = (register2, register1);
+                (register1.Word, register2.Word) = (register2.Word, register1.Word);
             }
         }
 
@@ -1547,7 +1547,7 @@
             {
                 var register1 = this.ReferenceTransfer16(specifier1);
                 var register2 = this.ReferenceTransfer16(specifier2);
-                register2 = register1;
+                register2.Word = register1.Word;
             }
         }
 
