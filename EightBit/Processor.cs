@@ -48,6 +48,8 @@ namespace EightBit
             return (sbyte)result;
         }
 
+        public static sbyte SignExtend(int b, int x) => SignExtend(b, (byte)x);
+
         public abstract int Step();
 
         public abstract int Execute();
