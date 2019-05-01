@@ -6,7 +6,7 @@
         public static readonly ulong FrameCycleInterval = CyclesPerSecond / 60;
         public static readonly ulong TerminationCycles = CyclesPerSecond* 10 * 10;
 
-        public bool DebugMode { get; } = false;
+        public bool DebugMode { get; set;  } = false;
 
         public bool TerminatesEarly { get; } = false;
 
