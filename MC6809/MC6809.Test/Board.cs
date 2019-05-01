@@ -100,7 +100,7 @@
 
         private void CPU_ExecutedInstruction_Debug(object sender, EventArgs e)
         {
-            if (this.ignoreDisassembly)
+            if (!this.ignoreDisassembly)
             {
                 var disassembled = $"{this.disassembler.Trace(this.disassembleAt)}\t{this.ACIA.DumpStatus()}";
                 System.Console.Out.WriteLine(disassembled);
