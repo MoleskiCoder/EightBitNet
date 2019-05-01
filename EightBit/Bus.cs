@@ -145,7 +145,7 @@ namespace EightBit
                                     var position = 9 + (i * 2);
                                     var datumString = line.Substring(position, 2);
                                     var datum = Convert.ToByte(datumString, 16);
-                                    data[i] = datum;
+                                    data.Add(datum);
                                 }
 
                                 returned[address] = data;
