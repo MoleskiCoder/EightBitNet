@@ -33,10 +33,10 @@
             var a = this.CPU.A;
             var b = this.CPU.B;
             var dp = this.CPU.DP;
-            var x = this.CPU.X;
-            var y = this.CPU.Y;
-            var u = this.CPU.U;
-            var s = this.CPU.S;
+            var x = this.CPU.X.Word;
+            var y = this.CPU.Y.Word;
+            var u = this.CPU.U.Word;
+            var s = this.CPU.S.Word;
             return $"{current:X4}|{disassembled}\t\tcc={cc:X2} a={a:X2} b={b:X2} dp={dp:X2} x={x:X4} y={y:X4} u={u:X4} s={s:X4}";
         }
 
