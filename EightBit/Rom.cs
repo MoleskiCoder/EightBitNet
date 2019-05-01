@@ -75,7 +75,7 @@ namespace EightBit
         {
             if (limit < 0)
             {
-                limit = this.Size - readOffset;
+                limit = Math.Min(from.Length, this.Size - readOffset);
             }
 
             var extent = limit + writeOffset;
