@@ -59,7 +59,6 @@
             this.cpu.CC = (byte)StatusBits.NF;
             this.cpu.Step();
             this.cpu.Step();
-            this.cpu.Step();
             Assert.AreEqual(2, this.cpu.A);
         }
 
@@ -77,7 +76,6 @@
         public void TestBGT5()
         {
             this.cpu.CC = (byte)(StatusBits.ZF | StatusBits.NF);
-            this.cpu.Step();
             this.cpu.Step();
             this.cpu.Step();
             Assert.AreEqual(2, this.cpu.A);

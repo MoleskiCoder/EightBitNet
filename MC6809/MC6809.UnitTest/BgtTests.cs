@@ -49,7 +49,6 @@
             this.cpu.CC = 0;
             this.cpu.Step();
             this.cpu.Step();
-            this.cpu.Step();
             Assert.AreEqual(2, this.cpu.A);
         }
 
@@ -68,7 +67,6 @@
         {
             Assert.AreEqual(0, this.cpu.PC.Word);
             this.cpu.CC = (byte)(StatusBits.NF | StatusBits.VF);
-            this.cpu.Step();
             this.cpu.Step();
             this.cpu.Step();
             Assert.AreEqual(2, this.cpu.A);

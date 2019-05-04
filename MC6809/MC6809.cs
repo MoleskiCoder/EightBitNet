@@ -447,9 +447,17 @@
             }
         }
 
-        private Register16 Address_relative_byte() => new Register16(this.PC.Word + (sbyte)this.FetchByte());
+        private Register16 Address_relative_byte()
+        {
+            var offset = (sbyte)this.FetchByte();
+            return new Register16(this.PC.Word + offset);
+        }
 
-        private Register16 Address_relative_word() => new Register16(this.PC.Word + (short)this.FetchWord().Word);
+        private Register16 Address_relative_word()
+        {
+            var offset = (short)this.FetchWord().Word;
+            return new Register16(this.PC.Word + offset);
+        }
 
         private Register16 Address_direct() => new Register16(this.FetchByte(), this.DP);
 
