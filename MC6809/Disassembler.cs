@@ -37,7 +37,7 @@
             var y = this.CPU.Y.Word;
             var u = this.CPU.U.Word;
             var s = this.CPU.S.Word;
-            return $"{current:X4}|{disassembled}\t\tcc={cc:X2} a={a:X2} b={b:X2} dp={dp:X2} x={x:X4} y={y:X4} u={u:X4} s={s:X4}";
+            return $"{current:x4}|{disassembled}\t\tcc={cc:x2} a={a:x2} b={b:x2} dp={dp:x2} x={x:x4} y={y:x4} u={u:x4} s={s:x4}";
         }
 
         public string Trace(Register16 current) => this.Trace(current.Word);
@@ -94,7 +94,7 @@
         private string DisassembleUnprefixed()
         {
             var opcode = this.GetByte(this.address);
-            var output = $"{opcode:X2}";
+            var output = $"{opcode:x2}";
 
             switch (opcode)
             {
@@ -466,7 +466,7 @@
         private string Disassemble10()
         {
             var opcode = this.GetByte(this.address);
-            var output = $"{opcode:X2}";
+            var output = $"{opcode:x2}";
 
             switch (opcode)
             {
@@ -541,7 +541,7 @@
         private string Disassemble11()
         {
             var opcode = this.GetByte(this.address);
-            var output = $"{opcode:X2}";
+            var output = $"{opcode:x2}";
 
             switch (opcode)
             {
@@ -600,7 +600,7 @@
         private string Address_direct(string mnemomic)
         {
             var offset = this.GetByte(++this.address);
-            return $"{offset:X2}\t{mnemomic}\t${offset:X2}";
+            return $"{offset:x2}\t{mnemomic}\t${offset:x2}";
         }
 
         private string Address_indexed(string mnemomic)
@@ -611,7 +611,7 @@
             byte byte8 = 0xff;
             ushort word = 0xffff;
 
-            var output = $"{type:X2}";
+            var output = $"{type:x2}";
 
             if ((type & (byte)Bits.Bit7) != 0)
             {
@@ -641,22 +641,22 @@
                         break;
                     case 0b1000:    // n,R (eight-bit)
                         byte8 = this.GetByte(++this.address);
-                        output += $"{byte8:X2}\t{mnemomic}\t{WrapIndirect($"{byte8:X2},{r}", indirect)}";
+                        output += $"{byte8:x2}\t{mnemomic}\t{WrapIndirect($"{byte8:x2},{r}", indirect)}";
                         break;
                     case 0b1001:    // n,R (sixteen-bit)
                         word = this.GetWord(++this.address);
-                        output += $"{word:X4}\t{mnemomic}\t{WrapIndirect($"{word:X4},{r}", indirect)}";
+                        output += $"{word:x4}\t{mnemomic}\t{WrapIndirect($"{word:x4},{r}", indirect)}";
                         break;
                     case 0b1011:    // D,R
                         output += $"\t{mnemomic}\t{WrapIndirect($"D,{r}", indirect)}";
                         break;
                     case 0b1100:    // n,PCR (eight-bit)
                         byte8 = this.GetByte(++this.address);
-                        output += $"{byte8:X2}\t{mnemomic}\t{WrapIndirect("${(byte)byte8:D},PCR", indirect)}";
+                        output += $"{byte8:x2}\t{mnemomic}\t{WrapIndirect("${(byte)byte8:D},PCR", indirect)}";
                         break;
                     case 0b1101:    // n,PCR (sixteen-bit)
                         word = this.GetWord(++this.address);
-                        output += $"{word:X4}\t{mnemomic}\t{WrapIndirect("${(short)word:D},PCR", indirect)}";
+                        output += $"{word:x4}\t{mnemomic}\t{WrapIndirect("${(short)word:D},PCR", indirect)}";
                         break;
                     case 0b1111:    // [n]
                         if (!indirect)
@@ -665,7 +665,7 @@
                         }
 
                         word = this.GetWord(++this.address);
-                        output += $"{word:X4}\t{mnemomic}\t{WrapIndirect("${word:X4}", indirect)}";
+                        output += $"{word:x4}\t{mnemomic}\t{WrapIndirect("${word:x4}", indirect)}";
                         break;
                     default:
                         throw new InvalidOperationException("Invalid index specification used");
@@ -683,31 +683,31 @@
         private string Address_extended(string mnemomic)
         {
             var word = this.GetWord(++this.address);
-            return $"{word:X4}\t{mnemomic}\t${word:X4}";
+            return $"{word:x4}\t{mnemomic}\t${word:x4}";
         }
 
         private string Address_relative_byte(string mnemomic)
         {
             var byte8 = this.GetByte(++this.address);
-            return $"{byte8:X4}\t{mnemomic}\t${++this.address + (sbyte)byte8:X4}";
+            return $"{byte8:x4}\t{mnemomic}\t${++this.address + (sbyte)byte8:x4}";
         }
 
         private string Address_relative_word(string mnemomic)
         {
             var word = this.GetWord(++this.address);
-            return $"{word:X4}\t{mnemomic}\t${++this.address + (short)word:X4}";
+            return $"{word:x4}\t{mnemomic}\t${++this.address + (short)word:x4}";
         }
 
         private string AM_immediate_byte(string mnemomic)
         {
             var byte8 = this.GetByte(++this.address);
-            return $"{byte8:X4}\t{mnemomic}\t#${byte8:X4}";
+            return $"{byte8:x4}\t{mnemomic}\t#${byte8:x4}";
         }
 
         private string AM_immediate_word(string mnemomic)
         {
             var word = this.GetWord(++this.address);
-            return $"{word:X4}\t{mnemomic}\t#${word:X4}";
+            return $"{word:x4}\t{mnemomic}\t#${word:x4}";
         }
 
         private string BranchShort(string mnemomic) => this.Address_relative_byte(mnemomic);
@@ -758,7 +758,7 @@
             var reg1 = Chip.HighNibble(data);
             var reg2 = Chip.LowNibble(data);
 
-            var output = $"{data:X2}\t{mnemomic}\t";
+            var output = $"{data:x2}\t{mnemomic}\t";
 
             var type8 = (reg1 & (byte)Bits.Bit3) != 0;   // 8 bit?
             return type8
@@ -779,7 +779,7 @@
         private string PulX(string mnemomic, string upon)
         {
             var data = this.GetByte(++this.address);
-            var output = $"data:X2\t{mnemomic}\t";
+            var output = $"data:x2\t{mnemomic}\t";
             var registers = new List<string>();
 
             if ((data & (byte)Bits.Bit0) != 0)
@@ -829,7 +829,7 @@
         private string PshX(string mnemomic, string upon)
         {
             var data = this.GetByte(++this.address);
-            var output = $"data:X2\t{mnemomic}\t";
+            var output = $"data:x2\t{mnemomic}\t";
             var registers = new List<string>();
 
             if ((data & (byte)Bits.Bit7) != 0)
