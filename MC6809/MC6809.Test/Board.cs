@@ -43,7 +43,7 @@
 
             // Get the ACIA ready for action
             this.Address.Word = 0b1010000000000000;
-            this.ACIA.DATA = (byte)(MC6850.ControlRegister.CR0 | MC6850.ControlRegister.CR1);  // Master reset
+            this.Data = (byte)(MC6850.ControlRegister.CR0 | MC6850.ControlRegister.CR1);  // Master reset
             this.UpdateAciaPinsWrite();
             this.ACIA.CTS.Lower();
             this.ACIA.RaisePOWER();
