@@ -8,7 +8,7 @@ namespace EightBit
     // +--------+----------------------------------------------------------------------------------+
     // |        |                               Buffer address                                     |
     // |        +------------------+------------------+--------------------+-----------------------+
-    // |        |            _     |            _     |               _    |               _       |
+    // |        |             _    |            _     |               _    |               _       |
     // |  Data  |      RS * R/W    |     RS * R/W     |        RS * R/W    |        RS * R/W       |
     // |  Bus   |   (high)(low)    |   (high)(high)   |       (low)(low)   |       (low)(low)      |
     // |  Line  |     Transmit     |     Receive      |                    |                       |
@@ -181,7 +181,7 @@ namespace EightBit
             // character has not begun since the last write data command.
             STATUS_TDRE = 0b10,
 
-            //                      ___
+            // .                    ___
             // Data Carrier Detect (DCD), Bit 2 - The Data Carrier Detect
             // bit will be high when the DCD (low) input from a modem has gone
             // high to indicate that a carrier is not present. This bit
@@ -195,7 +195,7 @@ namespace EightBit
             // will follow the DCD (low) input.
             STATUS_DCD = 0b100,
 
-            //                  ___
+            // .              ___
             // Clear-to-Send (CTS), Bit 3 - The Clear-to-Send bit indicates
             // the state of the Clear-to-Send input from a modem. A low CTS (low)
             // indicates that there is a Clear-to-Send from the modem. In
@@ -240,7 +240,7 @@ namespace EightBit
             // parity check results are inhibited
             STATUS_PE = 0b1000000,
 
-            //                    ___
+            // .                  ___
             // Interrupt Request (IRQ), Bit 7- The IRQ (low) bit indicates the
             // state of the IRQ (low) output. Any interrupt condition with its
             // applicable enable will be indicated in this status bit.
@@ -330,7 +330,7 @@ namespace EightBit
                 byte status = 0;
                 status = SetFlag(status, StatusRegister.STATUS_RDRF, this.statusRDRF);
                 status = SetFlag(status, StatusRegister.STATUS_TDRE, this.statusTDRE);
-                status = SetFlag(status, StatusRegister.STATUS_DCD, this.DCD.Lowered());
+                status = SetFlag(status, StatusRegister.STATUS_DCD, this.DCD.Raised());
                 status = SetFlag(status, StatusRegister.STATUS_CTS, this.CTS.Raised());
                 status = ClearFlag(status, StatusRegister.STATUS_FE);
                 status = SetFlag(status, StatusRegister.STATUS_OVRN, this.statusOVRN);
@@ -349,9 +349,12 @@ namespace EightBit
         {
             this.ResetCycles();
 
-            this.OnAccessing();
+            if (!this.Activated)
+            {
+                return;
+            }
 
-            this.Tick();
+            this.OnAccessing();
 
             var writing = this.RW.Lowered();
             var reading = !writing;
@@ -441,7 +444,7 @@ namespace EightBit
             var value = this.Status;
             var returned = string.Empty;
             returned += "(";
-            returned += (value & (byte)StatusRegister.STATUS_IRQ) != 0 ? "IRQ" : "- ";
+            returned += (value & (byte)StatusRegister.STATUS_IRQ) != 0 ? "IRQ " : "- ";
             returned += (value & (byte)StatusRegister.STATUS_PE) != 0 ? "PE " : "- ";
             returned += (value & (byte)StatusRegister.STATUS_OVRN) != 0 ? "OVRN " : "- ";
             returned += (value & (byte)StatusRegister.STATUS_FE) != 0 ? "FE " : "- ";
@@ -462,6 +465,12 @@ namespace EightBit
         private static byte ClearFlag(byte f, StatusRegister flag) => ClearFlag(f, (byte)flag);
 
         ////private static byte ClearFlag(byte f, StatusRegisters flag, int condition) => ClearFlag(f, (byte)flag, condition);
+
+        protected override void OnTicked()
+        {
+            base.OnTicked();
+            this.Step();
+        }
 
         private void OnAccessing() => this.Accessing?.Invoke(this, EventArgs.Empty);
 
