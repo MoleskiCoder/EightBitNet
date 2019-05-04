@@ -13,6 +13,7 @@ namespace EightBit
         private const byte NMIvector = 0xfa;  // NMI vector
 
         private readonly Register16 intermediate = new Register16();
+        private byte crossedPage;
 
         private bool handlingRESET = false;
         private bool handlingNMI = false;
@@ -627,30 +628,30 @@ namespace EightBit
             return Chip.LowByte(address + this.Y);
         }
 
-        private Tuple<Register16, byte> Address_AbsoluteX()
+        private Register16 Address_AbsoluteX()
         {
             var address = this.Address_Absolute();
-            var page = address.High;
+            this.crossedPage = address.High;
             address.Word += this.X;
-            return new Tuple<Register16, byte>(address, page);
+            return address;
         }
 
-        private Tuple<Register16, byte> Address_AbsoluteY()
+        private Register16 Address_AbsoluteY()
         {
             var address = this.Address_Absolute();
-            var page = address.High;
+            this.crossedPage = address.High;
             address.Word += this.Y;
-            return new Tuple<Register16, byte>(address, page);
+            return address;
         }
 
         private Register16 Address_IndexedIndirectX() => this.GetWordPaged(0, this.Address_ZeroPageX());
 
-        private Tuple<Register16, byte> Address_IndirectIndexedY()
+        private Register16 Address_IndirectIndexedY()
         {
             var address = this.Address_ZeroPageIndirect();
-            var page = address.High;
+            this.crossedPage = address.High;
             address.Word += this.Y;
-            return new Tuple<Register16, byte>(address, page);
+            return address;
         }
 
         private ushort Address_relative_byte()
@@ -668,11 +669,9 @@ namespace EightBit
 
         private byte AM_AbsoluteX(PageCrossingBehavior behaviour = PageCrossingBehavior.MaybeReadTwice)
         {
-            var crossed = this.Address_AbsoluteX();
-            var address = crossed.Item1;
-            var page = crossed.Item2;
-            var possible = this.BusRead(address.Low, page);
-            if ((behaviour == PageCrossingBehavior.AlwaysReadTwice) || (page != address.High))
+            var address = this.Address_AbsoluteX();
+            var possible = this.BusRead(address.Low, this.crossedPage);
+            if ((behaviour == PageCrossingBehavior.AlwaysReadTwice) || (this.crossedPage != address.High))
             {
                 possible = this.BusRead(address.Word);
             }
@@ -682,11 +681,9 @@ namespace EightBit
 
         private byte AM_AbsoluteY()
         {
-            var crossed = this.Address_AbsoluteY();
-            var address = crossed.Item1;
-            var page = crossed.Item2;
-            var possible = this.BusRead(address.Low, page);
-            if (page != address.High)
+            var address = this.Address_AbsoluteY();
+            var possible = this.BusRead(address.Low, this.crossedPage);
+            if (this.crossedPage != address.High)
             {
                 possible = this.BusRead(address.Word);
             }
@@ -702,11 +699,9 @@ namespace EightBit
 
         private byte AM_IndirectIndexedY()
         {
-            var crossed = this.Address_IndirectIndexedY();
-            var address = crossed.Item1;
-            var page = crossed.Item2;
-            var possible = this.BusRead(address.Low, page);
-            if (page != address.High)
+            var address = this.Address_IndirectIndexedY();
+            var possible = this.BusRead(address.Low, this.crossedPage);
+            if (this.crossedPage != address.High)
             {
                 possible = this.BusRead(address);
             }
@@ -982,19 +977,15 @@ namespace EightBit
 
         private void STA_AbsoluteX()
         {
-            var crossed = this.Address_AbsoluteX();
-            var address = crossed.Item1;
-            var page = crossed.Item2;
-            this.BusRead(address.Low, page);
+            var address = this.Address_AbsoluteX();
+            this.BusRead(address.Low, this.crossedPage);
             this.BusWrite(address, this.A);
         }
 
         private void STA_AbsoluteY()
         {
-            var crossed = this.Address_AbsoluteY();
-            var address = crossed.Item1;
-            var page = crossed.Item2;
-            this.BusRead(address.Low, page);
+            var address = this.Address_AbsoluteY();
+            this.BusRead(address.Low, this.crossedPage);
             this.BusWrite(address, this.A);
         }
     }
