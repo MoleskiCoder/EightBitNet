@@ -1311,15 +1311,15 @@
 
             if (type1 == 0)
             {
-                ref var register1 = ref this.ReferenceTransfer8(specifier1);
-                ref var register2 = ref this.ReferenceTransfer8(specifier2);
-                (register1, register2) = (register2, register1);
-            }
-            else
-            {
                 var register1 = this.ReferenceTransfer16(specifier1);
                 var register2 = this.ReferenceTransfer16(specifier2);
                 (register1.Word, register2.Word) = (register2.Word, register1.Word);
+            }
+            else
+            {
+                ref var register1 = ref this.ReferenceTransfer8(specifier1);
+                ref var register2 = ref this.ReferenceTransfer8(specifier2);
+                (register1, register2) = (register2, register1);
             }
         }
 
@@ -1548,15 +1548,15 @@
 
             if (type1 == 0)
             {
-                ref var register1 = ref this.ReferenceTransfer8(specifier1);
-                ref var register2 = ref this.ReferenceTransfer8(specifier2);
-                register2 = register1;
-            }
-            else
-            {
                 var register1 = this.ReferenceTransfer16(specifier1);
                 var register2 = this.ReferenceTransfer16(specifier2);
                 register2.Word = register1.Word;
+            }
+            else
+            {
+                ref var register1 = ref this.ReferenceTransfer8(specifier1);
+                ref var register2 = ref this.ReferenceTransfer8(specifier2);
+                register2 = register1;
             }
         }
 
