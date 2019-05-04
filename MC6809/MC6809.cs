@@ -4,6 +4,7 @@
 
     // Uses some information from:
     // http://www.cpu-world.com/Arch/6809.html
+    // http://atjs.mbnet.fi/mc6809/Information/6809.htm
 
     //  |---------------|-----------------------------------|
     //  |   MPU State   |                                   |
@@ -25,7 +26,7 @@
         private const byte FIRQvector = 0xf6;       // FIRQ vector
         private const byte SWI2vector = 0xf4;       // SWI2 vector
         private const byte SWI3vector = 0xf2;       // SWI3 vector
-        private const byte RESERVEDvector = 0xf0;   // RESERVED vector
+        // private const byte RESERVEDvector = 0xf0;   // RESERVED vector
 
         private byte cc = 0;
         private byte dp = 0;
@@ -304,8 +305,8 @@
             this.LowerBA();
             this.RaiseBS();
             this.DP = 0;
-            SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
-            SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.CC = SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
             this.Jump(this.GetWordPaged(0xff, RESETvector));
             this.Tick(10);
         }
@@ -316,7 +317,7 @@
             this.LowerBA();
             this.RaiseBS();
             this.SaveEntireRegisterState();
-            SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
             this.Jump(this.GetWordPaged(0xff, IRQvector));
             this.Tick(12);
         }
@@ -337,8 +338,8 @@
             this.LowerBA();
             this.RaiseBS();
             this.SaveEntireRegisterState();
-            SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
-            SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.CC = SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
             this.Jump(this.GetWordPaged(0xff, NMIvector));
             this.Tick(12);
         }
@@ -349,8 +350,8 @@
             this.LowerBA();
             this.RaiseBS();
             this.SavePartialRegisterState();
-            SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
-            SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.CC = SetFlag(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetFlag(this.CC, StatusBits.FF);  // Disable FIRQ
             this.Jump(this.GetWordPaged(0xff, FIRQvector));
             this.Tick(12);
         }
