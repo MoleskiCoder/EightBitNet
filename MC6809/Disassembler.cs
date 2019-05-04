@@ -689,7 +689,7 @@
         private string Address_relative_byte(string mnemomic)
         {
             var byte8 = this.GetByte(++this.address);
-            return $"{byte8:x4}\t{mnemomic}\t${++this.address + (sbyte)byte8:x4}";
+            return $"{byte8:x2}\t{mnemomic}\t${++this.address + (sbyte)byte8:x4}";
         }
 
         private string Address_relative_word(string mnemomic)
@@ -701,7 +701,7 @@
         private string AM_immediate_byte(string mnemomic)
         {
             var byte8 = this.GetByte(++this.address);
-            return $"{byte8:x4}\t{mnemomic}\t#${byte8:x4}";
+            return $"{byte8:x2}\t{mnemomic}\t#${byte8:x2}";
         }
 
         private string AM_immediate_word(string mnemomic)
