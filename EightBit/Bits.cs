@@ -9,6 +9,7 @@ namespace EightBit
     [Flags]
     public enum Bits
     {
+        None = 0,
         Bit0 = 1,
         Bit1 = Bit0 << 1,
         Bit2 = Bit1 << 1,
