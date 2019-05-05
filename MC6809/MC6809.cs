@@ -410,7 +410,7 @@
 
         private static byte ClearFlag(byte f, StatusBits flag, int condition) => ClearFlag(f, (byte)flag, condition);
 
-        private void Push(Register16 stack, byte value) => this.BusWrite(--stack, value);
+        private void Push(Register16 stack, byte value) => this.BusWrite(--stack.Word, value);
 
         private void PushS(byte value) => this.Push(this.S, value);
 
@@ -420,7 +420,7 @@
             this.Push(stack, value.High);
         }
 
-        private byte Pop(Register16 stack) => this.BusRead(stack++);
+        private byte Pop(Register16 stack) => this.BusRead(stack.Word++);
 
         private byte PopS() => this.Pop(this.S);
 
