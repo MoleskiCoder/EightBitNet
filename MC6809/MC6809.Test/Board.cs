@@ -120,7 +120,7 @@
             {
                 if (System.Console.KeyAvailable)
                 {
-                    var key = System.Console.ReadKey();
+                    var key = System.Console.ReadKey(true);
                     this.ACIA.RDR = System.Convert.ToByte(key.KeyChar);
                     this.ACIA.MarkReceiveStarting();
                 }
@@ -231,9 +231,15 @@
         private bool AccessAcia()
         {
             this.ACIA.E.Raise();
-            this.ACIA.Tick();
-            this.ACIA.E.Lower();
-            return this.ACIA.Activated;
+            try
+            {
+                this.ACIA.Tick();
+                return this.ACIA.Activated;
+            }
+            finally
+            {
+                this.ACIA.E.Lower();
+            }
         }
     }
 }
