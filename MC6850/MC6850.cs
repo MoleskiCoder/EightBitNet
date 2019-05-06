@@ -456,6 +456,12 @@ namespace EightBit
             return returned;
         }
 
+        protected override void OnTicked()
+        {
+            base.OnTicked();
+            this.Step();
+        }
+
         ////private static byte SetFlag(byte f, StatusRegisters flag) => SetFlag(f, (byte)flag);
 
         ////private static byte SetFlag(byte f, StatusRegisters flag, int condition) => SetFlag(f, (byte)flag, condition);
@@ -465,12 +471,6 @@ namespace EightBit
         private static byte ClearFlag(byte f, StatusRegister flag) => ClearFlag(f, (byte)flag);
 
         ////private static byte ClearFlag(byte f, StatusRegisters flag, int condition) => ClearFlag(f, (byte)flag, condition);
-
-        protected override void OnTicked()
-        {
-            base.OnTicked();
-            this.Step();
-        }
 
         private void OnAccessing() => this.Accessing?.Invoke(this, EventArgs.Empty);
 

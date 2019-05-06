@@ -822,8 +822,7 @@
                 registers.Add("PC");
             }
 
-            output += string.Join(",", registers);
-            return output;
+            return string.Join(",", registers);
         }
 
         private string PshX(string mnemomic, string upon)
@@ -872,8 +871,7 @@
                 registers.Add("CC");
             }
 
-            output += string.Join(",", registers);
-            return output;
+            return string.Join(",", registers);
         }
 
         private byte GetByte(ushort absolute) => this.BUS.Peek(absolute);

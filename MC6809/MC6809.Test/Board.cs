@@ -1,4 +1,8 @@
-﻿namespace EightBit
+﻿// <copyright file="Board.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using System;
 
@@ -27,7 +31,28 @@
         }
 
         public MC6809 CPU { get; }
+
         public MC6850 ACIA { get; } = new MC6850();
+
+        public override MemoryMapping Mapping(ushort absolute)
+        {
+            if (absolute < 0x8000)
+            {
+                return new MemoryMapping(this.ram, 0x0000, Mask.Mask16, AccessLevel.ReadWrite);
+            }
+
+            if (absolute < 0xa000)
+            {
+                return new MemoryMapping(this.unused2000, 0x8000, Mask.Mask16, AccessLevel.ReadOnly);
+            }
+
+            if (absolute < 0xc000)
+            {
+                return new MemoryMapping(this.io, 0xa000, Mask.Mask16, AccessLevel.ReadWrite);
+            }
+
+            return new MemoryMapping(this.rom, 0xc000, Mask.Mask16, AccessLevel.ReadOnly);
+        }
 
         public override void RaisePOWER()
         {
@@ -44,8 +69,9 @@
             // Get the ACIA ready for action
             this.Address.Word = 0b1010000000000000;
             this.Data = (byte)(MC6850.ControlRegister.CR0 | MC6850.ControlRegister.CR1);  // Master reset
-            this.UpdateAciaPinsWrite();
             this.ACIA.CTS.Lower();
+            this.ACIA.RW.Lower();
+            this.UpdateAciaPins();
             this.ACIA.RaisePOWER();
             this.AccessAcia();
         }
@@ -59,18 +85,14 @@
 
         public override void Initialize()
         {
+            System.Console.TreatControlCAsInput = true;
+
             // Load our BASIC interpreter
             var directory = this.configuration.RomDirectory + "\\";
             this.LoadHexFile(directory + "ExBasROM.hex");
 
             // Catch a byte being transmitted
             this.ACIA.Transmitting += this.ACIA_Transmitting;
-
-            // Marshal data from memory -> ACIA
-            this.WrittenByte += this.Board_WrittenByte;
-
-            // Marshal data from ACIA -> memory
-            this.ReadingByte += this.Board_ReadingByte;
 
             // Keyboard wiring, check for input once per frame
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
@@ -86,6 +108,32 @@
             {
                 // Early termination condition for CPU timing code
                 this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Termination;
+            }
+        }
+
+        // Marshal data from ACIA -> memory
+        protected override void OnReadingByte()
+        {
+            this.UpdateAciaPins();
+            this.ACIA.RW.Raise();
+            if (this.AccessAcia())
+            {
+                this.Poke(this.ACIA.DATA);
+            }
+
+            base.OnReadingByte();
+        }
+
+        // Marshal data from memory -> ACIA
+        protected override void OnWrittenByte()
+        {
+            base.OnWrittenByte();
+            this.UpdateAciaPins();
+            if (this.ACIA.Selected)
+            {
+                this.ACIA.RW.Lower();
+                this.ACIA.DATA = this.Data;
+                this.AccessAcia();
             }
         }
 
@@ -129,62 +177,10 @@
             }
         }
 
-        private void Board_ReadingByte(object sender, EventArgs e)
-        {
-            this.UpdateAciaPinsRead();
-            if (this.AccessAcia())
-            {
-                this.Poke(this.ACIA.DATA);
-            }
-        }
-
-        private void Board_WrittenByte(object sender, EventArgs e)
-        {
-            this.UpdateAciaPinsWrite();
-            if (this.ACIA.Selected)
-            {
-                this.ACIA.DATA = this.Data;
-                this.AccessAcia();
-            }
-        }
-
         private void ACIA_Transmitting(object sender, EventArgs e)
         {
             System.Console.Out.Write(Convert.ToChar(this.ACIA.TDR));
             this.ACIA.MarkTransmitComplete();
-        }
-
-        public override MemoryMapping Mapping(ushort absolute)
-        {
-            if (absolute < 0x8000)
-            {
-                return new MemoryMapping(this.ram, 0x0000, Mask.Mask16, AccessLevel.ReadWrite);
-            }
-
-            if (absolute < 0xa000)
-            {
-                return new MemoryMapping(this.unused2000, 0x8000, Mask.Mask16, AccessLevel.ReadOnly);
-            }
-
-            if (absolute < 0xc000)
-            {
-                return new MemoryMapping(this.io, 0xa000, Mask.Mask16, AccessLevel.ReadWrite);
-            }
-
-            return new MemoryMapping(this.rom, 0xc000, Mask.Mask16, AccessLevel.ReadOnly);
-        }
-
-        // Use the bus data to update the ACIA access/address pins
-        private void UpdateAciaPinsRead()
-        {
-            this.ACIA.RW.Raise();
-            this.UpdateAciaPins();
-        }
-
-        private void UpdateAciaPinsWrite()
-        {
-            this.ACIA.RW.Lower();
-            this.UpdateAciaPins();
         }
 
         private void UpdateAciaPins()
