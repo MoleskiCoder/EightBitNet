@@ -16,6 +16,8 @@
             this.CPU = targetProcessor;
         }
 
+        public bool Pause { get; set;  } = false;
+
         public bool Ignore => this.CPU.HALT.Lowered()
                                 || this.CPU.RESET.Lowered()
                                 || this.CPU.NMI.Lowered()
@@ -822,7 +824,7 @@
                 registers.Add("PC");
             }
 
-            return string.Join(",", registers);
+            return output + string.Join(",", registers);
         }
 
         private string PshX(string mnemomic, string upon)
@@ -871,7 +873,7 @@
                 registers.Add("CC");
             }
 
-            return string.Join(",", registers);
+            return output + string.Join(",", registers);
         }
 
         private byte GetByte(ushort absolute) => this.BUS.Peek(absolute);
