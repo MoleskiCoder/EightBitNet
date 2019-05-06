@@ -376,14 +376,7 @@ namespace EightBit
                         this.wordSelect = (WordSelect)((this.DATA & (byte)(ControlRegister.CR2 | ControlRegister.CR3 | ControlRegister.CR4)) >> 2);
                         this.transmitControl = (TransmitterControl)((this.DATA & (byte)(ControlRegister.CR5 | ControlRegister.CR6)) >> 5);
                         this.receiveControl = (ReceiveControl)((this.DATA & (byte)ControlRegister.CR7) >> 7);
-                        if (this.TransmitReadyHigh)
-                        {
-                            this.RTS.Raise();
-                        }
-                        else
-                        {
-                            this.RTS.Lower();
-                        }
+                        this.RTS.Match(this.TransmitReadyHigh);
                     }
                 }
                 else

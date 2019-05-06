@@ -13,5 +13,19 @@ namespace EightBit
         public static void Raise(this ref PinLevel line) => line = PinLevel.High;
 
         public static void Lower(this ref PinLevel line) => line = PinLevel.Low;
+
+        public static void Match(this ref PinLevel line, int condition) => Match(ref line, condition != 0);
+
+        public static void Match(this ref PinLevel line, bool condition)
+        {
+            if (condition)
+            {
+                line.Raise();
+            }
+            else
+            {
+                line.Lower();
+            }
+        }
     }
 }

@@ -186,42 +186,10 @@ namespace EightBit
         private void UpdateAciaPins()
         {
             this.ACIA.DATA = this.Data;
-
-            if ((this.Address.Word & (ushort)Bits.Bit0) != 0)
-            {
-                this.ACIA.RS.Raise();
-            }
-            else
-            {
-                this.ACIA.RS.Lower();
-            }
-
-            if ((this.Address.Word & (ushort)Bits.Bit15) != 0)
-            {
-                this.ACIA.CS0.Raise();
-            }
-            else
-            {
-                this.ACIA.CS0.Lower();
-            }
-
-            if ((this.Address.Word & (ushort)Bits.Bit13) != 0)
-            {
-                this.ACIA.CS1.Raise();
-            }
-            else
-            {
-                this.ACIA.CS1.Lower();
-            }
-
-            if ((this.Address.Word & (ushort)Bits.Bit14) != 0)
-            {
-                this.ACIA.CS2.Raise();
-            }
-            else
-            {
-                this.ACIA.CS2.Lower();
-            }
+            this.ACIA.RS.Match(this.Address.Word & (ushort)Bits.Bit0);
+            this.ACIA.CS0.Match(this.Address.Word & (ushort)Bits.Bit15);
+            this.ACIA.CS1.Match(this.Address.Word & (ushort)Bits.Bit13);
+            this.ACIA.CS2.Match(this.Address.Word & (ushort)Bits.Bit14);
         }
 
         private bool AccessAcia()
