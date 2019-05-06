@@ -15,6 +15,7 @@ namespace EightBit
         private readonly Rom rom = new Rom(0x4000);                                 // C000 - FFFF, 16K ROM
 
         private readonly Disassembler disassembler;
+        private readonly Profiler profiler;
 
         private ulong totalCycleCount = 0UL;
         private long frameCycleCount = 0L;
@@ -28,6 +29,7 @@ namespace EightBit
             this.configuration = configuration;
             this.CPU = new MC6809(this);
             this.disassembler = new Disassembler(this, this.CPU);
+            this.profiler = new Profiler(this, this.CPU, this.disassembler);
         }
 
         public MC6809 CPU { get; }
@@ -78,6 +80,8 @@ namespace EightBit
 
         public override void LowerPOWER()
         {
+            ////this.profiler.Generate();
+
             this.ACIA.LowerPOWER();
             this.CPU.LowerPOWER();
             base.LowerPOWER();
@@ -109,6 +113,9 @@ namespace EightBit
                 // Early termination condition for CPU timing code
                 this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Termination;
             }
+
+            ////this.profiler.Enable();
+            ////this.profiler.EmitLine += this.Profiler_EmitLine;
         }
 
         // Marshal data from ACIA -> memory
@@ -137,6 +144,13 @@ namespace EightBit
             }
         }
 
+        private void Profiler_EmitLine(object sender, ProfileLineEventArgs e)
+        {
+            var cycles = e.Cycles;
+            var disassembled = e.Source;
+            System.Console.Error.WriteLine(disassembled);
+        }
+
         private void CPU_ExecutedInstruction_Termination(object sender, EventArgs e)
         {
             this.totalCycleCount += (ulong)this.CPU.Cycles;
@@ -151,14 +165,14 @@ namespace EightBit
             if (!this.ignoreDisassembly)
             {
                 var disassembled = $"{this.disassembler.Trace(this.disassembleAt)}\t{this.ACIA.DumpStatus()}";
-                System.Console.Out.WriteLine(disassembled);
+                System.Console.Error.WriteLine(disassembled);
             }
         }
 
         private void CPU_ExecutingInstruction(object sender, EventArgs e)
         {
             this.disassembleAt = this.CPU.PC.Word;
-            this.ignoreDisassembly = this.disassembler.Ignore;
+            this.ignoreDisassembly = this.disassembler.Ignore || this.disassembler.Pause;
         }
 
         private void CPU_ExecutedInstruction(object sender, EventArgs e)
@@ -169,6 +183,11 @@ namespace EightBit
                 if (System.Console.KeyAvailable)
                 {
                     var key = System.Console.ReadKey(true);
+                    if (key.Key == ConsoleKey.F12)
+                    {
+                        this.LowerPOWER();
+                    }
+
                     this.ACIA.RDR = System.Convert.ToByte(key.KeyChar);
                     this.ACIA.MarkReceiveStarting();
                 }

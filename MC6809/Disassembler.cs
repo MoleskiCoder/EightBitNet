@@ -52,25 +52,20 @@
 
         ////private static string Dump_RelativeValue(Register16 value) => Dump_RelativeValue(value);
 
-        private string Disassemble(ushort current)
+        public string Disassemble(ushort current)
         {
-            if (this.CPU.Powered)
+            this.address = current;
+            if (this.prefix10)
             {
-                this.address = current;
-                if (this.prefix10)
-                {
-                    return this.Disassemble10();
-                }
-
-                if (this.prefix11)
-                {
-                    return this.Disassemble11();
-                }
-
-                return this.DisassembleUnprefixed();
+                return this.Disassemble10();
             }
 
-            return string.Empty;
+            if (this.prefix11)
+            {
+                return this.Disassemble11();
+            }
+
+            return this.DisassembleUnprefixed();
         }
 
         private string Disassemble(int current) => this.Disassemble((ushort)current);
@@ -764,8 +759,8 @@
 
             var type8 = (reg1 & (byte)Bits.Bit3) != 0;   // 8 bit?
             return type8
-                ? $"{ReferenceTransfer8(reg1)},{ReferenceTransfer8(reg2)}"
-                : $"{ReferenceTransfer16(reg1)},{ReferenceTransfer16(reg2)}";
+                ? $"{output}{ReferenceTransfer8(reg1)},{ReferenceTransfer8(reg2)}"
+                : $"{output}{ReferenceTransfer16(reg1)},{ReferenceTransfer16(reg2)}";
         }
 
         //
@@ -781,7 +776,7 @@
         private string PulX(string mnemomic, string upon)
         {
             var data = this.GetByte(++this.address);
-            var output = $"data:x2\t{mnemomic}\t";
+            var output = $"{data:x2}\t{mnemomic}\t";
             var registers = new List<string>();
 
             if ((data & (byte)Bits.Bit0) != 0)
@@ -830,7 +825,7 @@
         private string PshX(string mnemomic, string upon)
         {
             var data = this.GetByte(++this.address);
-            var output = $"data:x2\t{mnemomic}\t";
+            var output = $"{data:x2}\t{mnemomic}\t";
             var registers = new List<string>();
 
             if ((data & (byte)Bits.Bit7) != 0)

@@ -42,6 +42,10 @@
   <ItemGroup>
     <Compile Include="Disassembler.cs" />
     <Compile Include="MC6809.cs" />
+    <Compile Include="ProfileEventArgs.cs" />
+    <Compile Include="ProfileLineEventArgs.cs" />
+    <Compile Include="Profiler.cs" />
+    <Compile Include="ProfileScopeEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StatusBits.cs" />
   </ItemGroup>
