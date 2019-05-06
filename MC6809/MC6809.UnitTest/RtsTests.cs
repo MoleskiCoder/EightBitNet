@@ -1,9 +1,12 @@
-﻿namespace EightBit
+﻿// <copyright file="RtsTests.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace EightBit
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     // https://github.com/sorenroug/osnine-java/blob/master/core/src/test/java/org/roug/osnine/BranchAndJumpTest.java
-
     [TestClass]
     public class RtsTests
     {

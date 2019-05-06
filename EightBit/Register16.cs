@@ -65,25 +65,9 @@ namespace EightBit
 
         public ref byte High => ref this.high;
 
-        public static Register16 operator ++(Register16 value) => Increment(value);
-
-        public static Register16 operator --(Register16 value) => Decrement(value);
-
         public static bool operator ==(Register16 left, Register16 right) => left.Equals(right);
 
         public static bool operator !=(Register16 left, Register16 right) => !(left == right);
-
-        public static Register16 Increment(Register16 value)
-        {
-            ++value.Word;
-            return value;
-        }
-
-        public static Register16 Decrement(Register16 value)
-        {
-            --value.Word;
-            return value;
-        }
 
         public override bool Equals(object obj)
         {
