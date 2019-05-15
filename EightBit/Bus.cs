@@ -36,11 +36,11 @@ namespace EightBit
 
         public void Poke(byte value) => this.Reference() = value;
 
-        public byte Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
+        public void Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
 
-        public byte Poke(Register16 absolute, byte value) => this.Poke(absolute.Word, value);
+        public void Poke(Register16 absolute, byte value) => this.Poke(absolute.Word, value);
 
-        public byte Poke(byte low, byte high, byte value) => this.Reference(low, high) = value;
+        public void Poke(byte low, byte high, byte value) => this.Reference(low, high) = value;
 
         public byte Read()
         {
