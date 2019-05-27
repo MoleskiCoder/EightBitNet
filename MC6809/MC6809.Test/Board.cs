@@ -139,7 +139,6 @@ namespace EightBit
             if (this.ACIA.Selected)
             {
                 this.ACIA.RW.Lower();
-                this.ACIA.DATA = this.Data;
                 this.AccessAcia();
             }
         }

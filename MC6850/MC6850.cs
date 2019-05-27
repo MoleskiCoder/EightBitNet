@@ -321,8 +321,6 @@ namespace EightBit
 
         private bool TransmitReadyHigh => this.transmitControl == TransmitterControl.ReadyHighInterruptDisabled;
 
-        //// private bool TransmitReadyLow => !this.TransmitReadyHigh;
-
         private byte Status
         {
             get
@@ -343,70 +341,6 @@ namespace EightBit
         {
             base.RaisePOWER();
             this.startup = StartupCondition.ColdStart;
-        }
-
-        public void Step()
-        {
-            this.ResetCycles();
-
-            if (!this.Activated)
-            {
-                return;
-            }
-
-            this.OnAccessing();
-
-            var writing = this.RW.Lowered();
-            var reading = !writing;
-
-            var registers = this.RS.Lowered();
-            var transferring = !registers;
-
-            if (registers)
-            {
-                if (writing)
-                {
-                    this.counterDivide = (CounterDivideSelect)(this.DATA & (byte)(ControlRegister.CR0 | ControlRegister.CR1));
-                    if (this.counterDivide == CounterDivideSelect.MasterReset)
-                    {
-                        this.Reset();
-                    }
-                    else
-                    {
-                        this.wordSelect = (WordSelect)((this.DATA & (byte)(ControlRegister.CR2 | ControlRegister.CR3 | ControlRegister.CR4)) >> 2);
-                        this.transmitControl = (TransmitterControl)((this.DATA & (byte)(ControlRegister.CR5 | ControlRegister.CR6)) >> 5);
-                        this.receiveControl = (ReceiveControl)((this.DATA & (byte)ControlRegister.CR7) >> 7);
-                        this.RTS.Match(this.TransmitReadyHigh);
-                    }
-                }
-                else
-                {
-                    this.DATA = this.Status;
-                }
-            }
-            else
-            {
-                this.IRQ.Raise();
-                if (writing)
-                {
-                    this.StartTransmit();
-                }
-                else
-                {
-                    this.CompleteReceive();
-                }
-            }
-
-            // Catch the transition to lost carrier
-            if (this.oldDcdLine.Lowered() && this.DCD.Raised())
-            {
-                this.IRQ.Raise();
-                this.statusRead = false;
-            }
-
-            this.oldDcdLine = this.dcdLine;
-
-            this.OnAccessed();
         }
 
         public void MarkTransmitComplete()
@@ -455,15 +389,70 @@ namespace EightBit
             this.Step();
         }
 
-        ////private static byte SetFlag(byte f, StatusRegisters flag) => SetFlag(f, (byte)flag);
-
-        ////private static byte SetFlag(byte f, StatusRegisters flag, int condition) => SetFlag(f, (byte)flag, condition);
-
         private static byte SetFlag(byte f, StatusRegister flag, bool condition) => SetFlag(f, (byte)flag, condition);
 
         private static byte ClearFlag(byte f, StatusRegister flag) => ClearFlag(f, (byte)flag);
 
-        ////private static byte ClearFlag(byte f, StatusRegisters flag, int condition) => ClearFlag(f, (byte)flag, condition);
+        private void Step()
+        {
+            this.ResetCycles();
+
+            if (!this.Activated)
+            {
+                return;
+            }
+
+            this.OnAccessing();
+
+            var writing = this.RW.Lowered();
+            var registers = this.RS.Lowered();
+
+            if (registers)
+            {
+                if (writing)
+                {
+                    this.counterDivide = (CounterDivideSelect)(this.DATA & (byte)(ControlRegister.CR0 | ControlRegister.CR1));
+                    if (this.counterDivide == CounterDivideSelect.MasterReset)
+                    {
+                        this.Reset();
+                    }
+                    else
+                    {
+                        this.wordSelect = (WordSelect)((this.DATA & (byte)(ControlRegister.CR2 | ControlRegister.CR3 | ControlRegister.CR4)) >> 2);
+                        this.transmitControl = (TransmitterControl)((this.DATA & (byte)(ControlRegister.CR5 | ControlRegister.CR6)) >> 5);
+                        this.receiveControl = (ReceiveControl)((this.DATA & (byte)ControlRegister.CR7) >> 7);
+                        this.RTS.Match(this.TransmitReadyHigh);
+                    }
+                }
+                else
+                {
+                    this.DATA = this.Status;
+                }
+            }
+            else
+            {
+                this.IRQ.Raise();
+                if (writing)
+                {
+                    this.StartTransmit();
+                }
+                else
+                {
+                    this.CompleteReceive();
+                }
+            }
+
+            // Catch the transition to lost carrier
+            if (this.oldDcdLine.Lowered() && this.DCD.Raised())
+            {
+                this.IRQ.Raise();
+                this.statusRead = false;
+            }
+
+            this.oldDcdLine = this.dcdLine;
+
+            this.OnAccessed();
+        }
 
         private void OnAccessing() => this.Accessing?.Invoke(this, EventArgs.Empty);
 
