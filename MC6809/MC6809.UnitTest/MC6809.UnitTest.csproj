@@ -8,7 +8,7 @@
     <ProjectGuid>{4391A363-ECEF-44C8-9335-BF6ECB811E4B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MC6809.UnitTest</RootNamespace>
+    <RootNamespace>EightBit</RootNamespace>
     <AssemblyName>MC6809.UnitTest</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -74,6 +74,14 @@
     <Compile Include="SbcTests.cs" />
     <Compile Include="SubTests.cs" />
     <Compile Include="TfrTests.cs" />
+    <Compile Include="PshTests.cs" />
+    <Compile Include="PulTests.cs" />
+    <Compile Include="TstTests.cs" />
+    <Compile Include="OrTests.cs" />
+    <Compile Include="RolTests.cs" />
+    <Compile Include="LsrTests.cs" />
+    <Compile Include="RorTests.cs" />
+    <Compile Include="ComTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\EightBit\EightBit.csproj">
