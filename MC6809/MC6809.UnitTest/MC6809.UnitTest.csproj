@@ -65,12 +65,15 @@
     <Compile Include="ClrTests.cs" />
     <Compile Include="CmpTests.cs" />
     <Compile Include="DecTests.cs" />
+    <Compile Include="ExgTests.cs" />
     <Compile Include="IncTests.cs" />
     <Compile Include="JsrTests.cs" />
+    <Compile Include="NegTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RtsTests.cs" />
     <Compile Include="SbcTests.cs" />
     <Compile Include="SubTests.cs" />
+    <Compile Include="TfrTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\EightBit\EightBit.csproj">

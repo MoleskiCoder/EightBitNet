@@ -1298,28 +1298,41 @@
 
         private void EXG(byte data)
         {
-            var specifier1 = Chip.HighNibble(data);
-            var type1 = specifier1 & (int)Bits.Bit3;  // transfer type, part 1
+            var leftSpecifier = Chip.HighNibble(data);
+            var leftType = leftSpecifier & (int)Bits.Bit3;
 
-            var specifier2 = Chip.LowNibble(data);
-            var type2 = specifier2 & (int)Bits.Bit3;  // transfer type, part 2
+            var rightSpecifier = Chip.LowNibble(data);
+            var rightType = rightSpecifier & (int)Bits.Bit3;
 
-            if (type1 != type2)
+            if (leftType == 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(data), data, "Type specifications do not match");
-            }
-
-            if (type1 == 0)
-            {
-                var register1 = this.ReferenceTransfer16(specifier1);
-                var register2 = this.ReferenceTransfer16(specifier2);
-                (register1.Word, register2.Word) = (register2.Word, register1.Word);
+                var leftRegister = this.ReferenceTransfer16(leftSpecifier);
+                if (rightType == 0)
+                {
+                    var rightRegister = this.ReferenceTransfer16(rightSpecifier);
+                    (leftRegister.Word, rightRegister.Word) = (rightRegister.Word, leftRegister.Word);
+                }
+                else
+                {
+                    var rightRegister = this.ReferenceTransfer8(rightSpecifier);
+                    (leftRegister.Low, rightRegister) = (rightRegister, leftRegister.Low);
+                    leftRegister.High = (byte)Mask.Mask8;
+                }
             }
             else
             {
-                ref var register1 = ref this.ReferenceTransfer8(specifier1);
-                ref var register2 = ref this.ReferenceTransfer8(specifier2);
-                (register1, register2) = (register2, register1);
+                ref var leftRegister = ref this.ReferenceTransfer8(leftSpecifier);
+                if (rightType == 0)
+                {
+                    var rightRegister = this.ReferenceTransfer16(rightSpecifier);
+                    (leftRegister, rightRegister.Low) = (rightRegister.Low, leftRegister);
+                    rightRegister.High =(byte)Mask.Mask8;
+                }
+                else
+                {
+                    ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
+                    (leftRegister, rightRegister) = (rightRegister, leftRegister);
+                }
             }
         }
 
@@ -1535,28 +1548,40 @@
 
         private void TFR(byte data)
         {
-            var specifier1 = Chip.HighNibble(data);
-            var type1 = specifier1 & (int)Bits.Bit3;  // transfer type, part 1
+            var sourceSpecifier = Chip.HighNibble(data);
+            var sourceType = sourceSpecifier & (int)Bits.Bit3;
 
-            var specifier2 = Chip.LowNibble(data);
-            var type2 = specifier2 & (int)Bits.Bit3;  // transfer type, part 2
+            var destinationSpecifier = Chip.LowNibble(data);
+            var destinationType = destinationSpecifier & (int)Bits.Bit3;
 
-            if (type1 != type2)
+            if (sourceType == 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(data), data, "Type specifications do not match");
-            }
-
-            if (type1 == 0)
-            {
-                var register1 = this.ReferenceTransfer16(specifier1);
-                var register2 = this.ReferenceTransfer16(specifier2);
-                register2.Word = register1.Word;
+                var sourceRegister = this.ReferenceTransfer16(sourceSpecifier);
+                if (destinationType == 0)
+                {
+                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
+                    destinationRegister.Word = sourceRegister.Word;
+                }
+                else
+                {
+                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
+                    destinationRegister = sourceRegister.Low;
+                }
             }
             else
             {
-                ref var register1 = ref this.ReferenceTransfer8(specifier1);
-                ref var register2 = ref this.ReferenceTransfer8(specifier2);
-                register2 = register1;
+                ref var sourceRegister = ref this.ReferenceTransfer8(sourceSpecifier);
+                if (destinationType == 0)
+                {
+                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
+                    destinationRegister.Low = sourceRegister;
+                    destinationRegister.High = (byte)Mask.Mask8;
+                }
+                else
+                {
+                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
+                    destinationRegister = sourceRegister;
+                }
             }
         }
 
