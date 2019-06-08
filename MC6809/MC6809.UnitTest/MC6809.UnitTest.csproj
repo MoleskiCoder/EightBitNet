@@ -65,6 +65,7 @@
     <Compile Include="ClrTests.cs" />
     <Compile Include="CmpTests.cs" />
     <Compile Include="DecTests.cs" />
+    <Compile Include="EorTests.cs" />
     <Compile Include="ExgTests.cs" />
     <Compile Include="IncTests.cs" />
     <Compile Include="JsrTests.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RtsTests.cs" />
     <Compile Include="SbcTests.cs" />
+    <Compile Include="SexTests.cs" />
     <Compile Include="SubTests.cs" />
     <Compile Include="TfrTests.cs" />
     <Compile Include="PshTests.cs" />
