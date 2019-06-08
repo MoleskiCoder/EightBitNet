@@ -43,7 +43,6 @@ namespace EightBit
             this.cpu.CC = (byte)StatusBits.ZF;
             this.cpu.Step();
             this.cpu.Step();
-            this.cpu.Step();
             Assert.AreEqual(2, this.cpu.A);
         }
 
