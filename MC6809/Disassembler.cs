@@ -113,12 +113,12 @@
                 case 0xf9: output += this.Address_extended("ADCB"); break;      // ADC (ADCB extended)
 
                 // ADD
-                case 0x8b: output += this.Address_extended("ADDA"); break;      // ADD (ADDA immediate)
+                case 0x8b: output += this.AM_immediate_byte("ADDA"); break;      // ADD (ADDA immediate)
                 case 0x9b: output += this.Address_direct("ADDA"); break;        // ADD (ADDA direct)
                 case 0xab: output += this.Address_indexed("ADDA"); break;       // ADD (ADDA indexed)
                 case 0xbb: output += this.Address_extended("ADDA"); break;      // ADD (ADDA extended)
 
-                case 0xcb: output += this.Address_extended("ADDB"); break;      // ADD (ADDB immediate)
+                case 0xcb: output += this.AM_immediate_byte("ADDB"); break;      // ADD (ADDB immediate)
                 case 0xdb: output += this.Address_direct("ADDB"); break;        // ADD (ADDB direct)
                 case 0xeb: output += this.Address_indexed("ADDB"); break;       // ADD (ADDB indexed)
                 case 0xfb: output += this.Address_extended("ADDB"); break;      // ADD (ADDB extended)
@@ -519,7 +519,7 @@
                 case 0xff: output += this.Address_extended("STS"); break;       // ST (STS extended)
 
                 // STY
-                case 0x9f: output += this.Address_extended("STY"); break;       // ST (STY direct)
+                case 0x9f: output += this.Address_direct("STY"); break;       // ST (STY direct)
                 case 0xaf: output += this.Address_indexed("STY"); break;        // ST (STY indexed)
                 case 0xbf: output += this.Address_extended("STY"); break;       // ST (STY extended)
 
