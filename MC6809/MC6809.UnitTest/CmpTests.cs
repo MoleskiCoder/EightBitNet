@@ -41,7 +41,7 @@ namespace EightBit
 
         // Indirect mode: CMPA ,Y+ (CMP1)
         [TestMethod]
-        public void TestCMP1()
+        public void TestCMP1_indexed_y_plus()
         {
             this.board.Poke(0, 0xa1);
             this.board.Poke(1, 0xa0);
@@ -60,6 +60,75 @@ namespace EightBit
             Assert.AreEqual(0, this.cpu.U.Word);
             Assert.AreNotEqual(0, this.cpu.Zero);
             Assert.AreEqual(6, this.cpu.Cycles);
+        }
+
+        // Indirect mode: CMPA ,Y++ (CMP1)
+        [TestMethod]
+        public void TestCMP1_indexed_y_plusplus()
+        {
+            this.board.Poke(0, 0xa1);
+            this.board.Poke(1, 0xa1);
+            this.board.Poke(0x205, 0xff);
+            this.cpu.CC = 0;
+            this.cpu.A = 0xff;
+            this.cpu.B = 0;
+            this.cpu.X.Word = 0;
+            this.cpu.Y.Word = 0x205;
+            this.cpu.U.Word = 0;
+            this.cpu.Step();
+            Assert.AreEqual(0xff, this.cpu.A);
+            Assert.AreEqual(0, this.cpu.B);
+            Assert.AreEqual(0, this.cpu.X.Word);
+            Assert.AreEqual(0x207, this.cpu.Y.Word);
+            Assert.AreEqual(0, this.cpu.U.Word);
+            Assert.AreNotEqual(0, this.cpu.Zero);
+            Assert.AreEqual(7, this.cpu.Cycles);
+        }
+
+        // Indirect mode: CMPA ,-Y (CMP1)
+        [TestMethod]
+        public void TestCMP1_indexed_minus_y()
+        {
+            this.board.Poke(0, 0xa1);
+            this.board.Poke(1, 0xa2);
+            this.board.Poke(0x204, 0xff);
+            this.cpu.CC = 0;
+            this.cpu.A = 0xff;
+            this.cpu.B = 0;
+            this.cpu.X.Word = 0;
+            this.cpu.Y.Word = 0x205;
+            this.cpu.U.Word = 0;
+            this.cpu.Step();
+            Assert.AreEqual(0xff, this.cpu.A);
+            Assert.AreEqual(0, this.cpu.B);
+            Assert.AreEqual(0, this.cpu.X.Word);
+            Assert.AreEqual(0x204, this.cpu.Y.Word);
+            Assert.AreEqual(0, this.cpu.U.Word);
+            Assert.AreNotEqual(0, this.cpu.Zero);
+            Assert.AreEqual(6, this.cpu.Cycles);
+        }
+
+        // Indirect mode: CMPA ,Y++ (CMP1)
+        [TestMethod]
+        public void TestCMP1_indexed_minusminus_y()
+        {
+            this.board.Poke(0, 0xa1);
+            this.board.Poke(1, 0xa3);
+            this.board.Poke(0x203, 0xff);
+            this.cpu.CC = 0;
+            this.cpu.A = 0xff;
+            this.cpu.B = 0;
+            this.cpu.X.Word = 0;
+            this.cpu.Y.Word = 0x205;
+            this.cpu.U.Word = 0;
+            this.cpu.Step();
+            Assert.AreEqual(0xff, this.cpu.A);
+            Assert.AreEqual(0, this.cpu.B);
+            Assert.AreEqual(0, this.cpu.X.Word);
+            Assert.AreEqual(0x203, this.cpu.Y.Word);
+            Assert.AreEqual(0, this.cpu.U.Word);
+            Assert.AreNotEqual(0, this.cpu.Zero);
+            Assert.AreEqual(7, this.cpu.Cycles);
         }
 
         // B = 0xA0, CMPB with 0xA0
