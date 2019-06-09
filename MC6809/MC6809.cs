@@ -541,7 +541,7 @@
             {
                 // EA = ,R + 5-bit offset
                 this.Tick();
-                address = new Register16(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Mask5)));
+                address.Word = new Register16(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Mask5))).Word;
             }
             return address;
         }
@@ -1314,7 +1314,7 @@
                 }
                 else
                 {
-                    var rightRegister = this.ReferenceTransfer8(rightSpecifier);
+                    ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
                     (leftRegister.Low, rightRegister) = (rightRegister, leftRegister.Low);
                     leftRegister.High = (byte)Mask.Mask8;
                 }
