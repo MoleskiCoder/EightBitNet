@@ -70,5 +70,3 @@ namespace EightBit
         }
     }
 }
-
-

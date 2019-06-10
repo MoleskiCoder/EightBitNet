@@ -30,7 +30,7 @@ namespace EightBit
         public void Cleanup() => this.board.LowerPOWER();
 
         [TestMethod]
-        public void TestEOR_implied()
+        public void TestEOR_indexed()
         {
             this.cpu.Y.Word = 0x12f0;
             this.cpu.A = 0xf2;
