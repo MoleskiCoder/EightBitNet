@@ -87,6 +87,7 @@
     <Compile Include="LeaTests.cs" />
     <Compile Include="MulTests.cs" />
     <Compile Include="DaaTests.cs" />
+    <Compile Include="LdTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\EightBit\EightBit.csproj">
