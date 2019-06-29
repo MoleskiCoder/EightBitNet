@@ -5,8 +5,6 @@
 namespace EightBit
 {
     using System;
-    using System.Collections.Generic;
-    using System.IO;
 
     public abstract class Bus : IMapper
     {
@@ -140,7 +138,7 @@ namespace EightBit
                     var content = chunk.Item2;
                     var mapped = this.Mapping(address);
                     var offset = address - mapped.Begin;
-                    mapped.Memory.Load(content.ToArray(), offset);
+                    mapped.Memory.Load(content, offset);
                 }
             }
         }

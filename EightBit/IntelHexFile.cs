@@ -34,7 +34,7 @@ namespace EightBit
             }
         }
 
-        public IEnumerable<Tuple<ushort, List<byte>>> Parse()
+        public IEnumerable<Tuple<ushort, byte[]>> Parse()
         {
             var eof = false;
             while (!this.reader.EndOfStream && !eof)
@@ -49,7 +49,7 @@ namespace EightBit
             }
         }
 
-        private Tuple<ushort, List<byte>> Parse(string line)
+        private Tuple<ushort, byte[]> Parse(string line)
         {
             var colon = line.Substring(0, 1);
             if (colon != ":")
@@ -69,24 +69,7 @@ namespace EightBit
             switch (recordType)
             {
                 case 0x00:
-                    {
-                        var data = new List<byte>(count);
-                        var requiredLength = 9 + 2 + (count * 2);
-                        if (line.Length != requiredLength)
-                        {
-                            throw new InvalidOperationException("Invalid hex file: line is not the required length");
-                        }
-
-                        for (var i = 0; i < count; ++i)
-                        {
-                            var position = 9 + (i * 2);
-                            var datumString = line.Substring(position, 2);
-                            var datum = Convert.ToByte(datumString, 16);
-                            data.Add(datum);
-                        }
-
-                        return new Tuple<ushort, List<byte>>(address, data);
-                    }
+                    return ParseDataRecord(line, address, count);
 
                 case 0x01:
                     return null;
@@ -94,6 +77,25 @@ namespace EightBit
                 default:
                     throw new InvalidOperationException("Unhandled hex file record.");
             }
+        }
+
+        private static Tuple<ushort, byte[]> ParseDataRecord(string line, ushort address, byte count)
+        {
+            var data = new byte[count];
+            var requiredLength = 9 + 2 + (count * 2);
+            if (line.Length != requiredLength)
+            {
+                throw new InvalidOperationException("Invalid hex file: line is not the required length");
+            }
+
+            for (var i = 0; i < count; ++i)
+            {
+                var position = 9 + (i * 2);
+                var datumString = line.Substring(position, 2);
+                data[i] = Convert.ToByte(datumString, 16);
+            }
+
+            return new Tuple<ushort, byte[]>(address, data);
         }
     }
 }
