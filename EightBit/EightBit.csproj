@@ -51,6 +51,7 @@
     <Compile Include="Chip.cs" />
     <Compile Include="ClockedChip.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="IntelHexFile.cs" />
     <Compile Include="IntelOpCodeDecoded.cs" />
     <Compile Include="Memory.cs" />
     <Compile Include="InputOutput.cs" />

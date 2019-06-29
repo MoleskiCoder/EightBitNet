@@ -103,69 +103,6 @@ namespace EightBit
 
         public abstract void Initialize();
 
-        protected static Dictionary<ushort, List<byte>> ParseHexFile(string path)
-        {
-            var returned = new Dictionary<ushort, List<byte>>();
-
-            using (var reader = File.OpenText(path))
-            {
-                var eof = false;
-                while (!reader.EndOfStream && !eof)
-                {
-                    var line = reader.ReadLine();
-
-                    var colon = line.Substring(0, 1);
-                    if (colon != ":")
-                    {
-                        throw new System.InvalidOperationException("Invalid hex file: line does not begin with a colon");
-                    }
-
-                    var countString = line.Substring(1, 2);
-                    var count = Convert.ToByte(countString, 16);
-
-                    var addressString = line.Substring(3, 4);
-                    var address = Convert.ToUInt16(addressString, 16);
-
-                    var recordTypeString = line.Substring(7, 2);
-                    var recordType = Convert.ToByte(recordTypeString, 16);
-
-                    switch (recordType)
-                    {
-                        case 0x00:
-                            {
-                                var data = new List<byte>(count);
-                                var requiredLength = 9 + 2 + (count * 2);
-                                if (line.Length != requiredLength)
-                                {
-                                    throw new InvalidOperationException("Invalid hex file: line is not the required length");
-                                }
-
-                                for (var i = 0; i < count; ++i)
-                                {
-                                    var position = 9 + (i * 2);
-                                    var datumString = line.Substring(position, 2);
-                                    var datum = Convert.ToByte(datumString, 16);
-                                    data.Add(datum);
-                                }
-
-                                returned[address] = data;
-                            }
-
-                            break;
-
-                        case 0x01:
-                            eof = true;
-                            break;
-
-                        default:
-                            throw new InvalidOperationException("Unhandled hex file record.");
-                    }
-                }
-            }
-
-            return returned;
-        }
-
         protected virtual void OnWritingByte() => this.WritingByte?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnWrittenByte() => this.WrittenByte?.Invoke(this, EventArgs.Empty);
@@ -195,14 +132,16 @@ namespace EightBit
 
         protected void LoadHexFile(string path)
         {
-            var chunks = ParseHexFile(path);
-            foreach (var chunk in chunks)
+            using (var file = new IntelHexFile(path))
             {
-                var address = chunk.Key;
-                var content = chunk.Value;
-                var mapped = this.Mapping(address);
-                var offset = address - mapped.Begin;
-                mapped.Memory.Load(content.ToArray(), offset);
+                foreach (var chunk in file.Parse())
+                {
+                    var address = chunk.Item1;
+                    var content = chunk.Item2;
+                    var mapped = this.Mapping(address);
+                    var offset = address - mapped.Begin;
+                    mapped.Memory.Load(content.ToArray(), offset);
+                }
             }
         }
     }
