@@ -104,21 +104,21 @@ namespace EightBit
             }
         }
 
-        private static byte SetFlag(byte f, StatusBits flag) => SetFlag(f, (byte)flag);
+        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
-        private static byte SetFlag(byte f, StatusBits flag, int condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
 
-        private static byte SetFlag(byte f, StatusBits flag, bool condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
 
-        private static byte ClearFlag(byte f, StatusBits flag) => ClearFlag(f, (byte)flag);
+        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
 
-        private static byte ClearFlag(byte f, StatusBits flag, int condition) => ClearFlag(f, (byte)flag, condition);
+        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
-        private static byte AdjustSign(byte input, byte value) => SetFlag(input, StatusBits.SF, value & (byte)StatusBits.SF);
+        private static byte AdjustSign(byte input, byte value) => SetBit(input, StatusBits.SF, value & (byte)StatusBits.SF);
 
-        private static byte AdjustZero(byte input, byte value) => ClearFlag(input, StatusBits.ZF, value);
+        private static byte AdjustZero(byte input, byte value) => ClearBit(input, StatusBits.ZF, value);
 
-        private static byte AdjustParity(byte input, byte value) => SetFlag(input, StatusBits.PF, EvenParity(value));
+        private static byte AdjustParity(byte input, byte value) => SetBit(input, StatusBits.PF, EvenParity(value));
 
         private static byte AdjustSZ(byte input, byte value)
         {
@@ -132,9 +132,9 @@ namespace EightBit
             return AdjustParity(input, value);
         }
 
-        private static byte AdjustAuxiliaryCarryAdd(byte input, byte before, byte value, int calculation) => SetFlag(input, StatusBits.AC, CalculateHalfCarryAdd(before, value, calculation));
+        private static byte AdjustAuxiliaryCarryAdd(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.AC, CalculateHalfCarryAdd(before, value, calculation));
 
-        private static byte AdjustAuxiliaryCarrySub(byte input, byte before, byte value, int calculation) => ClearFlag(input, StatusBits.AC, CalculateHalfCarrySub(before, value, calculation));
+        private static byte AdjustAuxiliaryCarrySub(byte input, byte before, byte value, int calculation) => ClearBit(input, StatusBits.AC, CalculateHalfCarrySub(before, value, calculation));
 
         private void DisableInterrupts() => this.interruptEnable = false;
 
@@ -610,14 +610,14 @@ namespace EightBit
         private byte Increment(byte operand)
         {
             this.F = AdjustSZP(this.F, ++operand);
-            this.F = ClearFlag(this.F, StatusBits.AC, LowNibble(operand));
+            this.F = ClearBit(this.F, StatusBits.AC, LowNibble(operand));
             return operand;
         }
 
         private byte Decrement(byte operand)
         {
             this.F = AdjustSZP(this.F, --operand);
-            this.F = SetFlag(this.F, StatusBits.AC, LowNibble(operand) != (byte)Mask.Mask4);
+            this.F = SetBit(this.F, StatusBits.AC, LowNibble(operand) != (byte)Mask.Mask4);
             return operand;
         }
 
@@ -700,7 +700,7 @@ namespace EightBit
         {
             var result = this.HL.Word + value.Word;
             this.HL.Word = (ushort)result;
-            this.F = SetFlag(this.F, StatusBits.CF, result & (int)Bits.Bit16);
+            this.F = SetBit(this.F, StatusBits.CF, result & (int)Bits.Bit16);
         }
 
         private void Add(byte value, int carry = 0)
@@ -711,7 +711,7 @@ namespace EightBit
 
             this.A = this.intermediate.Low;
 
-            this.F = SetFlag(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
             this.F = AdjustSZP(this.F, this.A);
         }
 
@@ -725,7 +725,7 @@ namespace EightBit
 
             var result = this.intermediate.Low;
 
-            this.F = SetFlag(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
             this.F = AdjustSZP(this.F, result);
 
             return result;
@@ -737,20 +737,20 @@ namespace EightBit
 
         private void AndR(byte value)
         {
-            this.F = SetFlag(this.F, StatusBits.AC, (this.A | value) & (int)Bits.Bit3);
-            this.F = ClearFlag(this.F, StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.AC, (this.A | value) & (int)Bits.Bit3);
+            this.F = ClearBit(this.F, StatusBits.CF);
             this.F = AdjustSZP(this.F, this.A &= value);
         }
 
         private void XorR(byte value)
         {
-            this.F = ClearFlag(this.F, StatusBits.AC | StatusBits.CF);
+            this.F = ClearBit(this.F, StatusBits.AC | StatusBits.CF);
             this.F = AdjustSZP(this.F, this.A ^= value);
         }
 
         private void OrR(byte value)
         {
-            this.F = ClearFlag(this.F, StatusBits.AC | StatusBits.CF);
+            this.F = ClearBit(this.F, StatusBits.AC | StatusBits.CF);
             this.F = AdjustSZP(this.F, this.A |= value);
         }
 
@@ -759,28 +759,28 @@ namespace EightBit
         private byte RLC(byte operand)
         {
             var carry = operand & (byte)Bits.Bit7;
-            this.F = SetFlag(this.F, StatusBits.CF, carry);
+            this.F = SetBit(this.F, StatusBits.CF, carry);
             return (byte)((operand << 1) | (carry >> 7));
         }
 
         private byte RRC(byte operand)
         {
             var carry = operand & (byte)Bits.Bit0;
-            this.F = SetFlag(this.F, StatusBits.CF, carry);
+            this.F = SetBit(this.F, StatusBits.CF, carry);
             return (byte)((operand >> 1) | (carry << 7));
         }
 
         private byte RL(byte operand)
         {
             var carry = this.F & (byte)StatusBits.CF;
-            this.F = SetFlag(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             return (byte)((operand << 1) | carry);
         }
 
         private byte RR(byte operand)
         {
             var carry = this.F & (byte)StatusBits.CF;
-            this.F = SetFlag(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) | (carry << 7));
         }
 
@@ -801,14 +801,14 @@ namespace EightBit
             }
 
             this.Add(addition);
-            this.F = SetFlag(this.F, StatusBits.CF, carry);
+            this.F = SetBit(this.F, StatusBits.CF, carry);
         }
 
         private void CMA() => this.A = (byte)~this.A;
 
-        private void STC() => this.F = SetFlag(this.F, StatusBits.CF);
+        private void STC() => this.F = SetBit(this.F, StatusBits.CF);
 
-        private void CMC() => this.F = ClearFlag(this.F, StatusBits.CF, this.F & (byte)StatusBits.CF);
+        private void CMC() => this.F = ClearBit(this.F, StatusBits.CF, this.F & (byte)StatusBits.CF);
 
         private void XHTL()
         {

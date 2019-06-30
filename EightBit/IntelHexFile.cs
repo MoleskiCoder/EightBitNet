@@ -11,6 +11,7 @@ namespace EightBit
     public class IntelHexFile : IDisposable
     {
         private readonly StreamReader reader;
+        private bool eof;
         private bool disposed = false;
 
         public IntelHexFile(string path) => this.reader = File.OpenText(path);
@@ -36,25 +37,33 @@ namespace EightBit
 
         public IEnumerable<Tuple<ushort, byte[]>> Parse()
         {
-            var eof = false;
-            while (!this.reader.EndOfStream && !eof)
+            this.eof = false;
+            while (!this.reader.EndOfStream && !this.eof)
             {
                 var line = this.reader.ReadLine();
                 var parsed = this.Parse(line);
-                eof = parsed == null;
-                if (!eof)
+                if (parsed != null)
                 {
                     yield return parsed;
                 }
+            }
+            if (!this.eof)
+            {
+                throw new InvalidOperationException("File is missing an EOF record");
             }
         }
 
         private Tuple<ushort, byte[]> Parse(string line)
         {
+            if (string.IsNullOrEmpty(line))
+            {
+                throw new ArgumentNullException(nameof(line));
+            }
+
             var colon = line.Substring(0, 1);
             if (colon != ":")
             {
-                throw new System.InvalidOperationException("Invalid hex file: line does not begin with a colon");
+                throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line does not begin with a colon");
             }
 
             var countString = line.Substring(1, 2);
@@ -72,6 +81,7 @@ namespace EightBit
                     return ParseDataRecord(line, address, count);
 
                 case 0x01:
+                    this.eof = true;
                     return null;
 
                 default:
@@ -81,18 +91,23 @@ namespace EightBit
 
         private static Tuple<ushort, byte[]> ParseDataRecord(string line, ushort address, byte count)
         {
-            var data = new byte[count];
+            if (string.IsNullOrEmpty(line))
+            {
+                throw new ArgumentNullException(nameof(line));
+            }
+
             var requiredLength = 9 + 2 + (count * 2);
             if (line.Length != requiredLength)
             {
-                throw new InvalidOperationException("Invalid hex file: line is not the required length");
+                throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line is not the required length");
             }
 
+            var data = new byte[count];
             for (var i = 0; i < count; ++i)
             {
                 var position = 9 + (i * 2);
-                var datumString = line.Substring(position, 2);
-                data[i] = Convert.ToByte(datumString, 16);
+                var extracted = line.Substring(position, 2);
+                data[i] = Convert.ToByte(extracted, 16);
             }
 
             return new Tuple<ushort, byte[]>(address, data);

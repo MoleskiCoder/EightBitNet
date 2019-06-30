@@ -10,17 +10,17 @@ namespace EightBit
         {
         }
 
-        public static byte SetFlag(byte input, byte flag) => (byte)(input | flag);
+        public static byte SetBit(byte input, byte which) => (byte)(input | which);
 
-        public static byte SetFlag(byte input, byte flag, int condition) => SetFlag(input, flag, condition != 0);
+        public static byte SetBit(byte input, byte which, int condition) => SetBit(input, which, condition != 0);
 
-        public static byte SetFlag(byte input, byte flag, bool condition) => condition ? SetFlag(input, flag) : ClearFlag(input, flag);
+        public static byte SetBit(byte input, byte which, bool condition) => condition ? SetBit(input, which) : ClearBit(input, which);
 
-        public static byte ClearFlag(byte input, byte flag) => (byte)(input & (byte)~flag);
+        public static byte ClearBit(byte input, byte which) => (byte)(input & (byte)~which);
 
-        public static byte ClearFlag(byte input, byte flag, int condition) => ClearFlag(input, flag, condition != 0);
+        public static byte ClearBit(byte input, byte which, int condition) => ClearBit(input, which, condition != 0);
 
-        public static byte ClearFlag(byte input, byte flag, bool condition) => SetFlag(input, flag, !condition);
+        public static byte ClearBit(byte input, byte which, bool condition) => SetBit(input, which, !condition);
 
         public static byte HighByte(int value) => (byte)(value >> 8);
 

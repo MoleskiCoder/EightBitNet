@@ -52,7 +52,7 @@ namespace EightBit
 
         public ushort Word
         {
-            get => (ushort)(this.Low | Chip.PromoteByte(this.High));
+            get => Chip.MakeWord(this.Low, this.High);
 
             set
             {

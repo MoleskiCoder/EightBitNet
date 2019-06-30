@@ -326,14 +326,14 @@ namespace EightBit
             get
             {
                 byte status = 0;
-                status = SetFlag(status, StatusRegister.STATUS_RDRF, this.statusRDRF);
-                status = SetFlag(status, StatusRegister.STATUS_TDRE, this.statusTDRE);
-                status = SetFlag(status, StatusRegister.STATUS_DCD, this.DCD.Raised());
-                status = SetFlag(status, StatusRegister.STATUS_CTS, this.CTS.Raised());
-                status = ClearFlag(status, StatusRegister.STATUS_FE);
-                status = SetFlag(status, StatusRegister.STATUS_OVRN, this.statusOVRN);
-                status = ClearFlag(status, StatusRegister.STATUS_PE);
-                return SetFlag(status, StatusRegister.STATUS_IRQ, this.IRQ.Lowered());
+                status = SetBit(status, StatusRegister.STATUS_RDRF, this.statusRDRF);
+                status = SetBit(status, StatusRegister.STATUS_TDRE, this.statusTDRE);
+                status = SetBit(status, StatusRegister.STATUS_DCD, this.DCD.Raised());
+                status = SetBit(status, StatusRegister.STATUS_CTS, this.CTS.Raised());
+                status = ClearBit(status, StatusRegister.STATUS_FE);
+                status = SetBit(status, StatusRegister.STATUS_OVRN, this.statusOVRN);
+                status = ClearBit(status, StatusRegister.STATUS_PE);
+                return SetBit(status, StatusRegister.STATUS_IRQ, this.IRQ.Lowered());
             }
         }
 
@@ -389,9 +389,9 @@ namespace EightBit
             this.Step();
         }
 
-        private static byte SetFlag(byte f, StatusRegister flag, bool condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetBit(byte f, StatusRegister flag, bool condition) => SetBit(f, (byte)flag, condition);
 
-        private static byte ClearFlag(byte f, StatusRegister flag) => ClearFlag(f, (byte)flag);
+        private static byte ClearBit(byte f, StatusRegister flag) => ClearBit(f, (byte)flag);
 
         private void Step()
         {

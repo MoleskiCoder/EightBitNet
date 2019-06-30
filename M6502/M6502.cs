@@ -179,7 +179,7 @@ namespace EightBit
                 case 0x15: this.A = this.OrR(this.A, this.AM_ZeroPageX()); break;                                               // ORA (zero page, X)
                 case 0x16: this.BusReadModifyWrite(this.ASL(this.AM_ZeroPageX())); break;                                       // ASL (zero page, X)
                 case 0x17: this.SLO(this.AM_ZeroPageX()); break;                                                                // *SLO (zero page, X)
-                case 0x18: this.BusRead(); this.P = ClearFlag(this.P, StatusBits.CF); break;                                    // CLC (implied)
+                case 0x18: this.BusRead(); this.P = ClearBit(this.P, StatusBits.CF); break;                                     // CLC (implied)
                 case 0x19: this.A = this.OrR(this.A, this.AM_AbsoluteY()); break;                                               // ORA (absolute, Y)
                 case 0x1a: this.BusRead(); break;                                                                               // *NOP (implied)
                 case 0x1b: this.SLO(this.AM_AbsoluteY()); break;                                                                // *SLO (absolute, Y)
@@ -213,7 +213,7 @@ namespace EightBit
                 case 0x35: this.A = this.AndR(this.A, this.AM_ZeroPageX()); break;                                              // AND (zero page, X)
                 case 0x36: this.BusReadModifyWrite(this.ROL(this.AM_ZeroPageX())); break;                                       // ROL (zero page, X)
                 case 0x37: this.RLA(this.AM_ZeroPageX()); break;                                                                // *RLA (zero page, X)
-                case 0x38: this.BusRead(); this.P = SetFlag(this.P, StatusBits.CF); break;                                      // SEC (implied)
+                case 0x38: this.BusRead(); this.P = SetBit(this.P, StatusBits.CF); break;                                       // SEC (implied)
                 case 0x39: this.A = this.AndR(this.A, this.AM_AbsoluteY()); break;                                              // AND (absolute, Y)
                 case 0x3a: this.BusRead(); break;                                                                               // *NOP (implied)
                 case 0x3b: this.RLA(this.AM_AbsoluteY()); break;                                                                // *RLA (absolute, Y)
@@ -247,7 +247,7 @@ namespace EightBit
                 case 0x55: this.A = this.EorR(this.A, this.AM_ZeroPageX()); break;                                              // EOR (zero page, X)
                 case 0x56: this.BusReadModifyWrite(this.LSR(this.AM_ZeroPageX())); break;                                       // LSR (zero page, X)
                 case 0x57: this.SRE(this.AM_ZeroPageX()); break;                                                                // *SRE (zero page, X)
-                case 0x58: this.BusRead(); this.P = ClearFlag(this.P, StatusBits.IF); break;                                    // CLI (implied)
+                case 0x58: this.BusRead(); this.P = ClearBit(this.P, StatusBits.IF); break;                                     // CLI (implied)
                 case 0x59: this.A = this.EorR(this.A, this.AM_AbsoluteY()); break;                                              // EOR (absolute, Y)
                 case 0x5a: this.BusRead(); break;                                                                               // *NOP (implied)
                 case 0x5b: this.SRE(this.AM_AbsoluteY()); break;                                                                // *SRE (absolute, Y)
@@ -281,7 +281,7 @@ namespace EightBit
                 case 0x75: this.A = this.ADC(this.A, this.AM_ZeroPageX()); break;                                               // ADC (zero page, X)
                 case 0x76: this.BusReadModifyWrite(this.ROR(this.AM_ZeroPageX())); break;                                       // ROR (zero page, X)
                 case 0x77: this.RRA(this.AM_ZeroPageX()); break;                                                                // *RRA (zero page, X)
-                case 0x78: this.BusRead(); this.P = SetFlag(this.P, StatusBits.IF); break;                                      // SEI (implied)
+                case 0x78: this.BusRead(); this.P = SetBit(this.P, StatusBits.IF); break;                                       // SEI (implied)
                 case 0x79: this.A = this.ADC(this.A, this.AM_AbsoluteY()); break;                                               // ADC (absolute, Y)
                 case 0x7a: this.BusRead(); break;                                                                               // *NOP (implied)
                 case 0x7b: this.RRA(this.AM_AbsoluteY()); break;                                                                // *RRA (absolute, Y)
@@ -349,7 +349,7 @@ namespace EightBit
                 case 0xb5: this.A = this.Through(this.AM_ZeroPageX()); break;                                                   // LDA (zero page, X)
                 case 0xb6: this.X = this.Through(this.AM_ZeroPageY()); break;                                                   // LDX (zero page, Y)
                 case 0xb7: this.A = this.X = this.Through(this.AM_ZeroPageY()); break;                                          // *LAX (zero page, Y)
-                case 0xb8: this.BusRead(); this.P = ClearFlag(this.P, StatusBits.VF); break;                                    // CLV (implied)
+                case 0xb8: this.BusRead(); this.P = ClearBit(this.P, StatusBits.VF); break;                                     // CLV (implied)
                 case 0xb9: this.A = this.Through(this.AM_AbsoluteY()); break;                                                   // LDA (absolute, Y)
                 case 0xba: this.BusRead(); this.X = this.Through(this.S); break;                                                // TSX (implied)
                 case 0xbb: break;
@@ -383,7 +383,7 @@ namespace EightBit
                 case 0xd5: this.CMP(this.A, this.AM_ZeroPageX()); break;                                                        // CMP (zero page, X)
                 case 0xd6: this.BusReadModifyWrite(this.DEC(this.AM_ZeroPageX())); break;                                       // DEC (zero page, X)
                 case 0xd7: this.DCP(this.AM_ZeroPageX()); break;                                                                // *DCP (zero page, X)
-                case 0xd8: this.BusRead(); this.P = ClearFlag(this.P, StatusBits.DF); break;                                    // CLD (implied)
+                case 0xd8: this.BusRead(); this.P = ClearBit(this.P, StatusBits.DF); break;                                     // CLD (implied)
                 case 0xd9: this.CMP(this.A, this.AM_AbsoluteY()); break;                                                        // CMP (absolute, Y)
                 case 0xda: this.BusRead(); break;                                                                               // *NOP (implied)
                 case 0xdb: this.DCP(this.AM_AbsoluteY()); break;                                                                // *DCP (absolute, Y)
@@ -416,7 +416,7 @@ namespace EightBit
                 case 0xf5: this.A = this.SBC(this.A, this.AM_ZeroPageX()); break;                                               // SBC (zero page, X)
                 case 0xf6: this.BusReadModifyWrite(this.INC(this.AM_ZeroPageX())); break;                                       // INC (zero page, X)
                 case 0xf7: this.ISB(this.AM_ZeroPageX()); break;                                                                // *ISB (zero page, X)
-                case 0xf8: this.BusRead(); this.P = SetFlag(this.P, StatusBits.DF); break;                                      // SED (implied)
+                case 0xf8: this.BusRead(); this.P = SetBit(this.P, StatusBits.DF); break;                                       // SED (implied)
                 case 0xf9: this.A = this.SBC(this.A, this.AM_AbsoluteY()); break;                                               // SBC (absolute, Y)
                 case 0xfa: this.BusRead(); break;                                                                               // *NOP (implied)
                 case 0xfb: this.ISB(this.AM_AbsoluteY()); break;                                                                // *ISB (absolute, Y)
@@ -546,15 +546,15 @@ namespace EightBit
             return base.BusRead();
         }
 
-        private static byte SetFlag(byte f, StatusBits flag) => SetFlag(f, (byte)flag);
+        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
-        private static byte SetFlag(byte f, StatusBits flag, int condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
 
-        private static byte SetFlag(byte f, StatusBits flag, bool condition) => SetFlag(f, (byte)flag, condition);
+        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
 
-        private static byte ClearFlag(byte f, StatusBits flag) => ClearFlag(f, (byte)flag);
+        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
 
-        private static byte ClearFlag(byte f, StatusBits flag, int condition) => ClearFlag(f, (byte)flag, condition);
+        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
         private void HandleNMI()
         {
@@ -588,7 +588,7 @@ namespace EightBit
                 this.Push((byte)(this.P | (int)(software ? StatusBits.BF : 0)));
             }
 
-            this.P = SetFlag(this.P, StatusBits.IF);   // Disable IRQ
+            this.P = SetBit(this.P, StatusBits.IF);   // Disable IRQ
             var vector = reset ? RSTvector : (nmi ? NMIvector : IRQvector);
             this.Jump(this.GetWordPaged(0xff, vector).Word);
             this.handlingRESET = this.handlingNMI = this.handlingINT = false;
@@ -709,9 +709,9 @@ namespace EightBit
             return possible;
         }
 
-        private void AdjustZero(byte datum) => this.P = ClearFlag(this.P, StatusBits.ZF, datum);
+        private void AdjustZero(byte datum) => this.P = ClearBit(this.P, StatusBits.ZF, datum);
 
-        private void AdjustNegative(byte datum) => this.P = SetFlag(this.P, StatusBits.NF, datum & (byte)StatusBits.NF);
+        private void AdjustNegative(byte datum) => this.P = SetBit(this.P, StatusBits.NF, datum & (byte)StatusBits.NF);
 
         private void AdjustNZ(byte datum)
         {
@@ -756,8 +756,8 @@ namespace EightBit
             var returned = this.SUB(operand, data, ~this.P & (int)StatusBits.CF);
 
             this.AdjustNZ(this.intermediate.Low);
-            this.P = SetFlag(this.P, StatusBits.VF, (operand ^ data) & (operand ^ this.intermediate.Low) & (int)StatusBits.NF);
-            this.P = ClearFlag(this.P, StatusBits.CF, this.intermediate.High);
+            this.P = SetBit(this.P, StatusBits.VF, (operand ^ data) & (operand ^ this.intermediate.Low) & (int)StatusBits.NF);
+            this.P = ClearBit(this.P, StatusBits.CF, this.intermediate.High);
 
             return returned;
         }
@@ -804,8 +804,8 @@ namespace EightBit
         {
             this.intermediate.Word = (ushort)(operand + data + carry);
 
-            this.P = SetFlag(this.P, StatusBits.VF, ~(operand ^ data) & (operand ^ this.intermediate.Low) & (int)StatusBits.NF);
-            this.P = SetFlag(this.P, StatusBits.CF, this.intermediate.High & (int)StatusBits.CF);
+            this.P = SetBit(this.P, StatusBits.VF, ~(operand ^ data) & (operand ^ this.intermediate.Low) & (int)StatusBits.NF);
+            this.P = SetBit(this.P, StatusBits.CF, this.intermediate.High & (int)StatusBits.CF);
 
             return this.intermediate.Low;
         }
@@ -821,14 +821,14 @@ namespace EightBit
             }
 
             var high = (byte)(HighNibble(operand) + HighNibble(data) + (low > 0xf ? 1 : 0));
-            this.P = SetFlag(this.P, StatusBits.VF, ~(operand ^ data) & (operand ^ Chip.PromoteNibble(high)) & (int)StatusBits.NF);
+            this.P = SetBit(this.P, StatusBits.VF, ~(operand ^ data) & (operand ^ Chip.PromoteNibble(high)) & (int)StatusBits.NF);
 
             if (high > 9)
             {
                 high += 6;
             }
 
-            this.P = SetFlag(this.P, StatusBits.CF, high > 0xf);
+            this.P = SetBit(this.P, StatusBits.CF, high > 0xf);
 
             return (byte)(PromoteNibble(high) | LowNibble(low));
         }
@@ -837,13 +837,13 @@ namespace EightBit
 
         private byte ASL(byte value)
         {
-            this.P = SetFlag(this.P, StatusBits.CF, value & (byte)Bits.Bit7);
+            this.P = SetBit(this.P, StatusBits.CF, value & (byte)Bits.Bit7);
             return this.Through(value << 1);
         }
 
         private void BIT(byte operand, byte data)
         {
-            this.P = SetFlag(this.P, StatusBits.VF, data & (byte)StatusBits.VF);
+            this.P = SetBit(this.P, StatusBits.VF, data & (byte)StatusBits.VF);
             this.AdjustZero((byte)(operand & data));
             this.AdjustNegative(data);
         }
@@ -852,7 +852,7 @@ namespace EightBit
         {
             this.intermediate.Word = (ushort)(first - second);
             this.AdjustNZ(this.intermediate.Low);
-            this.P = ClearFlag(this.P, StatusBits.CF, this.intermediate.High);
+            this.P = ClearBit(this.P, StatusBits.CF, this.intermediate.High);
         }
 
         private byte DEC(byte value) => this.Through(--value);
@@ -873,7 +873,7 @@ namespace EightBit
 
         private byte LSR(byte value)
         {
-            this.P = SetFlag(this.P, StatusBits.CF, value & (byte)Bits.Bit0);
+            this.P = SetBit(this.P, StatusBits.CF, value & (byte)Bits.Bit0);
             return this.Through(value >> 1);
         }
 
@@ -886,7 +886,7 @@ namespace EightBit
         private byte ROL(byte operand)
         {
             var carryIn = this.Carry;
-            this.P = SetFlag(this.P, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.P = SetBit(this.P, StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (operand << 1) | carryIn;
             return this.Through(result);
         }
@@ -894,7 +894,7 @@ namespace EightBit
         private byte ROR(byte operand)
         {
             var carryIn = this.Carry;
-            this.P = SetFlag(this.P, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.P = SetBit(this.P, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (operand >> 1) | (carryIn << 7);
             return this.Through(result);
         }
@@ -916,15 +916,15 @@ namespace EightBit
         private void ANC(byte value)
         {
             this.A = this.AndR(this.A, value);
-            this.P = SetFlag(this.P, StatusBits.CF, this.A & (byte)Bits.Bit7);
+            this.P = SetBit(this.P, StatusBits.CF, this.A & (byte)Bits.Bit7);
         }
 
         private void ARR(byte value)
         {
             this.A = this.AndR(this.A, value);
             this.A = this.ROR(this.A);
-            this.P = SetFlag(this.P, StatusBits.CF, this.A & (byte)Bits.Bit6);
-            this.P = SetFlag(this.P, StatusBits.VF, ((this.A & (byte)Bits.Bit6) >> 6) ^ ((this.A & (byte)Bits.Bit5) >> 5));
+            this.P = SetBit(this.P, StatusBits.CF, this.A & (byte)Bits.Bit6);
+            this.P = SetBit(this.P, StatusBits.VF, ((this.A & (byte)Bits.Bit6) >> 6) ^ ((this.A & (byte)Bits.Bit5) >> 5));
         }
 
         private void ASR(byte value)
@@ -936,7 +936,7 @@ namespace EightBit
         private void AXS(byte value)
         {
             this.X = this.Through(this.SUB((byte)(this.A & this.X), value));
-            this.P = ClearFlag(this.P, StatusBits.CF, this.intermediate.High);
+            this.P = ClearBit(this.P, StatusBits.CF, this.intermediate.High);
         }
 
         private void DCP(byte value)

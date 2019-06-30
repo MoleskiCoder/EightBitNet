@@ -29,7 +29,7 @@ namespace EightBit
         {
             this.board.Poke(0, 0x89);
             this.board.Poke(1, 0x7c);
-            this.cpu.CC = EightBit.Chip.SetFlag(this.cpu.CC, (byte)StatusBits.CF);
+            this.cpu.CC = EightBit.Chip.SetBit(this.cpu.CC, (byte)StatusBits.CF);
             this.cpu.A = 0x3a;
             this.cpu.Step();
             Assert.AreEqual(0xb7, this.cpu.A);
