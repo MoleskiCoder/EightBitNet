@@ -4,6 +4,8 @@
 
 namespace EightBit
 {
+    using System.Collections.Specialized;
+
     public class Chip : Device
     {
         protected Chip()
@@ -69,5 +71,19 @@ namespace EightBit
         public static bool EvenParity(int value) => CountBits(value) % 2 == 0;
 
         public static bool EvenParity(byte value) => EvenParity((int)value);
+
+        public static int FindFirstSet(int value)
+        {
+            var bits = new BitVector32(value);
+            for (var i = 31; i >= 0; --i)
+            {
+                if (bits[i])
+                {
+                    return i + 1;
+                }
+            }
+
+            return 0;
+        }
     }
 }
