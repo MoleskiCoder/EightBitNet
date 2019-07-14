@@ -9,7 +9,6 @@ namespace EightBit
     public class Intel8080 : IntelProcessor
     {
         private readonly Register16 af = new Register16();
-        private readonly Register16 intermediate = new Register16();
 
         private readonly InputOutput ports;
 
@@ -705,13 +704,13 @@ namespace EightBit
 
         private void Add(byte value, int carry = 0)
         {
-            this.intermediate.Word = (ushort)(this.A + value + carry);
+            this.MEMPTR.Word = (ushort)(this.A + value + carry);
 
-            this.F = AdjustAuxiliaryCarryAdd(this.F, this.A, value, this.intermediate.Low);
+            this.F = AdjustAuxiliaryCarryAdd(this.F, this.A, value, this.MEMPTR.Low);
 
-            this.A = this.intermediate.Low;
+            this.A = this.MEMPTR.Low;
 
-            this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, this.MEMPTR.High & (byte)StatusBits.CF);
             this.F = AdjustSZP(this.F, this.A);
         }
 
@@ -719,13 +718,13 @@ namespace EightBit
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            this.intermediate.Word = (ushort)(operand - value - carry);
+            this.MEMPTR.Word = (ushort)(operand - value - carry);
 
-            this.F = AdjustAuxiliaryCarrySub(this.F, operand, value, this.intermediate.Word);
+            this.F = AdjustAuxiliaryCarrySub(this.F, operand, value, this.MEMPTR.Word);
 
-            var result = this.intermediate.Low;
+            var result = this.MEMPTR.Low;
 
-            this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, this.MEMPTR.High & (byte)StatusBits.CF);
             this.F = AdjustSZP(this.F, result);
 
             return result;
