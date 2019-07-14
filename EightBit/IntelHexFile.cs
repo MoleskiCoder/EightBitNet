@@ -73,12 +73,10 @@ namespace EightBit
             var address = Convert.ToUInt16(addressString, 16);
 
             var recordTypeString = line.Substring(7, 2);
-            var recordType = Convert.ToByte(recordTypeString, 16);
-
-            switch (recordType)
+            switch (Convert.ToByte(recordTypeString, 16))
             {
                 case 0x00:
-                    return ParseDataRecord(line, address, count);
+                    return new Tuple<ushort, byte[]>(address, ParseDataRecord(line, count));
 
                 case 0x01:
                     this.eof = true;
@@ -89,7 +87,7 @@ namespace EightBit
             }
         }
 
-        private static Tuple<ushort, byte[]> ParseDataRecord(string line, ushort address, byte count)
+        private static byte[] ParseDataRecord(string line, byte count)
         {
             if (string.IsNullOrEmpty(line))
             {
@@ -110,7 +108,7 @@ namespace EightBit
                 data[i] = Convert.ToByte(extracted, 16);
             }
 
-            return new Tuple<ushort, byte[]>(address, data);
+            return data;
         }
     }
 }
