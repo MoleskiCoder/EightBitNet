@@ -918,7 +918,6 @@ namespace EightBit
                 }
             }
 
-
             private void Add(Register16 operand, Register16 value)
             {
                 this.MEMPTR.Word = operand.Word;
