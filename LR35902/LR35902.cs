@@ -388,7 +388,7 @@ namespace EightBit
                                         break;
 
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 break;
@@ -420,7 +420,7 @@ namespace EightBit
                                                 break;
 
                                             default:
-                                                throw new NotSupportedException("Invalid operation mode");
+                                                throw new InvalidOperationException("Invalid operation mode");
                                         }
 
                                         break;
@@ -449,13 +449,13 @@ namespace EightBit
                                                 break;
 
                                             default:
-                                                throw new NotSupportedException("Invalid operation mode");
+                                                throw new InvalidOperationException("Invalid operation mode");
                                         }
 
                                         break;
 
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 break;
@@ -472,7 +472,7 @@ namespace EightBit
                                         break;
 
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 this.Tick(2);
@@ -531,14 +531,14 @@ namespace EightBit
                                         this.CCF();
                                         break;
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 this.Tick(4);
                                 break;
 
                             default:
-                                throw new NotSupportedException("Invalid operation mode");
+                                throw new InvalidOperationException("Invalid operation mode");
                         }
 
                         break;
@@ -588,7 +588,7 @@ namespace EightBit
                                 this.Compare(this.R(z));
                                 break;
                             default:
-                                throw new NotSupportedException("Invalid operation mode");
+                                throw new InvalidOperationException("Invalid operation mode");
                         }
 
                         this.Tick();
@@ -657,7 +657,7 @@ namespace EightBit
                                         break;
 
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 break;
@@ -688,13 +688,13 @@ namespace EightBit
                                                 this.Tick(2);
                                                 break;
                                             default:
-                                                throw new NotSupportedException("Invalid operation mode");
+                                                throw new InvalidOperationException("Invalid operation mode");
                                         }
 
                                         break;
 
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 break;
@@ -727,7 +727,7 @@ namespace EightBit
                                         this.Tick(4);
                                         break;
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
                                 break;
                             case 3: // Assorted operations
@@ -782,7 +782,7 @@ namespace EightBit
                                         break;
 
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 break;
@@ -815,7 +815,7 @@ namespace EightBit
                                         this.Compare(this.FetchByte());
                                         break;
                                     default:
-                                        throw new NotSupportedException("Invalid operation mode");
+                                        throw new InvalidOperationException("Invalid operation mode");
                                 }
 
                                 this.Tick(2);
@@ -827,7 +827,7 @@ namespace EightBit
                                 break;
 
                             default:
-                                throw new NotSupportedException("Invalid operation mode");
+                                throw new InvalidOperationException("Invalid operation mode");
                         }
 
                         break;
