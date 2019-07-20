@@ -72,10 +72,9 @@
             foreach (var memoryDatum in this.test.MemoryData)
             {
                 var address = memoryDatum.Address;
-                var bytes = memoryDatum.Bytes;
-                for (var i = 0; i < bytes.Count; ++i)
+                foreach (var seed in memoryDatum.Bytes)
                 {
-                    this.Poke((ushort)(address + i), bytes[i]);
+                    this.Poke(address++, seed);
                 }
             }
         }
@@ -156,10 +155,9 @@
             foreach (var memoryDatum in this.expected.MemoryData)
             {
                 var bytes = memoryDatum.Bytes;
-                for (var i = 0; i < bytes.Count; ++i)
+                var address = memoryDatum.Address;
+                foreach (var expected in bytes)
                 {
-                    var expected = bytes[i];
-                    var address = (ushort)(memoryDatum.Address + i);
                     var actual = this.Peek(address);
                     if (expected != actual)
                     {
@@ -172,6 +170,7 @@
 
                         System.Console.Error.WriteLine($"**** Difference: Address: {address:x4} Expected: {expected:x2} Actual: {actual:x2}");
                     }
+                    ++address;
                 }
             }
         }
