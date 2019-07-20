@@ -5,9 +5,11 @@
 
     public class TestEvent
     {
+        private int cycles;
+
         public bool Valid { get; private set; } = false;
 
-        public int Cycles { get; private set; } = -1;
+        public int Cycles => this.cycles;
 
         public string Specifier { get; private set; }
 
@@ -32,7 +34,12 @@
 
         private void ParseLine(string[] tokens)
         {
-            this.Cycles = int.Parse(tokens[0]);
+            this.Valid = int.TryParse(tokens[0], out this.cycles);
+            if (!this.Valid)
+            {
+                return;
+            }
+
             this.Specifier = tokens[1];
 
             this.Valid = true;
