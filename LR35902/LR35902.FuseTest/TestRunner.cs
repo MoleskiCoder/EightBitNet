@@ -154,9 +154,8 @@
 
             foreach (var memoryDatum in this.expected.MemoryData)
             {
-                var bytes = memoryDatum.Bytes;
                 var address = memoryDatum.Address;
-                foreach (var expected in bytes)
+                foreach (var expected in memoryDatum.Bytes)
                 {
                     var actual = this.Peek(address);
                     if (expected != actual)
