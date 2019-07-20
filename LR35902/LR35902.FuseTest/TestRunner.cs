@@ -3,10 +3,10 @@
     public class TestRunner : EightBit.GameBoy.Bus
     {
         private readonly Test test;
-        private readonly ExpectedTestResult expected;
+        private readonly Result expected;
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
 
-        public TestRunner(Test test, ExpectedTestResult expected)
+        public TestRunner(Test test, Result expected)
         {
             this.test = test;
             this.expected = expected;

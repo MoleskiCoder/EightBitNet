@@ -1,23 +1,22 @@
 ﻿namespace Fuse
 {
     using System.Collections.Generic;
-    using System.IO;
 
     public class TestEvents
     {
-        public List<TestEvent> Events { get; } = new List<TestEvent>();
+        public List<TestEvent> Container { get; } = new List<TestEvent>();
 
-        public void Read(StreamReader file)
+        public void Parse(Lines lines)
         {
             var complete = false;
             do
             {
                 var e = new TestEvent();
-                e.Read(file);
+                e.Parse(lines);
 		        complete = !e.Valid;
                 if (!complete)
                 {
-                    this.Events.Add(e);
+                    this.Container.Add(e);
                 }
             }
             while (!complete);

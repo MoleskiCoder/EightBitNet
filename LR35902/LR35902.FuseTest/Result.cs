@@ -2,8 +2,10 @@
 {
     using System.Collections.Generic;
 
-    public class Test
+    public class Result
     {
+        private readonly TestEvents events = new TestEvents();
+
         public bool Valid => !string.IsNullOrEmpty(this.Description);
 
         public string Description { get; private set; }
@@ -24,13 +26,14 @@
                 return;
             }
 
+            this.events.Parse(lines);
             this.RegisterState.Parse(lines);
 
             var finished = false;
             do
             {
                 var line = lines.ReadLine();
-                finished = line == "-1";
+                finished = string.IsNullOrWhiteSpace(line);
                 if (!finished)
                 {
                     var datum = new MemoryDatum();

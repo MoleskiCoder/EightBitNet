@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
 
     using EightBit;
 
@@ -17,24 +16,29 @@
         public bool Halted { get; private set; } = false;
         public int TStates { get; private set; } = -1;
 
-        public void Read(StreamReader file)
+        public void Parse(Lines lines)
         {
-            this.ReadExternalState(file);
-            this.ReadInternalState(file);
+            this.ParseExternalState(lines);
+            this.ParseInternalState(lines);
         }
 
-        private void ReadInternalState(StreamReader file)
-        {
-            var line = file.ReadLine();
-            var tokens = line.Split(new char[] { ' ', '\t' });
+        private void ParseInternalState(Lines lines) => this.ParseInternalState(lines.ReadLine());
 
+        private void ParseInternalState(string line)
+        {
+            var tokens = line.Split(new char[] { ' ', '\t' });
+            this.ParseInternalState(tokens);
+        }
+
+        private void ParseInternalState(string[] tokens)
+        {
             this.Halted = Convert.ToInt32(tokens[0]) == 1;
             this.TStates = Convert.ToInt32(tokens[1]);
         }
 
-        private void ReadExternalState(StreamReader file)
+        private void ParseExternalState(Lines lines)
         {
-            var line = file.ReadLine();
+            var line = lines.ReadLine();
             foreach (var token in line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 this.Registers.Add(new Register16(Convert.ToUInt16(token, 16)));

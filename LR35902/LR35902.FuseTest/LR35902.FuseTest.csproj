@@ -43,8 +43,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExpectedTestResult.cs" />
-    <Compile Include="ExpectedTestResults.cs" />
+    <Compile Include="Result.cs" />
+    <Compile Include="Results.cs" />
+    <Compile Include="Lines.cs" />
     <Compile Include="MemoryDatum.cs" />
     <Compile Include="RegisterState.cs" />
     <Compile Include="Test.cs" />

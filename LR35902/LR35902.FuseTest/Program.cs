@@ -4,8 +4,10 @@
     {
         public static void Main(string[] args)
         {
-            TestSuite testSuite = new TestSuite("fuse-tests\\tests");
-            testSuite.Run();
+            var suite = new TestSuite("fuse-tests\\tests");
+            suite.Read();
+            suite.Parse();
+            suite.Run();
         }
     }
 }

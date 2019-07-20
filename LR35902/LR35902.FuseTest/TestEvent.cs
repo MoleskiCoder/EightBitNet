@@ -13,15 +13,14 @@
 
         public ushort Address { get; private set; } = (ushort)EightBit.Mask.Mask16;
 
-        public ushort Value { get; private set; } = (byte)EightBit.Mask.Mask8;
+        public byte Value { get; private set; } = (byte)EightBit.Mask.Mask8;
 
-        public void Read(StreamReader file)
+        public void Parse(Lines lines)
         {
-            var prior = file.BaseStream.Position;
-            this.ParseLine(file.ReadLine());
+            this.ParseLine(lines.ReadLine());
             if (!this.Valid)
             {
-                file.BaseStream.Seek(prior, SeekOrigin.Begin);
+                lines.UnreadLine();
             }
         }
 

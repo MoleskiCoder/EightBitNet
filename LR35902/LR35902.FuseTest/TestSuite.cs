@@ -2,13 +2,25 @@
 {
     public class TestSuite
     {
-        private readonly Tests tests = new Tests();
-        private readonly ExpectedTestResults results = new ExpectedTestResults();
+        private readonly Tests tests;
+        private readonly Results results;
 
         public TestSuite(string path)
         {
-            this.tests.Read(path + ".in");
-            this.results.Read(path + ".expected");
+            this.tests = new Tests(path + ".in");
+            this.results = new Results(path + ".expected");
+        }
+
+        public void Read()
+        {
+            this.tests.Read();
+            this.results.Read();
+        }
+
+        public void Parse()
+        {
+            this.tests.Parse();
+            this.results.Parse();
         }
 
         public void Run()
@@ -21,7 +33,7 @@
                 System.Console.Out.WriteLine($"** Checking: {key}");
 
                 var input = test.Value;
-                var result = this.results.Results[key];
+                var result = this.results.Container[key];
                 var runner = new TestRunner(input, result);
 
                 runner.Run();
