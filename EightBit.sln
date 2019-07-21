@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LR35902", "LR35902\LR35902.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LR35902.FuseTest", "LR35902\LR35902.FuseTest\LR35902.FuseTest.csproj", "{CC24B08D-1C51-43FD-961D-7C9A49253D69}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse", "Fuse\Fuse.csproj", "{28E65032-5DFF-406F-9385-0EE1422A7F4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -209,6 +211,18 @@ Global
 		{CC24B08D-1C51-43FD-961D-7C9A49253D69}.Release|x64.Build.0 = Release|Any CPU
 		{CC24B08D-1C51-43FD-961D-7C9A49253D69}.Release|x86.ActiveCfg = Release|Any CPU
 		{CC24B08D-1C51-43FD-961D-7C9A49253D69}.Release|x86.Build.0 = Release|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Debug|x64.Build.0 = Debug|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Debug|x86.Build.0 = Debug|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x64.ActiveCfg = Release|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x64.Build.0 = Release|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x86.ActiveCfg = Release|Any CPU
+		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
