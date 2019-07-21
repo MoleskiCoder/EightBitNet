@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LR35902.FuseTest", "LR35902
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse", "Fuse\Fuse.csproj", "{28E65032-5DFF-406F-9385-0EE1422A7F4A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LR35902.BlarggTest", "LR35902\LR35902.BlarggTest\LR35902.BlarggTest.csproj", "{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -223,6 +225,18 @@ Global
 		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x64.Build.0 = Release|Any CPU
 		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x86.ActiveCfg = Release|Any CPU
 		{28E65032-5DFF-406F-9385-0EE1422A7F4A}.Release|x86.Build.0 = Release|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Debug|x64.Build.0 = Debug|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Debug|x86.Build.0 = Debug|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x64.ActiveCfg = Release|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x64.Build.0 = Release|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x86.ActiveCfg = Release|Any CPU
+		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
