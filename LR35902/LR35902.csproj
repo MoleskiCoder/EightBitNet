@@ -46,7 +46,7 @@
     <Compile Include="CharacterDefinition.cs" />
     <Compile Include="ColourShades.cs" />
     <Compile Include="Display.cs" />
-    <Compile Include="GameboyBus.cs" />
+    <Compile Include="Bus.cs" />
     <Compile Include="Interrupts.cs" />
     <Compile Include="IoRegisters.cs" />
     <Compile Include="LcdcControl.cs" />
@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.1.118\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />

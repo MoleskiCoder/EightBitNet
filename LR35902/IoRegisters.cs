@@ -282,22 +282,22 @@ namespace EightBit
                     this.scanP15 = (value & (byte)Bits.Bit5) == 0;
                     break;
 
-                case SB:        // R/W
-                case SC:        // R/W
+                case SB: // R/W
+                case SC: // R/W
                     break;
 
-                case DIV:   // R/W
+                case DIV: // R/W
                     this.Poke(port, 0);
                     this.timerCounter = this.divCounter.Word = 0;
                     break;
-                case TIMA:  // R/W
-                case TMA:   // R/W
+                case TIMA: // R/W
+                case TMA: // R/W
                     break;
-                case TAC:   // R/W
+                case TAC: // R/W
                     this.timerRate = this.TimerClockTicks;
                     break;
 
-                case IF:        // R/W
+                case IF: // R/W
                     break;
 
                 case LCDC:
@@ -309,7 +309,7 @@ namespace EightBit
                     this.dmaAddress.Word = Chip.PromoteByte(value);
                     this.dmaTransferActive = true;
                     break;
-                case LY:        // R/O
+                case LY: // R/O
                     this.Poke(port, 0);
                     break;
                 case BGP:

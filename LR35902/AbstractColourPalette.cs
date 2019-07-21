@@ -10,7 +10,8 @@ namespace EightBit
             private readonly uint[] colours = new uint[4];
 
             protected AbstractColourPalette()
-            { }
+            {
+            }
 
             public uint Colour(int index) => this.colours[index];
         }

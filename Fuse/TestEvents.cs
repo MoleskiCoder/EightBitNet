@@ -1,4 +1,7 @@
-﻿namespace Fuse
+﻿// <copyright file="TestEvents.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace Fuse
 {
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
