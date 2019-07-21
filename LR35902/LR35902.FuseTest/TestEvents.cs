@@ -1,10 +1,13 @@
 ﻿namespace Fuse
 {
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
 
     public class TestEvents
     {
-        public List<TestEvent> Container { get; } = new List<TestEvent>();
+        private readonly List<TestEvent> container = new List<TestEvent>();
+
+        public ReadOnlyCollection<TestEvent> Container => this.container.AsReadOnly();
 
         public void Parse(Lines lines)
         {
@@ -16,7 +19,7 @@
 		        complete = !e.Valid;
                 if (!complete)
                 {
-                    this.Container.Add(e);
+                    this.container.Add(e);
                 }
             }
             while (!complete);

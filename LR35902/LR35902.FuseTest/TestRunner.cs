@@ -3,13 +3,13 @@
     public class TestRunner : EightBit.GameBoy.Bus
     {
         private readonly Test test;
-        private readonly Result expected;
+        private readonly Result result;
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
 
-        public TestRunner(Test test, Result expected)
+        public TestRunner(Test test, Result result)
         {
             this.test = test;
-            this.expected = expected;
+            this.result = result;
         }
 
         public bool Failed { get; private set; } = false;
@@ -87,7 +87,7 @@
 
         private void Checkregisters()
         {
-            var expectedState = this.expected.RegisterState;
+            var expectedState = this.result.RegisterState;
             var expectedRegisters = expectedState.Registers;
 
             var af = this.CPU.AF.Word == expectedRegisters[(int)RegisterState.Register.AF].Word;
@@ -152,7 +152,7 @@
         {
             var first = true;
 
-            foreach (var memoryDatum in this.expected.MemoryData)
+            foreach (var memoryDatum in this.result.MemoryData)
             {
                 var address = memoryDatum.Address;
                 foreach (var expected in memoryDatum.Bytes)

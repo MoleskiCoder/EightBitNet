@@ -19,6 +19,11 @@
 
         public void Parse(Lines lines)
         {
+            if (lines == null)
+            {
+                throw new ArgumentNullException(nameof(lines));
+            }
+
             this.ParseLine(lines.ReadLine());
             if (!this.Valid)
             {

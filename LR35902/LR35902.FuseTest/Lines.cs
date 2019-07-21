@@ -1,5 +1,6 @@
 ﻿namespace Fuse
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
 
@@ -15,22 +16,21 @@
 
         public void Read()
         {
-            using (var reader = new StreamReader(this.path))
+            using (var reader = File.OpenText(this.path))
             {
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
-                    var ignored = line.StartsWith(";");
+                    var ignored = line.StartsWith(";", StringComparison.OrdinalIgnoreCase);
                     if (!ignored)
                     {
                         this.lines.Add(line);
                     }
                 }
             }
-            if (this.lines.Count > 0)
-            {
-                this.position = 0;
-            }
+
+            // Users should check EndOfFile before using a bad position...
+            this.position = 0;
         }
 
         public string ReadLine()

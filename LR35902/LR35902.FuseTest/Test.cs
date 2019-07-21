@@ -1,19 +1,27 @@
 ﻿namespace Fuse
 {
+    using System;
     using System.Collections.Generic;
 
     public class Test
     {
+        private List<MemoryDatum> memoryData = new List<MemoryDatum>();
+
         public bool Valid => !string.IsNullOrEmpty(this.Description);
 
         public string Description { get; private set; }
 
         public RegisterState RegisterState { get; } = new RegisterState();
 
-        public List<MemoryDatum> MemoryData { get; } = new List<MemoryDatum>();
+        public IReadOnlyCollection<MemoryDatum> MemoryData => this.memoryData.AsReadOnly();
 
         public void Parse(Lines lines)
         {
+            if (lines == null)
+            {
+                throw new ArgumentNullException(nameof(lines));
+            }
+
             while (!lines.EndOfFile && !this.Valid)
             {
                 this.Description = lines.ReadLine();
@@ -35,7 +43,7 @@
                 {
                     var datum = new MemoryDatum();
                     datum.Parse(line);
-                    this.MemoryData.Add(datum);
+                    this.memoryData.Add(datum);
                 }
             }
             while (!finished);
