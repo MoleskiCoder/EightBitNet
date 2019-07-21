@@ -16,7 +16,7 @@
 
         public bool Unimplemented { get; private set; } = false;
 
-        public override EightBit.MemoryMapping Mapping(ushort address) => new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Mask8, EightBit.AccessLevel.ReadWrite);
+        public override EightBit.MemoryMapping Mapping(ushort address) => new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Mask16, EightBit.AccessLevel.ReadWrite);
 
         public void Run()
         {
