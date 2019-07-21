@@ -1,4 +1,7 @@
-﻿namespace Fuse
+﻿// <copyright file="Results.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace Fuse
 {
     using System.Collections.Generic;
 
@@ -6,9 +9,9 @@
     {
         private readonly Lines lines;
 
-        public Dictionary<string, Result> Container { get; } = new Dictionary<string, Result>();
-
         public Results(string path) => this.lines = new Lines(path);
+
+        public Dictionary<string, Result> Container { get; } = new Dictionary<string, Result>();
 
         public void Read() => this.lines.Read();
 

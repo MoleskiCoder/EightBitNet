@@ -16,7 +16,7 @@ namespace EightBit
             BackgroundCharacterDataSelection = Bits.Bit4,
             WindowEnable = Bits.Bit5,
             WindowCodeAreaSelection = Bits.Bit6,
-            LcdEnable = Bits.Bit7
+            LcdEnable = Bits.Bit7,
         }
     }
 }

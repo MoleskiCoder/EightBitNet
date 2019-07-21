@@ -11,7 +11,7 @@ namespace EightBit
             {
             }
 
-			public ObjectAttribute(Ram ram, ushort address)
+            public ObjectAttribute(Ram ram, ushort address)
             {
                 this.PositionY = ram.Peek(address);
                 this.PositionX = ram.Peek(++address);
@@ -20,8 +20,11 @@ namespace EightBit
             }
 
             public byte PositionY { get; }
+
             public byte PositionX { get; }
+
             public byte Pattern { get; }
+
             public byte Flags { get; }
 
             public int Priority => this.Flags & (byte)Bits.Bit7;

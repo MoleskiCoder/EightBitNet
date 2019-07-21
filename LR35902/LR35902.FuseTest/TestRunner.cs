@@ -1,12 +1,21 @@
-﻿namespace Fuse
+﻿// <copyright file="TestRunner.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+
+namespace Fuse
 {
+    public enum Register
+    {
+        AF,
+        BC,
+        DE,
+        HL,
+        SP,
+        PC,
+    }
+
     public class TestRunner : EightBit.GameBoy.Bus
     {
-        public enum Register
-        {
-            AF, BC, DE, HL, SP, PC
-        };
-
         private readonly Test test;
         private readonly Result result;
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
@@ -57,6 +66,31 @@
         }
 
         public override void Initialize() => this.DisableGameRom();
+
+        private static void DumpDifference(string description, byte expected, byte actual)
+        {
+            var output = $"**** {description}, Expected: {expected:x2}, Got {actual:x2}";
+            System.Console.Error.WriteLine(output);
+        }
+
+        private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
+        {
+            var expectedHigh = expected.High;
+            var expectedLow = expected.Low;
+
+            var actualHigh = actual.High;
+            var actualLow = actual.Low;
+
+            if (expectedHigh != actualHigh)
+            {
+                DumpDifference(highDescription, actualHigh, expectedHigh);
+            }
+
+            if (expectedLow != actualLow)
+            {
+                DumpDifference(lowDescription, actualLow, expectedLow);
+            }
+        }
 
         private void InitialiseRegisters()
         {
@@ -174,33 +208,9 @@
 
                         System.Console.Error.WriteLine($"**** Difference: Address: {address:x4} Expected: {expected:x2} Actual: {actual:x2}");
                     }
+
                     ++address;
                 }
-            }
-        }
-
-        private static void DumpDifference(string description, byte expected, byte actual)
-        {
-            var output = $"**** {description}, Expected: {expected:x2}, Got {actual:x2}";
-            System.Console.Error.WriteLine(output);
-        }
-
-        private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
-        {
-            var expectedHigh = expected.High;
-            var expectedLow = expected.Low;
-
-            var actualHigh = actual.High;
-            var actualLow = actual.Low;
-
-            if (expectedHigh != actualHigh)
-            {
-                DumpDifference(highDescription, actualHigh, expectedHigh);
-            }
-
-            if (expectedLow != actualLow)
-            {
-                DumpDifference(lowDescription, actualLow, expectedLow);
             }
         }
     }

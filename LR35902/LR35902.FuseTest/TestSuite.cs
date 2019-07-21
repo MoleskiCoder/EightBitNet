@@ -1,4 +1,7 @@
-﻿namespace Fuse
+﻿// <copyright file="TestSuite.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace Fuse
 {
     public class TestSuite
     {
@@ -47,6 +50,7 @@
                     ++unimplementedCount;
                 }
             }
+
             System.Console.Out.WriteLine($"+++ Failed test count: {failedCount}");
             System.Console.Out.WriteLine($"+++ Unimplemented test count: {unimplementedCount}");
         }

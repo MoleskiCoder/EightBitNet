@@ -1,4 +1,7 @@
-﻿namespace Fuse
+﻿// <copyright file="Test.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace Fuse
 {
     using System;
     using System.Collections.Generic;

@@ -1,4 +1,4 @@
-﻿// <copyright file="LcdcControl.cs" company="Adrian Conlon">
+﻿// <copyright file="LcdStatusModeEventArgs.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 namespace EightBit

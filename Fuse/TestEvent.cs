@@ -1,7 +1,9 @@
-﻿namespace Fuse
+﻿// <copyright file="TestEvent.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace Fuse
 {
     using System;
-    using System.IO;
 
     public class TestEvent
     {

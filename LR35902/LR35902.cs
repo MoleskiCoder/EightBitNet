@@ -148,6 +148,10 @@ namespace EightBit
 
             private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
 
+            private static byte Res(int n, byte operand) => (byte)(operand & ~(1 << n));
+
+            private static byte Set(int n, byte operand) => (byte)(operand | (1 << n));
+
             private void DI() => this.IME = false;
 
             private void EI() => this.IME = true;
@@ -296,7 +300,7 @@ namespace EightBit
                         break;
                     }
 
-                    case 1:   // BIT y, r[z]
+                    case 1: // BIT y, r[z]
                         this.Bit(y, this.R(z));
                         this.Tick(2);
                         if (z == 6)
@@ -729,6 +733,7 @@ namespace EightBit
                                     default:
                                         throw new InvalidOperationException("Invalid operation mode");
                                 }
+
                                 break;
                             case 3: // Assorted operations
                                 switch (y)
@@ -1060,10 +1065,6 @@ namespace EightBit
                 this.AndR(operand, (byte)(1 << n));
                 this.F = SetBit(this.F, StatusBits.CF, carry);
             }
-
-            private static byte Res(int n, byte operand) => (byte)(operand & ~(1 << n));
-
-            private static byte Set(int n, byte operand) => (byte)(operand | (1 << n));
 
             private void DAA()
             {

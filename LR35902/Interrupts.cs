@@ -14,7 +14,7 @@ namespace EightBit
             DisplayControlStatus = Bits.Bit1,  // LCDC Status
             TimerOverflow = Bits.Bit2,         // Timer Overflow
             SerialTransfer = Bits.Bit3,        // Serial Transfer
-            KeypadPressed = Bits.Bit4          // Hi-Lo transition of P10-P13
+            KeypadPressed = Bits.Bit4,         // Hi-Lo transition of P10-P13
         }
     }
 }

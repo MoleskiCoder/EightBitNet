@@ -12,69 +12,70 @@ namespace EightBit
             public const int BASE = 0xFF00;
 
             // Port/Mode Registers
-            public const int P1 = 0x0;       // R/W	Mask5
-            public const int SB = 0x1;       // R/W	Mask8
-            public const int SC = 0x2;       // R/W	Bit7 | Bit0
+            public const int P1 = 0x0;       // R/W Mask5
+            public const int SB = 0x1;       // R/W Mask8
+            public const int SC = 0x2;       // R/W Bit7 | Bit0
 
             // Timer control
-            public const int DIV = 0x4;      // R/W	Mask8
-            public const int TIMA = 0x5;     // R/W	Mask8
-            public const int TMA = 0x6;      // R/W	Mask8
-            public const int TAC = 0x7;      // R/W	Mask3
+            public const int DIV = 0x4;      // R/W Mask8
+            public const int TIMA = 0x5;     // R/W Mask8
+            public const int TMA = 0x6;      // R/W Mask8
+            public const int TAC = 0x7;      // R/W Mask3
 
             // Interrupt Flags
-            public const int IF = 0xF;       // R/W	Mask5
-            public const int IE = 0xFF;      // R/W	Mask5
+            public const int IF = 0xF;       // R/W Mask5
+            public const int IE = 0xFF;      // R/W Mask5
 
             // Sound Registers
-            public const int NR10 = 0x10;    // R/W	Mask7
-            public const int NR11 = 0x11;    // R/W	Bit7 | Bit6
-            public const int NR12 = 0x12;    // R/W	Mask8
-            public const int NR13 = 0x13;    // W	0
-            public const int NR14 = 0x14;    // R/W	Bit6
-            public const int NR21 = 0x16;    // R/W	Bit7 | Bit6
-            public const int NR22 = 0x17;    // R/W	Mask8
-            public const int NR23 = 0x18;    // W	0
-            public const int NR24 = 0x19;    // R/W	Bit6
-            public const int NR30 = 0x1A;    // R/W	Bit7
-            public const int NR31 = 0x1B;    // R/W	Mask8
-            public const int NR32 = 0x1C;    // R/W	Bit6 | Bit5
-            public const int NR33 = 0x1D;    // W	0
-            public const int NR34 = 0x1E;    // R/W	Bit6
-            public const int NR41 = 0x20;    // R/W	Mask6
-            public const int NR42 = 0x21;    // R/W	Mask8
-            public const int NR43 = 0x22;    // R/W	Mask8
-            public const int NR44 = 0x23;    // R/W	Bit6
-            public const int NR50 = 0x24;    // R/W	Mask8
-            public const int NR51 = 0x25;    // R/W	Mask8
-            public const int NR52 = 0x26;    // R/W	Mask8	Mask8
+            public const int NR10 = 0x10;    // R/W Mask7
+            public const int NR11 = 0x11;    // R/W Bit7 | Bit6
+            public const int NR12 = 0x12;    // R/W Mask8
+            public const int NR13 = 0x13;    // W   0
+            public const int NR14 = 0x14;    // R/W Bit6
+            public const int NR21 = 0x16;    // R/W Bit7 | Bit6
+            public const int NR22 = 0x17;    // R/W Mask8
+            public const int NR23 = 0x18;    // W   0
+            public const int NR24 = 0x19;    // R/W Bit6
+            public const int NR30 = 0x1A;    // R/W Bit7
+            public const int NR31 = 0x1B;    // R/W Mask8
+            public const int NR32 = 0x1C;    // R/W Bit6 | Bit5
+            public const int NR33 = 0x1D;    // W   0
+            public const int NR34 = 0x1E;    // R/W Bit6
+            public const int NR41 = 0x20;    // R/W Mask6
+            public const int NR42 = 0x21;    // R/W Mask8
+            public const int NR43 = 0x22;    // R/W Mask8
+            public const int NR44 = 0x23;    // R/W Bit6
+            public const int NR50 = 0x24;    // R/W Mask8
+            public const int NR51 = 0x25;    // R/W Mask8
+            public const int NR52 = 0x26;    // R/W Mask8   Mask8
 
             public const int WAVE_PATTERN_RAM_START = 0x30;
             public const int WAVE_PATTERN_RAM_END = 0x3F;
 
             // LCD Display Registers
-            public const int LCDC = 0x40;    // R/W	Mask8
-            public const int STAT = 0x41;    // R/W	Mask7
-            public const int SCY = 0x42;     // R/W	Mask8
-            public const int SCX = 0x43;     // R/W	Mask8
-            public const int LY = 0x44;      // R	Mask8	zeroed
-            public const int LYC = 0x45;     // R/W	Mask8
-            public const int DMA = 0x46;     // W	0
-            public const int BGP = 0x47;     // R/W	Mask8
-            public const int OBP0 = 0x48;    // R/W	Mask8
-            public const int OBP1 = 0x49;    // R/W	Mask8
-            public const int WY = 0x4A;      // R/W	Mask8
-            public const int WX = 0x4B;      // R/W	Mask8
+            public const int LCDC = 0x40;    // R/W Mask8
+            public const int STAT = 0x41;    // R/W Mask7
+            public const int SCY = 0x42;     // R/W Mask8
+            public const int SCX = 0x43;     // R/W Mask8
+            public const int LY = 0x44;      // R   Mask8   zeroed
+            public const int LYC = 0x45;     // R/W Mask8
+            public const int DMA = 0x46;     // W   0
+            public const int BGP = 0x47;     // R/W Mask8
+            public const int OBP0 = 0x48;    // R/W Mask8
+            public const int OBP1 = 0x49;    // R/W Mask8
+            public const int WY = 0x4A;      // R/W Mask8
+            public const int WX = 0x4B;      // R/W Mask8
 
             // Boot rom control
             public const int BOOT_DISABLE = 0x50;
 
             private readonly Bus bus;
             private readonly Register16 divCounter = new Register16(0xab, 0xcc);
+            private readonly Register16 dmaAddress = new Register16();
+
             private int timerCounter = 0;
             private int timerRate = 0;
 
-            private readonly Register16 dmaAddress = new Register16();
             private bool dmaTransferActive = false;
 
             private bool scanP15 = false;
@@ -107,6 +108,26 @@ namespace EightBit
 
             public bool TimerDisabled => (this.Peek((ushort)TAC) & (byte)Bits.Bit2) == 0;
 
+            public int TimerClockTicks
+            {
+                get
+                {
+                    switch (this.TimerClock)
+                    {
+                        case 0b00:
+                            return 1024;    // 4.096 Khz
+                        case 0b01:
+                            return 16;      // 262.144 Khz
+                        case 0b10:
+                            return 64;      // 65.536 Khz
+                        case 0b11:
+                            return 256;     // 16.384 Khz
+                    }
+
+                    throw new InvalidOperationException("Invalid timer clock specification");
+                }
+            }
+
             public void Reset()
             {
                 this.Poke((ushort)NR52, 0xf1);
@@ -130,25 +151,6 @@ namespace EightBit
             {
                 this.IncrementDIV(cycles);
                 this.CheckTimer(cycles);
-            }
-
-            public int TimerClockTicks
-            {
-                get
-                {
-                    switch (this.TimerClock)
-                    {
-                        case 0b00:
-                            return 1024;    // 4.096 Khz
-                        case 0b01:
-                            return 16;      // 262.144 Khz
-                        case 0b10:
-                            return 64;      // 65.536 Khz
-                        case 0b11:
-                            return 256;     // 16.384 Khz
-                    }
-                    throw new InvalidOperationException("Invalid timer clock specification");
-                }
             }
 
             public void IncrementDIV(int cycles)
@@ -342,10 +344,11 @@ namespace EightBit
                                 var p11 = live && this.p11 ? 1 : 0;
                                 var p12 = live && this.p12 ? 1 : 0;
                                 var p13 = live && this.p13 ? 1 : 0;
-                                this.Poke(port,
-                                    (byte)(p10 | (p11 << 1) | (p12 << 2) | (p13 << 3)
-                                    | (int)(Bits.Bit4 | Bits.Bit5 | Bits.Bit6 | Bits.Bit7)));
+                                this.Poke(
+                                    port,
+                                    (byte)(p10 | (p11 << 1) | (p12 << 2) | (p13 << 3) | (int)(Bits.Bit4 | Bits.Bit5 | Bits.Bit6 | Bits.Bit7)));
                             }
+
                             break;
                         case SB:
                             break;

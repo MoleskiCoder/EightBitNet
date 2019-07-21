@@ -1,11 +1,11 @@
-﻿// <copyright file="GameboyBus.cs" company="Adrian Conlon">
+﻿// <copyright file="Bus.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-using System;
-using System.Collections.Generic;
-
 namespace EightBit
 {
+    using System;
+    using System.Collections.Generic;
+
     namespace GameBoy
     {
         public abstract class Bus : EightBit.Bus
@@ -175,6 +175,64 @@ namespace EightBit
                 return new MemoryMapping(this.highInternalRam, 0xff80, 0xffff, AccessLevel.ReadWrite);
             }
 
+            protected override void OnWrittenByte()
+            {
+                base.OnWrittenByte();
+
+                var address = this.Address.Word;
+                var value = this.Data;
+
+                switch (address & 0xe000)
+                {
+                    case 0x0000:
+                        // Register 0: RAMCS gate data
+                        if (this.ram)
+                        {
+                            throw new InvalidOperationException("Register 0: RAMCS gate data: Not handled!");
+                        }
+
+                        break;
+                    case 0x2000:
+                        // Register 1: ROM bank code
+                        if (this.banked && this.higherRomBank)
+                        {
+                            // assert((address >= 0x2000) && (address < 0x4000));
+                            // assert((value > 0) && (value < 0x20));
+                            this.romBank = value & (byte)Mask.Mask5;
+                        }
+
+                        break;
+                    case 0x4000:
+                        // Register 2: ROM bank selection
+                        if (this.banked)
+                        {
+                            throw new InvalidOperationException("Register 2: ROM bank selection: Not handled!");
+                        }
+
+                        break;
+                    case 0x6000:
+                        // Register 3: ROM/RAM change
+                        if (this.banked)
+                        {
+                            switch (value & (byte)Mask.Mask1)
+                            {
+                                case 0:
+                                    this.higherRomBank = true;
+                                    this.ramBankSwitching = false;
+                                    break;
+                                case 1:
+                                    this.higherRomBank = false;
+                                    this.ramBankSwitching = true;
+                                    break;
+                                default:
+                                    throw new InvalidOperationException("Unreachable");
+                            }
+                        }
+
+                        break;
+                }
+            }
+
             private void ValidateCartridgeType()
             {
                 this.rom = this.banked = this.ram = this.battery = false;
@@ -266,60 +324,6 @@ namespace EightBit
                 }
             }
 
-            protected override void OnWrittenByte()
-            {
-                base.OnWrittenByte();
-
-                var address = this.Address.Word;
-                var value = this.Data;
-
-                switch (address & 0xe000)
-                {
-                    case 0x0000:
-                        // Register 0: RAMCS gate data
-                        if (this.ram)
-                        {
-                            throw new InvalidOperationException("Register 0: RAMCS gate data: Not handled!");
-                        }
-                        break;
-                    case 0x2000:
-                        // Register 1: ROM bank code
-                        if (this.banked && this.higherRomBank)
-                        {
-                            //assert((address >= 0x2000) && (address < 0x4000));
-                            //assert((value > 0) && (value < 0x20));
-                            this.romBank = value & (byte)Mask.Mask5;
-                        }
-                        break;
-                    case 0x4000:
-                        // Register 2: ROM bank selection
-                        if (this.banked)
-                        {
-                            throw new InvalidOperationException("Register 2: ROM bank selection: Not handled!");
-                        }
-                        break;
-                    case 0x6000:
-                        // Register 3: ROM/RAM change
-                        if (this.banked)
-                        {
-                            switch (value & (byte)Mask.Mask1)
-                            {
-                                case 0:
-                                    this.higherRomBank = true;
-                                    this.ramBankSwitching = false;
-                                    break;
-                                case 1:
-                                    this.higherRomBank = false;
-                                    this.ramBankSwitching = true;
-                                    break;
-                                default:
-                                    throw new InvalidOperationException("Unreachable");
-                            }
-                        }
-                        break;
-                }
-            }
-
             private int RunRasterLines(int lines)
             {
                 var count = 0;
@@ -362,6 +366,7 @@ namespace EightBit
 
                     this.IO.TriggerInterrupt(Interrupts.VerticalBlank);
                 }
+
                 return this.RunRasterLines(lines);
             }
 

@@ -10,7 +10,7 @@ namespace EightBit
             Off,
             Light,
             Medium,
-            Dark
+            Dark,
         }
     }
 }

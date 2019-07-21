@@ -1,4 +1,4 @@
-﻿// <copyright file="LcdcControl.cs" company="Adrian Conlon">
+﻿// <copyright file="LcdStatusMode.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 namespace EightBit
@@ -10,7 +10,7 @@ namespace EightBit
             HBlank = 0b00,
             VBlank = 0b01,
             SearchingOamRam = 0b10,
-            TransferringDataToLcd = 0b11
+            TransferringDataToLcd = 0b11,
         }
     }
 }
