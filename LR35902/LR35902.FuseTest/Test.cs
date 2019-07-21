@@ -5,9 +5,7 @@
 
     public class Test
     {
-        private List<MemoryDatum> memoryData = new List<MemoryDatum>();
-
-        public bool Valid => !string.IsNullOrEmpty(this.Description);
+        private readonly List<MemoryDatum> memoryData = new List<MemoryDatum>();
 
         public string Description { get; private set; }
 
@@ -15,21 +13,21 @@
 
         public IReadOnlyCollection<MemoryDatum> MemoryData => this.memoryData.AsReadOnly();
 
-        public void Parse(Lines lines)
+        public bool TryParse(Lines lines)
         {
             if (lines == null)
             {
                 throw new ArgumentNullException(nameof(lines));
             }
 
-            while (!lines.EndOfFile && !this.Valid)
+            while (!lines.EndOfFile && string.IsNullOrEmpty(this.Description))
             {
                 this.Description = lines.ReadLine();
             }
 
-            if (!this.Valid)
+            if (string.IsNullOrEmpty(this.Description))
             {
-                return;
+                return false;
             }
 
             this.RegisterState.Parse(lines);
@@ -47,6 +45,8 @@
                 }
             }
             while (!finished);
+
+            return true;
         }
     }
 }

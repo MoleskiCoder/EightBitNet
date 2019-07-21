@@ -11,18 +11,17 @@
 
         public void Parse(Lines lines)
         {
-            var complete = false;
+            var success = false;
             do
             {
                 var e = new TestEvent();
-                e.Parse(lines);
-		        complete = !e.Valid;
-                if (!complete)
+                success = e.TryParse(lines);
+                if (success)
                 {
                     this.container.Add(e);
                 }
             }
-            while (!complete);
+            while (success);
         }
     }
 }

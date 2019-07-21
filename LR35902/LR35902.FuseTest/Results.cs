@@ -17,8 +17,7 @@
             while (!this.lines.EndOfFile)
             {
                 var result = new Result();
-                result.Parse(this.lines);
-                if (result.Valid)
+                if (result.TryParse(this.lines))
                 {
                     this.Container.Add(result.Description, result);
                 }

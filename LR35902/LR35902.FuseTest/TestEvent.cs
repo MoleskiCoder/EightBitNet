@@ -7,8 +7,6 @@
     {
         private int cycles;
 
-        public bool Valid { get; private set; } = false;
-
         public int Cycles => this.cycles;
 
         public string Specifier { get; private set; }
@@ -17,37 +15,37 @@
 
         public byte Value { get; private set; } = (byte)EightBit.Mask.Mask8;
 
-        public void Parse(Lines lines)
+        public bool TryParse(Lines lines)
         {
             if (lines == null)
             {
                 throw new ArgumentNullException(nameof(lines));
             }
 
-            this.ParseLine(lines.ReadLine());
-            if (!this.Valid)
+            var returned = this.TryParseLine(lines.ReadLine());
+            if (!returned)
             {
                 lines.UnreadLine();
             }
+
+            return returned;
         }
 
-        private void ParseLine(string line)
+        private bool TryParseLine(string line)
         {
             var split = line.Split(new char[] { ' ', '\t' });
-            this.ParseLine(split);
+            return this.TryParseLine(split);
         }
 
-        private void ParseLine(string[] tokens)
+        private bool TryParseLine(string[] tokens)
         {
-            this.Valid = int.TryParse(tokens[0], out this.cycles);
-            if (!this.Valid)
+            if (!int.TryParse(tokens[0], out this.cycles))
             {
-                return;
+                return false;
             }
 
             this.Specifier = tokens[1];
 
-            this.Valid = true;
             switch (this.Specifier)
             {
                 case "MR":
@@ -68,9 +66,10 @@
                     break;
 
                 default:
-                    this.Valid = false;
-                    break;
+                    return false;
             }
+
+            return true;
         }
     }
 }

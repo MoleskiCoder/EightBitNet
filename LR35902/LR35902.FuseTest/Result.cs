@@ -9,29 +9,27 @@
         private readonly TestEvents events = new TestEvents();
         private readonly List<MemoryDatum> memoryData = new List<MemoryDatum>();
 
-        public bool Valid => !string.IsNullOrEmpty(this.Description);
-
         public string Description { get; private set; }
 
         public RegisterState RegisterState { get; } = new RegisterState();
 
         public ReadOnlyCollection<MemoryDatum> MemoryData => this.memoryData.AsReadOnly();
 
-        public void Parse(Lines lines)
+        public bool TryParse(Lines lines)
         {
             if (lines == null)
             {
                 throw new ArgumentNullException(nameof(lines));
             }
 
-            while (!lines.EndOfFile && !this.Valid)
+            while (!lines.EndOfFile && string.IsNullOrWhiteSpace(this.Description))
             {
                 this.Description = lines.ReadLine();
             }
 
-            if (!this.Valid)
+            if (string.IsNullOrWhiteSpace(this.Description))
             {
-                return;
+                return false;
             }
 
             this.events.Parse(lines);
@@ -50,6 +48,8 @@
                 }
             }
             while (!finished);
+
+            return true;
         }
     }
 }
