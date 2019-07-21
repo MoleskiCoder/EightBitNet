@@ -2,6 +2,11 @@
 {
     public class TestRunner : EightBit.GameBoy.Bus
     {
+        public enum Register
+        {
+            AF, BC, DE, HL, SP, PC
+        };
+
         private readonly Test test;
         private readonly Result result;
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
@@ -58,13 +63,13 @@
             var testState = this.test.RegisterState;
             var inputRegisters = testState.Registers;
 
-            this.CPU.AF.Word = inputRegisters[(int)RegisterState.Register.AF].Word;
-            this.CPU.BC.Word = inputRegisters[(int)RegisterState.Register.BC].Word;
-            this.CPU.DE.Word = inputRegisters[(int)RegisterState.Register.DE].Word;
-            this.CPU.HL.Word = inputRegisters[(int)RegisterState.Register.HL].Word;
+            this.CPU.AF.Word = inputRegisters[(int)Register.AF].Word;
+            this.CPU.BC.Word = inputRegisters[(int)Register.BC].Word;
+            this.CPU.DE.Word = inputRegisters[(int)Register.DE].Word;
+            this.CPU.HL.Word = inputRegisters[(int)Register.HL].Word;
 
-            this.CPU.SP.Word = inputRegisters[(int)RegisterState.Register.SP].Word;
-            this.CPU.PC.Word = inputRegisters[(int)RegisterState.Register.PC].Word;
+            this.CPU.SP.Word = inputRegisters[(int)Register.SP].Word;
+            this.CPU.PC.Word = inputRegisters[(int)Register.PC].Word;
         }
 
         private void InitialiseMemory()
@@ -90,13 +95,13 @@
             var expectedState = this.result.RegisterState;
             var expectedRegisters = expectedState.Registers;
 
-            var af = this.CPU.AF.Word == expectedRegisters[(int)RegisterState.Register.AF].Word;
-            var bc = this.CPU.BC.Word == expectedRegisters[(int)RegisterState.Register.BC].Word;
-            var de = this.CPU.DE.Word == expectedRegisters[(int)RegisterState.Register.DE].Word;
-            var hl = this.CPU.HL.Word == expectedRegisters[(int)RegisterState.Register.HL].Word;
+            var af = this.CPU.AF.Word == expectedRegisters[(int)Register.AF].Word;
+            var bc = this.CPU.BC.Word == expectedRegisters[(int)Register.BC].Word;
+            var de = this.CPU.DE.Word == expectedRegisters[(int)Register.DE].Word;
+            var hl = this.CPU.HL.Word == expectedRegisters[(int)Register.HL].Word;
 
-            var sp = this.CPU.SP.Word == expectedRegisters[(int)RegisterState.Register.SP].Word;
-            var pc = this.CPU.PC.Word == expectedRegisters[(int)RegisterState.Register.PC].Word;
+            var sp = this.CPU.SP.Word == expectedRegisters[(int)Register.SP].Word;
+            var pc = this.CPU.PC.Word == expectedRegisters[(int)Register.PC].Word;
 
             var success = af && bc && de && hl && sp && pc;
             if (!success)
@@ -106,42 +111,42 @@
 
                 if (!af)
                 {
-                    var expectedWord = expectedRegisters[(int)RegisterState.Register.AF];
+                    var expectedWord = expectedRegisters[(int)Register.AF];
                     var actualWord = this.CPU.AF;
                     DumpDifference("A", "F", expectedWord, actualWord);
                 }
 
                 if (!bc)
                 {
-                    var expectedWord = expectedRegisters[(int)RegisterState.Register.BC];
+                    var expectedWord = expectedRegisters[(int)Register.BC];
                     var actualWord = this.CPU.BC;
                     DumpDifference("B", "C", expectedWord, actualWord);
                 }
 
                 if (!de)
                 {
-                    var expectedWord = expectedRegisters[(int)RegisterState.Register.DE];
+                    var expectedWord = expectedRegisters[(int)Register.DE];
                     var actualWord = this.CPU.DE;
                     DumpDifference("D", "E", expectedWord, actualWord);
                 }
 
                 if (!hl)
                 {
-                    var expectedWord = expectedRegisters[(int)RegisterState.Register.HL];
+                    var expectedWord = expectedRegisters[(int)Register.HL];
                     var actualWord = this.CPU.HL;
                     DumpDifference("H", "L", expectedWord, actualWord);
                 }
 
                 if (!sp)
                 {
-                    var expectedWord = expectedRegisters[(int)RegisterState.Register.SP];
+                    var expectedWord = expectedRegisters[(int)Register.SP];
                     var actualWord = this.CPU.SP;
                     DumpDifference("SPH", "SPL", expectedWord, actualWord);
                 }
 
                 if (!pc)
                 {
-                    var expectedWord = expectedRegisters[(int)RegisterState.Register.PC];
+                    var expectedWord = expectedRegisters[(int)Register.PC];
                     var actualWord = this.CPU.PC;
                     DumpDifference("PCH", "PCL", expectedWord, actualWord);
                 }

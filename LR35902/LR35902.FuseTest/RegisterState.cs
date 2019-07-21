@@ -8,11 +8,6 @@
 
     public class RegisterState
     {
-        public enum Register
-        {
-            AF, BC, DE, HL, SP, PC
-        };
-
         private readonly List<Register16> registers = new List<Register16>();
 
         public ReadOnlyCollection<Register16> Registers => this.registers.AsReadOnly();
