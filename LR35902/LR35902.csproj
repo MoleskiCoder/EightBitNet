@@ -45,6 +45,7 @@
     <Compile Include="CartridgeType.cs" />
     <Compile Include="CharacterDefinition.cs" />
     <Compile Include="ColourShades.cs" />
+    <Compile Include="Disassembler.cs" />
     <Compile Include="Display.cs" />
     <Compile Include="Bus.cs" />
     <Compile Include="Interrupts.cs" />
