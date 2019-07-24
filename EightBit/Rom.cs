@@ -45,7 +45,7 @@ namespace EightBit
             file.Seek(readOffset, SeekOrigin.Begin);
             using (var reader = new BinaryReader(file))
             {
-                reader.Read(output, writeOffset, size);
+                reader.Read(output, writeOffset, extent);
             }
 
             return size;
