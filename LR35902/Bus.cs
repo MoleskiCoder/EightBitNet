@@ -18,8 +18,8 @@ namespace EightBit
             public const int RomPageSize = 0x4000;
 
             private readonly Rom bootRom = new Rom(0x100);                                  // 0x0000 - 0x00ff
-            private readonly List<Rom> gameRomBanks;                                        // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
-            private readonly List<Ram> ramBanks;                                            // 0xa000 - 0xbfff (switchable)
+            private readonly List<Rom> gameRomBanks = new List<Rom>();                      // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
+            private readonly List<Ram> ramBanks = new List<Ram>();                          // 0xa000 - 0xbfff (switchable)
             private readonly UnusedMemory unmapped2000 = new UnusedMemory(0x2000, 0xff);    // 0xa000 - 0xbfff
             private readonly Ram lowInternalRam = new Ram(0x2000);                          // 0xc000 - 0xdfff (mirrored at 0xe000)
             private readonly UnusedMemory unmapped60 = new UnusedMemory(0x60, 0xff);        // 0xfea0 - 0xfeff
