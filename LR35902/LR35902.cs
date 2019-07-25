@@ -11,6 +11,7 @@ namespace EightBit
         public class LR35902 : IntelProcessor
         {
             private readonly Bus bus;
+            private readonly Register16 af = new Register16((int)Mask.Mask16);
             private bool prefixCB = false;
 
             public LR35902(Bus bus)
@@ -22,7 +23,14 @@ namespace EightBit
 
             public int ClockCycles => this.Cycles * 4;
 
-            public override Register16 AF { get; } = new Register16((int)Mask.Mask16);
+            public override Register16 AF
+            {
+                get
+                {
+                    this.af.Low = (byte)HigherNibble(this.af.Low);
+                    return this.af;
+                }
+            }
 
             public override Register16 BC { get; } = new Register16((int)Mask.Mask16);
 
