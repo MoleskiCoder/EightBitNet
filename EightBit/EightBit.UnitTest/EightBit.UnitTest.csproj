@@ -49,7 +49,6 @@
       <HintPath>..\..\packages\MSTest.TestFramework.2.0.0-beta4\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChipUnitTest.cs" />
