@@ -66,7 +66,8 @@ namespace EightBit
         public void Write()
         {
             this.OnWritingByte();
-            this.Reference() = this.Data;
+            var data = this.Data;       // N.B. Don't join these two lines together: the 
+            this.Reference() = data;    // data bus integrity is lost, due to evaluation order!
             this.OnWrittenByte();
         }
 
