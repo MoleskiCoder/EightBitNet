@@ -354,7 +354,7 @@ namespace EightBit
                                 switch (y)
                                 {
                                     case 0: // NOP
-                                        this.Tick(4);
+                                        this.Tick();
                                         break;
                                     case 1: // GB: LD (nn),SP
                                         this.Bus.Address.Word = this.FetchWord().Word;
@@ -546,7 +546,7 @@ namespace EightBit
                                         throw new InvalidOperationException("Invalid operation mode");
                                 }
 
-                                this.Tick(4);
+                                this.Tick();
                                 break;
 
                             default:
