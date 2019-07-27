@@ -636,7 +636,7 @@ namespace EightBit
                                         ioRegister = IoRegister.Register;
                                         break;
                                     case 7:
-                                        specification = "LD A,(%2$04XH)";
+                                        specification = "LD A,({1:X4}H)";
                                         dumpCount += 2;
                                         break;
                                 }
