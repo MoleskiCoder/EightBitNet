@@ -39,6 +39,6 @@ namespace LR35902.BlarggTest
             }
         }
 
-        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.GameBoy.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
+        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.GameBoy.Disassembler.State(this.CPU)} {this.disassembler.Disassemble(this.CPU)}");
     }
 }
