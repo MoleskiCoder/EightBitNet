@@ -566,7 +566,7 @@ namespace EightBit
                                         specification = $"RET {CC(y)}";
                                         break;
                                     case 4:
-                                        specification = "LD (FF00H+{1:X2}H),A";
+                                        specification = "LD (FF00H+{0:X2}H),A";
                                         ioRegister = IoRegister.Abbreviated;
                                         dumpCount++;
                                         break;
@@ -575,7 +575,7 @@ namespace EightBit
                                         dumpCount++;
                                         break;
                                     case 6:
-                                        specification = "LD A,(FF00H+{1:X2}H)";
+                                        specification = "LD A,(FF00H+{0:X2}H)";
                                         ioRegister = IoRegister.Abbreviated;
                                         dumpCount++;
                                         break;
@@ -628,7 +628,7 @@ namespace EightBit
                                         ioRegister = IoRegister.Register;
                                         break;
                                     case 5:
-                                        specification = "LD (%2$04XH),A";
+                                        specification = "LD ({1:X4}H),A";
                                         dumpCount += 2;
                                         break;
                                     case 6:
