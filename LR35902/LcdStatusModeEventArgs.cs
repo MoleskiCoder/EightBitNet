@@ -7,8 +7,8 @@ namespace EightBit.GameBoy
 
     public class LcdStatusModeEventArgs : EventArgs
     {
-        public LcdStatusModeEventArgs(LcdStatusMode value) => this.LcdStatusMode = value;
+        public LcdStatusModeEventArgs(LcdStatusMode value) => this.Mode = value;
 
-        public LcdStatusMode LcdStatusMode { get; }
+        public LcdStatusMode Mode { get; }
     }
 }

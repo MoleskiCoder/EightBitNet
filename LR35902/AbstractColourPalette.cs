@@ -3,14 +3,14 @@
 // </copyright>
 namespace EightBit.GameBoy
 {
-    public class AbstractColourPalette
+    public class AbstractColourPalette<T>
     {
-        private readonly uint[] colours = new uint[4];
-
         protected AbstractColourPalette()
         {
         }
 
-        public uint Colour(int index) => this.colours[index];
+        protected T[] Colours { get; } = new T[4];
+
+        public T Colour(int index) => this.Colours[index];
     }
 }

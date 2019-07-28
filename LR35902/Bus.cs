@@ -102,12 +102,12 @@ namespace EightBit.GameBoy
         {
             this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControl.LcdEnable) != 0;
             this.IO.ResetLY();
-            return this.RunRasterLines(Display.RasterHeight);
+            return this.RunRasterLines(DisplayCharacteristics.RasterHeight);
         }
 
         public int RunVerticalBlankLines()
         {
-            var lines = TotalLineCount - Display.RasterHeight;
+            var lines = TotalLineCount - DisplayCharacteristics.RasterHeight;
             return this.RunVerticalBlankLines(lines);
         }
 

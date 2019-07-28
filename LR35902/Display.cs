@@ -3,25 +3,17 @@
 // </copyright>
 namespace EightBit.GameBoy
 {
-    public sealed class Display
+    public sealed class Display<T>
     {
-        public static readonly int BufferWidth = 256;
-        public static readonly int BufferHeight = 256;
-        public static readonly int BufferCharacterWidth = BufferWidth / 8;
-        public static readonly int BufferCharacterHeight = BufferHeight / 8;
-        public static readonly int RasterWidth = 160;
-        public static readonly int RasterHeight = 144;
-        public static readonly int PixelCount = RasterWidth * RasterHeight;
-
         private readonly Bus bus;
         private readonly Ram oam;
         private readonly Ram vram;
-        private readonly AbstractColourPalette colours;
+        private readonly AbstractColourPalette<T> colours;
         private readonly ObjectAttribute[] objectAttributes = new ObjectAttribute[40];
         private byte control;
         private byte scanLine = 0;
 
-        public Display(AbstractColourPalette colours, Bus bus, Ram oam, Ram vram)
+        public Display(AbstractColourPalette<T> colours, Bus bus, Ram oam, Ram vram)
         {
             this.colours = colours;
             this.bus = bus;
@@ -29,12 +21,12 @@ namespace EightBit.GameBoy
             this.vram = vram;
         }
 
-        public uint[] Pixels { get; } = new uint[PixelCount];
+        public T[] Pixels { get; } = new T[DisplayCharacteristics.PixelCount];
 
         public void Render()
         {
             this.scanLine = this.bus.IO.Peek(IoRegisters.LY);
-            if (this.scanLine < RasterHeight)
+            if (this.scanLine < DisplayCharacteristics.RasterHeight)
             {
                 this.control = this.bus.IO.Peek(IoRegisters.LCDC);
                 if ((this.control & (byte)LcdcControl.LcdEnable) != 0)
@@ -95,9 +87,9 @@ namespace EightBit.GameBoy
         private void RenderBackground(int bgArea, int bgCharacters, int offsetX, int offsetY, int[] palette)
         {
             var row = (this.scanLine - offsetY) / 8;
-            var address = bgArea + (row * BufferCharacterWidth);
+            var address = bgArea + (row * DisplayCharacteristics.BufferCharacterWidth);
 
-            for (var column = 0; column < BufferCharacterWidth; ++column)
+            for (var column = 0; column < DisplayCharacteristics.BufferCharacterWidth; ++column)
             {
                 var character = this.vram.Peek((ushort)address++);
                 var definition = new CharacterDefinition(this.vram, (ushort)(bgCharacters + (16 * character)));
@@ -154,11 +146,11 @@ namespace EightBit.GameBoy
 
             var rowDefinition = definition.Get(cy);
 
-            var lineAddress = y * RasterWidth;
+            var lineAddress = y * DisplayCharacteristics.RasterWidth;
             for (var cx = 0; cx < width; ++cx)
             {
                 var x = drawX + (flipX ? ~cx & flipMaskX : cx);
-                if (x >= RasterWidth)
+                if (x >= DisplayCharacteristics.RasterWidth)
                 {
                     break;
                 }

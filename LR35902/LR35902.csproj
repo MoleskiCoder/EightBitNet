@@ -41,6 +41,7 @@
     <Compile Include="Disassembler.cs" />
     <Compile Include="Display.cs" />
     <Compile Include="Bus.cs" />
+    <Compile Include="DisplayCharacteristics.cs" />
     <Compile Include="Interrupts.cs" />
     <Compile Include="IoRegisters.cs" />
     <Compile Include="LcdcControl.cs" />
@@ -62,8 +63,6 @@
     <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\StyleCop.Analyzers.1.1.118\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="..\packages\StyleCop.Analyzers.1.1.118\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
