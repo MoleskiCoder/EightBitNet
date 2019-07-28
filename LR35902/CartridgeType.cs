@@ -1,16 +1,13 @@
 ﻿// <copyright file="CartridgeType.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace EightBit.GameBoy
 {
-    namespace GameBoy
+    public enum CartridgeType
     {
-        public enum CartridgeType
-        {
-            ROM = 0,
-            ROM_MBC1 = 1,
-            ROM_MBC1_RAM = 2,
-            ROM_MBC1_RAM_BATTERY = 3,
-        }
+        ROM = 0,
+        ROM_MBC1 = 1,
+        ROM_MBC1_RAM = 2,
+        ROM_MBC1_RAM_BATTERY = 3,
     }
 }

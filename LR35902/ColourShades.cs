@@ -1,16 +1,13 @@
 ﻿// <copyright file="ColourShades.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace EightBit.GameBoy
 {
-    namespace GameBoy
+    public enum ColourShades
     {
-        public enum ColourShades
-        {
-            Off,
-            Light,
-            Medium,
-            Dark,
-        }
+        Off,
+        Light,
+        Medium,
+        Dark,
     }
 }

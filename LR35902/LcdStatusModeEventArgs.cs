@@ -1,17 +1,14 @@
 ﻿// <copyright file="LcdStatusModeEventArgs.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace EightBit.GameBoy
 {
-    namespace GameBoy
+    using System;
+
+    public class LcdStatusModeEventArgs : EventArgs
     {
-        using System;
+        public LcdStatusModeEventArgs(LcdStatusMode value) => this.LcdStatusMode = value;
 
-        public class LcdStatusModeEventArgs : EventArgs
-        {
-            public LcdStatusModeEventArgs(LcdStatusMode value) => this.LcdStatusMode = value;
-
-            public LcdStatusMode LcdStatusMode { get; }
-        }
+        public LcdStatusMode LcdStatusMode { get; }
     }
 }
