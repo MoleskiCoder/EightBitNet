@@ -72,18 +72,22 @@ namespace EightBit
 
         public static bool EvenParity(byte value) => EvenParity((int)value);
 
-        public static int FindFirstSet(int value)
+        public static int FindFirstSet(int x)
         {
-            var bits = new BitVector32(value);
-            for (var i = 31; i >= 0; --i)
+            if (x == 0)
             {
-                if (bits[i])
-                {
-                    return i - 1;
-                }
+                return 0;
             }
 
-            return 0;
+            var t = 1;
+            var r = 1;
+            while ((x & t) == 0)
+            {
+                t <<= 1;
+                ++r;
+            }
+
+            return r;
         }
     }
 }

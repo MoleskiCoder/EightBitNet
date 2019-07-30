@@ -191,5 +191,33 @@ namespace EightBit
             var word = Chip.MakeWord(0xcd, 0xab);
             Assert.AreEqual(0xabcd, word);
         }
+
+        [TestMethod]
+        public void TestFindFirstSet_1()
+        {
+            var position = Chip.FindFirstSet(12);
+            Assert.AreEqual(3, position);
+        }
+
+        [TestMethod]
+        public void TestFindFirstSet_2()
+        {
+            var position = Chip.FindFirstSet(1);
+            Assert.AreEqual(1, position);
+        }
+
+        [TestMethod]
+        public void TestFindFirstSet_3()
+        {
+            var position = Chip.FindFirstSet(128);
+            Assert.AreEqual(8, position);
+        }
+
+        [TestMethod]
+        public void TestFindFirstSet_4()
+        {
+            var position = Chip.FindFirstSet(0);
+            Assert.AreEqual(0, position);
+        }
     }
 }
