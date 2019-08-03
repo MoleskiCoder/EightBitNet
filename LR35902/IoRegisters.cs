@@ -335,16 +335,17 @@ namespace EightBit.GameBoy
                     // Port/Mode Registers
                     case P1:
                         {
-                            var p14 = this.scanP14 && !this.p14;
-                            var p15 = this.scanP15 && !this.p15;
-                            var live = p14 || p15;
-                            var p10 = live && this.p10 ? 1 : 0;
-                            var p11 = live && this.p11 ? 1 : 0;
-                            var p12 = live && this.p12 ? 1 : 0;
-                            var p13 = live && this.p13 ? 1 : 0;
-                            this.Poke(
-                                port,
-                                (byte)(p10 | (p11 << 1) | (p12 << 2) | (p13 << 3) | (int)(Bits.Bit4 | Bits.Bit5 | Bits.Bit6 | Bits.Bit7)));
+                            var directionKeys = this.scanP14 && !this.p14;
+                            var miscKeys = this.scanP15 && !this.p15;
+                            var live = directionKeys || miscKeys;
+                            var rightOrA = live && this.p10 ? 0 : 1;
+                            var leftOrB = live && this.p11 ? 0 : 1;
+                            var upOrSelect = live && this.p12 ? 0 : 1;
+                            var downOrStart = live && this.p13 ? 0 : 1;
+                            var lowNibble = (byte)(rightOrA | (leftOrB << 1) | (upOrSelect << 2) | (downOrStart << 3));
+                            var highNibble = (byte)Chip.PromoteNibble((byte)Mask.Mask4);
+                            var value = (byte)(lowNibble | highNibble);
+                            this.Poke(port, value);
                         }
 
                         break;
