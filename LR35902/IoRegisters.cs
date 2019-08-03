@@ -338,11 +338,11 @@ namespace EightBit.GameBoy
                             var directionKeys = this.scanP14 && !this.p14;
                             var miscKeys = this.scanP15 && !this.p15;
                             var live = directionKeys || miscKeys;
-                            var rightOrA = live && this.p10 ? 0 : 1;
-                            var leftOrB = live && this.p11 ? 0 : 1;
-                            var upOrSelect = live && this.p12 ? 0 : 1;
-                            var downOrStart = live && this.p13 ? 0 : 1;
-                            var lowNibble = (byte)(rightOrA | (leftOrB << 1) | (upOrSelect << 2) | (downOrStart << 3));
+                            var rightOrA = (live && !this.p10) ? 0 : Bits.Bit0;
+                            var leftOrB = (live && !this.p11) ? 0 : Bits.Bit1;
+                            var upOrSelect = (live && !this.p12) ? 0 : Bits.Bit2;
+                            var downOrStart = (live && !this.p13) ? 0 : Bits.Bit3;
+                            var lowNibble = (byte)(rightOrA | leftOrB | upOrSelect | downOrStart);
                             var highNibble = (byte)Chip.PromoteNibble((byte)Mask.Mask4);
                             var value = (byte)(lowNibble | highNibble);
                             this.Poke(port, value);
