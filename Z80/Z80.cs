@@ -347,9 +347,9 @@ namespace EightBit
 
         private static byte AdjustOverflowSub(byte input, byte before, byte value, byte calculation) => AdjustOverflowSub(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
 
-        private static byte RES(int n, byte operand) => (byte)(operand & ~(1 << n));
+        private static byte RES(int n, byte operand) => ClearBit(operand, Bit(n));
 
-        private static byte SET(int n, byte operand) => (byte)(operand | (1 << n));
+        private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
 
         private void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
 
@@ -1724,7 +1724,7 @@ namespace EightBit
         {
             this.F = SetBit(this.F, StatusBits.HC);
             this.F = ClearBit(this.F, StatusBits.NF);
-            var discarded = (byte)(operand & (1 << n));
+            var discarded = (byte)(operand & Bit(n));
             this.F = AdjustSZ(this.F, discarded);
             this.F = ClearBit(this.F, StatusBits.PF, discarded);
         }

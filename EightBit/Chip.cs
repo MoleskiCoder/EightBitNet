@@ -12,6 +12,10 @@ namespace EightBit
         {
         }
 
+        public static byte Bit(int which) => (byte)(1 << which);
+
+        public static byte Bit(byte which) => Bit((int)which);
+
         public static byte SetBit(byte input, byte which) => (byte)(input | which);
 
         public static byte SetBit(byte input, byte which, int condition) => SetBit(input, which, condition != 0);
@@ -72,22 +76,22 @@ namespace EightBit
 
         public static bool EvenParity(byte value) => EvenParity((int)value);
 
-        public static int FindFirstSet(int x)
+        public static int FindFirstSet(int value)
         {
-            if (x == 0)
+            if (value == 0)
             {
                 return 0;
             }
 
-            var t = 1;
-            var r = 1;
-            while ((x & t) == 0)
+            var test = 1;
+            var result = 1;
+            while ((value & test) == 0)
             {
-                t <<= 1;
-                ++r;
+                test <<= 1;
+                ++result;
             }
 
-            return r;
+            return result;
         }
     }
 }

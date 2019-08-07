@@ -154,9 +154,9 @@ namespace EightBit.GameBoy
 
         private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
 
-        private static byte Res(int n, byte operand) => (byte)(operand & ~(1 << n));
+        private static byte Res(int n, byte operand) => ClearBit(operand, Bit(n));
 
-        private static byte Set(int n, byte operand) => (byte)(operand | (1 << n));
+        private static byte Set(int n, byte operand) => SetBit(operand, Bit(n));
 
         private void DI() => this.IME = false;
 
@@ -1068,7 +1068,7 @@ namespace EightBit.GameBoy
         private void Bit(int n, byte operand)
         {
             var carry = this.F & (byte)StatusBits.CF;
-            this.AndR(operand, (byte)(1 << n));
+            this.AndR(operand, Bit(n));
             this.F = SetBit(this.F, StatusBits.CF, carry);
         }
 
