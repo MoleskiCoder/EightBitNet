@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System.Collections.Specialized;
-
     public class Chip : Device
     {
         protected Chip()
