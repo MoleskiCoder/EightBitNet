@@ -100,11 +100,11 @@ namespace EightBit.GameBoy
 
         public bool BootRomEnabled => !this.BootRomDisabled;
 
-        public int TimerClock => this.Peek((ushort)TAC) & (byte)Mask.Mask2;
+        public int TimerClock => this.TimerControl & (byte)Mask.Mask2;
 
         public bool TimerEnabled => !this.TimerDisabled;
 
-        public bool TimerDisabled => (this.Peek((ushort)TAC) & (byte)Bits.Bit2) == 0;
+        public bool TimerDisabled => (this.TimerControl & (byte)Bits.Bit2) == 0;
 
         public int TimerClockTicks
         {
@@ -126,10 +126,16 @@ namespace EightBit.GameBoy
             }
         }
 
+        private ref byte TimerControl => ref this.Reference(TAC);
+
+        private ref byte TimerModulo => ref this.Reference(TMA);
+
+        private ref byte TimerCounter => ref this.Reference(TIMA);
+
         public void Reset()
         {
-            this.Poke((ushort)NR52, 0xf1);
-            this.Poke((ushort)LCDC, (byte)(LcdcControl.DisplayBackground | LcdcControl.BackgroundCharacterDataSelection | LcdcControl.LcdEnable));
+            this.Poke(NR52, 0xf1);
+            this.Poke(LCDC, (byte)(LcdcControl.DisplayBackground | LcdcControl.BackgroundCharacterDataSelection | LcdcControl.LcdEnable));
             this.divCounter.Word = 0xabcc;
             this.timerCounter = 0;
         }
@@ -143,7 +149,7 @@ namespace EightBit.GameBoy
             }
         }
 
-        public void TriggerInterrupt(Interrupts cause) => this.Poke((ushort)IF, (byte)(this.Peek((ushort)IF) | (byte)cause));
+        public void TriggerInterrupt(Interrupts cause) => this.Reference(IF) |= (byte)cause;
 
         public void CheckTimers(int cycles)
         {
@@ -154,29 +160,29 @@ namespace EightBit.GameBoy
         public void IncrementDIV(int cycles)
         {
             this.divCounter.Word += (ushort)cycles;
-            this.Poke((ushort)DIV, this.divCounter.High);
+            this.Poke(DIV, this.divCounter.High);
         }
 
         public void IncrementTIMA()
         {
-            var updated = this.Peek((ushort)TIMA) + 1;
+            var updated = this.TimerCounter + 1;
             if ((updated & (int)Bits.Bit8) != 0)
             {
                 this.TriggerInterrupt(Interrupts.TimerOverflow);
-                updated = this.Peek((ushort)TMA);
+                updated = this.TimerModulo;
             }
 
-            this.Poke((ushort)TIMA, Chip.LowByte(updated));
+            this.TimerCounter = Chip.LowByte(updated);
         }
 
-        public void IncrementLY() => this.Poke((ushort)LY, (byte)((this.Peek((ushort)LY) + 1) % GameBoy.Bus.TotalLineCount));
+        public void IncrementLY() => this.Poke(LY, (byte)((this.Peek(LY) + 1) % GameBoy.Bus.TotalLineCount));
 
-        public void ResetLY() => this.Poke((ushort)LY, 0);
+        public void ResetLY() => this.Poke(LY, 0);
 
         public void UpdateLcdStatusMode(LcdStatusMode mode)
         {
-            var current = this.Peek((ushort)STAT) & unchecked((byte)~Mask.Mask2);
-            this.Poke((ushort)STAT, (byte)(current | (int)mode));
+            var current = this.Peek(STAT) & unchecked((byte)~Mask.Mask2);
+            this.Poke(STAT, (byte)(current | (int)mode));
             this.OnDisplayStatusModeUpdated(mode);
         }
 
@@ -289,6 +295,7 @@ namespace EightBit.GameBoy
                 this.timerCounter = this.divCounter.Word = 0;
                 break;
             case TIMA: // R/W
+                break;
             case TMA: // R/W
                 break;
             case TAC: // R/W
