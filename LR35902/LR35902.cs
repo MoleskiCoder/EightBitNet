@@ -60,6 +60,7 @@ namespace EightBit.GameBoy
                 this.ExecuteOther(x, y, z, p, q);
             }
 
+            System.Diagnostics.Debug.Assert(this.Cycles > 0, $"No timing associated with instruction (CB prefixed? {this.prefixCB}) 0x{this.OpCode:X2}");
             return this.ClockCycles;
         }
 
@@ -365,7 +366,7 @@ namespace EightBit.GameBoy
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative((sbyte)this.FetchByte());
-                                    this.Tick(4);
+                                    this.Tick(3);
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
@@ -715,7 +716,11 @@ namespace EightBit.GameBoy
                                 case 1:
                                 case 2:
                                 case 3:
-                                    this.JumpConditionalFlag(y);
+                                    if (this.JumpConditionalFlag(y))
+                                    {
+                                        this.Tick();
+                                    }
+
                                     this.Tick(3);
                                     break;
                                 case 4: // GB: LD (FF00 + C),A
