@@ -237,14 +237,14 @@ namespace Fuse
                 {
                     var expectedWord = expectedRegisters[(int)Register.IX];
                     var actualWord = this.cpu.IX;
-                    DumpDifference("IXH", "IXL", actualWord, expectedWord);
+                    DumpDifference("IXH", "IXL", expectedWord, actualWord);
                 }
 
                 if (!iy)
                 {
                     var expectedWord = expectedRegisters[(int)Register.IY];
                     var actualWord = this.cpu.IY;
-                    DumpDifference("IYH", "IYL", actualWord, expectedWord);
+                    DumpDifference("IYH", "IYL", expectedWord, actualWord);
                 }
 
                 if (!sp)
@@ -265,7 +265,7 @@ namespace Fuse
                 {
                     var expectedWord = expectedRegisters[(int)Register.MEMPTR];
                     var actualWord = this.cpu.MEMPTR;
-                    DumpDifference("MEMPTRH", "MEMPTRL", actualWord, expectedWord);
+                    DumpDifference("MEMPTRH", "MEMPTRL", expectedWord, actualWord);
                 }
 
                 this.cpu.ExxAF();
@@ -273,7 +273,7 @@ namespace Fuse
 
                 if (!af_)
                 {
-                    var expectedWord = expectedRegisters[(int)Register.AF];
+                    var expectedWord = expectedRegisters[(int)Register.AF_];
                     var actualWord = this.cpu.AF;
                     DumpDifference("A'", "F'", expectedWord, actualWord);
                 }
@@ -282,21 +282,21 @@ namespace Fuse
                 {
                     var expectedWord = expectedRegisters[(int)Register.BC_];
                     var actualWord = this.cpu.BC;
-                    DumpDifference("B'", "C'", actualWord, expectedWord);
+                    DumpDifference("B'", "C'", expectedWord, actualWord);
                 }
 
                 if (!de_)
                 {
                     var expectedWord = expectedRegisters[(int)Register.DE_];
                     var actualWord = this.cpu.DE;
-                    DumpDifference("D'", "E'", actualWord, expectedWord);
+                    DumpDifference("D'", "E'", expectedWord, actualWord);
                 }
 
                 if (!hl_)
                 {
                     var expectedWord = expectedRegisters[(int)Register.HL_];
                     var actualWord = this.cpu.HL;
-                    DumpDifference("H'", "L'", actualWord, expectedWord);
+                    DumpDifference("H'", "L'", expectedWord, actualWord);
                 }
 
                 if (!iv)
