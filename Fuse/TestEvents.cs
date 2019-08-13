@@ -14,7 +14,7 @@ namespace Fuse
 
         public void Parse(Lines lines)
         {
-            var success = false;
+            bool success;
             do
             {
                 var e = new TestEvent();

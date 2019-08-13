@@ -35,7 +35,7 @@ namespace Fuse
 
         private bool TryParseLine(string line)
         {
-            var split = line.Split(new char[] { ' ', '\t' });
+            var split = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             return this.TryParseLine(split);
         }
 

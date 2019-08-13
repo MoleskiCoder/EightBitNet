@@ -30,7 +30,7 @@ namespace Fuse
 
         protected virtual void ParseInternalState(string line)
         {
-            var tokens = line.Split(new char[] { ' ', '\t' });
+            var tokens = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             this.ParseInternalState(tokens);
         }
 
