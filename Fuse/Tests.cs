@@ -5,13 +5,14 @@ namespace Fuse
 {
     using System.Collections.Generic;
 
-    public class Tests
+    public class Tests<T>
+        where T : Fuse.IRegisterState, new()
     {
         private readonly Lines lines;
 
         public Tests(string path) => this.lines = new Lines(path);
 
-        public Dictionary<string, Test> Container { get; } = new Dictionary<string, Test>();
+        public Dictionary<string, Test<T>> Container { get; } = new Dictionary<string, Test<T>>();
 
         public void Read() => this.lines.Read();
 
@@ -19,7 +20,7 @@ namespace Fuse
         {
             while (!this.lines.EndOfFile)
             {
-                var test = new Test();
+                var test = new Test<T>();
                 if (test.TryParse(this.lines))
                 {
                     this.Container.Add(test.Description, test);

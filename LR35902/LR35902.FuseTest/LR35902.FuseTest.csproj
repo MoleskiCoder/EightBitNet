@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegisterState.cs" />
     <Compile Include="TestRunner.cs" />
     <Compile Include="TestSuite.cs" />
   </ItemGroup>

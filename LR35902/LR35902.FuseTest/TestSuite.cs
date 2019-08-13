@@ -3,15 +3,16 @@
 // </copyright>
 namespace Fuse
 {
-    public class TestSuite
+    public class TestSuite<T>
+        where T : Fuse.IRegisterState, new()
     {
-        private readonly Tests tests;
-        private readonly Results results;
+        private readonly Tests<T> tests;
+        private readonly Results<T> results;
 
         public TestSuite(string path)
         {
-            this.tests = new Tests(path + ".in");
-            this.results = new Results(path + ".expected");
+            this.tests = new Tests<T>(path + ".in");
+            this.results = new Results<T>(path + ".expected");
         }
 
         public void Read()
@@ -37,7 +38,7 @@ namespace Fuse
 
                 var input = test.Value;
                 var result = this.results.Container[key];
-                var runner = new TestRunner(input, result);
+                var runner = new TestRunner<T>(input, result);
 
                 runner.Run();
                 if (runner.Failed)

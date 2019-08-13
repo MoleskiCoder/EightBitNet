@@ -1,4 +1,4 @@
-﻿// <copyright file="RegisterState.cs" company="Adrian Conlon">
+﻿// <copyright file="AbstractRegisterState.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 namespace Fuse
@@ -6,18 +6,19 @@ namespace Fuse
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Globalization;
     using EightBit;
 
-    public class RegisterState
+    public abstract class AbstractRegisterState
     {
         private readonly List<Register16> registers = new List<Register16>();
 
-        public ReadOnlyCollection<Register16> Registers => this.registers.AsReadOnly();
+        public ReadOnlyCollection<Register16> Registers => this.MutableRegisters.AsReadOnly();
 
-        public bool Halted { get; private set; } = false;
+        public bool Halted { get; protected set; } = false;
 
-        public int TStates { get; private set; } = -1;
+        public int TStates { get; protected set; } = -1;
+
+        protected List<Register16> MutableRegisters => this.registers;
 
         public void Parse(Lines lines)
         {
@@ -25,21 +26,17 @@ namespace Fuse
             this.ParseInternalState(lines);
         }
 
-        private void ParseInternalState(Lines lines) => this.ParseInternalState(lines.ReadLine());
+        protected void ParseInternalState(Lines lines) => this.ParseInternalState(lines.ReadLine());
 
-        private void ParseInternalState(string line)
+        protected virtual void ParseInternalState(string line)
         {
             var tokens = line.Split(new char[] { ' ', '\t' });
             this.ParseInternalState(tokens);
         }
 
-        private void ParseInternalState(string[] tokens)
-        {
-            this.Halted = Convert.ToInt32(tokens[0], CultureInfo.InvariantCulture) == 1;
-            this.TStates = Convert.ToInt32(tokens[1], CultureInfo.InvariantCulture);
-        }
+        protected abstract void ParseInternalState(string[] tokens);
 
-        private void ParseExternalState(Lines lines)
+        protected virtual void ParseExternalState(Lines lines)
         {
             var line = lines.ReadLine();
             foreach (var token in line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))

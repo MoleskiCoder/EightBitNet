@@ -14,13 +14,14 @@ namespace Fuse
         PC,
     }
 
-    public class TestRunner : EightBit.GameBoy.Bus
+    public class TestRunner<T> : EightBit.GameBoy.Bus
+        where T : Fuse.IRegisterState, new()
     {
-        private readonly Test test;
-        private readonly Result result;
+        private readonly Test<T> test;
+        private readonly Result<T> result;
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
 
-        public TestRunner(Test test, Result result)
+        public TestRunner(Test<T> test, Result<T> result)
         {
             this.test = test;
             this.result = result;

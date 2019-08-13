@@ -7,14 +7,15 @@ namespace Fuse
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
 
-    public class Result
+    public class Result<T>
+        where T : Fuse.IRegisterState, new()
     {
         private readonly TestEvents events = new TestEvents();
         private readonly List<MemoryDatum> memoryData = new List<MemoryDatum>();
 
         public string Description { get; private set; }
 
-        public RegisterState RegisterState { get; } = new RegisterState();
+        public T RegisterState { get; } = new T();
 
         public ReadOnlyCollection<MemoryDatum> MemoryData => this.memoryData.AsReadOnly();
 
@@ -38,7 +39,7 @@ namespace Fuse
             this.events.Parse(lines);
             this.RegisterState.Parse(lines);
 
-            var finished = false;
+            bool finished;
             do
             {
                 var line = lines.ReadLine();

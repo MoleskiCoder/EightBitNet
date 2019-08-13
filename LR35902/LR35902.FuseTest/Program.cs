@@ -8,7 +8,7 @@ namespace Fuse
     {
         public static void Main(string[] args)
         {
-            var suite = new TestSuite("fuse-tests\\tests");
+            var suite = new TestSuite<RegisterState>("fuse-tests\\tests");
             suite.Read();
             suite.Parse();
             suite.Run();
