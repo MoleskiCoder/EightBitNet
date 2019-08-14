@@ -25,7 +25,7 @@ namespace EightBit
 
         public static bool operator !=(RefreshRegister left, RefreshRegister right) => !(left == right);
 
-        public static byte ToByte(RefreshRegister input) => (byte)((input.high << 7) | (input.variable & (byte)Mask.Mask7));
+        public static byte ToByte(RefreshRegister input) => (byte)(input.high | (input.variable & (byte)Mask.Mask7));
 
         public static RefreshRegister Increment(RefreshRegister value)
         {
