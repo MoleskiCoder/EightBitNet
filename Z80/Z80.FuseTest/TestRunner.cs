@@ -207,9 +207,20 @@ namespace Fuse
 
                 if (!af)
                 {
-                    var expectedWord = expectedRegisters[(int)Register.AF];
-                    var actualWord = this.cpu.AF;
-                    DumpDifference("A", "F", expectedWord, actualWord);
+                    var expectedA = expectedRegisters[(int)Register.AF].High;
+                    var gotA = this.cpu.A;
+                    if (expectedA != gotA)
+                    {
+                        DumpDifference("A", expectedA, gotA);
+                    }
+
+                    var expectedF = expectedRegisters[(int)Register.AF].Low;
+                    var gotF = this.cpu.F;
+                    if (expectedF != gotF)
+                    {
+                        var output = $"**** F, Expected: {EightBit.Disassembler.AsFlags(expectedF)}, Got: {EightBit.Disassembler.AsFlags(gotF)}";
+                        System.Console.Error.WriteLine(output);
+                    }
                 }
 
                 if (!bc)
@@ -273,9 +284,20 @@ namespace Fuse
 
                 if (!af_)
                 {
-                    var expectedWord = expectedRegisters[(int)Register.AF_];
-                    var actualWord = this.cpu.AF;
-                    DumpDifference("A'", "F'", expectedWord, actualWord);
+                    var expectedA = expectedRegisters[(int)Register.AF_].High;
+                    var gotA = this.cpu.A;
+                    if (expectedA != gotA)
+                    {
+                        DumpDifference("A'", expectedA, gotA);
+                    }
+
+                    var expectedF = expectedRegisters[(int)Register.AF_].Low;
+                    var gotF = this.cpu.F;
+                    if (expectedF != gotF)
+                    {
+                        var output = $"**** F', Expected: {EightBit.Disassembler.AsFlags(expectedF)}, Got: {EightBit.Disassembler.AsFlags(gotF)}";
+                        System.Console.Error.WriteLine(output);
+                    }
                 }
 
                 if (!bc_)
@@ -307,7 +329,7 @@ namespace Fuse
 
                 if (!refresh)
                 {
-                    var output = $"**** R, Expected: {expectedState.R:X2}, Got: {this.cpu.REFRESH:X2}";
+                    var output = $"**** R, Expected: {expectedState.R:X2}, Got: {this.cpu.REFRESH.ToByte():X2}";
                     System.Console.Error.WriteLine(output);
                 }
 
