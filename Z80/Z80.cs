@@ -1791,12 +1791,15 @@ namespace EightBit
         private void XHTL()
         {
             var hl2 = this.HL2();
-            this.MEMPTR.Low = this.BusRead(this.SP);
-            this.BusWrite(hl2.Low);
+            this.Bus.Address.Word = this.SP.Word;
+            this.MEMPTR.Low = this.BusRead();
+            this.Bus.Data = hl2.Low;
+            this.BusWrite();
             hl2.Low = this.MEMPTR.Low;
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.BusRead();
-            this.BusWrite(hl2.High);
+            this.Bus.Data = hl2.High;
+            this.BusWrite();
             hl2.High = this.MEMPTR.High;
         }
 

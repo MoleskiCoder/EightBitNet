@@ -9,6 +9,18 @@ namespace Fuse
     {
         private int cycles;
 
+        public TestEvent()
+        {
+        }
+
+        public TestEvent(int cycles, string specifier, ushort address, byte value)
+        {
+            this.cycles = cycles;
+            this.Specifier = specifier;
+            this.Address = address;
+            this.Value = value;
+        }
+
         public int Cycles => this.cycles;
 
         public string Specifier { get; private set; }

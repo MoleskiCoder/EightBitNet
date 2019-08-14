@@ -25,6 +25,8 @@ namespace Fuse
     {
         private readonly Test<RegisterState> test;
         private readonly Result<RegisterState> result;
+        private readonly TestEvents desiredEvents;
+        private readonly TestEvents actualEvents = new TestEvents();
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
         private readonly EightBit.InputOutput ports = new EightBit.InputOutput();
         private readonly EightBit.Z80 cpu;
@@ -34,6 +36,7 @@ namespace Fuse
             this.cpu = new EightBit.Z80(this, this.ports);
             this.test = test;
             this.result = result;
+            this.desiredEvents = result.Events;
         }
 
         public bool Failed { get; private set; } = false;
@@ -78,6 +81,20 @@ namespace Fuse
 
         public override void Initialize()
         {
+            this.ports.ReadPort += this.Ports_ReadPort;
+            this.ports.WrittenPort += this.Ports_WrittenPort;
+        }
+
+        protected override void OnReadByte()
+        {
+            this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "MR", this.Address.Word, this.Data));
+            base.OnReadByte();
+        }
+
+        protected override void OnWrittenByte()
+        {
+            this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "MW", this.Address.Word, this.Data));
+            base.OnWrittenByte();
         }
 
         private static void DumpDifference(string description, byte expected, byte actual)
@@ -85,6 +102,10 @@ namespace Fuse
             var output = $"**** {description}, Expected: {expected:x2}, Got {actual:x2}";
             System.Console.Error.WriteLine(output);
         }
+
+        private void Ports_WrittenPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "PW", this.Address.Word, this.Data));
+
+        private void Ports_ReadPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "PR", this.Address.Word, this.Data));
 
         private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
         {
@@ -150,11 +171,12 @@ namespace Fuse
 
         private void Check()
         {
-            this.Checkregisters();
+            this.CheckRegisters();
             this.CheckMemory();
+            this.CheckEvents();
         }
 
-        private void Checkregisters()
+        private void CheckRegisters()
         {
             var expectedState = this.result.RegisterState;
             var expectedRegisters = expectedState.Registers;
@@ -351,6 +373,54 @@ namespace Fuse
                     System.Console.Error.WriteLine(output);
                 }
             }
+        }
+
+        private void CheckEvents()
+        {
+            var desires = this.desiredEvents.Container;
+            var actuals = this.actualEvents.Container;
+
+            var j = 0;
+            for (var i = 0; i < desires.Count; ++i)
+            {
+                var desire = desires[i];
+                if (desire.Specifier.EndsWith("C")) // Not interested in contention events (yet)
+                {
+                    continue;
+                }
+
+                var actual = actuals[j++];
+
+                var equalCycles = desire.Cycles == actual.Cycles;
+                var equalSpecifier = desire.Specifier == actual.Specifier;
+                var equalAddress = desire.Address == actual.Address;
+                var equalValue = desire.Value == actual.Value;
+
+                // var equal = equalCycles && equalSpecifier && equalAddress && equalValue;
+                var equal = equalSpecifier && equalAddress && equalValue;
+                if (!equal)
+                {
+                    this.Failed = true;
+
+                    var expectedOutput = $"**** Event issue (desire index, {i}): {ToString(desire)}";
+                    System.Console.Error.WriteLine(expectedOutput);
+
+                    var actualOutput = $"**** Event issue (actual index, {j}): {ToString(actual)}";
+                    System.Console.Error.WriteLine(actualOutput);
+                }
+
+            }
+        }
+
+        private static string ToString(TestEvent e)
+        {
+            var output = $"Cycles = {e.Cycles}, Specifier = {e.Specifier}, Address = {e.Address:X4}";
+            if (!e.Specifier.EndsWith("C"))
+            {
+                output += $", Value={e.Value:X2}";
+            }
+
+            return output;
         }
 
         private void CheckMemory()

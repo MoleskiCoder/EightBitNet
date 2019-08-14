@@ -17,6 +17,8 @@ namespace Fuse
 
         public T RegisterState { get; } = new T();
 
+        public TestEvents Events => this.events;
+
         public ReadOnlyCollection<MemoryDatum> MemoryData => this.memoryData.AsReadOnly();
 
         public bool TryParse(Lines lines)

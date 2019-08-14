@@ -12,6 +12,8 @@ namespace Fuse
 
         public ReadOnlyCollection<TestEvent> Container => this.container.AsReadOnly();
 
+        public void Add(TestEvent testEvent) => this.container.Add(testEvent);
+
         public void Parse(Lines lines)
         {
             bool success;
@@ -21,7 +23,7 @@ namespace Fuse
                 success = e.TryParse(lines);
                 if (success)
                 {
-                    this.container.Add(e);
+                    this.Add(e);
                 }
             }
             while (success);
