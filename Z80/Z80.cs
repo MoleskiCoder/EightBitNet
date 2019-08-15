@@ -578,6 +578,11 @@ namespace EightBit
                 else
                 {
                     this.BusWrite(operand);
+                    if (!memoryZ)
+                    {
+                        this.R2(z, operand);
+                    }
+
                     this.Tick(15);
                 }
             }
