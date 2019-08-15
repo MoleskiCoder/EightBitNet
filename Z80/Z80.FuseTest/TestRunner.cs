@@ -126,12 +126,12 @@ namespace Fuse
 
             if (expectedHigh != actualHigh)
             {
-                DumpDifference(highDescription, actualHigh, expectedHigh);
+                DumpDifference(highDescription, expectedHigh, actualHigh);
             }
 
             if (expectedLow != actualLow)
             {
-                DumpDifference(lowDescription, actualLow, expectedLow);
+                DumpDifference(lowDescription, expectedLow, actualLow);
             }
         }
 
@@ -410,8 +410,10 @@ namespace Fuse
                 this.DumpActualEvents();
             }
 
-            this.Failed = eventFailure;
-
+            if (!this.Failed)
+            {
+                this.Failed = eventFailure;
+            }
         }
 
         private void DumpExpectedEvents()
