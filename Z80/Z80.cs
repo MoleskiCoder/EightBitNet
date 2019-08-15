@@ -1905,9 +1905,9 @@ namespace EightBit
         private void BlockOut(ushort source, Register16 destination)
         {
             var value = this.BusRead(source);
+            destination.High = this.Decrement(destination.High);
             this.Bus.Address.Word = destination.Word;
             this.WritePort();
-            destination.High = this.Decrement(destination.High);
             this.MEMPTR.Word = destination.Word;
             this.F = SetBit(this.F, StatusBits.NF, value & (byte)Bits.Bit7);
             this.F = SetBit(this.F, StatusBits.HC | StatusBits.CF, (this.L + value) > 0xff);
