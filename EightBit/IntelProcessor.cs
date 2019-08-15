@@ -181,9 +181,10 @@ namespace EightBit
 
         protected bool JumpRelativeConditional(bool condition)
         {
-            var offset = (sbyte)this.FetchByte();
+            var offsetAddress = this.PC.Word++;
             if (condition)
             {
+                var offset = (sbyte)this.BusRead(offsetAddress);
                 this.JumpRelative(offset);
             }
 
