@@ -513,7 +513,7 @@ namespace EightBit
                                     this.Tick(11);
                                     break;
                                 case 4: // EX (SP),HL
-                                    this.XHTL();
+                                    this.XHTL(this.HL);
                                     this.Tick(19);
                                     break;
                                 case 5: // EX DE,HL
@@ -809,15 +809,18 @@ namespace EightBit
 
         private void CMC() => this.F = ClearBit(this.F, StatusBits.CF, this.F & (byte)StatusBits.CF);
 
-        private void XHTL()
+        private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.BusRead(this.SP);
-            this.BusWrite(this.L);
-            this.L = this.MEMPTR.Low;
+            this.MEMPTR.Low = this.BusRead(this.SP.Word);
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.BusRead();
-            this.BusWrite(this.H);
-            this.H = this.MEMPTR.High;
+            this.Bus.Data = exchange.High;
+            this.BusWrite();
+            exchange.High = this.MEMPTR.High;
+            --this.Bus.Address.Word;
+            this.Bus.Data = exchange.Low;
+            this.BusWrite();
+            exchange.Low = this.MEMPTR.Low;
         }
 
         private void WritePort(byte port)

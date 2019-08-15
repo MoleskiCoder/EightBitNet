@@ -1269,7 +1269,7 @@ namespace EightBit
                                     this.Tick(11);
                                     break;
                                 case 4: // EX (SP),HL
-                                    this.XHTL();
+                                    this.XHTL(this.HL2());
                                     this.Tick(19);
                                     break;
                                 case 5: // EX DE,HL
@@ -1788,19 +1788,18 @@ namespace EightBit
             this.F = AdjustXY(this.F, this.A = (byte)~this.A);
         }
 
-        private void XHTL()
+        private void XHTL(Register16 exchange)
         {
-            var hl2 = this.HL2();
-            this.Bus.Address.Word = this.SP.Word;
-            this.MEMPTR.Low = this.BusRead();
-            this.Bus.Data = hl2.Low;
-            this.BusWrite();
-            hl2.Low = this.MEMPTR.Low;
+            this.MEMPTR.Low = this.BusRead(this.SP.Word);
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.BusRead();
-            this.Bus.Data = hl2.High;
+            this.Bus.Data = exchange.High;
             this.BusWrite();
-            hl2.High = this.MEMPTR.High;
+            exchange.High = this.MEMPTR.High;
+            --this.Bus.Address.Word;
+            this.Bus.Data = exchange.Low;
+            this.BusWrite();
+            exchange.Low = this.MEMPTR.Low;
         }
 
         private void BlockCompare(ushort source, ushort counter)
