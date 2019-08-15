@@ -4,7 +4,9 @@
 namespace Fuse
 {
     using System;
+    using System.Diagnostics;
 
+    [DebuggerDisplay("Cycles = {Cycles}, Specififier = {Specifier}, Address = {Address}, Value = {Value}")]
     public class TestEvent
     {
         private int cycles;

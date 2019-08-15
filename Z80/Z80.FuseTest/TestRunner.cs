@@ -4,6 +4,8 @@
 
 namespace Fuse
 {
+    using System.Collections.Generic;
+
     public enum Register
     {
         AF,
@@ -25,7 +27,7 @@ namespace Fuse
     {
         private readonly Test<RegisterState> test;
         private readonly Result<RegisterState> result;
-        private readonly TestEvents desiredEvents;
+        private readonly TestEvents expectedEvents = new TestEvents();
         private readonly TestEvents actualEvents = new TestEvents();
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
         private readonly EightBit.InputOutput ports = new EightBit.InputOutput();
@@ -36,7 +38,14 @@ namespace Fuse
             this.cpu = new EightBit.Z80(this, this.ports);
             this.test = test;
             this.result = result;
-            this.desiredEvents = result.Events;
+
+            foreach (var e in result.Events.Container)
+            {
+                if (!e.Specifier.EndsWith("C"))
+                {
+                    this.expectedEvents.Add(new TestEvent(0, e.Specifier, e.Address, e.Value));
+                }
+            }
         }
 
         public bool Failed { get; private set; } = false;
@@ -87,13 +96,13 @@ namespace Fuse
 
         protected override void OnReadByte()
         {
-            this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "MR", this.Address.Word, this.Data));
+            this.actualEvents.Add(new TestEvent(0, "MR", this.Address.Word, this.Data));
             base.OnReadByte();
         }
 
         protected override void OnWrittenByte()
         {
-            this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "MW", this.Address.Word, this.Data));
+            this.actualEvents.Add(new TestEvent(0, "MW", this.Address.Word, this.Data));
             base.OnWrittenByte();
         }
 
@@ -377,38 +386,52 @@ namespace Fuse
 
         private void CheckEvents()
         {
-            var desires = this.desiredEvents.Container;
+            var expectations = this.expectedEvents.Container;
             var actuals = this.actualEvents.Container;
 
-            var j = 0;
-            for (var i = 0; i < desires.Count; ++i)
+            var eventFailure = expectations.Count != actuals.Count;
+            for (var i = 0; !eventFailure && (i < expectations.Count); ++i)
             {
-                var desire = desires[i];
-                if (desire.Specifier.EndsWith("C")) // Not interested in contention events (yet)
-                {
-                    continue;
-                }
+                var expectation = expectations[i];
+                var actual = actuals[i];
 
-                var actual = actuals[j++];
+                var equalCycles = expectation.Cycles == actual.Cycles;
+                var equalSpecifier = expectation.Specifier == actual.Specifier;
+                var equalAddress = expectation.Address == actual.Address;
+                var equalValue = expectation.Value == actual.Value;
 
-                var equalCycles = desire.Cycles == actual.Cycles;
-                var equalSpecifier = desire.Specifier == actual.Specifier;
-                var equalAddress = desire.Address == actual.Address;
-                var equalValue = desire.Value == actual.Value;
+                var equal = equalCycles && equalSpecifier && equalAddress && equalValue;
+                eventFailure = !equal;
+            }
 
-                // var equal = equalCycles && equalSpecifier && equalAddress && equalValue;
-                var equal = equalSpecifier && equalAddress && equalValue;
-                if (!equal)
-                {
-                    this.Failed = true;
+            if (eventFailure)
+            {
+                this.DumpExpectedEvents();
+                this.DumpActualEvents();
+            }
 
-                    var expectedOutput = $"**** Event issue (desire index, {i}): {ToString(desire)}";
-                    System.Console.Error.WriteLine(expectedOutput);
+            this.Failed = eventFailure;
 
-                    var actualOutput = $"**** Event issue (actual index, {j}): {ToString(actual)}";
-                    System.Console.Error.WriteLine(actualOutput);
-                }
+        }
 
+        private void DumpExpectedEvents()
+        {
+            System.Console.Error.WriteLine("++++ Dumping expected events:");
+            DumpEvents(this.expectedEvents.Container);
+        }
+
+        private void DumpActualEvents()
+        {
+            System.Console.Error.WriteLine("++++ Dumping actual events:");
+            DumpEvents(this.actualEvents.Container);
+        }
+
+        private static void DumpEvents(IEnumerable<TestEvent> events)
+        {
+            foreach (var e in events)
+            {
+                var output = $" Event issue {ToString(e)}";
+                System.Console.Error.WriteLine(output);
             }
         }
 
