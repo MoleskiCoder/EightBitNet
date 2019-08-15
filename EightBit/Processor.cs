@@ -42,10 +42,9 @@ namespace EightBit
         // http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
         public static sbyte SignExtend(int b, byte x)
         {
-            var m = (byte)(1 << (b - 1)); // mask can be pre-computed if b is fixed
-            x = (byte)(x & ((1 << b) - 1));  // (Skip this if bits in x above position b are already zero.)
-            var result = (x ^ m) - m;
-            return (sbyte)result;
+            var m = Bit(b - 1); // mask can be pre-computed if b is fixed
+            x &= (byte)(Bit(b) - 1);  // (Skip this if bits in x above position b are already zero.)
+            return (sbyte)((x ^ m) - m);
         }
 
         public static sbyte SignExtend(int b, int x) => SignExtend(b, (byte)x);
