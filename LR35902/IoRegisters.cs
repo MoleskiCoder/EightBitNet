@@ -72,7 +72,6 @@ namespace EightBit.GameBoy
         private readonly Register16 dmaAddress = new Register16();
 
         private int timerCounter = 0;
-        private int timerRate = 0;
 
         private bool dmaTransferActive = false;
 
@@ -263,7 +262,7 @@ namespace EightBit.GameBoy
                 this.timerCounter -= cycles;
                 if (this.timerCounter <= 0)
                 {
-                    this.timerCounter += this.timerRate;
+                    this.timerCounter += this.TimerClockTicks;
                     this.IncrementTIMA();
                 }
             }
@@ -299,7 +298,6 @@ namespace EightBit.GameBoy
             case TMA: // R/W
                 break;
             case TAC: // R/W
-                this.timerRate = this.TimerClockTicks;
                 break;
 
             case IF: // R/W
