@@ -191,67 +191,83 @@ namespace EightBit.GameBoy
 
         public void PressRight()
         {
-            this.p14 = this.p10 = false;
+            this.ControlRightLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseRight() => this.p14 = this.p10 = true;
+        public void ReleaseRight() => this.ControlRightLines(true);
 
         public void PressLeft()
         {
-            this.p14 = this.p11 = false;
+            this.ControlLeftLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseLeft() => this.p14 = this.p11 = true;
+        public void ReleaseLeft() => this.ControlLeftLines(true);
 
         public void PressUp()
         {
-            this.p14 = this.p12 = false;
+            this.ControlUpLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseUp() => this.p14 = this.p12 = true;
+        public void ReleaseUp() => this.ControlUpLines(true);
 
         public void PressDown()
         {
-            this.p14 = this.p13 = false;
+            this.ControlDownLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseDown() => this.p14 = this.p13 = true;
+        public void ReleaseDown() => this.ControlDownLines(true);
 
         public void PressA()
         {
-            this.p15 = this.p10 = false;
+            this.ControlALines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseA() => this.p15 = this.p10 = true;
+        public void ReleaseA() => this.ControlALines(true);
 
         public void PressB()
         {
-            this.p15 = this.p11 = false;
+            this.ControlBLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseB() => this.p15 = this.p11 = true;
+        public void ReleaseB() => this.ControlBLines(true);
 
         public void PressSelect()
         {
-            this.p15 = this.p12 = false;
+            this.ControlSelectLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseSelect() => this.p15 = this.p12 = true;
+        public void ReleaseSelect() => this.ControlSelectLines(true);
 
         public void PressStart()
         {
-            this.p15 = this.p13 = false;
+            this.ControlStartLines(false);
             this.TriggerKeypadInterrupt();
         }
 
-        public void ReleaseStart() => this.p15 = this.p13 = true;
+        public void ReleaseStart() => this.ControlStartLines(true);
+
+        private void ControlRightLines(bool value) => this.p14 = this.p10 = value;
+
+        private void ControlLeftLines(bool value) => this.p14 = this.p11 = value;
+
+        private void ControlUpLines(bool value) => this.p14 = this.p12 = value;
+
+        private void ControlDownLines(bool value) => this.p14 = this.p13 = value;
+
+        private void ControlALines(bool value) => this.p15 = this.p10 = value;
+
+        private void ControlBLines(bool value) => this.p15 = this.p11 = value;
+
+        private void ControlSelectLines(bool value) => this.p15 = this.p12 = value;
+
+        private void ControlStartLines(bool value) => this.p15 = this.p13 = value;
 
         private void OnDisplayStatusModeUpdated(LcdStatusMode mode) => this.DisplayStatusModeUpdated?.Invoke(this, new LcdStatusModeEventArgs(mode));
 
