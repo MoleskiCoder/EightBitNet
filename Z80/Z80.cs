@@ -258,7 +258,11 @@ namespace EightBit
         protected override void HandleINT()
         {
             base.HandleINT();
-            this.RaiseHALT();
+            if (this.Halted)
+            {
+                this.Proceed();
+            }
+
             if (this.IFF1)
             {
                 this.DisableInterrupts();
@@ -1392,7 +1396,11 @@ namespace EightBit
         private void HandleNMI()
         {
             this.RaiseNMI();
-            this.RaiseHALT();
+            if (this.Halted)
+            {
+                this.Proceed();
+            }
+
             this.IFF1 = false;
             this.Restart(0x66);
             this.Tick(13);
