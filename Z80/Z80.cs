@@ -1797,12 +1797,10 @@ namespace EightBit
             this.MEMPTR.Low = this.BusRead(this.SP.Word);
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.BusRead();
-            this.Bus.Data = exchange.High;
-            this.BusWrite();
+            this.BusWrite(exchange.High);
             exchange.High = this.MEMPTR.High;
             --this.Bus.Address.Word;
-            this.Bus.Data = exchange.Low;
-            this.BusWrite();
+            this.BusWrite(exchange.Low);
             exchange.Low = this.MEMPTR.Low;
         }
 
