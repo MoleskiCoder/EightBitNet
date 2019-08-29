@@ -214,7 +214,7 @@ namespace EightBit
                 {
                     this.HandleINT();
                 }
-                else if (this.Halted)
+                else if (this.HALT.Lowered())
                 {
                     this.Execute(0); // NOP
                 }
@@ -258,11 +258,7 @@ namespace EightBit
         protected override void HandleINT()
         {
             base.HandleINT();
-            if (this.Halted)
-            {
-                this.Proceed();
-            }
-
+            this.RaiseHALT();
             if (this.IFF1)
             {
                 this.DisableInterrupts();
@@ -1149,7 +1145,7 @@ namespace EightBit
                     }
                     else
                     {
-                        this.Halt(); // Exception (replaces LD (HL), (HL))
+                        this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                     }
 
                     this.Tick(4);
@@ -1396,11 +1392,7 @@ namespace EightBit
         private void HandleNMI()
         {
             this.RaiseNMI();
-            if (this.Halted)
-            {
-                this.Proceed();
-            }
-
+            this.RaiseHALT();
             this.IFF1 = false;
             this.Restart(0x66);
             this.Tick(13);

@@ -62,8 +62,6 @@ namespace EightBit
 
         public ref PinLevel HALT => ref this.haltLine;
 
-        protected bool Halted => this.HALT.Lowered();
-
         public IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this.decodedOpCodes[opCode];
 
         public override void RaisePOWER()
@@ -195,18 +193,6 @@ namespace EightBit
         {
             base.Return();
             this.MEMPTR.Word = this.PC.Word;
-        }
-
-        protected void Halt()
-        {
-            --this.PC.Word;
-            this.LowerHALT();
-        }
-
-        protected void Proceed()
-        {
-            ++this.PC.Word;
-            this.RaiseHALT();
         }
     }
 }
