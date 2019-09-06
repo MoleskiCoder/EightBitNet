@@ -108,53 +108,44 @@ namespace EightBit
 
         public void ExxAF() => this.accumulatorFlagsSet ^= 1;
 
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-
-            this.RaiseM1();
-
-            this.DisableInterrupts();
-            this.IM = 0;
-
-            this.REFRESH = new RefreshRegister(0);
-            this.IV = (byte)Mask.Mask8;
-
-            this.ExxAF();
-            this.AF.Word = (ushort)Mask.Mask16;
-
-            this.Exx();
-            this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
-
-            this.prefixCB = this.prefixDD = this.prefixED = false;
-        }
-
         public virtual void RaiseNMI()
         {
-            this.OnRaisingNMI();
-            this.NMI.Raise();
-            this.OnRaisedNMI();
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
         }
 
         public virtual void LowerNMI()
         {
-            this.OnLoweringNMI();
-            this.NMI.Lower();
-            this.OnLoweredNMI();
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
         }
 
         public virtual void RaiseM1()
         {
-            this.OnRaisingM1();
-            this.M1.Raise();
-            this.OnRaisedM1();
+            if (this.M1.Lowered())
+            {
+                this.OnRaisingM1();
+                this.M1.Raise();
+                this.OnRaisedM1();
+            }
         }
 
         public virtual void LowerM1()
         {
-            this.OnLoweringM1();
-            this.M1.Lower();
-            this.OnLoweredM1();
+            if (this.M1.Raised())
+            {
+                this.OnLoweringM1();
+                this.M1.Lower();
+                this.OnLoweredM1();
+            }
         }
 
         public override int Execute()
@@ -226,6 +217,26 @@ namespace EightBit
 
             this.OnExecutedInstruction();
             return this.Cycles;
+        }
+
+        protected override void OnRaisedPOWER()
+        {
+            this.RaiseM1();
+
+            this.DisableInterrupts();
+            this.IM = 0;
+
+            this.REFRESH = new RefreshRegister(0);
+            this.IV = (byte)Mask.Mask8;
+
+            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
+
+            this.ExxAF();
+            this.Exx();
+
+            this.prefixCB = this.prefixDD = this.prefixED = false;
+
+            base.OnRaisedPOWER();
         }
 
         protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);

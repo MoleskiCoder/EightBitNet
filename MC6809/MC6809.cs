@@ -221,81 +221,111 @@
             return this.Cycles;
         }
 
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.LowerBA();
-            this.LowerBS();
-        }
-
         public void RaiseNMI()
         {
-            this.OnRaisingNMI();
-            this.NMI.Raise();
-            this.OnRaisedNMI();
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
         }
 
         public void LowerNMI()
         {
-            this.OnLoweringNMI();
-            this.NMI.Lower();
-            this.OnLoweredNMI();
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
         }
 
         public void RaiseFIRQ()
         {
-            this.OnRaisingFIRQ();
-            this.FIRQ.Raise();
-            this.OnRaisedFIRQ();
+            if (this.FIRQ.Lowered())
+            {
+                this.OnRaisingFIRQ();
+                this.FIRQ.Raise();
+                this.OnRaisedFIRQ();
+            }
         }
 
         public void LowerFIRQ()
         {
-            this.OnLoweringFIRQ();
-            this.FIRQ.Lower();
-            this.OnLoweredFIRQ();
+            if (this.FIRQ.Raised())
+            {
+                this.OnLoweringFIRQ();
+                this.FIRQ.Lower();
+                this.OnLoweredFIRQ();
+            }
         }
 
         public void RaiseHALT()
         {
-            this.OnRaisingHALT();
-            this.HALT.Raise();
-            this.OnRaisedHALT();
+            if (this.HALT.Lowered())
+            {
+                this.OnRaisingHALT();
+                this.HALT.Raise();
+                this.OnRaisedHALT();
+            }
         }
 
         public void LowerHALT()
         {
-            this.OnLoweringHALT();
-            this.HALT.Lower();
-            this.OnLoweredHALT();
+            if (this.HALT.Raised())
+            {
+                this.OnLoweringHALT();
+                this.HALT.Lower();
+                this.OnLoweredHALT();
+            }
         }
 
         public void RaiseBA()
         {
-            this.OnRaisingBA();
-            this.BA.Raise();
-            this.OnRaisedBA();
+            if (this.BA.Lowered())
+            {
+                this.OnRaisingBA();
+                this.BA.Raise();
+                this.OnRaisedBA();
+            }
         }
 
         public void LowerBA()
         {
-            this.OnLoweringBA();
-            this.BA.Lower();
-            this.OnLoweredBA();
+            if (this.BA.Raised())
+            {
+                this.OnLoweringBA();
+                this.BA.Lower();
+                this.OnLoweredBA();
+            }
         }
 
         public void RaiseBS()
         {
-            this.OnRaisingBS();
-            this.BS.Raise();
-            this.OnRaisedBS();
+            if (this.BS.Lowered())
+            {
+                this.OnRaisingBS();
+                this.BS.Raise();
+                this.OnRaisedBS();
+            }
         }
 
         public void LowerBS()
         {
-            this.OnLoweringBS();
-            this.BS.Lower();
-            this.OnLoweredBS();
+            if (this.BS.Raised())
+            {
+                this.OnLoweringBS();
+                this.BS.Lower();
+                this.OnLoweredBS();
+            }
+        }
+
+        protected override void OnRaisedPOWER()
+        {
+            this.LowerBA();
+            this.LowerBS();
+            base.OnRaisedPOWER();
         }
 
         protected override void HandleRESET()

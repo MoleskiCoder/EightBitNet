@@ -95,57 +95,64 @@ namespace EightBit
 
         private int Carry => this.P & (byte)StatusBits.CF;
 
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.X = (byte)Bits.Bit7;
-            this.Y = 0;
-            this.A = 0;
-            this.P = (byte)StatusBits.RF;
-            this.S = (byte)Mask.Mask8;
-            this.LowerSYNC();
-        }
-
         public virtual void RaiseNMI()
         {
-            this.OnRaisingNMI();
-            this.NMI.Raise();
-            this.OnRaisedNMI();
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
         }
 
         public virtual void LowerNMI()
         {
-            this.OnLoweringNMI();
-            this.NMI.Lower();
-            this.OnLoweredNMI();
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
         }
 
         public virtual void RaiseSO()
         {
-            this.OnRaisingSO();
-            this.SO.Raise();
-            this.OnRaisedSO();
+            if (this.SO.Lowered())
+            {
+                this.OnRaisingSO();
+                this.SO.Raise();
+                this.OnRaisedSO();
+            }
         }
 
         public virtual void LowerSO()
         {
-            this.OnLoweringSO();
-            this.SO.Lower();
-            this.OnLoweredSO();
+            if (this.SO.Raised())
+            {
+                this.OnLoweringSO();
+                this.SO.Lower();
+                this.OnLoweredSO();
+            }
         }
 
         public virtual void RaiseRDY()
         {
-            this.OnRaisingRDY();
-            this.RDY.Raise();
-            this.OnRaisedRDY();
+            if (this.RDY.Lowered())
+            {
+                this.OnRaisingRDY();
+                this.RDY.Raise();
+                this.OnRaisedRDY();
+            }
         }
 
         public virtual void LowerRDY()
         {
-            this.OnLoweringRDY();
-            this.RDY.Lower();
-            this.OnLoweredRDY();
+            if (this.RDY.Raised())
+            {
+                this.OnLoweringRDY();
+                this.RDY.Lower();
+                this.OnLoweredRDY();
+            }
         }
 
         public override int Execute()
@@ -501,6 +508,17 @@ namespace EightBit
         protected virtual void OnLoweringRDY() => this.LoweringRDY?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweredRDY() => this.LoweredRDY?.Invoke(this, EventArgs.Empty);
+
+        protected override void OnRaisedPOWER()
+        {
+            this.X = (byte)Bits.Bit7;
+            this.Y = 0;
+            this.A = 0;
+            this.P = (byte)StatusBits.RF;
+            this.S = (byte)Mask.Mask8;
+            this.LowerSYNC();
+            base.OnRaisedPOWER();
+        }
 
         protected override byte Pop() => this.BusRead(++this.S, 1);
 
