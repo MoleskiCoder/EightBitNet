@@ -100,8 +100,8 @@ namespace EightBit
 
         protected override void OnRaisedPOWER()
         {
+            this.PC.Word = this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
             this.RaiseHALT();
-            this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
             base.OnRaisedPOWER();
         }
 
