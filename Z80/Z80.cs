@@ -193,23 +193,31 @@ namespace EightBit
             {
                 this.displaced = this.prefixCB = this.prefixDD = this.prefixED = false;
                 this.LowerM1();
+                var handled = false;
                 if (this.RESET.Lowered())
                 {
                     this.HandleRESET();
+                    handled = true;
                 }
                 else if (this.NMI.Lowered())
                 {
                     this.HandleNMI();
+                    handled = true;
                 }
                 else if (this.INT.Lowered())
                 {
-                    this.HandleINT();
+                    this.RaiseHALT();
+                    if (handled = this.IFF1)
+                    {
+                        this.HandleINT();
+                    }
                 }
                 else if (this.HALT.Lowered())
                 {
                     this.Execute(0); // NOP
                 }
-                else
+
+                if (!handled)
                 {
                     this.Execute(this.FetchByte());
                 }
@@ -269,26 +277,22 @@ namespace EightBit
         protected override void HandleINT()
         {
             base.HandleINT();
-            this.RaiseHALT();
-            if (this.IFF1)
+            this.DisableInterrupts();
+            switch (this.IM)
             {
-                this.DisableInterrupts();
-                switch (this.IM)
-                {
-                    case 0: // i8080 equivalent
-                        this.Execute(this.Bus.Data);
-                        break;
-                    case 1:
-                        this.Restart(7 << 3);
-                        this.Tick(13);
-                        break;
-                    case 2:
-                        this.Call(this.MEMPTR.Word = new Register16(this.Bus.Data, this.IV).Word);
-                        this.Tick(19);
-                        break;
-                    default:
-                        throw new NotSupportedException("Invalid interrupt mode");
-                }
+                case 0: // i8080 equivalent
+                    this.Execute(this.Bus.Data);
+                    break;
+                case 1:
+                    this.Restart(7 << 3);
+                    this.Tick(13);
+                    break;
+                case 2:
+                    this.Call(this.MEMPTR.Word = new Register16(this.Bus.Data, this.IV).Word);
+                    this.Tick(19);
+                    break;
+                default:
+                    throw new NotSupportedException("Invalid interrupt mode");
             }
         }
 

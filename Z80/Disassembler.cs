@@ -56,7 +56,12 @@ namespace EightBit
                 + $"D={d:x2} E={e:x2} "
                 + $"H={h:x2} L={l:x2} "
                 + $"I={i:x2} R={(byte)r:x2} "
-                + $"IM={im}";
+                + $"IM={im} "
+                + $"IFF1={(cpu.IFF1 ? 1 : 0)} "
+                + $"{(cpu.RESET.Lowered() ? "R" : "-")}"
+                + $"{(cpu.INT.Lowered() ? "I" : "-")}"
+                + $"{(cpu.HALT.Lowered() ? "H" : "-")}"
+                + $"{(cpu.NMI.Lowered() ? "N" : "-")}";
         }
 
         public string Disassemble(Z80 cpu)
