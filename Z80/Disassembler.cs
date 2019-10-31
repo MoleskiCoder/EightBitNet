@@ -266,6 +266,39 @@ namespace EightBit
 
                             dumpCount += 2;
                             break;
+                        case 4: // Negate accumulator
+                            specification = "NEG";
+                            break;
+                        case 5: // Return from interrupt
+                            switch (y)
+                            {
+                                case 1:
+                                    specification = "RETI";
+                                    break;
+                                default:
+                                    specification = "RETN";
+                                    break;
+                            }
+                            break;
+                        case 6: // Set interrupt mode
+                            switch (y)
+                            {
+                                case 0:
+                                case 1:
+                                case 4:
+                                case 5:
+                                    specification = "IM 0";
+                                    break;
+                                case 2:
+                                case 6:
+                                    specification = "IM 1";
+                                    break;
+                                case 3:
+                                case 7:
+                                    specification = "IM 2";
+                                    break;
+                            }
+                            break;
                         case 7:
                             switch (y)
                             {

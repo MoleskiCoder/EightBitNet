@@ -36,6 +36,7 @@
         private PinLevel haltLine = PinLevel.Low;
         private PinLevel baLine = PinLevel.Low;
         private PinLevel bsLine = PinLevel.Low;
+        private PinLevel rwLine = PinLevel.Low;
 
         private bool prefix10 = false;
         private bool prefix11 = false;
@@ -88,6 +89,14 @@
         public event EventHandler<EventArgs> LoweringBS;
 
         public event EventHandler<EventArgs> LoweredBS;
+
+        public event EventHandler<EventArgs> RaisingRW;
+
+        public event EventHandler<EventArgs> RaisedRW;
+
+        public event EventHandler<EventArgs> LoweringRW;
+
+        public event EventHandler<EventArgs> LoweredRW;
 
         public Register16 D { get; } = new Register16();
 
@@ -146,6 +155,8 @@
         public ref PinLevel BA => ref this.baLine;
 
         public ref PinLevel BS => ref this.bsLine;
+
+        public ref PinLevel RW => ref this.rwLine;
 
         public void Halt()
         {
@@ -321,10 +332,31 @@
             }
         }
 
+        public void RaiseRW()
+        {
+            if (this.RW.Lowered())
+            {
+                this.OnRaisingRW();
+                this.RW.Raise();
+                this.OnRaisedRW();
+            }
+        }
+
+        public void LowerRW()
+        {
+            if (this.RW.Raised())
+            {
+                this.OnLoweringRW();
+                this.RW.Lower();
+                this.OnLoweredRW();
+            }
+        }
+
         protected override void OnRaisedPOWER()
         {
             this.LowerBA();
             this.LowerBS();
+            this.LowerRW();
             base.OnRaisedPOWER();
         }
 
@@ -355,6 +387,18 @@
         protected override byte Pop() => this.PopS();
 
         protected override void Push(byte value) => this.PushS(value);
+
+        protected override void BusWrite()
+        {
+            this.LowerRW();
+            base.BusWrite();
+        }
+
+        protected override byte BusRead()
+        {
+            this.RaiseRW();
+            return base.BusRead();
+        }
 
         private void HandleHALT()
         {
@@ -425,6 +469,14 @@
         private void OnLoweringBS() => this.LoweringBS?.Invoke(this, EventArgs.Empty);
 
         private void OnLoweredBS() => this.LoweredBS?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
 
         private void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
 

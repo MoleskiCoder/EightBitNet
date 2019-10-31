@@ -31,6 +31,9 @@ namespace EightBit
 
         private PinLevel nmiLine = PinLevel.Low;
         private PinLevel m1Line = PinLevel.Low;
+        private PinLevel iorqLine = PinLevel.Low;
+        private PinLevel rdLine = PinLevel.Low;
+        private PinLevel wrLine = PinLevel.Low;
 
         private int accumulatorFlagsSet = 0;
 
@@ -60,6 +63,30 @@ namespace EightBit
         public event EventHandler<EventArgs> LoweringM1;
 
         public event EventHandler<EventArgs> LoweredM1;
+
+        public event EventHandler<EventArgs> RaisingIORQ;
+
+        public event EventHandler<EventArgs> RaisedIORQ;
+
+        public event EventHandler<EventArgs> LoweringIORQ;
+
+        public event EventHandler<EventArgs> LoweredIORQ;
+
+        public event EventHandler<EventArgs> RaisingRD;
+
+        public event EventHandler<EventArgs> RaisedRD;
+
+        public event EventHandler<EventArgs> LoweringRD;
+
+        public event EventHandler<EventArgs> LoweredRD;
+
+        public event EventHandler<EventArgs> RaisingWR;
+
+        public event EventHandler<EventArgs> RaisedWR;
+
+        public event EventHandler<EventArgs> LoweringWR;
+
+        public event EventHandler<EventArgs> LoweredWR;
 
         public byte IV { get; set; } = 0xff;
 
@@ -94,6 +121,12 @@ namespace EightBit
         public ref PinLevel NMI => ref this.nmiLine;
 
         public ref PinLevel M1 => ref this.m1Line;
+
+        public ref PinLevel IORQ => ref this.iorqLine;
+
+        public ref PinLevel RD => ref this.rdLine;
+
+        public ref PinLevel WR => ref this.wrLine;
 
         private ushort DisplacedAddress
         {
@@ -148,13 +181,69 @@ namespace EightBit
             }
         }
 
+        public virtual void RaiseIORQ()
+        {
+            if (this.IORQ.Lowered())
+            {
+                this.OnRaisingIORQ();
+                this.IORQ.Raise();
+                this.OnRaisedIORQ();
+            }
+        }
+
+        public virtual void LowerIORQ()
+        {
+            if (this.IORQ.Raised())
+            {
+                this.OnLoweringIORQ();
+                this.IORQ.Lower();
+                this.OnLoweredIORQ();
+            }
+        }
+
+        public virtual void RaiseRD()
+        {
+            if (this.RD.Lowered())
+            {
+                this.OnRaisingRD();
+                this.RD.Raise();
+                this.OnRaisedRD();
+            }
+        }
+
+        public virtual void LowerRD()
+        {
+            if (this.RD.Raised())
+            {
+                this.OnLoweringRD();
+                this.RD.Lower();
+                this.OnLoweredRD();
+            }
+        }
+
+        public virtual void RaiseWR()
+        {
+            if (this.WR.Lowered())
+            {
+                this.OnRaisingWR();
+                this.WR.Raise();
+                this.OnRaisedWR();
+            }
+        }
+
+        public virtual void LowerWR()
+        {
+            if (this.WR.Raised())
+            {
+                this.OnLoweringWR();
+                this.WR.Lower();
+                this.OnLoweredWR();
+            }
+        }
+
         public override int Execute()
         {
-            if (!(this.prefixCB && this.displaced))
-            {
-                ++this.REFRESH;
-                this.RaiseM1();
-            }
+            this.RaiseM1();
 
             var decoded = this.GetDecodedOpCode(this.OpCode);
 
@@ -165,17 +254,13 @@ namespace EightBit
             var p = decoded.P;
             var q = decoded.Q;
 
-            var prefixed = this.prefixCB || this.prefixED;
-            if (prefixed)
+            if (this.prefixCB)
             {
-                if (this.prefixCB)
-                {
-                    this.ExecuteCB(x, y, z);
-                }
-                else if (this.prefixED)
-                {
-                    this.ExecuteED(x, y, z, p, q);
-                }
+                this.ExecuteCB(x, y, z);
+            }
+            else if (this.prefixED)
+            {
+                this.ExecuteED(x, y, z, p, q);
             }
             else
             {
@@ -192,7 +277,6 @@ namespace EightBit
             if (this.Powered)
             {
                 this.displaced = this.prefixCB = this.prefixDD = this.prefixED = false;
-                this.LowerM1();
                 var handled = false;
                 if (this.RESET.Lowered())
                 {
@@ -219,6 +303,7 @@ namespace EightBit
 
                 if (!handled)
                 {
+                    this.LowerM1();
                     this.Execute(this.FetchByte());
                 }
             }
@@ -230,6 +315,9 @@ namespace EightBit
         protected override void OnRaisedPOWER()
         {
             this.RaiseM1();
+            this.RaiseIORQ();
+            this.RaiseRD();
+            this.RaiseWR();
 
             this.DisableInterrupts();
             this.IM = 0;
@@ -265,7 +353,50 @@ namespace EightBit
 
         protected virtual void OnLoweringM1() => this.LoweringM1?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweredM1() => this.LoweredM1?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredM1()
+        {
+            ++this.REFRESH;
+            this.LoweredM1?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnLoweringIORQ() => this.LoweringIORQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredIORQ() => this.LoweredIORQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisingIORQ() => this.RaisingIORQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisedIORQ() => this.RaisedIORQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweringRD() => this.LoweringRD?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredRD() => this.LoweredRD?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisingRD() => this.RaisingRD?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisedRD() => this.RaisedRD?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweringWR() => this.LoweringWR?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredWR() => this.LoweredWR?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisingWR() => this.RaisingWR?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisedWR() => this.RaisedWR?.Invoke(this, EventArgs.Empty);
+
+        protected override void BusWrite()
+        {
+            this.LowerWR();
+            base.BusWrite();
+            this.RaiseWR();
+        }
+
+        protected override byte BusRead()
+        {
+            this.LowerRD();
+            var returned = base.BusRead();
+            this.RaiseRD();
+            return returned;
+        }
 
         protected override void HandleRESET()
         {
@@ -277,18 +408,23 @@ namespace EightBit
         protected override void HandleINT()
         {
             base.HandleINT();
+            this.LowerM1();
+            this.LowerIORQ();
+            var data = this.Bus.Data;
+            this.RaiseIORQ();
+            this.RaiseM1();
             this.DisableInterrupts();
             switch (this.IM)
             {
                 case 0: // i8080 equivalent
-                    this.Execute(this.Bus.Data);
+                    this.Execute(data);
                     break;
                 case 1:
                     this.Restart(7 << 3);
                     this.Tick(13);
                     break;
                 case 2:
-                    this.Call(this.MEMPTR.Word = new Register16(this.Bus.Data, this.IV).Word);
+                    this.Call(this.MEMPTR.Word = new Register16(data, this.IV).Word);
                     this.Tick(19);
                     break;
                 default:
@@ -639,10 +775,10 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // SBC HL, rp[p]
-                                    this.SBC(this.RP(p));
+                                    this.HL2().Word = this.SBC(this.HL2(), this.RP(p));
                                     break;
                                 case 1: // ADC HL, rp[p]
-                                    this.ADC(this.RP(p));
+                                    this.HL2().Word = this.ADC(this.HL2(), this.RP(p));
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -894,6 +1030,11 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0: // NOP
+                                    if (this.prefixDD)
+                                    {
+                                        this.Tick(4);
+                                    }
+
                                     this.Tick(4);
                                     break;
                                 case 1: // EX AF AF'
@@ -936,7 +1077,7 @@ namespace EightBit
                                     this.Tick(10);
                                     break;
                                 case 1: // ADD HL,rp
-                                    this.Add(this.RP(p));
+                                    this.HL2().Word = this.Add(this.HL2(), this.RP(p));
                                     this.Tick(11);
                                     break;
                                 default:
@@ -1180,16 +1321,16 @@ namespace EightBit
                         switch (y)
                         {
                             case 0: // ADD A,r
-                                this.Add(value);
+                                this.A = this.Add(this.A, value);
                                 break;
                             case 1: // ADC A,r
-                                this.ADC(value);
+                                this.A = this.ADC(this.A, value);
                                 break;
                             case 2: // SUB r
-                                this.SUB(value);
+                                this.A = this.SUB(this.A, value);
                                 break;
                             case 3: // SBC A,r
-                                this.SBC(value);
+                                this.A = this.SBC(this.A, value);
                                 break;
                             case 4: // AND r
                                 this.AndR(value);
@@ -1275,8 +1416,11 @@ namespace EightBit
                                     {
                                         this.FetchDisplacement();
                                     }
+                                    else
+                                    {
+                                        this.LowerM1();
+                                    }
 
-                                    this.LowerM1();
                                     this.Execute(this.FetchByte());
                                     break;
                                 case 2: // OUT (n),A
@@ -1361,16 +1505,16 @@ namespace EightBit
                                 switch (y)
                                 {
                                     case 0: // ADD A,n
-                                        this.Add(operand);
+                                        this.A = this.Add(this.A, operand);
                                         break;
                                     case 1: // ADC A,n
-                                        this.ADC(operand);
+                                        this.A = this.ADC(this.A, operand);
                                         break;
                                     case 2: // SUB n
-                                        this.SUB(operand);
+                                        this.A = this.SUB(this.A, operand);
                                         break;
                                     case 3: // SBC A,n
-                                        this.SBC(operand);
+                                        this.A = this.SBC(this.A, operand);
                                         break;
                                     case 4: // AND n
                                         this.AndR(operand);
@@ -1409,6 +1553,9 @@ namespace EightBit
             this.RaiseNMI();
             this.RaiseHALT();
             this.IFF1 = false;
+            this.LowerM1();
+            var discarded = this.Bus.Data;
+            this.RaiseM1();
             this.Restart(0x66);
             this.Tick(13);
         }
@@ -1550,92 +1697,84 @@ namespace EightBit
             }
         }
 
-        private void SBC(Register16 value)
+        private ushort SBC(Register16 operand, Register16 value)
         {
-            var hl2 = this.HL2();
-            this.MEMPTR.Word = hl2.Word;
+            var subtraction = operand.Word - value.Word - (this.F & (byte)StatusBits.CF);
+            this.intermediate.Word = (ushort)subtraction;
 
-            var beforeNegative = this.MEMPTR.High & (byte)StatusBits.SF;
-            var valueNegative = value.High & (byte)StatusBits.SF;
-
-            var result = this.MEMPTR.Word - value.Word - (this.F & (byte)StatusBits.CF);
-            hl2.Word = (ushort)result;
-
-            var afterNegative = hl2.High & (byte)StatusBits.SF;
-
-            this.F = SetBit(this.F, StatusBits.SF, afterNegative);
-            this.F = ClearBit(this.F, StatusBits.ZF, hl2.Word);
-            this.F = AdjustHalfCarrySub(this.F, this.MEMPTR.High, value.High, hl2.High);
-            this.F = AdjustOverflowSub(this.F, beforeNegative, valueNegative, afterNegative);
             this.F = SetBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustXY(this.F, hl2.High);
+            this.F = ClearBit(this.F, StatusBits.ZF, this.intermediate.Word);
+            this.F = SetBit(this.F, StatusBits.CF, subtraction & (int)Bits.Bit16);
+            this.F = AdjustHalfCarrySub(this.F, operand.High, value.High, this.intermediate.High);
+            this.F = AdjustXY(this.F, this.intermediate.High);
 
-            ++this.MEMPTR.Word;
-        }
-
-        private void ADC(Register16 value)
-        {
-            var hl2 = this.HL2();
-            this.MEMPTR.Word = hl2.Word;
-
-            var beforeNegative = this.MEMPTR.High & (byte)StatusBits.SF;
+            var beforeNegative = operand.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
-
-            var result = this.MEMPTR.Word + value.Word + (this.F & (byte)StatusBits.CF);
-            hl2.Word = (ushort)result;
-
-            var afterNegative = hl2.High & (byte)StatusBits.SF;
+            var afterNegative = this.intermediate.High & (byte)StatusBits.SF;
 
             this.F = SetBit(this.F, StatusBits.SF, afterNegative);
-            this.F = ClearBit(this.F, StatusBits.ZF, hl2.Word);
-            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, hl2.High);
+            this.F = AdjustOverflowSub(this.F, beforeNegative, valueNegative, afterNegative);
+
+            this.MEMPTR.Word = (ushort)(operand.Word + 1);
+
+            return this.intermediate.Word;
+        }
+
+        private ushort ADC(Register16 operand ,Register16 value)
+        {
+            this.Add(operand, value, this.F & (byte)StatusBits.CF); // Leaves result in intermediate anyway
+            this.F = ClearBit(this.F, StatusBits.ZF, this.intermediate.Word);
+
+            var beforeNegative = operand.High & (byte)StatusBits.SF;
+            var valueNegative = value.High & (byte)StatusBits.SF;
+            var afterNegative = this.intermediate.High & (byte)StatusBits.SF;
+
+            this.F = SetBit(this.F, StatusBits.SF, afterNegative);
             this.F = AdjustOverflowAdd(this.F, beforeNegative, valueNegative, afterNegative);
-            this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustXY(this.F, hl2.High);
 
-            ++this.MEMPTR.Word;
+            return this.intermediate.Word;
         }
 
-        private void Add(Register16 value)
+        private ushort Add(Register16 operand, Register16 value, int carry = 0)
         {
-            var hl2 = this.HL2();
-            this.MEMPTR.Word = hl2.Word;
-
-            var result = this.MEMPTR.Word + value.Word;
-
-            hl2.Word = (ushort)result;
+            var addition = operand.Word + value.Word + carry;
+            this.intermediate.Word = (ushort)addition;
 
             this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, hl2.High);
-            this.F = AdjustXY(this.F, hl2.High);
+            this.F = SetBit(this.F, StatusBits.CF, addition & (int)Bits.Bit16);
+            this.F = AdjustHalfCarryAdd(this.F, operand.High, value.High, this.intermediate.High);
+            this.F = AdjustXY(this.F, this.intermediate.High);
 
-            ++this.MEMPTR.Word;
+            this.MEMPTR.Word = (ushort)(operand.Word + 1);
+
+            return this.intermediate.Word;
         }
 
-        private void Add(byte value, int carry = 0)
+        private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.intermediate.Word = (ushort)(this.A + value + carry);
+            this.intermediate.Word = (ushort)(operand + value + carry);
+            var result = this.intermediate.Low;
 
-            this.F = AdjustHalfCarryAdd(this.F, this.A, value, this.intermediate.Low);
-            this.F = AdjustOverflowAdd(this.F, this.A, value, this.intermediate.Low);
+            this.F = AdjustHalfCarryAdd(this.F, operand, value, result);
+            this.F = AdjustOverflowAdd(this.F, operand, value, result);
 
             this.F = ClearBit(this.F, StatusBits.NF);
             this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
-            this.F = AdjustSZXY(this.F, this.A = this.intermediate.Low);
+            this.F = AdjustSZXY(this.F, result);
+
+            return result;
         }
 
-        private void ADC(byte value) => this.Add(value, this.F & (byte)StatusBits.CF);
+        private byte ADC(byte operand, byte value) => this.Add(operand, value, this.F & (byte)StatusBits.CF);
 
-        private void SUB(byte value, int carry = 0)
+        private byte SUB(byte operand, byte value, int carry = 0)
         {
-            this.A = this.Subtract(this.A, value, carry);
-            this.F = AdjustXY(this.F, this.A);
+            var subtraction = this.Subtract(operand, value, carry);
+            this.F = AdjustXY(this.F, subtraction);
+            return subtraction;
         }
 
-        private void SBC(byte value) => this.SUB(value, this.F & (byte)StatusBits.CF);
+        private byte SBC(byte operand, byte value) => this.SUB(operand, value, this.F & (byte)StatusBits.CF);
 
         private void AndR(byte value)
         {
@@ -2002,7 +2141,14 @@ namespace EightBit
             ++this.MEMPTR.Low;
         }
 
-        private void WritePort() => this.ports.Write(this.Bus.Address.Low, this.Bus.Data);
+        private void WritePort()
+        {
+            this.LowerIORQ();
+            this.LowerWR();
+            this.ports.Write(this.Bus.Address.Low, this.Bus.Data);
+            this.RaiseWR();
+            this.RaiseIORQ();
+        }
 
         private byte ReadPort(byte port)
         {
@@ -2011,6 +2157,14 @@ namespace EightBit
             return this.ReadPort();
         }
 
-        private byte ReadPort() => this.Bus.Data = this.ports.Read(this.Bus.Address.Low);
+        private byte ReadPort()
+        {
+            this.LowerIORQ();
+            this.LowerRD();
+            var returned = this.Bus.Data = this.ports.Read(this.Bus.Address.Low);
+            this.RaiseRD();
+            this.RaiseIORQ();
+            return returned;
+        }
     }
 }
