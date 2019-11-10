@@ -31,6 +31,7 @@ namespace EightBit
 
         private PinLevel nmiLine = PinLevel.Low;
         private PinLevel m1Line = PinLevel.Low;
+        private PinLevel mreqLine = PinLevel.Low;
         private PinLevel iorqLine = PinLevel.Low;
         private PinLevel rdLine = PinLevel.Low;
         private PinLevel wrLine = PinLevel.Low;
@@ -63,6 +64,14 @@ namespace EightBit
         public event EventHandler<EventArgs> LoweringM1;
 
         public event EventHandler<EventArgs> LoweredM1;
+
+        public event EventHandler<EventArgs> RaisingMREQ;
+
+        public event EventHandler<EventArgs> RaisedMREQ;
+
+        public event EventHandler<EventArgs> LoweringMREQ;
+
+        public event EventHandler<EventArgs> LoweredMREQ;
 
         public event EventHandler<EventArgs> RaisingIORQ;
 
@@ -122,6 +131,8 @@ namespace EightBit
 
         public ref PinLevel M1 => ref this.m1Line;
 
+        public ref PinLevel MREQ => ref this.mreqLine;
+
         public ref PinLevel IORQ => ref this.iorqLine;
 
         public ref PinLevel RD => ref this.rdLine;
@@ -178,6 +189,26 @@ namespace EightBit
                 this.OnLoweringM1();
                 this.M1.Lower();
                 this.OnLoweredM1();
+            }
+        }
+
+        public virtual void RaiseMREQ()
+        {
+            if (this.MREQ.Lowered())
+            {
+                this.OnRaisingMREQ();
+                this.MREQ.Raise();
+                this.OnRaisedMREQ();
+            }
+        }
+
+        public virtual void LowerMREQ()
+        {
+            if (this.MREQ.Raised())
+            {
+                this.OnLoweringMREQ();
+                this.MREQ.Lower();
+                this.OnLoweredMREQ();
             }
         }
 
@@ -243,8 +274,6 @@ namespace EightBit
 
         public override int Execute()
         {
-            this.RaiseM1();
-
             var decoded = this.GetDecodedOpCode(this.OpCode);
 
             var x = decoded.X;
@@ -291,20 +320,21 @@ namespace EightBit
                 else if (this.INT.Lowered())
                 {
                     this.RaiseHALT();
-                    if (handled = this.IFF1)
+                    if (this.IFF1)
                     {
                         this.HandleINT();
+                        handled = true;
                     }
                 }
                 else if (this.HALT.Lowered())
                 {
                     this.Execute(0); // NOP
+                    handled = true;
                 }
 
                 if (!handled)
                 {
-                    this.LowerM1();
-                    this.Execute(this.FetchByte());
+                    this.Execute(this.FetchInitialOpCode());
                 }
             }
 
@@ -315,6 +345,7 @@ namespace EightBit
         protected override void OnRaisedPOWER()
         {
             this.RaiseM1();
+            this.RaiseMREQ();
             this.RaiseIORQ();
             this.RaiseRD();
             this.RaiseWR();
@@ -325,10 +356,10 @@ namespace EightBit
             this.REFRESH = new RefreshRegister(0);
             this.IV = (byte)Mask.Mask8;
 
-            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
-
             this.ExxAF();
             this.Exx();
+
+            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
 
             this.prefixCB = this.prefixDD = this.prefixED = false;
 
@@ -359,6 +390,14 @@ namespace EightBit
             this.LoweredM1?.Invoke(this, EventArgs.Empty);
         }
 
+        protected virtual void OnLoweringMREQ() => this.LoweringMREQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredMREQ() => this.LoweredMREQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisingMREQ() => this.RaisingMREQ?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisedMREQ() => this.RaisedMREQ?.Invoke(this, EventArgs.Empty);
+
         protected virtual void OnLoweringIORQ() => this.LoweringIORQ?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweredIORQ() => this.LoweredIORQ?.Invoke(this, EventArgs.Empty);
@@ -385,16 +424,20 @@ namespace EightBit
 
         protected override void BusWrite()
         {
+            this.LowerMREQ();
             this.LowerWR();
             base.BusWrite();
             this.RaiseWR();
+            this.RaiseMREQ();
         }
 
         protected override byte BusRead()
         {
+            this.LowerMREQ();
             this.LowerRD();
             var returned = base.BusRead();
             this.RaiseRD();
+            this.RaiseMREQ();
             return returned;
         }
 
@@ -1415,13 +1458,13 @@ namespace EightBit
                                     if (this.displaced)
                                     {
                                         this.FetchDisplacement();
+                                        this.Execute(this.FetchByte());
                                     }
                                     else
                                     {
-                                        this.LowerM1();
+                                        this.Execute(this.FetchInitialOpCode());
                                     }
 
-                                    this.Execute(this.FetchByte());
                                     break;
                                 case 2: // OUT (n),A
                                     this.WritePort(this.FetchByte());
@@ -1476,18 +1519,15 @@ namespace EightBit
                                             break;
                                         case 1: // DD prefix
                                             this.displaced = this.prefixDD = true;
-                                            this.LowerM1();
-                                            this.Execute(this.FetchByte());
+                                            this.Execute(this.FetchInitialOpCode());
                                             break;
                                         case 2: // ED prefix
                                             this.prefixED = true;
-                                            this.LowerM1();
-                                            this.Execute(this.FetchByte());
+                                            this.Execute(this.FetchInitialOpCode());
                                             break;
                                         case 3: // FD prefix
                                             this.displaced = true;
-                                            this.LowerM1();
-                                            this.Execute(this.FetchByte());
+                                            this.Execute(this.FetchInitialOpCode());
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1561,6 +1601,14 @@ namespace EightBit
         }
 
         private void FetchDisplacement() => this.displacement = (sbyte)this.FetchByte();
+
+        private byte FetchInitialOpCode()
+        {
+            this.LowerM1();
+            var returned = this.FetchByte();
+            this.RaiseM1();
+            return returned;
+        }
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
