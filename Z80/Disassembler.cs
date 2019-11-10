@@ -55,6 +55,8 @@ namespace EightBit
                 + $"B={b:x2} C={c:x2} "
                 + $"D={d:x2} E={e:x2} "
                 + $"H={h:x2} L={l:x2} "
+                + $"IX={cpu.IX.Word:x4} "
+                + $"IY={cpu.IY.Word:x4} "
                 + $"I={i:x2} R={(byte)r:x2} "
                 + $"IM={im} "
                 + $"IFF1={(cpu.IFF1 ? 1 : 0)} "
