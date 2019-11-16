@@ -442,15 +442,15 @@ namespace EightBit
 
         protected virtual void OnRaisingM1() => this.RaisingM1?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnRaisedM1() => this.RaisedM1?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedM1()
+        {
+            ++this.REFRESH;
+            this.RaisedM1?.Invoke(this, EventArgs.Empty);
+        }
 
         protected virtual void OnLoweringM1() => this.LoweringM1?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweredM1()
-        {
-            ++this.REFRESH;
-            this.LoweredM1?.Invoke(this, EventArgs.Empty);
-        }
+        protected virtual void OnLoweredM1() => this.LoweredM1?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnRaisingRFSH() => this.RaisingRFSH?.Invoke(this, EventArgs.Empty);
 
