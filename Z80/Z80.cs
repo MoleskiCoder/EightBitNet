@@ -31,6 +31,7 @@ namespace EightBit
 
         private PinLevel nmiLine = PinLevel.Low;
         private PinLevel m1Line = PinLevel.Low;
+        private PinLevel rfshLine = PinLevel.Low;
         private PinLevel mreqLine = PinLevel.Low;
         private PinLevel iorqLine = PinLevel.Low;
         private PinLevel rdLine = PinLevel.Low;
@@ -64,6 +65,14 @@ namespace EightBit
         public event EventHandler<EventArgs> LoweringM1;
 
         public event EventHandler<EventArgs> LoweredM1;
+
+        public event EventHandler<EventArgs> RaisingRFSH;
+
+        public event EventHandler<EventArgs> RaisedRFSH;
+
+        public event EventHandler<EventArgs> LoweringRFSH;
+
+        public event EventHandler<EventArgs> LoweredRFSH;
 
         public event EventHandler<EventArgs> RaisingMREQ;
 
@@ -125,11 +134,28 @@ namespace EightBit
 
         public byte IYL { get => this.IY.Low; set => this.IY.Low = value; }
 
+        // ** From the Z80 CPU User Manual
+        // Memory Refresh(R) Register.The Z80 CPU contains a memory refresh counter,
+        // enabling dynamic memories to be used with the same ease as static memories.Seven bits
+        // of this 8-bit register are automatically incremented after each instruction fetch.The eighth
+        // bit remains as programmed, resulting from an LD R, A instruction. The data in the refresh
+        // counter is sent out on the lower portion of the address bus along with a refresh control
+        // signal while the CPU is decoding and executing the fetched instruction. This mode of refresh
+        // is transparent to the programmer and does not slow the CPU operation.The programmer
+        // can load the R register for testing purposes, but this register is normally not used by the
+        // programmer. During refresh, the contents of the I Register are placed on the upper eight
+        // bits of the address bus.
         public ref RefreshRegister REFRESH => ref this.refresh;
 
         public ref PinLevel NMI => ref this.nmiLine;
 
         public ref PinLevel M1 => ref this.m1Line;
+
+        // ** From the Z80 CPU User Manual
+        // RFSH.Refresh(output, active Low). RFSH, together with MREQ, indicates that the lower
+        // seven bits of the system’s address bus can be used as a refresh address to the system’s
+        // dynamic memories.
+        public ref PinLevel RFSH => ref this.rfshLine;
 
         public ref PinLevel MREQ => ref this.mreqLine;
 
@@ -189,6 +215,26 @@ namespace EightBit
                 this.OnLoweringM1();
                 this.M1.Lower();
                 this.OnLoweredM1();
+            }
+        }
+
+        public virtual void RaiseRFSH()
+        {
+            if (this.RFSH.Lowered())
+            {
+                this.OnRaisingRFSH();
+                this.RFSH.Raise();
+                this.OnRaisedRFSH();
+            }
+        }
+
+        public virtual void LowerRFSH()
+        {
+            if (this.RFSH.Raised())
+            {
+                this.OnLoweringRFSH();
+                this.RFSH.Lower();
+                this.OnLoweredRFSH();
             }
         }
 
@@ -328,6 +374,21 @@ namespace EightBit
                 }
                 else if (this.HALT.Lowered())
                 {
+                    // ** From the Z80 CPU User Manual
+                    // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
+                    // is received(either a nonmaskable or a maskable interrupt while the interrupt flip-flop is
+                    // enabled). The two interrupt lines are sampled with the rising clock edge during each T4
+                    // state as depicted in Figure 11.If a nonmaskable interrupt is received or a maskable interrupt
+                    // is received and the interrupt enable flip-flop is set, then the HALT state is exited on
+                    // the next rising clock edge.The following cycle is an interrupt acknowledge cycle corresponding
+                    // to the type of interrupt that was received.If both are received at this time, then
+                    // the nonmaskable interrupt is acknowledged because it is the highest priority.The purpose
+                    // of executing NOP instructions while in the HALT state is to keep the memory refresh signals
+                    // active.Each cycle in the HALT state is a normal M1(fetch) cycle except that the data
+                    // received from the memory is ignored and an NOP instruction is forced internally to the
+                    // CPU.The HALT acknowledge signal is active during this time indicating that the processor
+                    // is in the HALT state.
+                    var discarded = this.ReadInitialOpCode();
                     this.Execute(0); // NOP
                     handled = true;
                 }
@@ -389,6 +450,14 @@ namespace EightBit
             ++this.REFRESH;
             this.LoweredM1?.Invoke(this, EventArgs.Empty);
         }
+
+        protected virtual void OnRaisingRFSH() => this.RaisingRFSH?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisedRFSH() => this.RaisedRFSH?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweringRFSH() => this.LoweringRFSH?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredRFSH() => this.LoweredRFSH?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweringMREQ() => this.LoweringMREQ?.Invoke(this, EventArgs.Empty);
 
@@ -731,10 +800,10 @@ namespace EightBit
                     }
 
                     this.F = AdjustSZP(this.F, operand);
-                    this.Tick(8);
+                    this.Tick(4);
                     break;
                 case 1: // BIT y, r[z]
-                    this.Tick(8);
+                    this.Tick(4);
                     this.BIT(y, operand);
                     if (direct)
                     {
@@ -748,11 +817,11 @@ namespace EightBit
 
                     break;
                 case 2: // RES y, r[z]
-                    this.Tick(8);
+                    this.Tick(4);
                     operand = RES(y, operand);
                     break;
                 case 3: // SET y, r[z]
-                    this.Tick(8);
+                    this.Tick(4);
                     operand = SET(y, operand);
                     break;
                 default:
@@ -788,7 +857,6 @@ namespace EightBit
             {
                 case 0:
                 case 3: // Invalid instruction, equivalent to NONI followed by NOP
-                    this.Tick(8);
                     break;
                 case 1:
                     switch (z)
@@ -804,7 +872,7 @@ namespace EightBit
 
                             this.F = AdjustSZPXY(this.F, this.Bus.Data);
                             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
-                            this.Tick(12);
+                            this.Tick(4);
                             break;
                         case 1: // Output to port with 16-bit address
                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
@@ -812,7 +880,7 @@ namespace EightBit
                             this.Bus.Data = y != 6 ? this.R(y) : (byte)0;
 
                             this.WritePort();
-                            this.Tick(12);
+                            this.Tick(4);
                             break;
                         case 2: // 16-bit add/subtract with carry
                             switch (q)
@@ -827,7 +895,7 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(15);
+                            this.Tick(7);
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
                             this.Bus.Address.Word = this.FetchWord().Word;
@@ -843,11 +911,10 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(20);
+                            this.Tick(12);
                             break;
                         case 4: // Negate accumulator
                             this.NEG();
-                            this.Tick(8);
                             break;
                         case 5: // Return from interrupt
                             switch (y)
@@ -860,7 +927,7 @@ namespace EightBit
                                     break;
                             }
 
-                            this.Tick(14);
+                            this.Tick(6);
                             break;
                         case 6: // Set interrupt mode
                             switch (y)
@@ -883,42 +950,40 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(8);
                             break;
                         case 7: // Assorted ops
                             switch (y)
                             {
                                 case 0: // LD I,A
                                     this.IV = this.A;
-                                    this.Tick(9);
+                                    this.Tick();
                                     break;
                                 case 1: // LD R,A
                                     this.REFRESH = this.A;
-                                    this.Tick(9);
+                                    this.Tick();
                                     break;
                                 case 2: // LD A,I
                                     this.F = AdjustSZXY(this.F, this.A = this.IV);
                                     this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
-                                    this.Tick(9);
+                                    this.Tick();
                                     break;
                                 case 3: // LD A,R
                                     this.F = AdjustSZXY(this.F, this.A = this.REFRESH);
                                     this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
-                                    this.Tick(9);
+                                    this.Tick();
                                     break;
                                 case 4: // RRD
                                     this.RRD();
-                                    this.Tick(18);
+                                    this.Tick(10);
                                     break;
                                 case 5: // RLD
                                     this.RLD();
-                                    this.Tick(18);
+                                    this.Tick(10);
                                     break;
                                 case 6: // NOP
                                 case 7: // NOP
-                                    this.Tick(4);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1055,7 +1120,7 @@ namespace EightBit
                             break;
                     }
 
-                    this.Tick(16);
+                    this.Tick(8);
                     break;
             }
         }
@@ -1073,16 +1138,9 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0: // NOP
-                                    if (this.prefixDD)
-                                    {
-                                        this.Tick(4);
-                                    }
-
-                                    this.Tick(4);
                                     break;
                                 case 1: // EX AF AF'
                                     this.ExxAF();
-                                    this.Tick(4);
                                     break;
                                 case 2: // DJNZ d
                                     if (this.JumpRelativeConditional(--this.B != 0))
@@ -1090,11 +1148,11 @@ namespace EightBit
                                         this.Tick(5);
                                     }
 
-                                    this.Tick(8);
+                                    this.Tick(4);
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative((sbyte)this.FetchByte());
-                                    this.Tick(12);
+                                    this.Tick(8);
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
@@ -1105,7 +1163,7 @@ namespace EightBit
                                         this.Tick(5);
                                     }
 
-                                    this.Tick(5);
+                                    this.Tick(3);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1117,11 +1175,11 @@ namespace EightBit
                             {
                                 case 0: // LD rp,nn
                                     this.RP(p).Word = this.FetchWord().Word;
-                                    this.Tick(10);
+                                    this.Tick(6);
                                     break;
                                 case 1: // ADD HL,rp
                                     this.HL2().Word = this.Add(this.HL2(), this.RP(p));
-                                    this.Tick(11);
+                                    this.Tick(7);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1139,26 +1197,26 @@ namespace EightBit
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.BusWrite();
-                                            this.Tick(7);
+                                            this.Tick(3);
                                             break;
                                         case 1: // LD (DE),A
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.BusWrite();
-                                            this.Tick(7);
+                                            this.Tick(3);
                                             break;
                                         case 2: // LD (nn),HL
                                             this.Bus.Address.Word = this.FetchWord().Word;
                                             this.SetWord(this.HL2());
-                                            this.Tick(16);
+                                            this.Tick(12);
                                             break;
                                         case 3: // LD (nn),A
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.BusWrite();
-                                            this.Tick(13);
+                                            this.Tick(9);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1172,24 +1230,24 @@ namespace EightBit
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                                             ++this.MEMPTR.Word;
                                             this.A = this.BusRead();
-                                            this.Tick(7);
+                                            this.Tick(3);
                                             break;
                                         case 1: // LD A,(DE)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
                                             this.A = this.BusRead();
-                                            this.Tick(7);
+                                            this.Tick(3);
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.Bus.Address.Word = this.FetchWord().Word;
                                             this.HL2().Word = this.GetWord().Word;
-                                            this.Tick(16);
+                                            this.Tick(12);
                                             break;
                                         case 3: // LD A,(nn)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
                                             this.A = this.BusRead();
-                                            this.Tick(13);
+                                            this.Tick(9);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1214,7 +1272,7 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(6);
+                            this.Tick(2);
                             break;
                         case 4: // 8-bit INC
                             if (this.displaced && memoryY)
@@ -1223,7 +1281,6 @@ namespace EightBit
                             }
 
                             this.R(y, this.Increment(this.R(y)));
-                            this.Tick(4);
                             break;
                         case 5: // 8-bit DEC
                             if (memoryY)
@@ -1236,7 +1293,6 @@ namespace EightBit
                             }
 
                             this.R(y, this.Decrement(this.R(y)));
-                            this.Tick(4);
                             break;
                         case 6: // 8-bit load immediate
                             if (memoryY)
@@ -1249,7 +1305,7 @@ namespace EightBit
                             }
 
                             this.R(y, this.FetchByte());  // LD r,n
-                            this.Tick(7);
+                            this.Tick(3);
                             break;
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
@@ -1282,7 +1338,6 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(4);
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
@@ -1347,7 +1402,6 @@ namespace EightBit
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                     }
 
-                    this.Tick(4);
                     break;
                 case 2:
                     { // Operate on accumulator and register/memory location
@@ -1391,7 +1445,6 @@ namespace EightBit
                                 throw new NotSupportedException("Invalid operation mode");
                         }
 
-                        this.Tick(4);
                         break;
                     }
 
@@ -1404,33 +1457,30 @@ namespace EightBit
                                 this.Tick(6);
                             }
 
-                            this.Tick(5);
+                            this.Tick();
                             break;
                         case 1: // POP & various ops
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
                                     this.RP2(p).Word = this.PopWord().Word;
-                                    this.Tick(10);
+                                    this.Tick(6);
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // RET
                                             this.Return();
-                                            this.Tick(10);
+                                            this.Tick(6);
                                             break;
                                         case 1: // EXX
                                             this.Exx();
-                                            this.Tick(4);
                                             break;
                                         case 2: // JP HL
                                             this.Jump(this.HL2().Word);
-                                            this.Tick(4);
                                             break;
                                         case 3: // LD SP,HL
                                             this.SP.Word = this.HL2().Word;
-                                            this.Tick(4);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1444,14 +1494,14 @@ namespace EightBit
                             break;
                         case 2: // Conditional jump
                             this.JumpConditionalFlag(y);
-                            this.Tick(10);
+                            this.Tick(6);
                             break;
                         case 3: // Assorted operations
                             switch (y)
                             {
                                 case 0: // JP nn
                                     this.Jump(this.MEMPTR.Word = this.FetchWord().Word);
-                                    this.Tick(10);
+                                    this.Tick(6);
                                     break;
                                 case 1: // CB prefix
                                     this.prefixCB = true;
@@ -1468,27 +1518,24 @@ namespace EightBit
                                     break;
                                 case 2: // OUT (n),A
                                     this.WritePort(this.FetchByte());
-                                    this.Tick(11);
+                                    this.Tick(7);
                                     break;
                                 case 3: // IN A,(n)
                                     this.A = this.ReadPort(this.FetchByte());
-                                    this.Tick(11);
+                                    this.Tick(7);
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL2());
-                                    this.Tick(19);
+                                    this.Tick(15);
                                     break;
                                 case 5: // EX DE,HL
                                     (this.DE.Word, this.HL.Word) = (this.HL.Word, this.DE.Word);
-                                    this.Tick(4);
                                     break;
                                 case 6: // DI
                                     this.DisableInterrupts();
-                                    this.Tick(4);
                                     break;
                                 case 7: // EI
                                     this.EnableInterrupts();
-                                    this.Tick(4);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1501,21 +1548,21 @@ namespace EightBit
                                 this.Tick(7);
                             }
 
-                            this.Tick(10);
+                            this.Tick(6);
                             break;
                         case 5: // PUSH & various ops
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
                                     this.PushWord(this.RP2(p));
-                                    this.Tick(11);
+                                    this.Tick(7);
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // CALL nn
                                             this.Call(this.MEMPTR.Word = this.FetchWord().Word);
-                                            this.Tick(17);
+                                            this.Tick(13);
                                             break;
                                         case 1: // DD prefix
                                             this.displaced = this.prefixDD = true;
@@ -1572,13 +1619,13 @@ namespace EightBit
                                         throw new NotSupportedException("Invalid operation mode");
                                 }
 
-                                this.Tick(7);
+                                this.Tick(3);
                                 break;
                             }
 
                         case 7: // Restart: RST y * 8
                             this.Restart((byte)(y << 3));
-                            this.Tick(11);
+                            this.Tick(7);
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
@@ -1604,9 +1651,37 @@ namespace EightBit
 
         private byte FetchInitialOpCode()
         {
+            var returned = this.ReadInitialOpCode();
+            ++this.PC.Word;
+            return returned;
+        }
+
+        // ** From the Z80 CPU User Manual
+        // Figure 5 depicts the timing during an M1 (op code fetch) cycle. The Program Counter is
+        // placed on the address bus at the beginning of the M1 cycle. One half clock cycle later, the
+        // MREQ signal goes active. At this time, the address to memory has had time to stabilize so
+        // that the falling edge of MREQ can be used directly as a chip enable clock to dynamic
+        // memories. The RD line also goes active to indicate that the memory read data should be
+        // enabled onto the CPU data bus. The CPU samples the data from the memory space on the
+        // data bus with the rising edge of the clock of state T3, and this same edge is used by the
+        // CPU to turn off the RD and MREQ signals. As a result, the data is sampled by the CPU
+        // before the RD signal becomes inactive. Clock states T3 and T4 of a fetch cycle are used to
+        // refresh dynamic memories. The CPU uses this time to decode and execute the fetched
+        // instruction so that no other concurrent operation can be performed.
+        private byte ReadInitialOpCode()
+        {
             this.LowerM1();
-            var returned = this.FetchByte();
+            var returned = this.BusRead(this.PC.Word);
             this.RaiseM1();
+            this.Tick(2);
+            this.Bus.Address.Low = this.REFRESH;
+            this.Bus.Address.High = this.IV;
+            this.LowerRFSH();
+            this.LowerMREQ();
+            this.Tick();
+            this.RaiseMREQ();
+            this.RaiseRFSH();
+            this.Tick();
             return returned;
         }
 
