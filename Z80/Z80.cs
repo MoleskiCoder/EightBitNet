@@ -365,6 +365,7 @@ namespace EightBit
                 }
                 else if (this.INT.Lowered())
                 {
+                    this.RaiseINT();
                     this.RaiseHALT();
                     if (this.IFF1)
                     {
