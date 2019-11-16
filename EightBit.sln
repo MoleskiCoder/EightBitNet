@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.329
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EightBit", "EightBit\EightBit.csproj", "{6EBF8857-62A3-4EF4-AF21-C1844031D7E4}"
 EndProject
@@ -34,6 +34,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse", "Fuse\Fuse.csproj", "{28E65032-5DFF-406F-9385-0EE1422A7F4A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LR35902.BlarggTest", "LR35902\LR35902.BlarggTest\LR35902.BlarggTest.csproj", "{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Z80.FuseTest", "Z80\Z80.FuseTest\Z80.FuseTest.csproj", "{0233FF6C-DB1A-4353-8E42-D22717770226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -237,6 +239,18 @@ Global
 		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x64.Build.0 = Release|Any CPU
 		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x86.ActiveCfg = Release|Any CPU
 		{DDFC8E91-B9EE-41DC-8FBD-09198AB01C6C}.Release|x86.Build.0 = Release|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Debug|x64.Build.0 = Debug|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Debug|x86.Build.0 = Debug|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Release|x64.ActiveCfg = Release|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Release|x64.Build.0 = Release|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Release|x86.ActiveCfg = Release|Any CPU
+		{0233FF6C-DB1A-4353-8E42-D22717770226}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
