@@ -337,12 +337,6 @@ namespace EightBit
             }
         }
 
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.startup = StartupCondition.ColdStart;
-        }
-
         public void MarkTransmitComplete()
         {
             this.statusTDRE = this.CTS.Lowered();
@@ -381,6 +375,12 @@ namespace EightBit
             returned += (value & (byte)StatusRegister.STATUS_RDRF) != 0 ? "RDRF " : "- ";
             returned += ") ";
             return returned;
+        }
+
+        protected override void OnRaisedPOWER()
+        {
+            this.startup = StartupCondition.ColdStart;
+            base.OnRaisedPOWER();
         }
 
         protected override void OnTicked()

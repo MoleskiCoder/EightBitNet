@@ -23,6 +23,7 @@ namespace EightBit
         private PinLevel soLine = PinLevel.Low;
         private PinLevel syncLine = PinLevel.Low;
         private PinLevel rdyLine = PinLevel.Low;
+        private PinLevel rwLine = PinLevel.Low;
 
         public M6502(Bus bus)
         : base(bus)
@@ -65,6 +66,14 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredRDY;
 
+        public event EventHandler<EventArgs> RaisingRW;
+
+        public event EventHandler<EventArgs> RaisedRW;
+
+        public event EventHandler<EventArgs> LoweringRW;
+
+        public event EventHandler<EventArgs> LoweredRW;
+
         public ref PinLevel NMI => ref this.nmiLine;
 
         public ref PinLevel SO => ref this.soLine;
@@ -72,6 +81,8 @@ namespace EightBit
         public ref PinLevel SYNC => ref this.syncLine;
 
         public ref PinLevel RDY => ref this.rdyLine;
+
+        public ref PinLevel RW => ref this.rwLine;
 
         public byte X { get; set; } = 0;
 
@@ -95,57 +106,84 @@ namespace EightBit
 
         private int Carry => this.P & (byte)StatusBits.CF;
 
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.X = (byte)Bits.Bit7;
-            this.Y = 0;
-            this.A = 0;
-            this.P = (byte)StatusBits.RF;
-            this.S = (byte)Mask.Mask8;
-            this.LowerSYNC();
-        }
-
         public virtual void RaiseNMI()
         {
-            this.OnRaisingNMI();
-            this.NMI.Raise();
-            this.OnRaisedNMI();
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
         }
 
         public virtual void LowerNMI()
         {
-            this.OnLoweringNMI();
-            this.NMI.Lower();
-            this.OnLoweredNMI();
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
         }
 
         public virtual void RaiseSO()
         {
-            this.OnRaisingSO();
-            this.SO.Raise();
-            this.OnRaisedSO();
+            if (this.SO.Lowered())
+            {
+                this.OnRaisingSO();
+                this.SO.Raise();
+                this.OnRaisedSO();
+            }
         }
 
         public virtual void LowerSO()
         {
-            this.OnLoweringSO();
-            this.SO.Lower();
-            this.OnLoweredSO();
+            if (this.SO.Raised())
+            {
+                this.OnLoweringSO();
+                this.SO.Lower();
+                this.OnLoweredSO();
+            }
         }
 
         public virtual void RaiseRDY()
         {
-            this.OnRaisingRDY();
-            this.RDY.Raise();
-            this.OnRaisedRDY();
+            if (this.RDY.Lowered())
+            {
+                this.OnRaisingRDY();
+                this.RDY.Raise();
+                this.OnRaisedRDY();
+            }
         }
 
         public virtual void LowerRDY()
         {
-            this.OnLoweringRDY();
-            this.RDY.Lower();
-            this.OnLoweredRDY();
+            if (this.RDY.Raised())
+            {
+                this.OnLoweringRDY();
+                this.RDY.Lower();
+                this.OnLoweredRDY();
+            }
+        }
+
+        public virtual void RaiseRW()
+        {
+            if (this.RW.Lowered())
+            {
+                this.OnRaisingRW();
+                this.RW.Raise();
+                this.OnRaisedRW();
+            }
+        }
+
+        public virtual void LowerRW()
+        {
+            if (this.RW.Raised())
+            {
+                this.OnLoweringRW();
+                this.RW.Lower();
+                this.OnLoweredRW();
+            }
         }
 
         public override int Execute()
@@ -444,6 +482,7 @@ namespace EightBit
                 if (this.RDY.Raised())
                 {
                     this.LowerSYNC();    // Instruction fetch beginning
+                    this.RaiseRW();
                     this.OpCode = this.Bus.Read(this.PC.Word++);  // can't use fetchByte
                     if (this.RESET.Lowered())
                     {
@@ -502,6 +541,26 @@ namespace EightBit
 
         protected virtual void OnLoweredRDY() => this.LoweredRDY?.Invoke(this, EventArgs.Empty);
 
+        protected virtual void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
+
+        protected virtual void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
+
+        protected override void OnRaisedPOWER()
+        {
+            this.X = (byte)Bits.Bit7;
+            this.Y = 0;
+            this.A = 0;
+            this.P = (byte)StatusBits.RF;
+            this.S = (byte)Mask.Mask8;
+            this.LowerSYNC();
+            this.LowerRW();
+            base.OnRaisedPOWER();
+        }
+
         protected override byte Pop() => this.BusRead(++this.S, 1);
 
         protected override void Push(byte value) => this.BusWrite(this.S--, 1, value);
@@ -537,12 +596,14 @@ namespace EightBit
         protected override sealed void BusWrite()
         {
             this.Tick();
+            this.LowerRW();
             base.BusWrite();
         }
 
         protected override sealed byte BusRead()
         {
             this.Tick();
+            this.RaiseRW();
             return base.BusRead();
         }
 

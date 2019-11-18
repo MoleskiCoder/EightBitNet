@@ -66,7 +66,7 @@ namespace EightBit
                 {
                     this.HandleINT();
                 }
-                else if (this.Halted)
+                else if (this.HALT.Lowered())
                 {
                     this.Execute(0); // NOP
                 }
@@ -401,7 +401,7 @@ namespace EightBit
                 case 1: // 8-bit loading
                     if (z == 6 && y == 6)
                     {
-                        this.Halt(); // Exception (replaces LD (HL), (HL))
+                        this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                     }
                     else
                     {

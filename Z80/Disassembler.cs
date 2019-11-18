@@ -55,8 +55,15 @@ namespace EightBit
                 + $"B={b:x2} C={c:x2} "
                 + $"D={d:x2} E={e:x2} "
                 + $"H={h:x2} L={l:x2} "
+                + $"IX={cpu.IX.Word:x4} "
+                + $"IY={cpu.IY.Word:x4} "
                 + $"I={i:x2} R={(byte)r:x2} "
-                + $"IM={im}";
+                + $"IM={im} "
+                + $"IFF1={(cpu.IFF1 ? 1 : 0)} "
+                + $"{(cpu.RESET.Lowered() ? "R" : "-")}"
+                + $"{(cpu.INT.Lowered() ? "I" : "-")}"
+                + $"{(cpu.HALT.Lowered() ? "H" : "-")}"
+                + $"{(cpu.NMI.Lowered() ? "N" : "-")}";
         }
 
         public string Disassemble(Z80 cpu)
@@ -260,6 +267,39 @@ namespace EightBit
                             }
 
                             dumpCount += 2;
+                            break;
+                        case 4: // Negate accumulator
+                            specification = "NEG";
+                            break;
+                        case 5: // Return from interrupt
+                            switch (y)
+                            {
+                                case 1:
+                                    specification = "RETI";
+                                    break;
+                                default:
+                                    specification = "RETN";
+                                    break;
+                            }
+                            break;
+                        case 6: // Set interrupt mode
+                            switch (y)
+                            {
+                                case 0:
+                                case 1:
+                                case 4:
+                                case 5:
+                                    specification = "IM 0";
+                                    break;
+                                case 2:
+                                case 6:
+                                    specification = "IM 1";
+                                    break;
+                                case 3:
+                                case 7:
+                                    specification = "IM 2";
+                                    break;
+                            }
                             break;
                         case 7:
                             switch (y)

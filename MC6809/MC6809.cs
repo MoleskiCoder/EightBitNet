@@ -36,6 +36,7 @@
         private PinLevel haltLine = PinLevel.Low;
         private PinLevel baLine = PinLevel.Low;
         private PinLevel bsLine = PinLevel.Low;
+        private PinLevel rwLine = PinLevel.Low;
 
         private bool prefix10 = false;
         private bool prefix11 = false;
@@ -88,6 +89,14 @@
         public event EventHandler<EventArgs> LoweringBS;
 
         public event EventHandler<EventArgs> LoweredBS;
+
+        public event EventHandler<EventArgs> RaisingRW;
+
+        public event EventHandler<EventArgs> RaisedRW;
+
+        public event EventHandler<EventArgs> LoweringRW;
+
+        public event EventHandler<EventArgs> LoweredRW;
 
         public Register16 D { get; } = new Register16();
 
@@ -146,6 +155,8 @@
         public ref PinLevel BA => ref this.baLine;
 
         public ref PinLevel BS => ref this.bsLine;
+
+        public ref PinLevel RW => ref this.rwLine;
 
         public void Halt()
         {
@@ -221,81 +232,132 @@
             return this.Cycles;
         }
 
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.LowerBA();
-            this.LowerBS();
-        }
-
         public void RaiseNMI()
         {
-            this.OnRaisingNMI();
-            this.NMI.Raise();
-            this.OnRaisedNMI();
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
         }
 
         public void LowerNMI()
         {
-            this.OnLoweringNMI();
-            this.NMI.Lower();
-            this.OnLoweredNMI();
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
         }
 
         public void RaiseFIRQ()
         {
-            this.OnRaisingFIRQ();
-            this.FIRQ.Raise();
-            this.OnRaisedFIRQ();
+            if (this.FIRQ.Lowered())
+            {
+                this.OnRaisingFIRQ();
+                this.FIRQ.Raise();
+                this.OnRaisedFIRQ();
+            }
         }
 
         public void LowerFIRQ()
         {
-            this.OnLoweringFIRQ();
-            this.FIRQ.Lower();
-            this.OnLoweredFIRQ();
+            if (this.FIRQ.Raised())
+            {
+                this.OnLoweringFIRQ();
+                this.FIRQ.Lower();
+                this.OnLoweredFIRQ();
+            }
         }
 
         public void RaiseHALT()
         {
-            this.OnRaisingHALT();
-            this.HALT.Raise();
-            this.OnRaisedHALT();
+            if (this.HALT.Lowered())
+            {
+                this.OnRaisingHALT();
+                this.HALT.Raise();
+                this.OnRaisedHALT();
+            }
         }
 
         public void LowerHALT()
         {
-            this.OnLoweringHALT();
-            this.HALT.Lower();
-            this.OnLoweredHALT();
+            if (this.HALT.Raised())
+            {
+                this.OnLoweringHALT();
+                this.HALT.Lower();
+                this.OnLoweredHALT();
+            }
         }
 
         public void RaiseBA()
         {
-            this.OnRaisingBA();
-            this.BA.Raise();
-            this.OnRaisedBA();
+            if (this.BA.Lowered())
+            {
+                this.OnRaisingBA();
+                this.BA.Raise();
+                this.OnRaisedBA();
+            }
         }
 
         public void LowerBA()
         {
-            this.OnLoweringBA();
-            this.BA.Lower();
-            this.OnLoweredBA();
+            if (this.BA.Raised())
+            {
+                this.OnLoweringBA();
+                this.BA.Lower();
+                this.OnLoweredBA();
+            }
         }
 
         public void RaiseBS()
         {
-            this.OnRaisingBS();
-            this.BS.Raise();
-            this.OnRaisedBS();
+            if (this.BS.Lowered())
+            {
+                this.OnRaisingBS();
+                this.BS.Raise();
+                this.OnRaisedBS();
+            }
         }
 
         public void LowerBS()
         {
-            this.OnLoweringBS();
-            this.BS.Lower();
-            this.OnLoweredBS();
+            if (this.BS.Raised())
+            {
+                this.OnLoweringBS();
+                this.BS.Lower();
+                this.OnLoweredBS();
+            }
+        }
+
+        public void RaiseRW()
+        {
+            if (this.RW.Lowered())
+            {
+                this.OnRaisingRW();
+                this.RW.Raise();
+                this.OnRaisedRW();
+            }
+        }
+
+        public void LowerRW()
+        {
+            if (this.RW.Raised())
+            {
+                this.OnLoweringRW();
+                this.RW.Lower();
+                this.OnLoweredRW();
+            }
+        }
+
+        protected override void OnRaisedPOWER()
+        {
+            this.LowerBA();
+            this.LowerBS();
+            this.LowerRW();
+            base.OnRaisedPOWER();
         }
 
         protected override void HandleRESET()
@@ -325,6 +387,18 @@
         protected override byte Pop() => this.PopS();
 
         protected override void Push(byte value) => this.PushS(value);
+
+        protected override void BusWrite()
+        {
+            this.LowerRW();
+            base.BusWrite();
+        }
+
+        protected override byte BusRead()
+        {
+            this.RaiseRW();
+            return base.BusRead();
+        }
 
         private void HandleHALT()
         {
@@ -395,6 +469,14 @@
         private void OnLoweringBS() => this.LoweringBS?.Invoke(this, EventArgs.Empty);
 
         private void OnLoweredBS() => this.LoweredBS?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
 
         private void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
 

@@ -78,30 +78,42 @@ namespace EightBit
 
         public virtual void RaiseRESET()
         {
-            this.OnRaisingRESET();
-            this.RESET.Raise();
-            this.OnRaisedRESET();
+            if (this.RESET.Lowered())
+            {
+                this.OnRaisingRESET();
+                this.RESET.Raise();
+                this.OnRaisedRESET();
+            }
         }
 
         public virtual void LowerRESET()
         {
-            this.OnLoweringRESET();
-            this.RESET.Lower();
-            this.OnLoweredRESET();
+            if (this.RESET.Raised())
+            {
+                this.OnLoweringRESET();
+                this.RESET.Lower();
+                this.OnLoweredRESET();
+            }
         }
 
         public virtual void RaiseINT()
         {
-            this.OnRaisingINT();
-            this.INT.Raise();
-            this.OnRaisedINT();
+            if (this.INT.Lowered())
+            {
+                this.OnRaisingINT();
+                this.INT.Raise();
+                this.OnRaisedINT();
+            }
         }
 
         public virtual void LowerINT()
         {
-            this.OnLoweringINT();
-            this.INT.Lower();
-            this.OnLoweredINT();
+            if (this.INT.Raised())
+            {
+                this.OnLoweringINT();
+                this.INT.Lower();
+                this.OnLoweredINT();
+            }
         }
 
         protected virtual void OnRaisingRESET() => this.RaisingRESET?.Invoke(this, EventArgs.Empty);

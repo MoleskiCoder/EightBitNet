@@ -28,16 +28,22 @@ namespace EightBit
 
         public virtual void RaisePOWER()
         {
-            this.OnRaisingPOWER();
-            this.POWER.Raise();
-            this.OnRaisedPOWER();
+            if (this.POWER.Lowered())
+            {
+                this.OnRaisingPOWER();
+                this.POWER.Raise();
+                this.OnRaisedPOWER();
+            }
         }
 
         public virtual void LowerPOWER()
         {
-            this.OnLoweringPOWER();
-            this.POWER.Lower();
-            this.OnLoweredPOWER();
+            if (this.POWER.Raised())
+            {
+                this.OnLoweringPOWER();
+                this.POWER.Lower();
+                this.OnLoweredPOWER();
+            }
         }
 
         protected virtual void OnRaisingPOWER() => this.RaisingPOWER?.Invoke(this, EventArgs.Empty);
