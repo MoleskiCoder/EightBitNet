@@ -494,6 +494,7 @@ namespace EightBit
 
         protected override void BusWrite()
         {
+            this.Tick(3);
             this.LowerMREQ();
             this.LowerWR();
             base.BusWrite();
@@ -503,6 +504,7 @@ namespace EightBit
 
         protected override byte BusRead()
         {
+            this.Tick(3);
             this.LowerMREQ();
             this.LowerRD();
             var returned = base.BusRead();
@@ -515,6 +517,8 @@ namespace EightBit
         {
             base.HandleRESET();
             this.DisableInterrupts();
+            this.IV = this.REFRESH = 0;
+            this.SP.Word = this.AF.Word = (ushort)Mask.Mask16;
             this.Tick(3);
         }
 
@@ -527,22 +531,29 @@ namespace EightBit
             this.RaiseIORQ();
             this.RaiseM1();
             this.DisableInterrupts();
+            this.Tick(5);
             switch (this.IM)
             {
                 case 0: // i8080 equivalent
                     this.Execute(data);
                     break;
                 case 1:
-                    this.Restart(7 << 3);
-                    this.Tick(13);
+                    this.Tick();
+                    this.Restart(7 << 3);   // 7 cycles
                     break;
                 case 2:
+                    this.Tick(7);
                     this.Call(this.MEMPTR.Word = new Register16(data, this.IV).Word);
-                    this.Tick(19);
                     break;
                 default:
                     throw new NotSupportedException("Invalid interrupt mode");
             }
+        }
+
+        protected override void Call(ushort destination)
+        {
+            this.Tick();
+            base.Call(destination);
         }
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
@@ -765,7 +776,18 @@ namespace EightBit
             var memoryZ = z == 6;
             var indirect = (!this.displaced && memoryZ) || this.displaced;
             var direct = !indirect;
-            var operand = !this.displaced ? this.R(z) : this.BusRead(this.DisplacedAddress);
+
+            byte operand;
+            if (this.displaced)
+            {
+                this.Tick(2);
+                operand = this.BusRead(this.DisplacedAddress);
+            }
+            else
+            {
+                operand = this.R(z);
+            }
+
             var update = x != 1; // BIT does not update
             switch (x)
             {
@@ -801,28 +823,15 @@ namespace EightBit
                     }
 
                     this.F = AdjustSZP(this.F, operand);
-                    this.Tick(4);
                     break;
                 case 1: // BIT y, r[z]
-                    this.Tick(4);
                     this.BIT(y, operand);
-                    if (direct)
-                    {
-                        this.F = AdjustXY(this.F, operand);
-                    }
-                    else
-                    {
-                        this.F = AdjustXY(this.F, this.MEMPTR.High);
-                        this.Tick(4);
-                    }
-
+                    this.F = direct ? AdjustXY(this.F, operand) : AdjustXY(this.F, this.MEMPTR.High);
                     break;
                 case 2: // RES y, r[z]
-                    this.Tick(4);
                     operand = RES(y, operand);
                     break;
                 case 3: // SET y, r[z]
-                    this.Tick(4);
                     operand = SET(y, operand);
                     break;
                 default:
@@ -831,13 +840,10 @@ namespace EightBit
 
             if (update)
             {
+                this.Tick();
                 if (!this.displaced)
                 {
                     this.R(z, operand);
-                    if (memoryZ)
-                    {
-                        this.Tick(7);
-                    }
                 }
                 else
                 {
@@ -846,8 +852,6 @@ namespace EightBit
                     {
                         this.R2(z, operand);
                     }
-
-                    this.Tick(15);
                 }
             }
         }
@@ -873,15 +877,12 @@ namespace EightBit
 
                             this.F = AdjustSZPXY(this.F, this.Bus.Data);
                             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
-                            this.Tick(4);
                             break;
                         case 1: // Output to port with 16-bit address
                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                             this.MEMPTR.Word++;
                             this.Bus.Data = y != 6 ? this.R(y) : (byte)0;
-
                             this.WritePort();
-                            this.Tick(4);
                             break;
                         case 2: // 16-bit add/subtract with carry
                             switch (q)
@@ -896,7 +897,6 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(7);
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
                             this.Bus.Address.Word = this.FetchWord().Word;
@@ -912,7 +912,6 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(12);
                             break;
                         case 4: // Negate accumulator
                             this.NEG();
@@ -928,7 +927,6 @@ namespace EightBit
                                     break;
                             }
 
-                            this.Tick(6);
                             break;
                         case 6: // Set interrupt mode
                             switch (y)
@@ -957,31 +955,25 @@ namespace EightBit
                             {
                                 case 0: // LD I,A
                                     this.IV = this.A;
-                                    this.Tick();
                                     break;
                                 case 1: // LD R,A
                                     this.REFRESH = this.A;
-                                    this.Tick();
                                     break;
                                 case 2: // LD A,I
                                     this.F = AdjustSZXY(this.F, this.A = this.IV);
                                     this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
-                                    this.Tick();
                                     break;
                                 case 3: // LD A,R
                                     this.F = AdjustSZXY(this.F, this.A = this.REFRESH);
                                     this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
-                                    this.Tick();
                                     break;
                                 case 4: // RRD
                                     this.RRD();
-                                    this.Tick(10);
                                     break;
                                 case 5: // RLD
                                     this.RLD();
-                                    this.Tick(10);
                                     break;
                                 case 6: // NOP
                                 case 7: // NOP
@@ -1013,18 +1005,18 @@ namespace EightBit
                                     {
                                         this.MEMPTR.Word = --this.PC.Word;
                                         --this.PC.Word;
-                                        this.Tick(5);
                                     }
 
+                                    this.Tick(7);
                                     break;
                                 case 7: // LDDR
                                     if (this.LDDR())
                                     {
                                         this.MEMPTR.Word = --this.PC.Word;
                                         --this.PC.Word;
-                                        this.Tick(5);
                                     }
 
+                                    this.Tick(7);
                                     break;
                             }
 
@@ -1046,19 +1038,21 @@ namespace EightBit
                                         this.Tick(5);
                                     }
 
+                                    this.Tick(5);
                                     break;
                                 case 7: // CPDR
                                     if (this.CPDR())
                                     {
                                         this.MEMPTR.Word = --this.PC.Word;
                                         --this.PC.Word;
-                                        this.Tick(5);
+                                        this.Tick(3);
                                     }
                                     else
                                     {
                                         this.MEMPTR.Word = (ushort)(this.PC.Word - 2);
                                     }
 
+                                    this.Tick(7);
                                     break;
                             }
 
@@ -1106,7 +1100,7 @@ namespace EightBit
                                         this.PC.Word -= 2;
                                         this.Tick(5);
                                     }
-
+                                    this.Tick(3);
                                     break;
                                 case 7: // OTDR
                                     if (this.OTDR())
@@ -1114,14 +1108,13 @@ namespace EightBit
                                         this.PC.Word -= 2;
                                         this.Tick(5);
                                     }
-
+                                    this.Tick(3);
                                     break;
                             }
 
                             break;
                     }
 
-                    this.Tick(8);
                     break;
             }
         }
@@ -1144,27 +1137,22 @@ namespace EightBit
                                     this.ExxAF();
                                     break;
                                 case 2: // DJNZ d
+                                    this.Tick();
                                     if (this.JumpRelativeConditional(--this.B != 0))
                                     {
-                                        this.Tick(5);
+                                        this.Tick(2);
                                     }
 
-                                    this.Tick(4);
+                                    this.Tick(3);
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative((sbyte)this.FetchByte());
-                                    this.Tick(8);
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
                                 case 6:
                                 case 7:
-                                    if (this.JumpRelativeConditionalFlag(y - 4))
-                                    {
-                                        this.Tick(5);
-                                    }
-
-                                    this.Tick(3);
+                                    this.JumpRelativeConditionalFlag(y - 4);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1176,11 +1164,9 @@ namespace EightBit
                             {
                                 case 0: // LD rp,nn
                                     this.RP(p).Word = this.FetchWord().Word;
-                                    this.Tick(6);
                                     break;
                                 case 1: // ADD HL,rp
                                     this.HL2().Word = this.Add(this.HL2(), this.RP(p));
-                                    this.Tick(7);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1198,26 +1184,22 @@ namespace EightBit
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.BusWrite();
-                                            this.Tick(3);
                                             break;
                                         case 1: // LD (DE),A
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.BusWrite();
-                                            this.Tick(3);
                                             break;
                                         case 2: // LD (nn),HL
                                             this.Bus.Address.Word = this.FetchWord().Word;
                                             this.SetWord(this.HL2());
-                                            this.Tick(12);
                                             break;
                                         case 3: // LD (nn),A
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.BusWrite();
-                                            this.Tick(9);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1231,24 +1213,20 @@ namespace EightBit
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                                             ++this.MEMPTR.Word;
                                             this.A = this.BusRead();
-                                            this.Tick(3);
                                             break;
                                         case 1: // LD A,(DE)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
                                             this.A = this.BusRead();
-                                            this.Tick(3);
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.Bus.Address.Word = this.FetchWord().Word;
                                             this.HL2().Word = this.GetWord().Word;
-                                            this.Tick(12);
                                             break;
                                         case 3: // LD A,(nn)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
                                             this.A = this.BusRead();
-                                            this.Tick(9);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1273,41 +1251,50 @@ namespace EightBit
                                     throw new NotSupportedException("Invalid operation mode");
                             }
 
-                            this.Tick(2);
                             break;
                         case 4: // 8-bit INC
-                            if (this.displaced && memoryY)
                             {
-                                this.FetchDisplacement();
-                            }
+                                if (memoryY && this.displaced)
+                                {
+                                    this.FetchDisplacement();
+                                    this.Tick(5);
+                                }
 
-                            this.R(y, this.Increment(this.R(y)));
-                            break;
+                                var original = this.R(y);
+                                this.Tick();
+                                this.R(y, this.Increment(original));
+                                break;
+                            }
                         case 5: // 8-bit DEC
-                            if (memoryY)
                             {
-                                this.Tick(7);
-                                if (this.displaced)
+                                if (memoryY && this.displaced)
                                 {
                                     this.FetchDisplacement();
+                                    this.Tick(5);
                                 }
+
+                                var original = this.R(y);
+                                this.Tick();
+                                this.R(y, this.Decrement(original));
+                                break;
                             }
 
-                            this.R(y, this.Decrement(this.R(y)));
-                            break;
                         case 6: // 8-bit load immediate
-                            if (memoryY)
                             {
-                                this.Tick(3);
-                                if (this.displaced)
+                                if (memoryY && this.displaced)
                                 {
                                     this.FetchDisplacement();
                                 }
-                            }
 
-                            this.R(y, this.FetchByte());  // LD r,n
-                            this.Tick(3);
-                            break;
+                                var value = this.FetchByte();
+                                if (this.displaced)
+                                {
+                                    this.Tick(2);
+                                }
+
+                                this.R(y, value);  // LD r,n
+                                break;
+                            }
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
                             {
@@ -1361,10 +1348,20 @@ namespace EightBit
                                 switch (y)
                                 {
                                     case 4:
+                                        if (this.displaced)
+                                        {
+                                            this.Tick(5);
+                                        }
+
                                         this.H = this.R(z);
                                         normal = false;
                                         break;
                                     case 5:
+                                        if (this.displaced)
+                                        {
+                                            this.Tick(5);
+                                        }
+
                                         this.L = this.R(z);
                                         normal = false;
                                         break;
@@ -1376,10 +1373,20 @@ namespace EightBit
                                 switch (z)
                                 {
                                     case 4:
+                                        if (this.displaced)
+                                        {
+                                            this.Tick(5);
+                                        }
+
                                         this.R(y, this.H);
                                         normal = false;
                                         break;
                                     case 5:
+                                        if (this.displaced)
+                                        {
+                                            this.Tick(5);
+                                        }
+
                                         this.R(y, this.L);
                                         normal = false;
                                         break;
@@ -1389,13 +1396,12 @@ namespace EightBit
 
                         if (normal)
                         {
-                            this.R(y, this.R(z));
-                        }
+                            if (this.displaced)
+                            {
+                                this.Tick(5);
+                            }
 
-                        // M operations
-                        if (memoryY || memoryZ)
-                        {
-                            this.Tick(3);
+                            this.R(y, this.R(z));
                         }
                     }
                     else
@@ -1408,10 +1414,10 @@ namespace EightBit
                     { // Operate on accumulator and register/memory location
                         if (memoryZ)
                         {
-                            this.Tick(3);
                             if (this.displaced)
                             {
                                 this.FetchDisplacement();
+                                this.Tick(5);
                             }
                         }
 
@@ -1453,26 +1459,19 @@ namespace EightBit
                     switch (z)
                     {
                         case 0: // Conditional return
-                            if (this.ReturnConditionalFlag(y))
-                            {
-                                this.Tick(6);
-                            }
-
-                            this.Tick();
+                            this.ReturnConditionalFlag(y);
                             break;
                         case 1: // POP & various ops
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
                                     this.RP2(p).Word = this.PopWord().Word;
-                                    this.Tick(6);
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // RET
                                             this.Return();
-                                            this.Tick(6);
                                             break;
                                         case 1: // EXX
                                             this.Exx();
@@ -1495,14 +1494,12 @@ namespace EightBit
                             break;
                         case 2: // Conditional jump
                             this.JumpConditionalFlag(y);
-                            this.Tick(6);
                             break;
                         case 3: // Assorted operations
                             switch (y)
                             {
                                 case 0: // JP nn
                                     this.Jump(this.MEMPTR.Word = this.FetchWord().Word);
-                                    this.Tick(6);
                                     break;
                                 case 1: // CB prefix
                                     this.prefixCB = true;
@@ -1519,15 +1516,12 @@ namespace EightBit
                                     break;
                                 case 2: // OUT (n),A
                                     this.WritePort(this.FetchByte());
-                                    this.Tick(7);
                                     break;
                                 case 3: // IN A,(n)
                                     this.A = this.ReadPort(this.FetchByte());
-                                    this.Tick(7);
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL2());
-                                    this.Tick(15);
                                     break;
                                 case 5: // EX DE,HL
                                     (this.DE.Word, this.HL.Word) = (this.HL.Word, this.DE.Word);
@@ -1544,26 +1538,21 @@ namespace EightBit
 
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
-                            if (this.CallConditionalFlag(y))
-                            {
-                                this.Tick(7);
-                            }
-
-                            this.Tick(6);
+                            this.CallConditionalFlag(y);
                             break;
                         case 5: // PUSH & various ops
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
+                                    this.Tick();
                                     this.PushWord(this.RP2(p));
-                                    this.Tick(7);
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            this.Call(this.MEMPTR.Word = this.FetchWord().Word);
-                                            this.Tick(13);
+                                            this.MEMPTR.Word = this.FetchWord().Word;
+                                            this.Call(this.MEMPTR.Word);
                                             break;
                                         case 1: // DD prefix
                                             this.displaced = this.prefixDD = true;
@@ -1620,13 +1609,11 @@ namespace EightBit
                                         throw new NotSupportedException("Invalid operation mode");
                                 }
 
-                                this.Tick(3);
                                 break;
                             }
 
                         case 7: // Restart: RST y * 8
                             this.Restart((byte)(y << 3));
-                            this.Tick(7);
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
@@ -1640,12 +1627,12 @@ namespace EightBit
         {
             this.RaiseNMI();
             this.RaiseHALT();
+            this.IFF2 = this.IFF1;
             this.IFF1 = false;
             this.LowerM1();
             var discarded = this.Bus.Data;
             this.RaiseM1();
             this.Restart(0x66);
-            this.Tick(13);
         }
 
         private void FetchDisplacement() => this.displacement = (sbyte)this.FetchByte();
@@ -1671,18 +1658,16 @@ namespace EightBit
         // instruction so that no other concurrent operation can be performed.
         private byte ReadInitialOpCode()
         {
+            this.Tick();
             this.LowerM1();
             var returned = this.BusRead(this.PC.Word);
             this.RaiseM1();
-            this.Tick(2);
             this.Bus.Address.Low = this.REFRESH;
             this.Bus.Address.High = this.IV;
             this.LowerRFSH();
             this.LowerMREQ();
-            this.Tick();
             this.RaiseMREQ();
             this.RaiseRFSH();
-            this.Tick();
             return returned;
         }
 
@@ -1729,97 +1714,33 @@ namespace EightBit
 
         private void RetI() => this.RetN();
 
-        private bool JumpRelativeConditionalFlag(int flag)
+        private bool ConvertCondition(int flag) => flag switch
         {
-            switch (flag)
+            0 => (this.F & (byte)StatusBits.ZF) == 0,
+            1 => (this.F & (byte)StatusBits.ZF) != 0,
+            2 => (this.F & (byte)StatusBits.CF) == 0,
+            3 => (this.F & (byte)StatusBits.CF) != 0,
+            4 => (this.F & (byte)StatusBits.PF) == 0,
+            5 => (this.F & (byte)StatusBits.PF) != 0,
+            6 => (this.F & (byte)StatusBits.SF) == 0,
+            7 => (this.F & (byte)StatusBits.SF) != 0,
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
+
+        private void ReturnConditionalFlag(int flag)
+        {
+            if (this.ConvertCondition(flag))
             {
-                case 0: // NZ
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
+                this.Tick();
+                this.Return();
             }
         }
 
-        private bool ReturnConditionalFlag(int flag)
-        {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0);
-                case 4: // PO
-                    return this.ReturnConditional((this.F & (byte)StatusBits.PF) == 0);
-                case 5: // PE
-                    return this.ReturnConditional((this.F & (byte)StatusBits.PF) != 0);
-                case 6: // P
-                    return this.ReturnConditional((this.F & (byte)StatusBits.SF) == 0);
-                case 7: // M
-                    return this.ReturnConditional((this.F & (byte)StatusBits.SF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+        private void JumpRelativeConditionalFlag(int flag) => this.JumpRelativeConditional(this.ConvertCondition(flag));
 
-        private bool JumpConditionalFlag(int flag)
-        {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.JumpConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.JumpConditional((this.F & (byte)StatusBits.CF) != 0);
-                case 4: // PO
-                    return this.JumpConditional((this.F & (byte)StatusBits.PF) == 0);
-                case 5: // PE
-                    return this.JumpConditional((this.F & (byte)StatusBits.PF) != 0);
-                case 6: // P
-                    return this.JumpConditional((this.F & (byte)StatusBits.SF) == 0);
-                case 7: // M
-                    return this.JumpConditional((this.F & (byte)StatusBits.SF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+        private void JumpConditionalFlag(int flag) => this.JumpConditional(this.ConvertCondition(flag));
 
-        private bool CallConditionalFlag(int flag)
-        {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.CallConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.CallConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.CallConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.CallConditional((this.F & (byte)StatusBits.CF) != 0);
-                case 4: // PO
-                    return this.CallConditional((this.F & (byte)StatusBits.PF) == 0);
-                case 5: // PE
-                    return this.CallConditional((this.F & (byte)StatusBits.PF) != 0);
-                case 6: // P
-                    return this.CallConditional((this.F & (byte)StatusBits.SF) == 0);
-                case 7: // M
-                    return this.CallConditional((this.F & (byte)StatusBits.SF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+        private void CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
 
         private ushort SBC(Register16 operand, Register16 value)
         {
@@ -2075,6 +1996,7 @@ namespace EightBit
             this.MEMPTR.Low = this.BusRead(this.SP.Word);
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.BusRead();
+            this.Tick();
             this.BusWrite(exchange.High);
             exchange.High = this.MEMPTR.High;
             --this.Bus.Address.Word;
@@ -2153,7 +2075,9 @@ namespace EightBit
         private void BlockIn(Register16 source, ushort destination)
         {
             this.MEMPTR.Word = this.Bus.Address.Word = source.Word;
+            this.Tick();
             var value = this.ReadPort();
+            this.Tick(3);
             this.BusWrite(destination, value);
             source.High = this.Decrement(source.High);
             this.F = SetBit(this.F, StatusBits.NF);
@@ -2185,6 +2109,7 @@ namespace EightBit
 
         private void BlockOut(ushort source, Register16 destination)
         {
+            this.Tick();
             var value = this.BusRead(source);
             destination.High = this.Decrement(destination.High);
             this.Bus.Address.Word = destination.Word;
@@ -2240,6 +2165,7 @@ namespace EightBit
             this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
             ++this.MEMPTR.Word;
             var memory = this.BusRead();
+            this.Tick(4);
             this.BusWrite((byte)(PromoteNibble(this.A) | HighNibble(memory)));
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
@@ -2251,6 +2177,7 @@ namespace EightBit
             this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
             ++this.MEMPTR.Word;
             var memory = this.BusRead();
+            this.Tick(4);
             this.BusWrite((byte)(PromoteNibble(memory) | LowNibble(this.A)));
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
@@ -2267,6 +2194,7 @@ namespace EightBit
 
         private void WritePort()
         {
+            this.Tick();
             this.LowerIORQ();
             this.LowerWR();
             this.ports.Write(this.Bus.Address.Low, this.Bus.Data);
@@ -2283,6 +2211,7 @@ namespace EightBit
 
         private byte ReadPort()
         {
+            this.Tick();
             this.LowerIORQ();
             this.LowerRD();
             var returned = this.Bus.Data = this.ports.Read(this.Bus.Address.Low);

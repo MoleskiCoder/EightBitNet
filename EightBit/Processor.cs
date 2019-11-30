@@ -214,7 +214,7 @@ namespace EightBit
 
         protected void Jump(ushort destination) => this.PC.Word = destination;
 
-        protected void Call(ushort destination)
+        protected virtual void Call(ushort destination)
         {
             this.PushWord(this.PC);
             this.Jump(destination);

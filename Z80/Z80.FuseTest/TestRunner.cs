@@ -33,6 +33,8 @@ namespace Fuse
         private readonly EightBit.InputOutput ports = new EightBit.InputOutput();
         private readonly EightBit.Z80 cpu;
 
+        private int totalCycles = 0;
+
         public TestRunner(Test<RegisterState> test, Result<RegisterState> result)
         {
             this.cpu = new EightBit.Z80(this, this.ports);
@@ -93,17 +95,18 @@ namespace Fuse
         {
             this.ports.ReadPort += this.Ports_ReadPort;
             this.ports.WrittenPort += this.Ports_WrittenPort;
+            this.cpu.ExecutedInstruction += this.Cpu_ExecutedInstruction;
         }
 
         protected override void OnReadByte()
         {
-            this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "MR", this.Address.Word, this.Data));
+            this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "MR", this.Address.Word, this.Data));
             base.OnReadByte();
         }
 
         protected override void OnWrittenByte()
         {
-            this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "MW", this.Address.Word, this.Data));
+            this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "MW", this.Address.Word, this.Data));
             base.OnWrittenByte();
         }
 
@@ -113,9 +116,11 @@ namespace Fuse
             System.Console.Error.WriteLine(output);
         }
 
-        private void Ports_WrittenPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "PW", this.Address.Word, this.Data));
+        private void Ports_WrittenPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PW", this.Address.Word, this.Data));
 
-        private void Ports_ReadPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.cpu.Cycles, "PR", this.Address.Word, this.Data));
+        private void Ports_ReadPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PR", this.Address.Word, this.Data));
+
+        private void Cpu_ExecutedInstruction(object sender, System.EventArgs e) => this.totalCycles += this.cpu.Cycles;
 
         private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
         {
@@ -401,7 +406,7 @@ namespace Fuse
                 var equalAddress = expectation.Address == actual.Address;
                 var equalValue = expectation.Value == actual.Value;
 
-                var equal = /* equalCycles && */equalSpecifier && equalAddress && equalValue;
+                var equal = equalCycles && equalSpecifier && equalAddress && equalValue;
                 eventFailure = !equal;
             }
 
