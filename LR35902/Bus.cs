@@ -38,6 +38,8 @@ namespace EightBit.GameBoy
         private int romBank = 1;
         private int ramBank = 0;
 
+        private int allowed = 0;
+
         protected Bus()
         {
             this.IO = new IoRegisters(this);
@@ -98,17 +100,17 @@ namespace EightBit.GameBoy
             this.ValidateCartridgeType();
         }
 
-        public int RunRasterLines()
+        public void RunRasterLines()
         {
             this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControl.LcdEnable) != 0;
             this.IO.ResetLY();
-            return this.RunRasterLines(DisplayCharacteristics.RasterHeight);
+            this.RunRasterLines(DisplayCharacteristics.RasterHeight);
         }
 
-        public int RunVerticalBlankLines()
+        public void RunVerticalBlankLines()
         {
             var lines = TotalLineCount - DisplayCharacteristics.RasterHeight;
-            return this.RunVerticalBlankLines(lines);
+            this.RunVerticalBlankLines(lines);
         }
 
         public override MemoryMapping Mapping(ushort address)
@@ -322,21 +324,15 @@ namespace EightBit.GameBoy
             }
         }
 
-        private int RunRasterLines(int lines)
+        private void RunRasterLines(int lines)
         {
-            var count = 0;
-            var allowed = CyclesPerLine;
             for (var line = 0; line < lines; ++line)
             {
-                var executed = this.RunRasterLine(allowed);
-                count += executed;
-                allowed = CyclesPerLine - (executed - CyclesPerLine);
+                this.RunRasterLine(CyclesPerLine);
             }
-
-            return count;
         }
 
-        private int RunVerticalBlankLines(int lines)
+        private void RunVerticalBlankLines(int lines)
         {
             /*
             Vertical Blank interrupt is triggered when the LCD
@@ -365,10 +361,10 @@ namespace EightBit.GameBoy
                 this.IO.TriggerInterrupt(Interrupts.VerticalBlank);
             }
 
-            return this.RunRasterLines(lines);
+            this.RunRasterLines(lines);
         }
 
-        private int RunRasterLine(int limit)
+        private void RunRasterLine(int suggested)
         {
             /*
             A scanline normally takes 456 clocks (912 clocks in double speed
@@ -393,7 +389,7 @@ namespace EightBit.GameBoy
             The rest of the clocks of line 153 are spent in line 0 in mode 1!
             */
 
-            var count = 0;
+            this.allowed += suggested;
             if (this.enabledLCD)
             {
                 if (((this.IO.Peek(IoRegisters.STAT) & (byte)Bits.Bit6) != 0) && (this.IO.Peek(IoRegisters.LYC) == this.IO.Peek(IoRegisters.LY)))
@@ -408,11 +404,11 @@ namespace EightBit.GameBoy
                     this.IO.TriggerInterrupt(Interrupts.DisplayControlStatus);
                 }
 
-                count += this.CPU.Run(80); // ~19us
+                this.allowed -= this.CPU.Run(80); // ~19us
 
                 // Mode 3, OAM/VRAM unavailable
                 this.IO.UpdateLcdStatusMode(LcdStatusMode.TransferringDataToLcd);
-                count += this.CPU.Run(170);    // ~41us
+                this.allowed -= this.CPU.Run(170);    // ~41us
 
                 // Mode 0
                 this.IO.UpdateLcdStatusMode(LcdStatusMode.HBlank);
@@ -421,16 +417,14 @@ namespace EightBit.GameBoy
                     this.IO.TriggerInterrupt(Interrupts.DisplayControlStatus);
                 }
 
-                count += this.CPU.Run(limit - count);  // ~48.6us
+                this.allowed -= this.CPU.Run(this.allowed);  // ~48.6us
 
                 this.IO.IncrementLY();
             }
             else
             {
-                count += this.CPU.Run(CyclesPerLine);
+                this.allowed -= this.CPU.Run(this.allowed);
             }
-
-            return count;
         }
     }
 }
