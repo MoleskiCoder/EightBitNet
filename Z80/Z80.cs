@@ -28,6 +28,7 @@ namespace EightBit
         private bool prefixCB = false;
         private bool prefixDD = false;
         private bool prefixED = false;
+        private bool prefixFD = false;
 
         private PinLevel nmiLine = PinLevel.Low;
         private PinLevel m1Line = PinLevel.Low;
@@ -351,7 +352,7 @@ namespace EightBit
             this.OnExecutingInstruction();
             if (this.Powered)
             {
-                this.displaced = this.prefixCB = this.prefixDD = this.prefixED = false;
+                this.displaced = this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
                 var handled = false;
                 if (this.RESET.Lowered())
                 {
@@ -423,7 +424,7 @@ namespace EightBit
 
             this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
 
-            this.prefixCB = this.prefixDD = this.prefixED = false;
+            this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
 
             base.OnRaisedPOWER();
         }
@@ -630,80 +631,38 @@ namespace EightBit
 
         private void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
 
-        private Register16 HL2()
+        private Register16 HL2() => this.prefixDD ? this.IX : this.prefixFD ? this.IY : this.HL;
+
+        private Register16 RP(int rp) => rp switch
         {
-            if (!this.displaced)
-            {
-                return this.HL;
-            }
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL2(),
+            3 => this.SP,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-            if (this.prefixDD)
-            {
-                return this.IX;
-            }
-
-            // Must be FD prefix
-            return this.IY;
-        }
-
-        private Register16 RP(int rp)
+        private Register16 RP2(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return this.BC;
-                case 1:
-                    return this.DE;
-                case 2:
-                    return this.HL2();
-                case 3:
-                    return this.SP;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(rp));
-            }
-        }
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL2(),
+            3 => this.AF,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-        private Register16 RP2(int rp)
+        private byte R(int r) => r switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return this.BC;
-                case 1:
-                    return this.DE;
-                case 2:
-                    return this.HL2();
-                case 3:
-                    return this.AF;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(rp));
-            }
-        }
-
-        private byte R(int r)
-        {
-            switch (r)
-            {
-                case 0:
-                    return this.B;
-                case 1:
-                    return this.C;
-                case 2:
-                    return this.D;
-                case 3:
-                    return this.E;
-                case 4:
-                    return this.HL2().High;
-                case 5:
-                    return this.HL2().Low;
-                case 6:
-                    return this.BusRead(this.displaced ? this.DisplacedAddress : this.HL.Word);
-                case 7:
-                    return this.A;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(r));
-            }
-        }
+            0 => this.B,
+            1 => this.C,
+            2 => this.D,
+            3 => this.E,
+            4 => this.HL2().High,
+            5 => this.HL2().Low,
+            6 => this.BusRead(this.displaced ? this.DisplacedAddress : this.HL.Word),
+            7 => this.A,
+            _ => throw new ArgumentOutOfRangeException(nameof(r)),
+        };
 
         private void R(int r, byte value)
         {
@@ -792,36 +751,18 @@ namespace EightBit
             switch (x)
             {
                 case 0: // rot[y] r[z]
-                    switch (y)
+                    operand = y switch
                     {
-                        case 0:
-                            operand = this.RLC(operand);
-                            break;
-                        case 1:
-                            operand = this.RRC(operand);
-                            break;
-                        case 2:
-                            operand = this.RL(operand);
-                            break;
-                        case 3:
-                            operand = this.RR(operand);
-                            break;
-                        case 4:
-                            operand = this.SLA(operand);
-                            break;
-                        case 5:
-                            operand = this.SRA(operand);
-                            break;
-                        case 6:
-                            operand = this.SLL(operand);
-                            break;
-                        case 7:
-                            operand = this.SRL(operand);
-                            break;
-                        default:
-                            throw new NotSupportedException("Invalid operation mode");
-                    }
-
+                        0 => this.RLC(operand),
+                        1 => this.RRC(operand),
+                        2 => this.RL(operand),
+                        3 => this.RR(operand),
+                        4 => this.SLA(operand),
+                        5 => this.SRA(operand),
+                        6 => this.SLL(operand),
+                        7 => this.SRL(operand),
+                        _ => throw new NotSupportedException("Invalid operation mode"),
+                    };
                     this.F = AdjustSZP(this.F, operand);
                     break;
                 case 1: // BIT y, r[z]
@@ -841,17 +782,17 @@ namespace EightBit
             if (update)
             {
                 this.Tick();
-                if (!this.displaced)
-                {
-                    this.R(z, operand);
-                }
-                else
+                if (this.displaced)
                 {
                     this.BusWrite(operand);
                     if (!memoryZ)
                     {
                         this.R2(z, operand);
                     }
+                }
+                else
+                {
+                    this.R(z, operand);
                 }
             }
         }
@@ -885,18 +826,12 @@ namespace EightBit
                             this.WritePort();
                             break;
                         case 2: // 16-bit add/subtract with carry
-                            switch (q)
+                            this.HL2().Word = q switch
                             {
-                                case 0: // SBC HL, rp[p]
-                                    this.HL2().Word = this.SBC(this.HL2(), this.RP(p));
-                                    break;
-                                case 1: // ADC HL, rp[p]
-                                    this.HL2().Word = this.ADC(this.HL2(), this.RP(p));
-                                    break;
-                                default:
-                                    throw new NotSupportedException("Invalid operation mode");
-                            }
-
+                                0 => this.SBC(this.HL2(), this.RP(p)), // SBC HL, rp[p]
+                                1 => this.ADC(this.HL2(), this.RP(p)), // ADC HL, rp[p]
+                                _ => throw new NotSupportedException("Invalid operation mode"),
+                            };
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
                             this.Bus.Address.Word = this.FetchWord().Word;
@@ -1412,13 +1347,10 @@ namespace EightBit
                     break;
                 case 2:
                     { // Operate on accumulator and register/memory location
-                        if (memoryZ)
+                        if (memoryZ && this.displaced)
                         {
-                            if (this.displaced)
-                            {
-                                this.FetchDisplacement();
-                                this.Tick(5);
-                            }
+                            this.FetchDisplacement();
+                            this.Tick(5);
                         }
 
                         var value = this.R(z);
@@ -1563,7 +1495,7 @@ namespace EightBit
                                             this.Execute(this.FetchInitialOpCode());
                                             break;
                                         case 3: // FD prefix
-                                            this.displaced = true;
+                                            this.displaced = this.prefixFD = true;
                                             this.Execute(this.FetchInitialOpCode());
                                             break;
                                         default:

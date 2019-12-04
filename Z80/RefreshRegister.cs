@@ -4,7 +4,7 @@
 
 namespace EightBit
 {
-    public struct RefreshRegister
+    public struct RefreshRegister : System.IEquatable<RefreshRegister>
     {
         private readonly byte high;
         private byte variable;
@@ -37,17 +37,10 @@ namespace EightBit
 
         public byte ToByte() => ToByte(this);
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is RefreshRegister))
-            {
-                return false;
-            }
-
-            var rhs = (RefreshRegister)obj;
-            return rhs.high == this.high && rhs.variable == this.variable;
-        }
+        public override bool Equals(object obj) => obj is RefreshRegister ? this.Equals((RefreshRegister)obj) : false;
 
         public override int GetHashCode() => this.high + this.variable;
+
+        public bool Equals(RefreshRegister other) => other.high == this.high && other.variable == this.variable;
     }
 }

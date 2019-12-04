@@ -4,6 +4,8 @@
 
 namespace EightBit
 {
+    using System;
+
     public class Disassembler
     {
         private bool prefixCB = false;
@@ -29,6 +31,11 @@ namespace EightBit
 
         public static string State(Z80 cpu)
         {
+            if (cpu == null)
+            {
+                throw new ArgumentNullException(nameof(cpu));
+            }
+
             var pc = cpu.PC;
             var sp = cpu.SP;
 
@@ -68,59 +75,40 @@ namespace EightBit
 
         public string Disassemble(Z80 cpu)
         {
+            if (cpu == null)
+            {
+                throw new ArgumentNullException(nameof(cpu));
+            }
+
             this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
             return this.Disassemble(cpu, cpu.PC.Word);
         }
 
-        private static string CC(int flag)
+        private static string CC(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0:
-                    return "NZ";
-                case 1:
-                    return "Z";
-                case 2:
-                    return "NC";
-                case 3:
-                    return "C";
-                case 4:
-                    return "PO";
-                case 5:
-                    return "PE";
-                case 6:
-                    return "P";
-                case 7:
-                    return "M";
-            }
+            0 => "NZ",
+            1 => "Z",
+            2 => "NC",
+            3 => "C",
+            4 => "PO",
+            5 => "PE",
+            6 => "P",
+            7 => "M",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(flag));
-        }
-
-        private static string ALU(int which)
+        private static string ALU(int which) => which switch
         {
-            switch (which)
-            {
-                case 0: // ADD A,n
-                    return "ADD";
-                case 1: // ADC
-                    return "ADC";
-                case 2: // SUB n
-                    return "SUB";
-                case 3: // SBC A,n
-                    return "SBC";
-                case 4: // AND n
-                    return "AND";
-                case 5: // XOR n
-                    return "XOR";
-                case 6: // OR n
-                    return "OR";
-                case 7: // CP n
-                    return "CP";
-            }
-
-            throw new System.ArgumentOutOfRangeException(nameof(which));
-        }
+            0 => "ADD",
+            1 => "ADC",
+            2 => "SUB",
+            3 => "SBC",
+            4 => "AND",
+            5 => "XOR",
+            6 => "OR",
+            7 => "CP",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(which)),
+        };
 
         private string Disassemble(Z80 cpu, ushort pc)
         {
@@ -152,7 +140,7 @@ namespace EightBit
             }
             else if (this.prefixED)
             {
-                output += this.DisassembleED(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
+                output += this.DisassembleED(ref specification, ref dumpCount, x, y, z, p, q);
             }
             else
             {
@@ -231,7 +219,7 @@ namespace EightBit
             return output;
         }
 
-        private string DisassembleED(Z80 cpu, ushort pc, ref string specification, ref int dumpCount, int x, int y, int z, int p, int q)
+        private string DisassembleED(ref string specification, ref int dumpCount, int x, int y, int z, int p, int q)
         {
             var output = string.Empty;
             switch (x)
@@ -272,15 +260,11 @@ namespace EightBit
                             specification = "NEG";
                             break;
                         case 5: // Return from interrupt
-                            switch (y)
+                            specification = y switch
                             {
-                                case 1:
-                                    specification = "RETI";
-                                    break;
-                                default:
-                                    specification = "RETN";
-                                    break;
-                            }
+                                1 => "RETI",
+                                _ => "RETN",
+                            };
                             break;
                         case 6: // Set interrupt mode
                             switch (y)
@@ -572,15 +556,7 @@ namespace EightBit
 
                     break;
                 case 1: // 8-bit loading
-                    if (z == 6 && y == 6)
-                    {
-                        specification = "HALT"; // Exception (replaces LD (HL), (HL))
-                    }
-                    else
-                    {
-                        specification = $"LD {this.R(y)},{this.R(z)}";
-                    }
-
+                    specification = z == 6 && y == 6 ? "HALT" : $"LD {this.R(y)},{this.R(z)}";
                     break;
                 case 2: // Operate on accumulator and register/memory location
                     specification = $"{ALU(y)} A,{this.R(z)}";
