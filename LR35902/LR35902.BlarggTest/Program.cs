@@ -11,9 +11,9 @@ namespace LR35902.BlarggTest
             var configuration = new Configuration();
 
 #if DEBUG
-            //configuration.DebugMode = true;
+            ////configuration.DebugMode = true;
 #endif
-            //configuration.DebugMode = true;
+            ////configuration.DebugMode = true;
 
             var computer = new Computer(configuration);
 

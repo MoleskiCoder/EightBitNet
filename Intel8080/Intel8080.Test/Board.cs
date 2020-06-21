@@ -23,7 +23,7 @@ namespace Intel8080.Test
             this.ports = new InputOutput();
             this.CPU = new Intel8080(this, this.ports);
             this.disassembler = new Disassembler(this);
-            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
+            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }
 
         public Intel8080 CPU { get; }

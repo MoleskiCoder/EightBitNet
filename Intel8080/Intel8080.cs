@@ -30,11 +30,11 @@ namespace EightBit
             }
         }
 
-        public override Register16 BC { get; } = new Register16((int)Mask.Mask16);
+        public override Register16 BC { get; } = new Register16((int)Mask.Sixteen);
 
-        public override Register16 DE { get; } = new Register16((int)Mask.Mask16);
+        public override Register16 DE { get; } = new Register16((int)Mask.Sixteen);
 
-        public override Register16 HL { get; } = new Register16((int)Mask.Mask16);
+        public override Register16 HL { get; } = new Register16((int)Mask.Sixteen);
 
         public override int Execute()
         {
@@ -616,7 +616,7 @@ namespace EightBit
         private byte Decrement(byte operand)
         {
             this.F = AdjustSZP(this.F, --operand);
-            this.F = SetBit(this.F, StatusBits.AC, LowNibble(operand) != (byte)Mask.Mask4);
+            this.F = SetBit(this.F, StatusBits.AC, LowNibble(operand) != (byte)Mask.Four);
             return operand;
         }
 

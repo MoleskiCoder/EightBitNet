@@ -23,7 +23,7 @@ namespace Z80.Test
             this.ports = new InputOutput();
             this.CPU = new Z80(this, this.ports);
             this.disassembler = new Disassembler(this);
-            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
+            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }
 
         public Z80 CPU { get; }

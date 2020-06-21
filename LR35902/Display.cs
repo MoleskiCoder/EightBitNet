@@ -29,14 +29,14 @@ namespace EightBit.GameBoy
             if (this.scanLine < DisplayCharacteristics.RasterHeight)
             {
                 this.control = this.bus.IO.Peek(IoRegisters.LCDC);
-                if ((this.control & (byte)LcdcControl.LcdEnable) != 0)
+                if ((this.control & (byte)LcdcControls.LcdEnable) != 0)
                 {
-                    if ((this.control & (byte)LcdcControl.DisplayBackground) != 0)
+                    if ((this.control & (byte)LcdcControls.DisplayBackground) != 0)
                     {
                         this.RenderBackground();
                     }
 
-                    if ((this.control & (byte)LcdcControl.ObjectEnable) != 0)
+                    if ((this.control & (byte)LcdcControls.ObjectEnable) != 0)
                     {
                         this.RenderObjects();
                     }
@@ -68,9 +68,9 @@ namespace EightBit.GameBoy
         {
             var palette = this.CreatePalette(IoRegisters.BGP);
 
-            var window = (this.control & (byte)LcdcControl.WindowEnable) != 0;
-            var bgArea = (this.control & (byte)LcdcControl.BackgroundCodeAreaSelection) != 0 ? 0x1c00 : 0x1800;
-            var bgCharacters = (this.control & (byte)LcdcControl.BackgroundCharacterDataSelection) != 0 ? 0 : 0x800;
+            var window = (this.control & (byte)LcdcControls.WindowEnable) != 0;
+            var bgArea = (this.control & (byte)LcdcControls.BackgroundCodeAreaSelection) != 0 ? 0x1c00 : 0x1800;
+            var bgCharacters = (this.control & (byte)LcdcControls.BackgroundCharacterDataSelection) != 0 ? 0 : 0x800;
 
             var wx = this.bus.IO.Peek(IoRegisters.WX);
             var wy = this.bus.IO.Peek(IoRegisters.WY);
@@ -99,7 +99,7 @@ namespace EightBit.GameBoy
 
         private void RenderObjects()
         {
-            var objBlockHeight = (this.control & (byte)LcdcControl.ObjectBlockCompositionSelection) != 0 ? 16 : 8;
+            var objBlockHeight = (this.control & (byte)LcdcControls.ObjectBlockCompositionSelection) != 0 ? 16 : 8;
 
             var palettes = new int[2][];
             palettes[0] = this.CreatePalette(IoRegisters.OBP0);

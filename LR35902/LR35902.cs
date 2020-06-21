@@ -9,7 +9,7 @@ namespace EightBit.GameBoy
     public class LR35902 : IntelProcessor
     {
         private readonly Bus bus;
-        private readonly Register16 af = new Register16((int)Mask.Mask16);
+        private readonly Register16 af = new Register16((int)Mask.Sixteen);
         private bool prefixCB = false;
 
         public LR35902(Bus bus)
@@ -30,11 +30,11 @@ namespace EightBit.GameBoy
             }
         }
 
-        public override Register16 BC { get; } = new Register16((int)Mask.Mask16);
+        public override Register16 BC { get; } = new Register16((int)Mask.Sixteen);
 
-        public override Register16 DE { get; } = new Register16((int)Mask.Mask16);
+        public override Register16 DE { get; } = new Register16((int)Mask.Sixteen);
 
-        public override Register16 HL { get; } = new Register16((int)Mask.Mask16);
+        public override Register16 HL { get; } = new Register16((int)Mask.Sixteen);
 
         private bool IME { get; set; } = false;
 
@@ -123,7 +123,7 @@ namespace EightBit.GameBoy
         {
             base.HandleRESET();
             this.DI();
-            this.SP.Word = (ushort)(Mask.Mask16 - 1);
+            this.SP.Word = (ushort)(Mask.Sixteen - 1);
             this.Tick(4);
         }
 
@@ -635,7 +635,7 @@ namespace EightBit.GameBoy
                                         var value = (sbyte)this.FetchByte();
                                         var result = before + value;
                                         this.SP.Word = (ushort)result;
-                                        var carried = before ^ value ^ (result & (int)Mask.Mask16);
+                                        var carried = before ^ value ^ (result & (int)Mask.Sixteen);
                                         this.F = ClearBit(this.F, StatusBits.ZF | StatusBits.NF);
                                         this.F = SetBit(this.F, StatusBits.CF, carried & (int)Bits.Bit8);
                                         this.F = SetBit(this.F, StatusBits.HC, carried & (int)Bits.Bit4);
@@ -655,7 +655,7 @@ namespace EightBit.GameBoy
                                         var value = (sbyte)this.FetchByte();
                                         var result = before + value;
                                         this.HL.Word = (ushort)result;
-                                        var carried = before ^ value ^ (result & (int)Mask.Mask16);
+                                        var carried = before ^ value ^ (result & (int)Mask.Sixteen);
                                         this.F = ClearBit(this.F, StatusBits.ZF | StatusBits.NF);
                                         this.F = SetBit(this.F, StatusBits.CF, carried & (int)Bits.Bit8);
                                         this.F = SetBit(this.F, StatusBits.HC, carried & (int)Bits.Bit4);

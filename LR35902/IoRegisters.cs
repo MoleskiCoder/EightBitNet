@@ -99,7 +99,7 @@ namespace EightBit.GameBoy
 
         public bool BootRomEnabled => !this.BootRomDisabled;
 
-        public int TimerClock => this.TimerControl & (byte)Mask.Mask2;
+        public int TimerClock => this.TimerControl & (byte)Mask.Two;
 
         public bool TimerEnabled => !this.TimerDisabled;
 
@@ -134,7 +134,7 @@ namespace EightBit.GameBoy
         public void Reset()
         {
             this.Poke(NR52, 0xf1);
-            this.Poke(LCDC, (byte)(LcdcControl.DisplayBackground | LcdcControl.BackgroundCharacterDataSelection | LcdcControl.LcdEnable));
+            this.Poke(LCDC, (byte)(LcdcControls.DisplayBackground | LcdcControls.BackgroundCharacterDataSelection | LcdcControls.LcdEnable));
             this.divCounter.Word = 0xabcc;
             this.timerCounter = 0;
         }
@@ -180,7 +180,7 @@ namespace EightBit.GameBoy
 
         public void UpdateLcdStatusMode(LcdStatusMode mode)
         {
-            var current = this.Peek(STAT) & unchecked((byte)~Mask.Mask2);
+            var current = this.Peek(STAT) & unchecked((byte)~Mask.Two);
             this.Poke(STAT, (byte)(current | (int)mode));
             this.OnDisplayStatusModeUpdated(mode);
         }
@@ -364,7 +364,7 @@ namespace EightBit.GameBoy
                             var upOrSelect = (live && !this.p12) ? 0 : Bits.Bit2;
                             var downOrStart = (live && !this.p13) ? 0 : Bits.Bit3;
                             var lowNibble = (byte)(rightOrA | leftOrB | upOrSelect | downOrStart);
-                            var highNibble = (byte)Chip.PromoteNibble((byte)Mask.Mask4);
+                            var highNibble = (byte)Chip.PromoteNibble((byte)Mask.Four);
                             var value = (byte)(lowNibble | highNibble);
                             this.Poke(port, value);
                         }
@@ -382,19 +382,19 @@ namespace EightBit.GameBoy
                     case TMA:
                         break;
                     case TAC:
-                        this.ApplyMask(port, (byte)Mask.Mask3);
+                        this.ApplyMask(port, (byte)Mask.Three);
                         break;
 
                     // Interrupt Flags
                     case IF:
-                        this.ApplyMask(port, (byte)Mask.Mask5);
+                        this.ApplyMask(port, (byte)Mask.Five);
                         break;
 
                     // LCD Display Registers
                     case LCDC:
                         break;
                     case STAT:
-                        this.ApplyMask(port, (byte)Mask.Mask7);
+                        this.ApplyMask(port, (byte)Mask.Seven);
                         break;
                     case SCY:
                     case SCX:

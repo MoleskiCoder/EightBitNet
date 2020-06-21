@@ -417,12 +417,12 @@ namespace EightBit
             this.IM = 0;
 
             this.REFRESH = new RefreshRegister(0);
-            this.IV = (byte)Mask.Mask8;
+            this.IV = (byte)Mask.Eight;
 
             this.ExxAF();
             this.Exx();
 
-            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
+            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
 
             this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
 
@@ -519,7 +519,7 @@ namespace EightBit
             base.HandleRESET();
             this.DisableInterrupts();
             this.IV = this.REFRESH = 0;
-            this.SP.Word = this.AF.Word = (ushort)Mask.Mask16;
+            this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
             this.Tick(3);
         }
 
@@ -1035,6 +1035,7 @@ namespace EightBit
                                         this.PC.Word -= 2;
                                         this.Tick(5);
                                     }
+
                                     this.Tick(3);
                                     break;
                                 case 7: // OTDR
@@ -1043,6 +1044,7 @@ namespace EightBit
                                         this.PC.Word -= 2;
                                         this.Tick(5);
                                     }
+
                                     this.Tick(3);
                                     break;
                             }
@@ -1200,6 +1202,7 @@ namespace EightBit
                                 this.R(y, this.Increment(original));
                                 break;
                             }
+
                         case 5: // 8-bit DEC
                             {
                                 if (memoryY && this.displaced)
@@ -1230,6 +1233,7 @@ namespace EightBit
                                 this.R(y, value);  // LD r,n
                                 break;
                             }
+
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
                             {
@@ -1634,7 +1638,7 @@ namespace EightBit
             this.F = ClearBit(this.F, StatusBits.HC, LowNibble(operand));
             var result = --operand;
             this.F = AdjustSZXY(this.F, result);
-            this.F = SetBit(this.F, StatusBits.VF, result == (byte)Mask.Mask7);
+            this.F = SetBit(this.F, StatusBits.VF, result == (byte)Mask.Seven);
             return result;
         }
 
@@ -1697,7 +1701,7 @@ namespace EightBit
             return this.intermediate.Word;
         }
 
-        private ushort ADC(Register16 operand ,Register16 value)
+        private ushort ADC(Register16 operand, Register16 value)
         {
             this.Add(operand, value, this.F & (byte)StatusBits.CF); // Leaves result in intermediate anyway
             this.F = ClearBit(this.F, StatusBits.ZF, this.intermediate.Word);
@@ -2049,7 +2053,7 @@ namespace EightBit
             this.MEMPTR.Word = destination.Word;
             this.F = SetBit(this.F, StatusBits.NF, value & (byte)Bits.Bit7);
             this.F = SetBit(this.F, StatusBits.HC | StatusBits.CF, (this.L + value) > 0xff);
-            this.F = AdjustParity(this.F, (byte)(((value + this.L) & (int)Mask.Mask3) ^ this.B));
+            this.F = AdjustParity(this.F, (byte)(((value + this.L) & (int)Mask.Three) ^ this.B));
         }
 
         private void OUTI()

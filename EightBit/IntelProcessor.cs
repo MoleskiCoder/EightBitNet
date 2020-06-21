@@ -32,9 +32,9 @@ namespace EightBit
 
         public event EventHandler<EventArgs> LoweredHALT;
 
-        public Register16 SP { get; } = new Register16((ushort)Mask.Mask16);
+        public Register16 SP { get; } = new Register16((ushort)Mask.Sixteen);
 
-        public Register16 MEMPTR { get; } = new Register16((ushort)Mask.Mask16);
+        public Register16 MEMPTR { get; } = new Register16((ushort)Mask.Sixteen);
 
         public abstract Register16 AF { get; }
 
@@ -89,18 +89,18 @@ namespace EightBit
         protected static int CalculateHalfCarryAdd(byte before, byte value, int calculation)
         {
             var index = BuildHalfCarryIndex(before, value, calculation);
-            return HalfCarryTableAdd[index & (int)Mask.Mask3];
+            return HalfCarryTableAdd[index & (int)Mask.Three];
         }
 
         protected static int CalculateHalfCarrySub(byte before, byte value, int calculation)
         {
             var index = BuildHalfCarryIndex(before, value, calculation);
-            return HalfCarryTableSub[index & (int)Mask.Mask3];
+            return HalfCarryTableSub[index & (int)Mask.Three];
         }
 
         protected override void OnRaisedPOWER()
         {
-            this.PC.Word = this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Mask16;
+            this.PC.Word = this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
             this.RaiseHALT();
             base.OnRaisedPOWER();
         }

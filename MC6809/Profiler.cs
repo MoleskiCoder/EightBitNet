@@ -1,4 +1,7 @@
-﻿namespace EightBit
+﻿// <copyright file="Profiler.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace EightBit
 {
     using System;
 
@@ -8,11 +11,11 @@
         private readonly ulong[] addressProfiles;
         private readonly ulong[] addressCounts;
 
-        private ushort address;
-
         private readonly Bus board;
         private readonly MC6809 processor;
         private readonly Disassembler disassembler;
+
+        private ushort address;
 
         public Profiler(Bus board, MC6809 processor, Disassembler disassembler)
         {

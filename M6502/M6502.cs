@@ -555,7 +555,7 @@ namespace EightBit
             this.Y = 0;
             this.A = 0;
             this.P = (byte)StatusBits.RF;
-            this.S = (byte)Mask.Mask8;
+            this.S = (byte)Mask.Eight;
             this.LowerSYNC();
             this.LowerRW();
             base.OnRaisedPOWER();

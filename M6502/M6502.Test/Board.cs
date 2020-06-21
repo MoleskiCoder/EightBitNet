@@ -24,9 +24,9 @@ namespace M6502.Test
             this.CPU = new M6502(this);
             this.symbols = new Symbols();
             this.disassembler = new Disassembler(this, this.CPU, this.symbols);
-            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Mask16, AccessLevel.ReadWrite);
+            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
 
-            this.oldPC = (ushort)Mask.Mask16;
+            this.oldPC = (ushort)Mask.Sixteen;
         }
 
         public M6502 CPU { get; }

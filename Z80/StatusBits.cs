@@ -27,7 +27,7 @@ namespace EightBit
         // Parity
         PF = Bits.Bit2,
 
-        // Zero
+        // Overflow
         VF = Bits.Bit2,
 
         // Negative?

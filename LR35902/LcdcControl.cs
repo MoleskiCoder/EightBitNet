@@ -4,7 +4,7 @@
 namespace EightBit.GameBoy
 {
     [System.Flags]
-    public enum LcdcControl
+    public enum LcdcControls
     {
         None = 0,
         DisplayBackground = Bits.Bit0,

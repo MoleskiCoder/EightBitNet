@@ -27,9 +27,9 @@ namespace Fuse
 
         public string Specifier { get; private set; }
 
-        public ushort Address { get; private set; } = (ushort)EightBit.Mask.Mask16;
+        public ushort Address { get; private set; } = (ushort)EightBit.Mask.Sixteen;
 
-        public byte Value { get; private set; } = (byte)EightBit.Mask.Mask8;
+        public byte Value { get; private set; } = (byte)EightBit.Mask.Eight;
 
         public bool TryParse(Lines lines)
         {

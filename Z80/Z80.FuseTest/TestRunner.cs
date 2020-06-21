@@ -44,7 +44,7 @@ namespace Fuse
             foreach (var e in result.Events.Container)
             {
                 // Ignore contention events
-                if (!e.Specifier.EndsWith("C"))
+                if (!e.Specifier.EndsWith("C", System.StringComparison.Ordinal))
                 {
                     this.expectedEvents.Add(e);
                 }
@@ -55,7 +55,7 @@ namespace Fuse
 
         public bool Unimplemented { get; private set; } = false;
 
-        public override EightBit.MemoryMapping Mapping(ushort address) => new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Mask16, EightBit.AccessLevel.ReadWrite);
+        public override EightBit.MemoryMapping Mapping(ushort address) => new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
 
         public void Run()
         {
@@ -446,7 +446,7 @@ namespace Fuse
         private static string ToString(TestEvent e)
         {
             var output = $"Cycles = {e.Cycles}, Specifier = {e.Specifier}, Address = {e.Address:X4}";
-            if (!e.Specifier.EndsWith("C"))
+            if (!e.Specifier.EndsWith("C", System.StringComparison.Ordinal))
             {
                 output += $", Value={e.Value:X2}";
             }

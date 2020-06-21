@@ -22,6 +22,25 @@ namespace EightBit
             GC.SuppressFinalize(this);
         }
 
+        public IEnumerable<Tuple<ushort, byte[]>> Parse()
+        {
+            this.eof = false;
+            while (!this.reader.EndOfStream && !this.eof)
+            {
+                var line = this.reader.ReadLine();
+                var parsed = this.Parse(line);
+                if (parsed != null)
+                {
+                    yield return parsed;
+                }
+            }
+
+            if (!this.eof)
+            {
+                throw new InvalidOperationException("File is missing an EOF record");
+            }
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!this.disposed)
@@ -35,22 +54,28 @@ namespace EightBit
             }
         }
 
-        public IEnumerable<Tuple<ushort, byte[]>> Parse()
+        private static byte[] ParseDataRecord(string line, byte count)
         {
-            this.eof = false;
-            while (!this.reader.EndOfStream && !this.eof)
+            if (string.IsNullOrEmpty(line))
             {
-                var line = this.reader.ReadLine();
-                var parsed = this.Parse(line);
-                if (parsed != null)
-                {
-                    yield return parsed;
-                }
+                throw new ArgumentNullException(nameof(line));
             }
-            if (!this.eof)
+
+            var requiredLength = 9 + 2 + (count * 2);
+            if (line.Length != requiredLength)
             {
-                throw new InvalidOperationException("File is missing an EOF record");
+                throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line is not the required length");
             }
+
+            var data = new byte[count];
+            for (var i = 0; i < count; ++i)
+            {
+                var position = 9 + (i * 2);
+                var extracted = line.Substring(position, 2);
+                data[i] = Convert.ToByte(extracted, 16);
+            }
+
+            return data;
         }
 
         private Tuple<ushort, byte[]> Parse(string line)
@@ -85,30 +110,6 @@ namespace EightBit
                 default:
                     throw new InvalidOperationException("Unhandled hex file record.");
             }
-        }
-
-        private static byte[] ParseDataRecord(string line, byte count)
-        {
-            if (string.IsNullOrEmpty(line))
-            {
-                throw new ArgumentNullException(nameof(line));
-            }
-
-            var requiredLength = 9 + 2 + (count * 2);
-            if (line.Length != requiredLength)
-            {
-                throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line is not the required length");
-            }
-
-            var data = new byte[count];
-            for (var i = 0; i < count; ++i)
-            {
-                var position = 9 + (i * 2);
-                var extracted = line.Substring(position, 2);
-                data[i] = Convert.ToByte(extracted, 16);
-            }
-
-            return data;
         }
     }
 }

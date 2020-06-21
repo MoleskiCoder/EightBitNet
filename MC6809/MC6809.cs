@@ -1,4 +1,7 @@
-﻿namespace EightBit
+﻿// <copyright file="MC6809.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace EightBit
 {
     using System;
 
@@ -6,16 +9,18 @@
     // http://www.cpu-world.com/Arch/6809.html
     // http://atjs.mbnet.fi/mc6809/Information/6809.htm
 
-    //  |---------------|-----------------------------------|
-    //  |   MPU State   |                                   |
-    //  |_______________|   MPU State Definition            |
-    //  |   BA  |   BS  |                                   |
-    //  |_______|_______|___________________________________|
-    //  |   0   |   0   |   Normal (running)                |
-    //  |   0   |   1   |   Interrupt or RESET Acknowledge  |
-    //  |   1   |   0   |   SYNC Acknowledge                |
-    //  |   1   |   1   |   HALT Acknowledge                |
-    //  |-------|-------|-----------------------------------|
+    /*
+    |---------------|-----------------------------------|
+    |   MPU State   |                                   |
+    |_______________|   MPU State Definition            |
+    |   BA  |   BS  |                                   |
+    |_______|_______|___________________________________|
+    |   0   |   0   |   Normal (running)                |
+    |   0   |   1   |   Interrupt or RESET Acknowledge  |
+    |   1   |   0   |   SYNC Acknowledge                |
+    |   1   |   1   |   HALT Acknowledge                |
+    |-------|-------|-----------------------------------|
+    */
 
     public sealed class MC6809 : BigEndianProcessor
     {
@@ -26,7 +31,6 @@
         private const byte FIRQvector = 0xf6;       // FIRQ vector
         private const byte SWI2vector = 0xf4;       // SWI2 vector
         private const byte SWI3vector = 0xf2;       // SWI3 vector
-        // private const byte RESERVEDvector = 0xf0;   // RESERVED vector
 
         private byte cc = 0;
         private byte dp = 0;
@@ -118,6 +122,18 @@
 
         public bool Halted => this.HALT.Lowered();
 
+        public ref PinLevel NMI => ref this.nmiLine;
+
+        public ref PinLevel FIRQ => ref this.firqLine;
+
+        public ref PinLevel HALT => ref this.haltLine;
+
+        public ref PinLevel BA => ref this.baLine;
+
+        public ref PinLevel BS => ref this.bsLine;
+
+        public ref PinLevel RW => ref this.rwLine;
+
         public int EntireRegisterSet => this.CC & (byte)StatusBits.EF;
 
         public int FastInterruptMasked => this.CC & (byte)StatusBits.FF;
@@ -145,18 +161,6 @@
         private bool LE => (this.Zero != 0) || this.LT;                         // (Z OR (N XOR V))
 
         private bool GT => !this.LE;                                            // !(Z OR (N XOR V))
-
-        public ref PinLevel NMI => ref this.nmiLine;
-
-        public ref PinLevel FIRQ => ref this.firqLine;
-
-        public ref PinLevel HALT => ref this.haltLine;
-
-        public ref PinLevel BA => ref this.baLine;
-
-        public ref PinLevel BS => ref this.bsLine;
-
-        public ref PinLevel RW => ref this.rwLine;
 
         public void Halt()
         {
@@ -400,6 +404,16 @@
             return base.BusRead();
         }
 
+        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
+
+        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
+
+        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
+
+        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
+
+        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
+
         private void HandleHALT()
         {
             this.RaiseBA();
@@ -482,16 +496,6 @@
 
         private void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
-        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
-
-        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
-
-        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
-
-        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
-
-        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
-
         private void Push(Register16 stack, byte value) => this.BusWrite(--stack.Word, value);
 
         private void PushS(byte value) => this.Push(this.S, value);
@@ -515,7 +519,8 @@
 
         private Register16 RR(int which)
         {
-            switch (which) {
+            switch (which)
+            {
                 case 0b00:
                     return this.X;
                 case 0b01:
@@ -553,58 +558,58 @@
             var address = new Register16();
             if ((type & (byte)Bits.Bit7) != 0)
             {
-                switch (type & (byte)Mask.Mask4)
+                switch (type & (byte)Mask.Four)
                 {
-                    case 0b0000:    // ,R+
+                    case 0b0000: // ,R+
                         this.Tick(2);
                         address.Word = r.Word++;
                         break;
-                    case 0b0001:    // ,R++
+                    case 0b0001: // ,R++
                         this.Tick(3);
                         address.Word = r.Word;
                         r.Word += 2;
                         break;
-                    case 0b0010:    // ,-R
+                    case 0b0010: // ,-R
                         this.Tick(2);
                         address.Word = --r.Word;
                         break;
-                    case 0b0011:    // ,--R
+                    case 0b0011: // ,--R
                         this.Tick(3);
                         r.Word -= 2;
                         address.Word = r.Word;
                         break;
-                    case 0b0100:    // ,R
+                    case 0b0100: // ,R
                         address.Word = r.Word;
                         break;
-                    case 0b0101:    // B,R
+                    case 0b0101: // B,R
                         this.Tick();
                         address.Word = (ushort)(r.Word + (sbyte)this.B);
                         break;
-                    case 0b0110:    // A,R
+                    case 0b0110: // A,R
                         this.Tick();
                         address.Word = (ushort)(r.Word + (sbyte)this.A);
                         break;
-                    case 0b1000:    // n,R (eight-bit)
+                    case 0b1000: // n,R (eight-bit)
                         this.Tick();
                         address.Word = (ushort)(r.Word + (sbyte)this.FetchByte());
                         break;
-                    case 0b1001:    // n,R (sixteen-bit)
+                    case 0b1001: // n,R (sixteen-bit)
                         this.Tick(4);
                         address.Word = (ushort)(r.Word + (short)this.FetchWord().Word);
                         break;
-                    case 0b1011:    // D,R
+                    case 0b1011: // D,R
                         this.Tick(4);
                         address.Word = (ushort)(r.Word + this.D.Word);
                         break;
-                    case 0b1100:    // n,PCR (eight-bit)
+                    case 0b1100: // n,PCR (eight-bit)
                         this.Tick();
                         address.Word = this.Address_relative_byte().Word;
                         break;
-                    case 0b1101:    // n,PCR (sixteen-bit)
+                    case 0b1101: // n,PCR (sixteen-bit)
                         this.Tick(2);
                         address.Word = this.Address_relative_word().Word;
                         break;
-                    case 0b1111:    // [n]
+                    case 0b1111: // [n]
                         this.Tick(2);
                         address.Word = this.Address_extended().Word;
                         break;
@@ -623,8 +628,9 @@
             {
                 // EA = ,R + 5-bit offset
                 this.Tick();
-                address.Word = new Register16(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Mask5))).Word;
+                address.Word = new Register16(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five))).Word;
             }
+
             return address;
         }
 
@@ -683,7 +689,7 @@
 
         private byte AdjustOverflow(ushort before, ushort data, uint after)
         {
-            var lowAfter = (ushort)(after & (uint)Mask.Mask16);
+            var lowAfter = (ushort)(after & (uint)Mask.Sixteen);
             var highAfter = (ushort)(after >> 16);
             return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 15)) & (int)Bits.Bit15);
         }
@@ -701,7 +707,7 @@
 
         private byte AdjustAddition(ushort before, ushort data, uint after)
         {
-            var result = new Register16(after & (uint)Mask.Mask16);
+            var result = new Register16(after & (uint)Mask.Sixteen);
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
@@ -719,7 +725,7 @@
 
         private byte AdjustSubtraction(ushort before, ushort data, uint after)
         {
-            var result = new Register16(after & (uint)Mask.Mask16);
+            var result = new Register16(after & (uint)Mask.Sixteen);
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
@@ -785,9 +791,9 @@
             this.SaveRegisterState();
         }
 
-        private void SaveRegisterState() => this.PSH(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Mask8 : (byte)0b10000001);
+        private void SaveRegisterState() => this.PSH(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Eight : (byte)0b10000001);
 
-        private void RestoreRegisterState() => this.PUL(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Mask8 : (byte)0b10000001);
+        private void RestoreRegisterState() => this.PUL(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Eight : (byte)0b10000001);
 
         private ref byte ReferenceTransfer8(int specifier)
         {
@@ -808,7 +814,8 @@
 
         private Register16 ReferenceTransfer16(int specifier)
         {
-            switch (specifier) {
+            switch (specifier)
+            {
                 case 0b0000:
                     return this.D;
                 case 0b0001:
@@ -1166,7 +1173,6 @@
                 case 0x7d: this.Tick(7); this.TST(this.AM_extended_byte()); break;                              // TST (extended)
 
                 // Branching
-
                 case 0x16: this.Tick(5); this.Jump(this.Address_relative_word()); break;                        // BRA (LBRA relative)
                 case 0x17: this.Tick(9); this.JSR(this.Address_relative_word()); break;                         // BSR (LBSR relative)
                 case 0x20: this.Tick(3); this.Jump(this.Address_relative_byte()); break;                        // BRA (relative)
@@ -1226,7 +1232,6 @@
                 case 0xbe: this.Tick(7); this.Y.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDY extended)
 
                 // Branching
-
                 case 0x21: this.Tick(5); this.Address_relative_word(); break;                                   // BRN (LBRN relative)
                 case 0x22: this.Tick(5); this.BranchLong(this.HI); break;                                       // BHI (LBHI relative)
                 case 0x23: this.Tick(5); this.BranchLong(this.LS); break;                                       // BLS (LBLS relative)
@@ -1300,7 +1305,7 @@
         {
             var addition = (uint)(operand.Word + data.Word);
             this.CC = this.AdjustAddition(operand, data, addition);
-            return new Register16(addition & (uint)Mask.Mask16);
+            return new Register16(addition & (uint)Mask.Sixteen);
         }
 
         private byte AndR(byte operand, byte data) => this.Through((byte)(operand & data));
@@ -1398,7 +1403,7 @@
                 {
                     ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
                     (leftRegister.Low, rightRegister) = (rightRegister, leftRegister.Low);
-                    leftRegister.High = (byte)Mask.Mask8;
+                    leftRegister.High = (byte)Mask.Eight;
                 }
             }
             else
@@ -1408,7 +1413,7 @@
                 {
                     var rightRegister = this.ReferenceTransfer16(rightSpecifier);
                     (leftRegister, rightRegister.Low) = (rightRegister.Low, leftRegister);
-                    rightRegister.High =(byte)Mask.Mask8;
+                    rightRegister.High =(byte)Mask.Eight;
                 }
                 else
                 {
@@ -1470,6 +1475,7 @@
             if ((data & (byte)Bits.Bit6) != 0)
             {
                 this.Tick(2);
+
                 // Pushing to the S stack means we must be pushing U
                 this.PushWord(stack, object.ReferenceEquals(stack, this.S) ? this.U : this.S);
             }
@@ -1552,6 +1558,7 @@
             if ((data & (byte)Bits.Bit6) != 0)
             {
                 this.Tick(2);
+
                 // Pulling from the S stack means we must be pulling U
                 (object.ReferenceEquals(stack, this.S) ? this.U : this.S).Word = this.PopWord(stack).Word;
             }
@@ -1599,13 +1606,13 @@
         {
             var subtraction = (uint)(operand.Word - data.Word);
             this.CC = this.AdjustSubtraction(operand, data, subtraction);
-            return new Register16(subtraction & (uint)Mask.Mask16);
+            return new Register16(subtraction & (uint)Mask.Sixteen);
         }
 
         private byte SEX(byte from)
         {
             this.CC = this.AdjustNZ(from);
-            return (from & (byte)Bits.Bit7) != 0 ? (byte)Mask.Mask8 : (byte)0;
+            return (from & (byte)Bits.Bit7) != 0 ? (byte)Mask.Eight : (byte)0;
         }
 
         private void SWI()
@@ -1657,7 +1664,7 @@
                 {
                     var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
                     destinationRegister.Low = sourceRegister;
-                    destinationRegister.High = (byte)Mask.Mask8;
+                    destinationRegister.High = (byte)Mask.Eight;
                 }
                 else
                 {

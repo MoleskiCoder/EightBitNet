@@ -1,4 +1,7 @@
-﻿namespace EightBit
+﻿// <copyright file="Disassembler.cs" company="Adrian Conlon">
+// Copyright (c) Adrian Conlon. All rights reserved.
+// </copyright>
+namespace EightBit
 {
     using System;
     using System.Collections.Generic;
@@ -46,12 +49,6 @@
 
         public string Trace() => this.Trace(this.CPU.PC);
 
-        ////private static string Dump_RelativeValue(sbyte value) => value.ToString("D");
-
-        ////private static string Dump_RelativeValue(short value) => value.ToString("D");
-
-        ////private static string Dump_RelativeValue(Register16 value) => Dump_RelativeValue(value);
-
         public string Disassemble(ushort current)
         {
             this.address = current;
@@ -68,25 +65,69 @@
             return this.DisassembleUnprefixed();
         }
 
+        private static string RR(int which)
+        {
+            switch (which)
+            {
+                case 0b00:
+                    return "X";
+                case 0b01:
+                    return "Y";
+                case 0b10:
+                    return "U";
+                case 0b11:
+                    return "S";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(which), which, "Register specification is unknown");
+            }
+        }
+
+        private static string WrapIndirect(string what, bool indirect)
+        {
+            var open = indirect ? "[" : string.Empty;
+            var close = indirect ? "]" : string.Empty;
+            return $"{open}{what}{close}";
+        }
+
+        private static string ReferenceTransfer8(int specifier)
+        {
+            switch (specifier)
+            {
+                case 0b1000:
+                    return "A";
+                case 0b1001:
+                    return "B";
+                case 0b1010:
+                    return "CC";
+                case 0b1011:
+                    return "DP";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "8bit register specification is unknown");
+            }
+        }
+
+        private static string ReferenceTransfer16(int specifier)
+        {
+            switch (specifier)
+            {
+                case 0b0000:
+                    return "D";
+                case 0b0001:
+                    return "X";
+                case 0b0010:
+                    return "Y";
+                case 0b0011:
+                    return "U";
+                case 0b0100:
+                    return "S";
+                case 0b0101:
+                    return "PC";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "16bit register specification is unknown");
+            }
+        }
+
         private string Disassemble(int current) => this.Disassemble((ushort)current);
-
-        ////private string Dump_Flags()
-        ////{
-        ////    var returned = string.Empty;
-        ////    returned += this.CPU.EntireRegisterSet != 0 ? "E" : "-";
-        ////    returned += this.CPU.FastInterruptMasked != 0 ? "F" : "-";
-        ////    returned += this.CPU.HalfCarry != 0 ? "H" : "-";
-        ////    returned += this.CPU.InterruptMasked != 0 ? "I" : "-";
-        ////    returned += this.CPU.Negative != 0 ? "N" : "-";
-        ////    returned += this.CPU.Zero != 0 ? "Z" : "-";
-        ////    returned += this.CPU.Overflow != 0 ? "V" : "-";
-        ////    returned += this.CPU.Carry != 0 ? "C" : "-";
-        ////    return returned;
-        ////}
-
-        ////private string Disassemble(Register16 current) => this.Disassemble(current.Word);
-
-        ////private string Disassemble() => this.Disassemble(this.CPU.PC);
 
         private string DisassembleUnprefixed()
         {
@@ -431,7 +472,6 @@
                 case 0x7d: output += this.Address_extended("TST"); break;       // TST (extended)
 
                 // Branching
-
                 case 0x16: output += this.BranchLong("LBRA"); break;            // BRA (LBRA relative)
                 case 0x17: output += this.BranchLong("LBSR"); break;            // BSR (LBSR relative)
                 case 0x20: output += this.BranchShort("BRA"); break;            // BRA (relative)
@@ -496,7 +536,6 @@
                 case 0xbe: output += this.Address_extended("LDY"); break;       // LD (LDY extended)
 
                 // Branching
-
                 case 0x21: output += this.BranchLong("LBRN"); break;            // BRN (LBRN relative)
                 case 0x22: output += this.BranchLong("LBHI"); break;            // BHI (LBHI relative)
                 case 0x23: output += this.BranchLong("LBLS"); break;            // BLS (LBLS relative)
@@ -568,31 +607,7 @@
             return output;
         }
 
-        //
-
-        private static string RR(int which)
-        {
-            switch (which)
-            {
-                case 0b00:
-                    return "X";
-                case 0b01:
-                    return "Y";
-                case 0b10:
-                    return "U";
-                case 0b11:
-                    return "S";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(which), which, "Register specification is unknown");
-            }
-        }
-
-        private static string WrapIndirect(string what, bool indirect)
-        {
-            var open = indirect ? "[" : "";
-            var close = indirect ? "]" : "";
-            return $"{open}{what}{close}";
-        }
+        ////
 
         private string Address_direct(string mnemomic)
         {
@@ -613,49 +628,49 @@
             if ((type & (byte)Bits.Bit7) != 0)
             {
                 var indirect = (type & (byte)Bits.Bit4) != 0;
-                switch (type & (byte)Mask.Mask4)
+                switch (type & (byte)Mask.Four)
                 {
-                    case 0b0000:    // ,R+
+                    case 0b0000: // ,R+
                         output += $"\t{mnemomic}\t{WrapIndirect($",{r}+", indirect)}";
                         break;
-                    case 0b0001:    // ,R++
+                    case 0b0001: // ,R++
                         output += $"\t{mnemomic}\t{WrapIndirect($",{r}++", indirect)}";
                         break;
-                    case 0b0010:    // ,-R
+                    case 0b0010: // ,-R
                         output += $"\t{mnemomic}\t{WrapIndirect($",-{r}", indirect)}";
                         break;
-                    case 0b0011:    // ,--R
+                    case 0b0011: // ,--R
                         output += $"\t{mnemomic}\t{WrapIndirect($",--{r}", indirect)}";
                         break;
-                    case 0b0100:    // ,R
+                    case 0b0100: // ,R
                         output += $"\t{mnemomic}\t{WrapIndirect($",{r}", indirect)}";
                         break;
-                    case 0b0101:    // B,R
+                    case 0b0101: // B,R
                         output += $"\t{mnemomic}\t{WrapIndirect($"B,{r}", indirect)}";
                         break;
-                    case 0b0110:    // A,R
+                    case 0b0110: // A,R
                         output += $"\t{mnemomic}\t{WrapIndirect($"A,{r}", indirect)}";
                         break;
-                    case 0b1000:    // n,R (eight-bit)
+                    case 0b1000: // n,R (eight-bit)
                         byte8 = this.GetByte(++this.address);
                         output += $"{byte8:x2}\t{mnemomic}\t{WrapIndirect($"{byte8:x2},{r}", indirect)}";
                         break;
-                    case 0b1001:    // n,R (sixteen-bit)
+                    case 0b1001: // n,R (sixteen-bit)
                         word = this.GetWord(++this.address);
                         output += $"{word:x4}\t{mnemomic}\t{WrapIndirect($"{word:x4},{r}", indirect)}";
                         break;
-                    case 0b1011:    // D,R
+                    case 0b1011: // D,R
                         output += $"\t{mnemomic}\t{WrapIndirect($"D,{r}", indirect)}";
                         break;
-                    case 0b1100:    // n,PCR (eight-bit)
+                    case 0b1100: // n,PCR (eight-bit)
                         byte8 = this.GetByte(++this.address);
                         output += $"{byte8:x2}\t{mnemomic}\t{WrapIndirect("${(byte)byte8:D},PCR", indirect)}";
                         break;
-                    case 0b1101:    // n,PCR (sixteen-bit)
+                    case 0b1101: // n,PCR (sixteen-bit)
                         word = this.GetWord(++this.address);
                         output += $"{word:x4}\t{mnemomic}\t{WrapIndirect("${(short)word:D},PCR", indirect)}";
                         break;
-                    case 0b1111:    // [n]
+                    case 0b1111: // [n]
                         if (!indirect)
                         {
                             throw new InvalidOperationException("Index specification cannot be direct");
@@ -671,7 +686,7 @@
             else
             {
                 // EA = ,R + 5-bit offset
-                output += $"\t{mnemomic}\t{Processor.SignExtend(5, type & (byte)Mask.Mask5)},{r}";
+                output += $"\t{mnemomic}\t{Processor.SignExtend(5, type & (byte)Mask.Five)},{r}";
             }
 
             return output;
@@ -711,44 +726,6 @@
 
         private string BranchLong(string mnemomic) => this.Address_relative_word(mnemomic);
 
-        private static string ReferenceTransfer8(int specifier)
-        {
-            switch (specifier)
-            {
-                case 0b1000:
-                    return "A";
-                case 0b1001:
-                    return "B";
-                case 0b1010:
-                    return "CC";
-                case 0b1011:
-                    return "DP";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "8bit register specification is unknown");
-            }
-        }
-
-        private static string ReferenceTransfer16(int specifier)
-        {
-            switch (specifier)
-            {
-                case 0b0000:
-                    return "D";
-                case 0b0001:
-                    return "X";
-                case 0b0010:
-                    return "Y";
-                case 0b0011:
-                    return "U";
-                case 0b0100:
-                    return "S";
-                case 0b0101:
-                    return "PC";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "16bit register specification is unknown");
-            }
-        }
-
         private string TFR(string mnemomic)
         {
             var data = this.GetByte(++this.address);
@@ -763,7 +740,7 @@
                 : $"{output}{ReferenceTransfer16(reg1)},{ReferenceTransfer16(reg2)}";
         }
 
-        //
+        ////
 
         private string PulS() => this.PulX("PULS", "U");
 

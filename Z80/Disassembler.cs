@@ -284,6 +284,7 @@ namespace EightBit
                                     specification = "IM 2";
                                     break;
                             }
+
                             break;
                         case 7:
                             switch (y)

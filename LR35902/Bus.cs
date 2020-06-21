@@ -102,7 +102,7 @@ namespace EightBit.GameBoy
 
         public void RunRasterLines()
         {
-            this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControl.LcdEnable) != 0;
+            this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControls.LcdEnable) != 0;
             this.IO.ResetLY();
             this.RunRasterLines(DisplayCharacteristics.RasterHeight);
         }
@@ -117,7 +117,7 @@ namespace EightBit.GameBoy
         {
             if ((address < 0x100) && this.IO.BootRomEnabled)
             {
-                return new MemoryMapping(this.bootRom, 0x0000, Mask.Mask16, AccessLevel.ReadOnly);
+                return new MemoryMapping(this.bootRom, 0x0000, Mask.Sixteen, AccessLevel.ReadOnly);
             }
 
             if ((address < 0x4000) && this.GameRomEnabled)
@@ -198,7 +198,7 @@ namespace EightBit.GameBoy
                     {
                         // assert((address >= 0x2000) && (address < 0x4000));
                         // assert((value > 0) && (value < 0x20));
-                        this.romBank = value & (byte)Mask.Mask5;
+                        this.romBank = value & (byte)Mask.Five;
                     }
 
                     break;
@@ -214,7 +214,7 @@ namespace EightBit.GameBoy
                     // Register 3: ROM/RAM change
                     if (this.banked)
                     {
-                        switch (value & (byte)Mask.Mask1)
+                        switch (value & (byte)Mask.One)
                         {
                             case 0:
                                 this.higherRomBank = true;

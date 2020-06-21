@@ -30,7 +30,7 @@ namespace EightBit
 
         public static byte HighByte(ushort value) => HighByte((int)value);
 
-        public static byte LowByte(int value) => (byte)(value & (int)Mask.Mask8);
+        public static byte LowByte(int value) => (byte)(value & (int)Mask.Eight);
 
         public static byte LowByte(ushort value) => LowByte((int)value);
 

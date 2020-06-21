@@ -12,7 +12,7 @@ namespace EightBit
         public RefreshRegister(byte value)
         {
             this.high = (byte)(value & (byte)Bits.Bit7);
-            this.variable = (byte)(value & (byte)Mask.Mask7);
+            this.variable = (byte)(value & (byte)Mask.Seven);
         }
 
         public static implicit operator byte(RefreshRegister input) => ToByte(input);
@@ -25,7 +25,7 @@ namespace EightBit
 
         public static bool operator !=(RefreshRegister left, RefreshRegister right) => !(left == right);
 
-        public static byte ToByte(RefreshRegister input) => (byte)(input.high | (input.variable & (byte)Mask.Mask7));
+        public static byte ToByte(RefreshRegister input) => (byte)(input.high | (input.variable & (byte)Mask.Seven));
 
         public static RefreshRegister Increment(RefreshRegister value)
         {

@@ -11,7 +11,7 @@ namespace Fuse
     {
         private readonly List<byte> bytes = new List<byte>();
 
-        public ushort Address { get; private set; } = (ushort)EightBit.Mask.Mask16;
+        public ushort Address { get; private set; } = (ushort)EightBit.Mask.Sixteen;
 
         public ReadOnlyCollection<byte> Bytes => this.bytes.AsReadOnly();
 

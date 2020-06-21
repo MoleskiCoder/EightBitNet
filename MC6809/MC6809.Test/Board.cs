@@ -40,20 +40,20 @@ namespace EightBit
         {
             if (absolute < 0x8000)
             {
-                return new MemoryMapping(this.ram, 0x0000, Mask.Mask16, AccessLevel.ReadWrite);
+                return new MemoryMapping(this.ram, 0x0000, Mask.Sixteen, AccessLevel.ReadWrite);
             }
 
             if (absolute < 0xa000)
             {
-                return new MemoryMapping(this.unused2000, 0x8000, Mask.Mask16, AccessLevel.ReadOnly);
+                return new MemoryMapping(this.unused2000, 0x8000, Mask.Sixteen, AccessLevel.ReadOnly);
             }
 
             if (absolute < 0xc000)
             {
-                return new MemoryMapping(this.io, 0xa000, Mask.Mask16, AccessLevel.ReadWrite);
+                return new MemoryMapping(this.io, 0xa000, Mask.Sixteen, AccessLevel.ReadWrite);
             }
 
-            return new MemoryMapping(this.rom, 0xc000, Mask.Mask16, AccessLevel.ReadOnly);
+            return new MemoryMapping(this.rom, 0xc000, Mask.Sixteen, AccessLevel.ReadOnly);
         }
 
         public override void RaisePOWER()
