@@ -12,13 +12,11 @@ namespace LR35902.BlarggTest
 
         public void Run()
         {
-            var cycles = 0;
             var cpu = this.board.CPU;
             while (cpu.Powered)
             {
-                cycles += EightBit.GameBoy.Bus.CyclesPerFrame;
-                cycles -= this.board.RunRasterLines();
-                cycles -= this.board.RunVerticalBlankLines();
+                this.board.RunRasterLines();
+                this.board.RunVerticalBlankLines();
             }
         }
 
