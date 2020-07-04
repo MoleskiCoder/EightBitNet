@@ -4,9 +4,8 @@
 namespace Fuse
 {
     using System;
-    using System.Diagnostics;
+    using EightBit;
 
-    [DebuggerDisplay("Cycles = {Cycles}, Specifier = {Specifier}, Address = {Address}, Value = {Value}")]
     public class TestEvent
     {
         private int cycles;
@@ -23,6 +22,9 @@ namespace Fuse
             this.Value = value;
         }
 
+        public TestEvent(int cycles, string specifier, ushort address)
+        : this(cycles, specifier, address, (byte)Mask.Eight) => this.ContentionEvent = true;
+
         public int Cycles => this.cycles;
 
         public string Specifier { get; private set; }
@@ -30,6 +32,8 @@ namespace Fuse
         public ushort Address { get; private set; } = (ushort)EightBit.Mask.Sixteen;
 
         public byte Value { get; private set; } = (byte)EightBit.Mask.Eight;
+
+        private bool ContentionEvent { get; set; } = false;
 
         public bool TryParse(Lines lines)
         {
@@ -45,6 +49,17 @@ namespace Fuse
             }
 
             return returned;
+        }
+
+        public override string ToString()
+        {
+            var possible = $"Cycles = {this.Cycles}, Specifier = {this.Specifier}, Address = {this.Address:X4}";
+            if (!this.ContentionEvent)
+            {
+                possible += $", Value = {this.Value:X2}";
+            }
+
+            return possible;
         }
 
         private bool TryParseLine(string line)

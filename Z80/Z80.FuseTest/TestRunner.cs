@@ -4,6 +4,7 @@
 
 namespace Fuse
 {
+    using System;
     using System.Collections.Generic;
 
     public enum Register
@@ -38,8 +39,8 @@ namespace Fuse
         public TestRunner(Test<RegisterState> test, Result<RegisterState> result)
         {
             this.cpu = new EightBit.Z80(this, this.ports);
-            this.test = test;
-            this.result = result;
+            this.test = test ?? throw new ArgumentNullException(nameof(test));
+            this.result = result ?? throw new ArgumentNullException(nameof(result));
 
             foreach (var e in result.Events.Container)
             {
@@ -438,20 +439,14 @@ namespace Fuse
         {
             foreach (var e in events)
             {
-                var output = $" Event issue {ToString(e)}";
-                System.Console.Error.WriteLine(output);
+                DumpEvent(e);
             }
         }
 
-        private static string ToString(TestEvent e)
+        private static void DumpEvent(TestEvent e)
         {
-            var output = $"Cycles = {e.Cycles}, Specifier = {e.Specifier}, Address = {e.Address:X4}";
-            if (!e.Specifier.EndsWith("C", System.StringComparison.Ordinal))
-            {
-                output += $", Value={e.Value:X2}";
-            }
-
-            return output;
+            var output = $" Event issue {e}";
+            System.Console.Error.WriteLine(output);
         }
 
         private void CheckMemory()

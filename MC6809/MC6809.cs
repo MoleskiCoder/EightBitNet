@@ -496,7 +496,7 @@ namespace EightBit
 
         private void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
-        private void Push(Register16 stack, byte value) => this.BusWrite(--stack.Word, value);
+        private void Push(Register16 stack, byte value) => this.MemoryWrite(--stack.Word, value);
 
         private void PushS(byte value) => this.Push(this.S, value);
 
@@ -506,7 +506,7 @@ namespace EightBit
             this.Push(stack, value.High);
         }
 
-        private byte Pop(Register16 stack) => this.BusRead(stack.Word++);
+        private byte Pop(Register16 stack) => this.MemoryRead(stack.Word++);
 
         private byte PopS() => this.Pop(this.S);
 
@@ -636,11 +636,11 @@ namespace EightBit
 
         private byte AM_immediate_byte() => this.FetchByte();
 
-        private byte AM_direct_byte() => this.BusRead(this.Address_direct());
+        private byte AM_direct_byte() => this.MemoryRead(this.Address_direct());
 
-        private byte AM_indexed_byte() => this.BusRead(this.Address_indexed());
+        private byte AM_indexed_byte() => this.MemoryRead(this.Address_indexed());
 
-        private byte AM_extended_byte() => this.BusRead(this.Address_extended());
+        private byte AM_extended_byte() => this.MemoryRead(this.Address_extended());
 
         private Register16 AM_immediate_word() => this.FetchWord();
 
@@ -884,18 +884,18 @@ namespace EightBit
                 case 0x1c: this.Tick(3); this.CC &= this.AM_immediate_byte(); break;                            // AND (ANDCC immediate)
 
                 // ASL/LSL
-                case 0x08: this.Tick(6); this.BusWrite(this.ASL(this.AM_direct_byte())); break;                 // ASL (direct)
+                case 0x08: this.Tick(6); this.MemoryWrite(this.ASL(this.AM_direct_byte())); break;              // ASL (direct)
                 case 0x48: this.Tick(2); this.A = this.ASL(this.A); break;                                      // ASL (ASLA inherent)
                 case 0x58: this.Tick(2); this.B = this.ASL(this.B); break;                                      // ASL (ASLB inherent)
-                case 0x68: this.Tick(6); this.BusWrite(this.ASL(this.AM_indexed_byte())); break;                // ASL (indexed)
-                case 0x78: this.Tick(7); this.BusWrite(this.ASL(this.AM_extended_byte())); break;               // ASL (extended)
+                case 0x68: this.Tick(6); this.MemoryWrite(this.ASL(this.AM_indexed_byte())); break;             // ASL (indexed)
+                case 0x78: this.Tick(7); this.MemoryWrite(this.ASL(this.AM_extended_byte())); break;            // ASL (extended)
 
                 // ASR
-                case 0x07: this.Tick(6); this.BusWrite(this.ASR(this.AM_direct_byte())); break;                 // ASR (direct)
+                case 0x07: this.Tick(6); this.MemoryWrite(this.ASR(this.AM_direct_byte())); break;              // ASR (direct)
                 case 0x47: this.Tick(2); this.A = this.ASR(this.A); break;                                      // ASR (ASRA inherent)
                 case 0x57: this.Tick(2); this.B = this.ASR(this.B); break;                                      // ASR (ASRB inherent)
-                case 0x67: this.Tick(6); this.BusWrite(this.ASR(this.AM_indexed_byte())); break;                // ASR (indexed)
-                case 0x77: this.Tick(7); this.BusWrite(this.ASR(this.AM_extended_byte())); break;               // ASR (extended)
+                case 0x67: this.Tick(6); this.MemoryWrite(this.ASR(this.AM_indexed_byte())); break;             // ASR (indexed)
+                case 0x77: this.Tick(7); this.MemoryWrite(this.ASR(this.AM_extended_byte())); break;            // ASR (extended)
 
                 // BIT
                 case 0x85: this.Tick(2); this.BIT(this.A, this.AM_immediate_byte()); break;                     // BIT (BITA immediate)
@@ -909,11 +909,11 @@ namespace EightBit
                 case 0xf5: this.Tick(5); this.BIT(this.B, this.AM_extended_byte()); break;                      // BIT (BITB extended)
 
                 // CLR
-                case 0x0f: this.Tick(6); this.BusWrite(this.Address_direct(), this.CLR()); break;               // CLR (direct)
+                case 0x0f: this.Tick(6); this.MemoryWrite(this.Address_direct(), this.CLR()); break;            // CLR (direct)
                 case 0x4f: this.Tick(2); this.A = this.CLR(); break;                                            // CLR (CLRA implied)
                 case 0x5f: this.Tick(2); this.B = this.CLR(); break;                                            // CLR (CLRB implied)
-                case 0x6f: this.Tick(6); this.BusWrite(this.Address_indexed(), this.CLR()); break;              // CLR (indexed)
-                case 0x7f: this.Tick(7); this.BusWrite(this.Address_extended(), this.CLR()); break;             // CLR (extended)
+                case 0x6f: this.Tick(6); this.MemoryWrite(this.Address_indexed(), this.CLR()); break;           // CLR (indexed)
+                case 0x7f: this.Tick(7); this.MemoryWrite(this.Address_extended(), this.CLR()); break;          // CLR (extended)
 
                 // CMP
 
@@ -936,11 +936,11 @@ namespace EightBit
                 case 0xbc: this.Tick(7); this.CMP(this.X, this.AM_extended_word()); break;                      // CMP (CMPX, extended)
 
                 // COM
-                case 0x03: this.Tick(6); this.BusWrite(this.COM(this.AM_direct_byte())); break;                 // COM (direct)
+                case 0x03: this.Tick(6); this.MemoryWrite(this.COM(this.AM_direct_byte())); break;              // COM (direct)
                 case 0x43: this.Tick(2); this.A = this.COM(this.A); break;                                      // COM (COMA inherent)
                 case 0x53: this.Tick(2); this.B = this.COM(this.B); break;                                      // COM (COMB inherent)
-                case 0x63: this.Tick(6); this.BusWrite(this.COM(this.AM_indexed_byte())); break;                // COM (indexed)
-                case 0x73: this.Tick(7); this.BusWrite(this.COM(this.AM_extended_byte())); break;               // COM (extended)
+                case 0x63: this.Tick(6); this.MemoryWrite(this.COM(this.AM_indexed_byte())); break;             // COM (indexed)
+                case 0x73: this.Tick(7); this.MemoryWrite(this.COM(this.AM_extended_byte())); break;            // COM (extended)
 
                 // CWAI
                 case 0x3c: this.Tick(11); this.CWAI(this.AM_direct_byte()); break;                              // CWAI (direct)
@@ -949,11 +949,11 @@ namespace EightBit
                 case 0x19: this.Tick(2); this.A = this.DA(this.A); break;                                       // DAA (inherent)
 
                 // DEC
-                case 0x0a: this.Tick(6); this.BusWrite(this.DEC(this.AM_direct_byte())); break;                 // DEC (direct)
+                case 0x0a: this.Tick(6); this.MemoryWrite(this.DEC(this.AM_direct_byte())); break;              // DEC (direct)
                 case 0x4a: this.Tick(2); this.A = this.DEC(this.A); break;                                      // DEC (DECA inherent)
                 case 0x5a: this.Tick(2); this.B = this.DEC(this.B); break;                                      // DEC (DECB inherent)
-                case 0x6a: this.Tick(6); this.BusWrite(this.DEC(this.AM_indexed_byte())); break;                // DEC (indexed)
-                case 0x7a: this.Tick(7); this.BusWrite(this.DEC(this.AM_extended_byte())); break;               // DEC (extended)
+                case 0x6a: this.Tick(6); this.MemoryWrite(this.DEC(this.AM_indexed_byte())); break;             // DEC (indexed)
+                case 0x7a: this.Tick(7); this.MemoryWrite(this.DEC(this.AM_extended_byte())); break;            // DEC (extended)
 
                 // EOR
 
@@ -973,11 +973,11 @@ namespace EightBit
                 case 0x1e: this.Tick(8); this.EXG(this.AM_immediate_byte()); break;                             // EXG (R1,R2 immediate)
 
                 // INC
-                case 0x0c: this.Tick(6); this.BusWrite(this.INC(this.AM_direct_byte())); break;                 // INC (direct)
+                case 0x0c: this.Tick(6); this.MemoryWrite(this.INC(this.AM_direct_byte())); break;              // INC (direct)
                 case 0x4c: this.Tick(2); this.A = this.INC(this.A); break;                                      // INC (INCA inherent)
                 case 0x5c: this.Tick(2); this.B = this.INC(this.B); break;                                      // INC (INCB inherent)
-                case 0x6c: this.Tick(6); this.BusWrite(this.INC(this.AM_indexed_byte())); break;                // INC (indexed)
-                case 0x7c: this.Tick(7); this.BusWrite(this.INC(this.AM_extended_byte())); break;               // INC (extended)
+                case 0x6c: this.Tick(6); this.MemoryWrite(this.INC(this.AM_indexed_byte())); break;             // INC (indexed)
+                case 0x7c: this.Tick(7); this.MemoryWrite(this.INC(this.AM_extended_byte())); break;            // INC (extended)
 
                 // JMP
                 case 0x0e: this.Tick(6); this.Jump(this.Address_direct()); break;                               // JMP (direct)
@@ -1028,21 +1028,21 @@ namespace EightBit
                 case 0x33: this.Tick(4); this.U.Word = this.Address_indexed().Word; break;                      // LEA (LEAU indexed)
 
                 // LSR
-                case 0x04: this.Tick(6); this.BusWrite(this.LSR(this.AM_direct_byte())); break;                 // LSR (direct)
+                case 0x04: this.Tick(6); this.MemoryWrite(this.LSR(this.AM_direct_byte())); break;              // LSR (direct)
                 case 0x44: this.Tick(2); this.A = this.LSR(this.A); break;                                      // LSR (LSRA inherent)
                 case 0x54: this.Tick(2); this.B = this.LSR(this.B); break;                                      // LSR (LSRB inherent)
-                case 0x64: this.Tick(6); this.BusWrite(this.LSR(this.AM_indexed_byte())); break;                // LSR (indexed)
-                case 0x74: this.Tick(7); this.BusWrite(this.LSR(this.AM_extended_byte())); break;               // LSR (extended)
+                case 0x64: this.Tick(6); this.MemoryWrite(this.LSR(this.AM_indexed_byte())); break;             // LSR (indexed)
+                case 0x74: this.Tick(7); this.MemoryWrite(this.LSR(this.AM_extended_byte())); break;            // LSR (extended)
 
                 // MUL
                 case 0x3d: this.Tick(11); this.D.Word = this.MUL(this.A, this.B).Word; break;                   // MUL (inherent)
 
                 // NEG
-                case 0x00: this.Tick(6); this.BusWrite(this.NEG(this.AM_direct_byte())); break;                 // NEG (direct)
+                case 0x00: this.Tick(6); this.MemoryWrite(this.NEG(this.AM_direct_byte())); break;              // NEG (direct)
                 case 0x40: this.Tick(2); this.A = this.NEG(this.A); break;                                      // NEG (NEGA, inherent)
                 case 0x50: this.Tick(2); this.B = this.NEG(this.B); break;                                      // NEG (NEGB, inherent)
-                case 0x60: this.Tick(6); this.BusWrite(this.NEG(this.AM_indexed_byte())); break;                // NEG (indexed)
-                case 0x70: this.Tick(7); this.BusWrite(this.NEG(this.AM_extended_byte())); break;               // NEG (extended)
+                case 0x60: this.Tick(6); this.MemoryWrite(this.NEG(this.AM_indexed_byte())); break;             // NEG (indexed)
+                case 0x70: this.Tick(7); this.MemoryWrite(this.NEG(this.AM_extended_byte())); break;            // NEG (extended)
 
                 // NOP
                 case 0x12: this.Tick(2); break;                                                                 // NOP (inherent)
@@ -1073,18 +1073,18 @@ namespace EightBit
                 case 0x37: this.Tick(5); this.PUL(this.U, this.AM_immediate_byte()); break;                     // PUL (PULU immediate)
 
                 // ROL
-                case 0x09: this.Tick(6); this.BusWrite(this.ROL(this.AM_direct_byte())); break;                 // ROL (direct)
+                case 0x09: this.Tick(6); this.MemoryWrite(this.ROL(this.AM_direct_byte())); break;              // ROL (direct)
                 case 0x49: this.Tick(2); this.A = this.ROL(this.A); break;                                      // ROL (ROLA inherent)
                 case 0x59: this.Tick(2); this.B = this.ROL(this.B); break;                                      // ROL (ROLB inherent)
-                case 0x69: this.Tick(6); this.BusWrite(this.ROL(this.AM_indexed_byte())); break;                // ROL (indexed)
-                case 0x79: this.Tick(7); this.BusWrite(this.ROL(this.AM_extended_byte())); break;               // ROL (extended)
+                case 0x69: this.Tick(6); this.MemoryWrite(this.ROL(this.AM_indexed_byte())); break;             // ROL (indexed)
+                case 0x79: this.Tick(7); this.MemoryWrite(this.ROL(this.AM_extended_byte())); break;            // ROL (extended)
 
                 // ROR
-                case 0x06: this.Tick(6); this.BusWrite(this.ROR(this.AM_direct_byte())); break;                 // ROR (direct)
+                case 0x06: this.Tick(6); this.MemoryWrite(this.ROR(this.AM_direct_byte())); break;              // ROR (direct)
                 case 0x46: this.Tick(2); this.A = this.ROR(this.A); break;                                      // ROR (RORA inherent)
                 case 0x56: this.Tick(2); this.B = this.ROR(this.B); break;                                      // ROR (RORB inherent)
-                case 0x66: this.Tick(6); this.BusWrite(this.ROR(this.AM_indexed_byte())); break;                // ROR (indexed)
-                case 0x76: this.Tick(7); this.BusWrite(this.ROR(this.AM_extended_byte())); break;               // ROR (extended)
+                case 0x66: this.Tick(6); this.MemoryWrite(this.ROR(this.AM_indexed_byte())); break;             // ROR (indexed)
+                case 0x76: this.Tick(7); this.MemoryWrite(this.ROR(this.AM_extended_byte())); break;            // ROR (extended)
 
                 // RTI
                 case 0x3B: this.Tick(6); this.RTI(); break;                                                     // RTI (inherent)
@@ -1112,14 +1112,14 @@ namespace EightBit
                 // ST
 
                 // STA
-                case 0x97: this.Tick(4); this.BusWrite(this.Address_direct(), this.ST(this.A)); break;          // ST (STA direct)
-                case 0xa7: this.Tick(4); this.BusWrite(this.Address_indexed(), this.ST(this.A)); break;         // ST (STA indexed)
-                case 0xb7: this.Tick(5); this.BusWrite(this.Address_extended(), this.ST(this.A)); break;        // ST (STA extended)
+                case 0x97: this.Tick(4); this.MemoryWrite(this.Address_direct(), this.ST(this.A)); break;       // ST (STA direct)
+                case 0xa7: this.Tick(4); this.MemoryWrite(this.Address_indexed(), this.ST(this.A)); break;      // ST (STA indexed)
+                case 0xb7: this.Tick(5); this.MemoryWrite(this.Address_extended(), this.ST(this.A)); break;     // ST (STA extended)
 
                 // STB
-                case 0xd7: this.Tick(4); this.BusWrite(this.Address_direct(), this.ST(this.B)); break;          // ST (STB direct)
-                case 0xe7: this.Tick(4); this.BusWrite(this.Address_indexed(), this.ST(this.B)); break;         // ST (STB indexed)
-                case 0xf7: this.Tick(5); this.BusWrite(this.Address_extended(), this.ST(this.B)); break;        // ST (STB extended)
+                case 0xd7: this.Tick(4); this.MemoryWrite(this.Address_direct(), this.ST(this.B)); break;       // ST (STB direct)
+                case 0xe7: this.Tick(4); this.MemoryWrite(this.Address_indexed(), this.ST(this.B)); break;      // ST (STB indexed)
+                case 0xf7: this.Tick(5); this.MemoryWrite(this.Address_extended(), this.ST(this.B)); break;     // ST (STB extended)
 
                 // STD
                 case 0xdd: this.Tick(5); this.SetWord(this.Address_direct(), this.ST(this.D)); break;           // ST (STD direct)

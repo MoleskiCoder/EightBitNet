@@ -127,9 +127,9 @@ namespace EightBit
             this.Jump(0);
         }
 
-        protected sealed override void Push(byte value) => this.BusWrite(--this.SP.Word, value);
+        protected sealed override void Push(byte value) => this.MemoryWrite(--this.SP.Word, value);
 
-        protected sealed override byte Pop() => this.BusRead(this.SP.Word++);
+        protected sealed override byte Pop() => this.MemoryRead(this.SP.Word++);
 
         protected sealed override Register16 GetWord()
         {
@@ -196,7 +196,7 @@ namespace EightBit
             var offsetAddress = this.PC.Word++;
             if (condition)
             {
-                var offset = (sbyte)this.BusRead(offsetAddress);
+                var offset = (sbyte)this.MemoryRead(offsetAddress);
                 this.JumpRelative(offset);
             }
 

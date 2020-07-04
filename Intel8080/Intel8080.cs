@@ -156,7 +156,7 @@ namespace EightBit
                 case 5:
                     return this.L;
                 case 6:
-                    return this.BusRead(this.HL.Word);
+                    return this.MemoryRead(this.HL.Word);
                 case 7:
                     return this.A;
                 default:
@@ -187,7 +187,7 @@ namespace EightBit
                     this.L = value;
                     break;
                 case 6:
-                    this.BusWrite(this.HL.Word, value);
+                    this.MemoryWrite(this.HL.Word, value);
                     break;
                 case 7:
                     this.A = value;
@@ -270,11 +270,11 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.BusWrite(this.BC, this.A);
+                                            this.MemoryWrite(this.BC, this.A);
                                             this.Tick(7);
                                             break;
                                         case 1: // LD (DE),A
-                                            this.BusWrite(this.DE, this.A);
+                                            this.MemoryWrite(this.DE, this.A);
                                             this.Tick(7);
                                             break;
                                         case 2: // LD (nn),HL
@@ -284,7 +284,7 @@ namespace EightBit
                                             break;
                                         case 3: // LD (nn),A
                                             this.Bus.Address.Word = this.FetchWord().Word;
-                                            this.BusWrite(this.A);
+                                            this.MemoryWrite(this.A);
                                             this.Tick(13);
                                             break;
                                         default:
@@ -296,11 +296,11 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.A = this.BusRead(this.BC);
+                                            this.A = this.MemoryRead(this.BC);
                                             this.Tick(7);
                                             break;
                                         case 1: // LD A,(DE)
-                                            this.A = this.BusRead(this.DE);
+                                            this.A = this.MemoryRead(this.DE);
                                             this.Tick(7);
                                             break;
                                         case 2: // LD HL,(nn)
@@ -310,7 +310,7 @@ namespace EightBit
                                             break;
                                         case 3: // LD A,(nn)
                                             this.Bus.Address.Word = this.FetchWord().Word;
-                                            this.A = this.BusRead();
+                                            this.A = this.MemoryRead();
                                             this.Tick(13);
                                             break;
                                         default:
@@ -811,13 +811,13 @@ namespace EightBit
 
         private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.BusRead(this.SP.Word);
+            this.MEMPTR.Low = this.MemoryRead(this.SP.Word);
             ++this.Bus.Address.Word;
-            this.MEMPTR.High = this.BusRead();
-            this.BusWrite(exchange.High);
+            this.MEMPTR.High = this.MemoryRead();
+            this.MemoryWrite(exchange.High);
             exchange.High = this.MEMPTR.High;
             --this.Bus.Address.Word;
-            this.BusWrite(exchange.Low);
+            this.MemoryWrite(exchange.Low);
             exchange.Low = this.MEMPTR.Low;
         }
 

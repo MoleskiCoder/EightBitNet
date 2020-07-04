@@ -198,15 +198,15 @@ namespace EightBit
                 case 0x03: this.SLO(this.AM_IndexedIndirectX()); break;                                                         // *SLO (indexed indirect X)
                 case 0x04: this.AM_ZeroPage(); break;                                                                           // *NOP (zero page)
                 case 0x05: this.A = this.OrR(this.A, this.AM_ZeroPage()); break;                                                // ORA (zero page)
-                case 0x06: this.BusReadModifyWrite(this.ASL(this.AM_ZeroPage())); break;                                        // ASL (zero page)
+                case 0x06: this.ReadModifyWrite(this.ASL(this.AM_ZeroPage())); break;                                           // ASL (zero page)
                 case 0x07: this.SLO(this.AM_ZeroPage()); break;                                                                 // *SLO (zero page)
-                case 0x08: this.BusRead(); this.PHP(); break;                                                                   // PHP (implied)
+                case 0x08: this.MemoryRead(); this.PHP(); break;                                                                // PHP (implied)
                 case 0x09: this.A = this.OrR(this.A, this.AM_Immediate()); break;                                               // ORA (immediate)
-                case 0x0a: this.BusRead(); this.A = this.ASL(this.A); break;                                                    // ASL A (implied)
+                case 0x0a: this.MemoryRead(); this.A = this.ASL(this.A); break;                                                 // ASL A (implied)
                 case 0x0b: this.ANC(this.AM_Immediate()); break;                                                                // *ANC (immediate)
                 case 0x0c: this.AM_Absolute(); break;                                                                           // *NOP (absolute)
                 case 0x0d: this.A = this.OrR(this.A, this.AM_Absolute()); break;                                                // ORA (absolute)
-                case 0x0e: this.BusReadModifyWrite(this.ASL(this.AM_Absolute())); break;                                        // ASL (absolute)
+                case 0x0e: this.ReadModifyWrite(this.ASL(this.AM_Absolute())); break;                                           // ASL (absolute)
                 case 0x0f: this.SLO(this.AM_Absolute()); break;                                                                 // *SLO (absolute)
 
                 case 0x10: this.Branch(this.Negative == 0); break;                                                              // BPL (relative)
@@ -215,15 +215,15 @@ namespace EightBit
                 case 0x13: this.SLO(this.AM_IndirectIndexedY()); break;                                                         // *SLO (indirect indexed Y)
                 case 0x14: this.AM_ZeroPageX(); break;                                                                          // *NOP (zero page, X)
                 case 0x15: this.A = this.OrR(this.A, this.AM_ZeroPageX()); break;                                               // ORA (zero page, X)
-                case 0x16: this.BusReadModifyWrite(this.ASL(this.AM_ZeroPageX())); break;                                       // ASL (zero page, X)
+                case 0x16: this.ReadModifyWrite(this.ASL(this.AM_ZeroPageX())); break;                                          // ASL (zero page, X)
                 case 0x17: this.SLO(this.AM_ZeroPageX()); break;                                                                // *SLO (zero page, X)
-                case 0x18: this.BusRead(); this.P = ClearBit(this.P, StatusBits.CF); break;                                     // CLC (implied)
+                case 0x18: this.MemoryRead(); this.P = ClearBit(this.P, StatusBits.CF); break;                                  // CLC (implied)
                 case 0x19: this.A = this.OrR(this.A, this.AM_AbsoluteY()); break;                                               // ORA (absolute, Y)
-                case 0x1a: this.BusRead(); break;                                                                               // *NOP (implied)
+                case 0x1a: this.MemoryRead(); break;                                                                            // *NOP (implied)
                 case 0x1b: this.SLO(this.AM_AbsoluteY()); break;                                                                // *SLO (absolute, Y)
                 case 0x1c: this.AM_AbsoluteX(); break;                                                                          // *NOP (absolute, X)
                 case 0x1d: this.A = this.OrR(this.A, this.AM_AbsoluteX()); break;                                               // ORA (absolute, X)
-                case 0x1e: this.BusReadModifyWrite(this.ASL(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;   // ASL (absolute, X)
+                case 0x1e: this.ReadModifyWrite(this.ASL(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;      // ASL (absolute, X)
                 case 0x1f: this.SLO(this.AM_AbsoluteX()); break;                                                                // *SLO (absolute, X)
 
                 case 0x20: this.JSR(); break;                                                                                   // JSR (absolute)
@@ -232,15 +232,15 @@ namespace EightBit
                 case 0x23: this.RLA(this.AM_IndexedIndirectX()); break;                                                         // *RLA (indexed indirect X)
                 case 0x24: this.BIT(this.A, this.AM_ZeroPage()); break;                                                         // BIT (zero page)
                 case 0x25: this.A = this.AndR(this.A, this.AM_ZeroPage()); break;                                               // AND (zero page)
-                case 0x26: this.BusReadModifyWrite(this.ROL(this.AM_ZeroPage())); break;                                        // ROL (zero page)
+                case 0x26: this.ReadModifyWrite(this.ROL(this.AM_ZeroPage())); break;                                           // ROL (zero page)
                 case 0x27: this.RLA(this.AM_ZeroPage()); break;                                                                 // *RLA (zero page)
-                case 0x28: this.BusRead(); this.BusRead(this.S, 1); this.PLP(); break;                                          // PLP (implied)
+                case 0x28: this.MemoryRead(); this.MemoryRead(this.S, 1); this.PLP(); break;                                    // PLP (implied)
                 case 0x29: this.A = this.AndR(this.A, this.AM_Immediate()); break;                                              // AND (immediate)
-                case 0x2a: this.BusRead(); this.A = this.ROL(this.A); break;                                                    // ROL A (implied)
+                case 0x2a: this.MemoryRead(); this.A = this.ROL(this.A); break;                                                 // ROL A (implied)
                 case 0x2b: this.ANC(this.AM_Immediate()); break;                                                                // *ANC (immediate)
                 case 0x2c: this.BIT(this.A, this.AM_Absolute()); break;                                                         // BIT (absolute)
                 case 0x2d: this.A = this.AndR(this.A, this.AM_Absolute()); break;                                               // AND (absolute)
-                case 0x2e: this.BusReadModifyWrite(this.ROL(this.AM_Absolute())); break;                                        // ROL (absolute)
+                case 0x2e: this.ReadModifyWrite(this.ROL(this.AM_Absolute())); break;                                           // ROL (absolute)
                 case 0x2f: this.RLA(this.AM_Absolute()); break;                                                                 // *RLA (absolute)
 
                 case 0x30: this.Branch(this.Negative); break;                                                                   // BMI (relative)
@@ -249,32 +249,32 @@ namespace EightBit
                 case 0x33: this.RLA(this.AM_IndirectIndexedY()); break;                                                         // *RLA (indirect indexed Y)
                 case 0x34: this.AM_ZeroPageX(); break;                                                                          // *NOP (zero page, X)
                 case 0x35: this.A = this.AndR(this.A, this.AM_ZeroPageX()); break;                                              // AND (zero page, X)
-                case 0x36: this.BusReadModifyWrite(this.ROL(this.AM_ZeroPageX())); break;                                       // ROL (zero page, X)
+                case 0x36: this.ReadModifyWrite(this.ROL(this.AM_ZeroPageX())); break;                                          // ROL (zero page, X)
                 case 0x37: this.RLA(this.AM_ZeroPageX()); break;                                                                // *RLA (zero page, X)
-                case 0x38: this.BusRead(); this.P = SetBit(this.P, StatusBits.CF); break;                                       // SEC (implied)
+                case 0x38: this.MemoryRead(); this.P = SetBit(this.P, StatusBits.CF); break;                                    // SEC (implied)
                 case 0x39: this.A = this.AndR(this.A, this.AM_AbsoluteY()); break;                                              // AND (absolute, Y)
-                case 0x3a: this.BusRead(); break;                                                                               // *NOP (implied)
+                case 0x3a: this.MemoryRead(); break;                                                                            // *NOP (implied)
                 case 0x3b: this.RLA(this.AM_AbsoluteY()); break;                                                                // *RLA (absolute, Y)
                 case 0x3c: this.AM_AbsoluteX(); break;                                                                          // *NOP (absolute, X)
                 case 0x3d: this.A = this.AndR(this.A, this.AM_AbsoluteX()); break;                                              // AND (absolute, X)
-                case 0x3e: this.BusReadModifyWrite(this.ROL(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;   // ROL (absolute, X)
+                case 0x3e: this.ReadModifyWrite(this.ROL(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;      // ROL (absolute, X)
                 case 0x3f: this.RLA(this.AM_AbsoluteX()); break;                                                                // *RLA (absolute, X)
 
-                case 0x40: this.BusRead(); this.RTI(); break;                                                                   // RTI (implied)
+                case 0x40: this.MemoryRead(); this.RTI(); break;                                                                // RTI (implied)
                 case 0x41: this.A = this.EorR(this.A, this.AM_IndexedIndirectX()); break;                                       // EOR (indexed indirect X)
                 case 0x42: break;
                 case 0x43: this.SRE(this.AM_IndexedIndirectX()); break;                                                         // *SRE (indexed indirect X)
                 case 0x44: this.AM_ZeroPage(); break;                                                                           // *NOP (zero page)
                 case 0x45: this.A = this.EorR(this.A, this.AM_ZeroPage()); break;                                               // EOR (zero page)
-                case 0x46: this.BusReadModifyWrite(this.LSR(this.AM_ZeroPage())); break;                                        // LSR (zero page)
+                case 0x46: this.ReadModifyWrite(this.LSR(this.AM_ZeroPage())); break;                                           // LSR (zero page)
                 case 0x47: this.SRE(this.AM_ZeroPage()); break;                                                                 // *SRE (zero page)
-                case 0x48: this.BusRead(); this.Push(this.A); break;                                                            // PHA (implied)
+                case 0x48: this.MemoryRead(); this.Push(this.A); break;                                                         // PHA (implied)
                 case 0x49: this.A = this.EorR(this.A, this.AM_Immediate()); break;                                              // EOR (immediate)
-                case 0x4a: this.BusRead(); this.A = this.LSR(this.A); break;                                                    // LSR A (implied)
+                case 0x4a: this.MemoryRead(); this.A = this.LSR(this.A); break;                                                 // LSR A (implied)
                 case 0x4b: this.ASR(this.AM_Immediate()); break;                                                                // *ASR (immediate)
                 case 0x4c: this.Jump(this.Address_Absolute().Word); break;                                                      // JMP (absolute)
                 case 0x4d: this.A = this.EorR(this.A, this.AM_Absolute()); break;                                               // EOR (absolute)
-                case 0x4e: this.BusReadModifyWrite(this.LSR(this.AM_Absolute())); break;                                        // LSR (absolute)
+                case 0x4e: this.ReadModifyWrite(this.LSR(this.AM_Absolute())); break;                                           // LSR (absolute)
                 case 0x4f: this.SRE(this.AM_Absolute()); break;                                                                 // *SRE (absolute)
 
                 case 0x50: this.Branch(this.Overflow == 0); break;                                                              // BVC (relative)
@@ -283,32 +283,32 @@ namespace EightBit
                 case 0x53: this.SRE(this.AM_IndirectIndexedY()); break;                                                         // *SRE (indirect indexed Y)
                 case 0x54: this.AM_ZeroPageX(); break;                                                                          // *NOP (zero page, X)
                 case 0x55: this.A = this.EorR(this.A, this.AM_ZeroPageX()); break;                                              // EOR (zero page, X)
-                case 0x56: this.BusReadModifyWrite(this.LSR(this.AM_ZeroPageX())); break;                                       // LSR (zero page, X)
+                case 0x56: this.ReadModifyWrite(this.LSR(this.AM_ZeroPageX())); break;                                          // LSR (zero page, X)
                 case 0x57: this.SRE(this.AM_ZeroPageX()); break;                                                                // *SRE (zero page, X)
-                case 0x58: this.BusRead(); this.P = ClearBit(this.P, StatusBits.IF); break;                                     // CLI (implied)
+                case 0x58: this.MemoryRead(); this.P = ClearBit(this.P, StatusBits.IF); break;                                  // CLI (implied)
                 case 0x59: this.A = this.EorR(this.A, this.AM_AbsoluteY()); break;                                              // EOR (absolute, Y)
-                case 0x5a: this.BusRead(); break;                                                                               // *NOP (implied)
+                case 0x5a: this.MemoryRead(); break;                                                                            // *NOP (implied)
                 case 0x5b: this.SRE(this.AM_AbsoluteY()); break;                                                                // *SRE (absolute, Y)
                 case 0x5c: this.AM_AbsoluteX(); break;                                                                          // *NOP (absolute, X)
                 case 0x5d: this.A = this.EorR(this.A, this.AM_AbsoluteX()); break;                                              // EOR (absolute, X)
-                case 0x5e: this.BusReadModifyWrite(this.LSR(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;   // LSR (absolute, X)
+                case 0x5e: this.ReadModifyWrite(this.LSR(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;      // LSR (absolute, X)
                 case 0x5f: this.SRE(this.AM_AbsoluteX()); break;                                                                // *SRE (absolute, X)
 
-                case 0x60: this.BusRead(); this.RTS(); break;                                                                   // RTS (implied)
+                case 0x60: this.MemoryRead(); this.RTS(); break;                                                                // RTS (implied)
                 case 0x61: this.A = this.ADC(this.A, this.AM_IndexedIndirectX()); break;                                        // ADC (indexed indirect X)
                 case 0x62: break;
                 case 0x63: this.RRA(this.AM_IndexedIndirectX()); break;                                                         // *RRA (indexed indirect X)
                 case 0x64: this.AM_ZeroPage(); break;                                                                           // *NOP (zero page)
                 case 0x65: this.A = this.ADC(this.A, this.AM_ZeroPage()); break;                                                // ADC (zero page)
-                case 0x66: this.BusReadModifyWrite(this.ROR(this.AM_ZeroPage())); break;                                        // ROR (zero page)
+                case 0x66: this.ReadModifyWrite(this.ROR(this.AM_ZeroPage())); break;                                           // ROR (zero page)
                 case 0x67: this.RRA(this.AM_ZeroPage()); break;                                                                 // *RRA (zero page)
-                case 0x68: this.BusRead(); this.BusRead(this.S, 1); this.A = this.Through(this.Pop()); break;                   // PLA (implied)
+                case 0x68: this.MemoryRead(); this.MemoryRead(this.S, 1); this.A = this.Through(this.Pop()); break;             // PLA (implied)
                 case 0x69: this.A = this.ADC(this.A, this.AM_Immediate()); break;                                               // ADC (immediate)
-                case 0x6a: this.BusRead(); this.A = this.ROR(this.A); break;                                                    // ROR A (implied)
+                case 0x6a: this.MemoryRead(); this.A = this.ROR(this.A); break;                                                 // ROR A (implied)
                 case 0x6b: this.ARR(this.AM_Immediate()); break;                                                                // *ARR (immediate)
                 case 0x6c: this.Jump(this.Address_Indirect().Word); break;                                                      // JMP (indirect)
                 case 0x6d: this.A = this.ADC(this.A, this.AM_Absolute()); break;                                                // ADC (absolute)
-                case 0x6e: this.BusReadModifyWrite(this.ROR(this.AM_Absolute())); break;                                        // ROR (absolute)
+                case 0x6e: this.ReadModifyWrite(this.ROR(this.AM_Absolute())); break;                                           // ROR (absolute)
                 case 0x6f: this.RRA(this.AM_Absolute()); break;                                                                 // *RRA (absolute)
 
                 case 0x70: this.Branch(this.Overflow); break;                                                                   // BVS (relative)
@@ -317,45 +317,45 @@ namespace EightBit
                 case 0x73: this.RRA(this.AM_IndirectIndexedY()); break;                                                         // *RRA (indirect indexed Y)
                 case 0x74: this.AM_ZeroPageX(); break;                                                                          // *NOP (zero page, X)
                 case 0x75: this.A = this.ADC(this.A, this.AM_ZeroPageX()); break;                                               // ADC (zero page, X)
-                case 0x76: this.BusReadModifyWrite(this.ROR(this.AM_ZeroPageX())); break;                                       // ROR (zero page, X)
+                case 0x76: this.ReadModifyWrite(this.ROR(this.AM_ZeroPageX())); break;                                          // ROR (zero page, X)
                 case 0x77: this.RRA(this.AM_ZeroPageX()); break;                                                                // *RRA (zero page, X)
-                case 0x78: this.BusRead(); this.P = SetBit(this.P, StatusBits.IF); break;                                       // SEI (implied)
+                case 0x78: this.MemoryRead(); this.P = SetBit(this.P, StatusBits.IF); break;                                    // SEI (implied)
                 case 0x79: this.A = this.ADC(this.A, this.AM_AbsoluteY()); break;                                               // ADC (absolute, Y)
-                case 0x7a: this.BusRead(); break;                                                                               // *NOP (implied)
+                case 0x7a: this.MemoryRead(); break;                                                                            // *NOP (implied)
                 case 0x7b: this.RRA(this.AM_AbsoluteY()); break;                                                                // *RRA (absolute, Y)
                 case 0x7c: this.AM_AbsoluteX(); break;                                                                          // *NOP (absolute, X)
                 case 0x7d: this.A = this.ADC(this.A, this.AM_AbsoluteX()); break;                                               // ADC (absolute, X)
-                case 0x7e: this.BusReadModifyWrite(this.ROR(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;   // ROR (absolute, X)
+                case 0x7e: this.ReadModifyWrite(this.ROR(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;      // ROR (absolute, X)
                 case 0x7f: this.RRA(this.AM_AbsoluteX()); break;                                                                // *RRA (absolute, X)
 
                 case 0x80: this.AM_Immediate(); break;                                                                          // *NOP (immediate)
-                case 0x81: this.BusWrite(this.Address_IndexedIndirectX(), this.A); break;                                       // STA (indexed indirect X)
+                case 0x81: this.MemoryWrite(this.Address_IndexedIndirectX(), this.A); break;                                    // STA (indexed indirect X)
                 case 0x82: this.AM_Immediate(); break;                                                                          // *NOP (immediate)
-                case 0x83: this.BusWrite(this.Address_IndexedIndirectX(), (byte)(this.A & this.X)); break;                      // *SAX (indexed indirect X)
-                case 0x84: this.BusWrite(this.Address_ZeroPage(), this.Y); break;                                               // STY (zero page)
-                case 0x85: this.BusWrite(this.Address_ZeroPage(), this.A); break;                                               // STA (zero page)
-                case 0x86: this.BusWrite(this.Address_ZeroPage(), this.X); break;                                               // STX (zero page)
-                case 0x87: this.BusWrite(this.Address_ZeroPage(), (byte)(this.A & this.X)); break;                              // *SAX (zero page)
-                case 0x88: this.BusRead(); this.Y = this.DEC(this.Y); break;                                                    // DEY (implied)
+                case 0x83: this.MemoryWrite(this.Address_IndexedIndirectX(), (byte)(this.A & this.X)); break;                   // *SAX (indexed indirect X)
+                case 0x84: this.MemoryWrite(this.Address_ZeroPage(), this.Y); break;                                            // STY (zero page)
+                case 0x85: this.MemoryWrite(this.Address_ZeroPage(), this.A); break;                                            // STA (zero page)
+                case 0x86: this.MemoryWrite(this.Address_ZeroPage(), this.X); break;                                            // STX (zero page)
+                case 0x87: this.MemoryWrite(this.Address_ZeroPage(), (byte)(this.A & this.X)); break;                           // *SAX (zero page)
+                case 0x88: this.MemoryRead(); this.Y = this.DEC(this.Y); break;                                                 // DEY (implied)
                 case 0x89: this.AM_Immediate(); break;                                                                          // *NOP (immediate)
-                case 0x8a: this.BusRead(); this.A = this.Through(this.X); break;                                                // TXA (implied)
+                case 0x8a: this.MemoryRead(); this.A = this.Through(this.X); break;                                             // TXA (implied)
                 case 0x8b: break;
-                case 0x8c: this.BusWrite(this.Address_Absolute(), this.Y); break;                                               // STY (absolute)
-                case 0x8d: this.BusWrite(this.Address_Absolute(), this.A); break;                                               // STA (absolute)
-                case 0x8e: this.BusWrite(this.Address_Absolute(), this.X); break;                                               // STX (absolute)
-                case 0x8f: this.BusWrite(this.Address_Absolute(), (byte)(this.A & this.X)); break;                              // *SAX (absolute)
+                case 0x8c: this.MemoryWrite(this.Address_Absolute(), this.Y); break;                                            // STY (absolute)
+                case 0x8d: this.MemoryWrite(this.Address_Absolute(), this.A); break;                                            // STA (absolute)
+                case 0x8e: this.MemoryWrite(this.Address_Absolute(), this.X); break;                                            // STX (absolute)
+                case 0x8f: this.MemoryWrite(this.Address_Absolute(), (byte)(this.A & this.X)); break;                           // *SAX (absolute)
 
                 case 0x90: this.Branch(this.Carry == 0); break;                                                                 // BCC (relative)
-                case 0x91: this.AM_IndirectIndexedY(); this.BusWrite(this.A); break;                                            // STA (indirect indexed Y)
+                case 0x91: this.AM_IndirectIndexedY(); this.MemoryWrite(this.A); break;                                         // STA (indirect indexed Y)
                 case 0x92: break;
                 case 0x93: break;
-                case 0x94: this.BusWrite(this.Address_ZeroPageX(), this.Y); break;                                              // STY (zero page, X)
-                case 0x95: this.BusWrite(this.Address_ZeroPageX(), this.A); break;                                              // STA (zero page, X)
-                case 0x96: this.BusWrite(this.Address_ZeroPageY(), this.X); break;                                              // STX (zero page, Y)
-                case 0x97: this.BusWrite(this.Address_ZeroPageY(), (byte)(this.A & this.X)); break;                             // *SAX (zero page, Y)
-                case 0x98: this.BusRead(); this.A = this.Through(this.Y); break;                                                // TYA (implied)
+                case 0x94: this.MemoryWrite(this.Address_ZeroPageX(), this.Y); break;                                           // STY (zero page, X)
+                case 0x95: this.MemoryWrite(this.Address_ZeroPageX(), this.A); break;                                           // STA (zero page, X)
+                case 0x96: this.MemoryWrite(this.Address_ZeroPageY(), this.X); break;                                           // STX (zero page, Y)
+                case 0x97: this.MemoryWrite(this.Address_ZeroPageY(), (byte)(this.A & this.X)); break;                          // *SAX (zero page, Y)
+                case 0x98: this.MemoryRead(); this.A = this.Through(this.Y); break;                                             // TYA (implied)
                 case 0x99: this.STA_AbsoluteY(); break;                                                                         // STA (absolute, Y)
-                case 0x9a: this.BusRead(); this.S = this.X; break;                                                              // TXS (implied)
+                case 0x9a: this.MemoryRead(); this.S = this.X; break;                                                           // TXS (implied)
                 case 0x9b: break;
                 case 0x9c: break;
                 case 0x9d: this.STA_AbsoluteX(); break;                                                                         // STA (absolute, X)
@@ -370,9 +370,9 @@ namespace EightBit
                 case 0xa5: this.A = this.Through(this.AM_ZeroPage()); break;                                                    // LDA (zero page)
                 case 0xa6: this.X = this.Through(this.AM_ZeroPage()); break;                                                    // LDX (zero page)
                 case 0xa7: this.A = this.X = this.Through(this.AM_ZeroPage()); break;                                           // *LAX (zero page)
-                case 0xa8: this.BusRead(); this.Y = this.Through(this.A); break;                                                // TAY (implied)
+                case 0xa8: this.MemoryRead(); this.Y = this.Through(this.A); break;                                             // TAY (implied)
                 case 0xa9: this.A = this.Through(this.AM_Immediate()); break;                                                   // LDA (immediate)
-                case 0xaa: this.BusRead(); this.X = this.Through(this.A); break;                                                // TAX (implied)
+                case 0xaa: this.MemoryRead(); this.X = this.Through(this.A); break;                                             // TAX (implied)
                 case 0xab: this.A = this.X = this.Through(this.AM_Immediate()); break;                                          // *ATX (immediate)
                 case 0xac: this.Y = this.Through(this.AM_Absolute()); break;                                                    // LDY (absolute)
                 case 0xad: this.A = this.Through(this.AM_Absolute()); break;                                                    // LDA (absolute)
@@ -387,9 +387,9 @@ namespace EightBit
                 case 0xb5: this.A = this.Through(this.AM_ZeroPageX()); break;                                                   // LDA (zero page, X)
                 case 0xb6: this.X = this.Through(this.AM_ZeroPageY()); break;                                                   // LDX (zero page, Y)
                 case 0xb7: this.A = this.X = this.Through(this.AM_ZeroPageY()); break;                                          // *LAX (zero page, Y)
-                case 0xb8: this.BusRead(); this.P = ClearBit(this.P, StatusBits.VF); break;                                     // CLV (implied)
+                case 0xb8: this.MemoryRead(); this.P = ClearBit(this.P, StatusBits.VF); break;                                  // CLV (implied)
                 case 0xb9: this.A = this.Through(this.AM_AbsoluteY()); break;                                                   // LDA (absolute, Y)
-                case 0xba: this.BusRead(); this.X = this.Through(this.S); break;                                                // TSX (implied)
+                case 0xba: this.MemoryRead(); this.X = this.Through(this.S); break;                                             // TSX (implied)
                 case 0xbb: break;
                 case 0xbc: this.Y = this.Through(this.AM_AbsoluteX()); break;                                                   // LDY (absolute, X)
                 case 0xbd: this.A = this.Through(this.AM_AbsoluteX()); break;                                                   // LDA (absolute, X)
@@ -402,15 +402,15 @@ namespace EightBit
                 case 0xc3: this.DCP(this.AM_IndexedIndirectX()); break;                                                         // *DCP (indexed indirect X)
                 case 0xc4: this.CMP(this.Y, this.AM_ZeroPage()); break;                                                         // CPY (zero page)
                 case 0xc5: this.CMP(this.A, this.AM_ZeroPage()); break;                                                         // CMP (zero page)
-                case 0xc6: this.BusReadModifyWrite(this.DEC(this.AM_ZeroPage())); break;                                        // DEC (zero page)
+                case 0xc6: this.ReadModifyWrite(this.DEC(this.AM_ZeroPage())); break;                                           // DEC (zero page)
                 case 0xc7: this.DCP(this.AM_ZeroPage()); break;                                                                 // *DCP (zero page)
-                case 0xc8: this.BusRead(); this.Y = this.INC(this.Y); break;                                                    // INY (implied)
+                case 0xc8: this.MemoryRead(); this.Y = this.INC(this.Y); break;                                                 // INY (implied)
                 case 0xc9: this.CMP(this.A, this.AM_Immediate()); break;                                                        // CMP (immediate)
-                case 0xca: this.BusRead(); this.X = this.DEC(this.X); break;                                                    // DEX (implied)
+                case 0xca: this.MemoryRead(); this.X = this.DEC(this.X); break;                                                 // DEX (implied)
                 case 0xcb: this.AXS(this.AM_Immediate()); break;                                                                // *AXS (immediate)
                 case 0xcc: this.CMP(this.Y, this.AM_Absolute()); break;                                                         // CPY (absolute)
                 case 0xcd: this.CMP(this.A, this.AM_Absolute()); break;                                                         // CMP (absolute)
-                case 0xce: this.BusReadModifyWrite(this.DEC(this.AM_Absolute())); break;                                        // DEC (absolute)
+                case 0xce: this.ReadModifyWrite(this.DEC(this.AM_Absolute())); break;                                           // DEC (absolute)
                 case 0xcf: this.DCP(this.AM_Absolute()); break;                                                                 // *DCP (absolute)
 
                 case 0xd0: this.Branch(this.Zero == 0); break;                                                                  // BNE (relative)
@@ -419,15 +419,15 @@ namespace EightBit
                 case 0xd3: this.DCP(this.AM_IndirectIndexedY()); break;                                                         // *DCP (indirect indexed Y)
                 case 0xd4: this.AM_ZeroPageX(); break;                                                                          // *NOP (zero page, X)
                 case 0xd5: this.CMP(this.A, this.AM_ZeroPageX()); break;                                                        // CMP (zero page, X)
-                case 0xd6: this.BusReadModifyWrite(this.DEC(this.AM_ZeroPageX())); break;                                       // DEC (zero page, X)
+                case 0xd6: this.ReadModifyWrite(this.DEC(this.AM_ZeroPageX())); break;                                          // DEC (zero page, X)
                 case 0xd7: this.DCP(this.AM_ZeroPageX()); break;                                                                // *DCP (zero page, X)
-                case 0xd8: this.BusRead(); this.P = ClearBit(this.P, StatusBits.DF); break;                                     // CLD (implied)
+                case 0xd8: this.MemoryRead(); this.P = ClearBit(this.P, StatusBits.DF); break;                                  // CLD (implied)
                 case 0xd9: this.CMP(this.A, this.AM_AbsoluteY()); break;                                                        // CMP (absolute, Y)
-                case 0xda: this.BusRead(); break;                                                                               // *NOP (implied)
+                case 0xda: this.MemoryRead(); break;                                                                            // *NOP (implied)
                 case 0xdb: this.DCP(this.AM_AbsoluteY()); break;                                                                // *DCP (absolute, Y)
                 case 0xdc: this.AM_AbsoluteX(); break;                                                                          // *NOP (absolute, X)
                 case 0xdd: this.CMP(this.A, this.AM_AbsoluteX()); break;                                                        // CMP (absolute, X)
-                case 0xde: this.BusReadModifyWrite(this.DEC(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;   // DEC (absolute, X)
+                case 0xde: this.ReadModifyWrite(this.DEC(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;      // DEC (absolute, X)
                 case 0xdf: this.DCP(this.AM_AbsoluteX()); break;                                                                // *DCP (absolute, X)
 
                 case 0xe0: this.CMP(this.X, this.AM_Immediate()); break;                                                        // CPX (immediate)
@@ -436,15 +436,15 @@ namespace EightBit
                 case 0xe3: this.ISB(this.AM_IndexedIndirectX()); break;                                                         // *ISB (indexed indirect X)
                 case 0xe4: this.CMP(this.X, this.AM_ZeroPage()); break;                                                         // CPX (zero page)
                 case 0xe5: this.A = this.SBC(this.A, this.AM_ZeroPage()); break;                                                // SBC (zero page)
-                case 0xe6: this.BusReadModifyWrite(this.INC(this.AM_ZeroPage())); break;                                        // INC (zero page)
+                case 0xe6: this.ReadModifyWrite(this.INC(this.AM_ZeroPage())); break;                                           // INC (zero page)
                 case 0xe7: this.ISB(this.AM_ZeroPage()); break;                                                                 // *ISB (zero page)
-                case 0xe8: this.BusRead(); this.X = this.INC(this.X); break;                                                    // INX (implied)
+                case 0xe8: this.MemoryRead(); this.X = this.INC(this.X); break;                                                 // INX (implied)
                 case 0xe9: this.A = this.SBC(this.A, this.AM_Immediate()); break;                                               // SBC (immediate)
-                case 0xea: this.BusRead(); break;                                                                               // NOP (implied)
+                case 0xea: this.MemoryRead(); break;                                                                            // NOP (implied)
                 case 0xeb: this.A = this.SBC(this.A, this.AM_Immediate()); break;                                               // *SBC (immediate)
                 case 0xec: this.CMP(this.X, this.AM_Absolute()); break;                                                         // CPX (absolute)
                 case 0xed: this.A = this.SBC(this.A, this.AM_Absolute()); break;                                                // SBC (absolute)
-                case 0xee: this.BusReadModifyWrite(this.INC(this.AM_Absolute())); break;                                        // *ISB (absolute)
+                case 0xee: this.ReadModifyWrite(this.INC(this.AM_Absolute())); break;                                           // *ISB (absolute)
 
                 case 0xf0: this.Branch(this.Zero); break;                                                                       // BEQ (relative)
                 case 0xf1: this.A = this.SBC(this.A, this.AM_IndirectIndexedY()); break;                                        // SBC (indirect indexed Y)
@@ -452,15 +452,15 @@ namespace EightBit
                 case 0xf3: this.ISB(this.AM_IndirectIndexedY()); break;                                                         // *ISB (indirect indexed Y)
                 case 0xf4: this.AM_ZeroPageX(); break;                                                                          // *NOP (zero page, X)
                 case 0xf5: this.A = this.SBC(this.A, this.AM_ZeroPageX()); break;                                               // SBC (zero page, X)
-                case 0xf6: this.BusReadModifyWrite(this.INC(this.AM_ZeroPageX())); break;                                       // INC (zero page, X)
+                case 0xf6: this.ReadModifyWrite(this.INC(this.AM_ZeroPageX())); break;                                          // INC (zero page, X)
                 case 0xf7: this.ISB(this.AM_ZeroPageX()); break;                                                                // *ISB (zero page, X)
-                case 0xf8: this.BusRead(); this.P = SetBit(this.P, StatusBits.DF); break;                                       // SED (implied)
+                case 0xf8: this.MemoryRead(); this.P = SetBit(this.P, StatusBits.DF); break;                                    // SED (implied)
                 case 0xf9: this.A = this.SBC(this.A, this.AM_AbsoluteY()); break;                                               // SBC (absolute, Y)
-                case 0xfa: this.BusRead(); break;                                                                               // *NOP (implied)
+                case 0xfa: this.MemoryRead(); break;                                                                            // *NOP (implied)
                 case 0xfb: this.ISB(this.AM_AbsoluteY()); break;                                                                // *ISB (absolute, Y)
                 case 0xfc: this.AM_AbsoluteX(); break;                                                                          // *NOP (absolute, X)
                 case 0xfd: this.A = this.SBC(this.A, this.AM_AbsoluteX()); break;                                               // SBC (absolute, X)
-                case 0xfe: this.BusReadModifyWrite(this.INC(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;   // INC (absolute, X)
+                case 0xfe: this.ReadModifyWrite(this.INC(this.AM_AbsoluteX(PageCrossingBehavior.AlwaysReadTwice))); break;      // INC (absolute, X)
                 case 0xff: this.ISB(this.AM_AbsoluteX()); break;                                                                // *ISB (absolute, X)
             }
 
@@ -561,9 +561,9 @@ namespace EightBit
             base.OnRaisedPOWER();
         }
 
-        protected override byte Pop() => this.BusRead(++this.S, 1);
+        protected override byte Pop() => this.MemoryRead(++this.S, 1);
 
-        protected override void Push(byte value) => this.BusWrite(this.S--, 1, value);
+        protected override void Push(byte value) => this.MemoryWrite(this.S--, 1, value);
 
         protected virtual void RaiseSYNC()
         {
@@ -678,14 +678,14 @@ namespace EightBit
         private byte Address_ZeroPageX()
         {
             var address = this.Address_ZeroPage();
-            this.BusRead(address);
+            this.MemoryRead(address);
             return Chip.LowByte(address + this.X);
         }
 
         private byte Address_ZeroPageY()
         {
             var address = this.Address_ZeroPage();
-            this.BusRead(address);
+            this.MemoryRead(address);
             return Chip.LowByte(address + this.Y);
         }
 
@@ -724,17 +724,17 @@ namespace EightBit
 
         private byte AM_Immediate() => this.FetchByte();
 
-        private byte AM_Absolute() => this.BusRead(this.Address_Absolute());
+        private byte AM_Absolute() => this.MemoryRead(this.Address_Absolute());
 
-        private byte AM_ZeroPage() => this.BusRead(this.Address_ZeroPage());
+        private byte AM_ZeroPage() => this.MemoryRead(this.Address_ZeroPage());
 
         private byte AM_AbsoluteX(PageCrossingBehavior behaviour = PageCrossingBehavior.MaybeReadTwice)
         {
             var address = this.Address_AbsoluteX();
-            var possible = this.BusRead(address.Low, this.crossedPage);
+            var possible = this.MemoryRead(address.Low, this.crossedPage);
             if ((behaviour == PageCrossingBehavior.AlwaysReadTwice) || (this.crossedPage != address.High))
             {
-                possible = this.BusRead(address.Word);
+                possible = this.MemoryRead(address.Word);
             }
 
             return possible;
@@ -743,28 +743,28 @@ namespace EightBit
         private byte AM_AbsoluteY()
         {
             var address = this.Address_AbsoluteY();
-            var possible = this.BusRead(address.Low, this.crossedPage);
+            var possible = this.MemoryRead(address.Low, this.crossedPage);
             if (this.crossedPage != address.High)
             {
-                possible = this.BusRead(address.Word);
+                possible = this.MemoryRead(address.Word);
             }
 
             return possible;
         }
 
-        private byte AM_ZeroPageX() => this.BusRead(this.Address_ZeroPageX());
+        private byte AM_ZeroPageX() => this.MemoryRead(this.Address_ZeroPageX());
 
-        private byte AM_ZeroPageY() => this.BusRead(this.Address_ZeroPageY());
+        private byte AM_ZeroPageY() => this.MemoryRead(this.Address_ZeroPageY());
 
-        private byte AM_IndexedIndirectX() => this.BusRead(this.Address_IndexedIndirectX());
+        private byte AM_IndexedIndirectX() => this.MemoryRead(this.Address_IndexedIndirectX());
 
         private byte AM_IndirectIndexedY()
         {
             var address = this.Address_IndirectIndexedY();
-            var possible = this.BusRead(address.Low, this.crossedPage);
+            var possible = this.MemoryRead(address.Low, this.crossedPage);
             if (this.crossedPage != address.High)
             {
-                possible = this.BusRead(address);
+                possible = this.MemoryRead(address);
             }
 
             return possible;
@@ -787,12 +787,12 @@ namespace EightBit
             var destination = this.Address_relative_byte();
             if (condition)
             {
-                this.BusRead();
+                this.MemoryRead();
                 var page = this.PC.High;
                 this.Jump(destination);
                 if (this.PC.High != page)
                 {
-                    this.BusRead(this.PC.Low, page);
+                    this.MemoryRead(this.PC.Low, page);
                 }
             }
         }
@@ -805,11 +805,11 @@ namespace EightBit
             return data;
         }
 
-        private void BusReadModifyWrite(byte data)
+        private void ReadModifyWrite(byte data)
         {
             // The read will have already taken place...
-            this.BusWrite();
-            this.BusWrite(data);
+            this.MemoryWrite();
+            this.MemoryWrite(data);
         }
 
         private byte SBC(byte operand, byte data)
@@ -925,7 +925,7 @@ namespace EightBit
         private void JSR()
         {
             var low = this.FetchByte();
-            this.BusRead(this.S, 1); // dummy read
+            this.MemoryRead(this.S, 1); // dummy read
             this.PushWord(this.PC);
             var high = this.FetchByte();
             this.PC.Low = low;
@@ -962,14 +962,14 @@ namespace EightBit
 
         private void RTI()
         {
-            this.BusRead(this.S, 1); // dummy read
+            this.MemoryRead(this.S, 1); // dummy read
             this.PLP();
             this.Return();
         }
 
         private void RTS()
         {
-            this.BusRead(this.S, 1); // dummy read
+            this.MemoryRead(this.S, 1); // dummy read
             this.Return();
             this.FetchByte();
         }
@@ -1002,52 +1002,52 @@ namespace EightBit
 
         private void DCP(byte value)
         {
-            this.BusReadModifyWrite(this.DEC(value));
+            this.ReadModifyWrite(this.DEC(value));
             this.CMP(this.A, this.Bus.Data);
         }
 
         private void ISB(byte value)
         {
-            this.BusReadModifyWrite(this.INC(value));
+            this.ReadModifyWrite(this.INC(value));
             this.A = this.SBC(this.A, this.Bus.Data);
         }
 
         private void RLA(byte value)
         {
-            this.BusReadModifyWrite(this.ROL(value));
+            this.ReadModifyWrite(this.ROL(value));
             this.A = this.AndR(this.A, this.Bus.Data);
         }
 
         private void RRA(byte value)
         {
-            this.BusReadModifyWrite(this.ROR(value));
+            this.ReadModifyWrite(this.ROR(value));
             this.A = this.ADC(this.A, this.Bus.Data);
         }
 
         private void SLO(byte value)
         {
-            this.BusReadModifyWrite(this.ASL(value));
+            this.ReadModifyWrite(this.ASL(value));
             this.A = this.OrR(this.A, this.Bus.Data);
         }
 
         private void SRE(byte value)
         {
-            this.BusReadModifyWrite(this.LSR(value));
+            this.ReadModifyWrite(this.LSR(value));
             this.A = this.EorR(this.A, this.Bus.Data);
         }
 
         private void STA_AbsoluteX()
         {
             var address = this.Address_AbsoluteX();
-            this.BusRead(address.Low, this.crossedPage);
-            this.BusWrite(address, this.A);
+            this.MemoryRead(address.Low, this.crossedPage);
+            this.MemoryWrite(address, this.A);
         }
 
         private void STA_AbsoluteY()
         {
             var address = this.Address_AbsoluteY();
-            this.BusRead(address.Low, this.crossedPage);
-            this.BusWrite(address, this.A);
+            this.MemoryRead(address.Low, this.crossedPage);
+            this.MemoryWrite(address, this.A);
         }
     }
 }

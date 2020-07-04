@@ -136,47 +136,51 @@ namespace EightBit
 
         protected virtual void HandleINT() => this.RaiseINT();
 
-        protected void BusWrite(byte low, byte high, byte data)
+        protected void MemoryWrite(byte low, byte high, byte data)
         {
             this.Bus.Address.Low = low;
             this.Bus.Address.High = high;
-            this.BusWrite(data);
+            this.MemoryWrite(data);
         }
 
-        protected void BusWrite(ushort address, byte data)
+        protected void MemoryWrite(ushort address, byte data)
         {
             this.Bus.Address.Word = address;
-            this.BusWrite(data);
+            this.MemoryWrite(data);
         }
 
-        protected void BusWrite(Register16 address, byte data) => this.BusWrite(address.Word, data);
+        protected void MemoryWrite(Register16 address, byte data) => this.MemoryWrite(address.Word, data);
 
-        protected void BusWrite(byte data)
+        protected void MemoryWrite(byte data)
         {
             this.Bus.Data = data;
-            this.BusWrite();
+            this.MemoryWrite();
         }
+
+        protected virtual void MemoryWrite() => this.BusWrite();
 
         protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
-        protected byte BusRead(byte low, byte high)
+        protected byte MemoryRead(byte low, byte high)
         {
             this.Bus.Address.Low = low;
             this.Bus.Address.High = high;
-            return this.BusRead();
+            return this.MemoryRead();
         }
 
-        protected byte BusRead(ushort address)
+        protected byte MemoryRead(ushort address)
         {
             this.Bus.Address.Word = address;
-            return this.BusRead();
+            return this.MemoryRead();
         }
 
-        protected byte BusRead(Register16 address) => this.BusRead(address.Word);
+        protected byte MemoryRead(Register16 address) => this.MemoryRead(address.Word);
+
+        protected virtual byte MemoryRead() => this.BusRead();
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte FetchByte() => this.BusRead(this.PC.Word++);
+        protected byte FetchByte() => this.MemoryRead(this.PC.Word++);
 
         protected abstract Register16 GetWord();
 

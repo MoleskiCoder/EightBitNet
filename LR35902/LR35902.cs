@@ -181,7 +181,7 @@ namespace EightBit.GameBoy
                 case 5:
                     return this.L;
                 case 6:
-                    return this.BusRead(this.HL.Word);
+                    return this.MemoryRead(this.HL.Word);
                 case 7:
                     return this.A;
                 default:
@@ -212,7 +212,7 @@ namespace EightBit.GameBoy
                     this.L = value;
                     break;
                 case 6:
-                    this.BusWrite(this.HL.Word, value);
+                    this.MemoryWrite(this.HL.Word, value);
                     break;
                 case 7:
                     this.A = value;
@@ -408,22 +408,22 @@ namespace EightBit.GameBoy
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.BusWrite(this.BC, this.A);
+                                            this.MemoryWrite(this.BC, this.A);
                                             this.Tick(2);
                                             break;
 
                                         case 1: // LD (DE),A
-                                            this.BusWrite(this.DE, this.A);
+                                            this.MemoryWrite(this.DE, this.A);
                                             this.Tick(2);
                                             break;
 
                                         case 2: // GB: LDI (HL),A
-                                            this.BusWrite(this.HL.Word++, this.A);
+                                            this.MemoryWrite(this.HL.Word++, this.A);
                                             this.Tick(2);
                                             break;
 
                                         case 3: // GB: LDD (HL),A
-                                            this.BusWrite(this.HL.Word--, this.A);
+                                            this.MemoryWrite(this.HL.Word--, this.A);
                                             this.Tick(2);
                                             break;
 
@@ -437,22 +437,22 @@ namespace EightBit.GameBoy
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.A = this.BusRead(this.BC);
+                                            this.A = this.MemoryRead(this.BC);
                                             this.Tick(2);
                                             break;
 
                                         case 1: // LD A,(DE)
-                                            this.A = this.BusRead(this.DE);
+                                            this.A = this.MemoryRead(this.DE);
                                             this.Tick(2);
                                             break;
 
                                         case 2: // GB: LDI A,(HL)
-                                            this.A = this.BusRead(this.HL.Word++);
+                                            this.A = this.MemoryRead(this.HL.Word++);
                                             this.Tick(2);
                                             break;
 
                                         case 3: // GB: LDD A,(HL)
-                                            this.A = this.BusRead(this.HL.Word--);
+                                            this.A = this.MemoryRead(this.HL.Word--);
                                             this.Tick(2);
                                             break;
 
@@ -625,7 +625,7 @@ namespace EightBit.GameBoy
                                     break;
 
                                 case 4: // GB: LD (FF00 + n),A
-                                    this.BusWrite((ushort)(IoRegisters.BASE + this.FetchByte()), this.A);
+                                    this.MemoryWrite((ushort)(IoRegisters.BASE + this.FetchByte()), this.A);
                                     this.Tick(3);
                                     break;
 
@@ -645,7 +645,7 @@ namespace EightBit.GameBoy
                                     break;
 
                                 case 6: // GB: LD A,(FF00 + n)
-                                    this.A = this.BusRead((ushort)(IoRegisters.BASE + this.FetchByte()));
+                                    this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.FetchByte()));
                                     this.Tick(3);
                                     break;
 
@@ -721,21 +721,21 @@ namespace EightBit.GameBoy
                                     this.Tick(3);
                                     break;
                                 case 4: // GB: LD (FF00 + C),A
-                                    this.BusWrite((ushort)(IoRegisters.BASE + this.C), this.A);
+                                    this.MemoryWrite((ushort)(IoRegisters.BASE + this.C), this.A);
                                     this.Tick(2);
                                     break;
                                 case 5: // GB: LD (nn),A
                                     this.Bus.Address.Word = this.MEMPTR.Word = this.FetchWord().Word;
-                                    this.BusWrite(this.A);
+                                    this.MemoryWrite(this.A);
                                     this.Tick(4);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
-                                    this.A = this.BusRead((ushort)(IoRegisters.BASE + this.C));
+                                    this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.C));
                                     this.Tick(2);
                                     break;
                                 case 7: // GB: LD A,(nn)
                                     this.Bus.Address.Word = this.MEMPTR.Word = this.FetchWord().Word;
-                                    this.A = this.BusRead();
+                                    this.A = this.MemoryRead();
                                     this.Tick(4);
                                     break;
                                 default:

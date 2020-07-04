@@ -493,22 +493,22 @@ namespace EightBit
 
         protected virtual void OnRaisedWR() => this.RaisedWR?.Invoke(this, EventArgs.Empty);
 
-        protected override void BusWrite()
+        protected override void MemoryWrite()
         {
             this.Tick(3);
             this.LowerMREQ();
             this.LowerWR();
-            base.BusWrite();
+            base.MemoryWrite();
             this.RaiseWR();
             this.RaiseMREQ();
         }
 
-        protected override byte BusRead()
+        protected override byte MemoryRead()
         {
             this.Tick(3);
             this.LowerMREQ();
             this.LowerRD();
-            var returned = base.BusRead();
+            var returned = base.MemoryRead();
             this.RaiseRD();
             this.RaiseMREQ();
             return returned;
@@ -659,7 +659,7 @@ namespace EightBit
             3 => this.E,
             4 => this.HL2().High,
             5 => this.HL2().Low,
-            6 => this.BusRead(this.displaced ? this.DisplacedAddress : this.HL.Word),
+            6 => this.MemoryRead(this.displaced ? this.DisplacedAddress : this.HL.Word),
             7 => this.A,
             _ => throw new ArgumentOutOfRangeException(nameof(r)),
         };
@@ -687,7 +687,7 @@ namespace EightBit
                     this.HL2().Low = value;
                     break;
                 case 6:
-                    this.BusWrite(this.displaced ? this.DisplacedAddress : this.HL.Word, value);
+                    this.MemoryWrite(this.displaced ? this.DisplacedAddress : this.HL.Word, value);
                     break;
                 case 7:
                     this.A = value;
@@ -720,7 +720,7 @@ namespace EightBit
                     this.L = value;
                     break;
                 case 6:
-                    this.BusWrite(this.HL, value);
+                    this.MemoryWrite(this.HL, value);
                     break;
                 case 7:
                     this.A = value;
@@ -740,7 +740,7 @@ namespace EightBit
             if (this.displaced)
             {
                 this.Tick(2);
-                operand = this.BusRead(this.DisplacedAddress);
+                operand = this.MemoryRead(this.DisplacedAddress);
             }
             else
             {
@@ -784,7 +784,7 @@ namespace EightBit
                 this.Tick();
                 if (this.displaced)
                 {
-                    this.BusWrite(operand);
+                    this.MemoryWrite(operand);
                     if (!memoryZ)
                     {
                         this.R2(z, operand);
@@ -1120,13 +1120,13 @@ namespace EightBit
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.BusWrite();
+                                            this.MemoryWrite();
                                             break;
                                         case 1: // LD (DE),A
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.BusWrite();
+                                            this.MemoryWrite();
                                             break;
                                         case 2: // LD (nn),HL
                                             this.Bus.Address.Word = this.FetchWord().Word;
@@ -1136,7 +1136,7 @@ namespace EightBit
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.BusWrite();
+                                            this.MemoryWrite();
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1149,12 +1149,12 @@ namespace EightBit
                                         case 0: // LD A,(BC)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
                                             ++this.MEMPTR.Word;
-                                            this.A = this.BusRead();
+                                            this.A = this.MemoryRead();
                                             break;
                                         case 1: // LD A,(DE)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
                                             ++this.MEMPTR.Word;
-                                            this.A = this.BusRead();
+                                            this.A = this.MemoryRead();
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.Bus.Address.Word = this.FetchWord().Word;
@@ -1163,7 +1163,7 @@ namespace EightBit
                                         case 3: // LD A,(nn)
                                             this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
                                             ++this.MEMPTR.Word;
-                                            this.A = this.BusRead();
+                                            this.A = this.MemoryRead();
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1596,7 +1596,7 @@ namespace EightBit
         {
             this.Tick();
             this.LowerM1();
-            var returned = this.BusRead(this.PC.Word);
+            var returned = this.MemoryRead(this.PC.Word);
             this.RaiseM1();
             this.Bus.Address.Low = this.REFRESH;
             this.Bus.Address.High = this.IV;
@@ -1929,20 +1929,20 @@ namespace EightBit
 
         private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.BusRead(this.SP.Word);
+            this.MEMPTR.Low = this.MemoryRead(this.SP.Word);
             ++this.Bus.Address.Word;
-            this.MEMPTR.High = this.BusRead();
+            this.MEMPTR.High = this.MemoryRead();
             this.Tick();
-            this.BusWrite(exchange.High);
+            this.MemoryWrite(exchange.High);
             exchange.High = this.MEMPTR.High;
             --this.Bus.Address.Word;
-            this.BusWrite(exchange.Low);
+            this.MemoryWrite(exchange.Low);
             exchange.Low = this.MEMPTR.Low;
         }
 
         private void BlockCompare(ushort source, ushort counter)
         {
-            var value = this.BusRead(source);
+            var value = this.MemoryRead(source);
             var result = (byte)(this.A - value);
 
             this.F = SetBit(this.F, StatusBits.PF, counter);
@@ -1983,8 +1983,8 @@ namespace EightBit
 
         private void BlockLoad(ushort source, ushort destination, ushort counter)
         {
-            var value = this.BusRead(source);
-            this.BusWrite(destination, value);
+            var value = this.MemoryRead(source);
+            this.MemoryWrite(destination, value);
             var xy = this.A + value;
             this.F = SetBit(this.F, StatusBits.XF, xy & (int)Bits.Bit3);
             this.F = SetBit(this.F, StatusBits.YF, xy & (int)Bits.Bit1);
@@ -2014,7 +2014,7 @@ namespace EightBit
             this.Tick();
             var value = this.ReadPort();
             this.Tick(3);
-            this.BusWrite(destination, value);
+            this.MemoryWrite(destination, value);
             source.High = this.Decrement(source.High);
             this.F = SetBit(this.F, StatusBits.NF);
         }
@@ -2046,7 +2046,7 @@ namespace EightBit
         private void BlockOut(ushort source, Register16 destination)
         {
             this.Tick();
-            var value = this.BusRead(source);
+            var value = this.MemoryRead(source);
             destination.High = this.Decrement(destination.High);
             this.Bus.Address.Word = destination.Word;
             this.WritePort();
@@ -2100,9 +2100,9 @@ namespace EightBit
         {
             this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
             ++this.MEMPTR.Word;
-            var memory = this.BusRead();
+            var memory = this.MemoryRead();
             this.Tick(4);
-            this.BusWrite((byte)(PromoteNibble(this.A) | HighNibble(memory)));
+            this.MemoryWrite((byte)(PromoteNibble(this.A) | HighNibble(memory)));
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
@@ -2112,9 +2112,9 @@ namespace EightBit
         {
             this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
             ++this.MEMPTR.Word;
-            var memory = this.BusRead();
+            var memory = this.MemoryRead();
             this.Tick(4);
-            this.BusWrite((byte)(PromoteNibble(memory) | LowNibble(this.A)));
+            this.MemoryWrite((byte)(PromoteNibble(memory) | LowNibble(this.A)));
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
