@@ -20,7 +20,7 @@ namespace EightBit
             this.symbols = symbols;
         }
 
-        public static string Dump_Flags(byte value)
+        public static string DumpFlags(byte value)
         {
             var returned = new StringBuilder();
             returned.Append((value & (byte)StatusBits.NF) != 0 ? "N" : "-");
@@ -34,9 +34,9 @@ namespace EightBit
             return returned.ToString();
         }
 
-        public static string Dump_ByteValue(byte value) => value.ToString("X2");
+        public static string DumpByteValue(byte value) => value.ToString("X2");
 
-        public static string Dump_WordValue(ushort value) => value.ToString("X4");
+        public static string DumpWordValue(ushort value) => value.ToString("X4");
 
         public string Disassemble(ushort current)
         {
@@ -46,7 +46,7 @@ namespace EightBit
 
             var cell = this.bus.Peek(current);
 
-            output.Append(Dump_ByteValue(cell));
+            output.Append(DumpByteValue(cell));
             output.Append(" ");
 
             var next = this.bus.Peek((ushort)(current + 1));
@@ -65,13 +65,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // BRK
-                                    output.Append(this.Disassemble_Implied("BRK"));
+                                    output.Append(Disassemble_Implied("BRK"));
                                     break;
                                 case 0b001: // DOP/NOP (0x04)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PHP
-                                    output.Append(this.Disassemble_Implied("PHP"));
+                                    output.Append(Disassemble_Implied("PHP"));
                                     break;
                                 case 0b011: // TOP/NOP (0b00001100, 0x0c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -83,7 +83,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLC
-                                    output.Append(this.Disassemble_Implied("CLC"));
+                                    output.Append(Disassemble_Implied("CLC"));
                                     break;
                                 case 0b111: // TOP/NOP (0b00011100, 0x1c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -100,7 +100,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_Absolute("JSR"));
                                     break;
                                 case 0b010: // PLP
-                                    output.Append(this.Disassemble_Implied("PLP"));
+                                    output.Append(Disassemble_Implied("PLP"));
                                     break;
                                 case 0b100: // BMI
                                     output.Append(this.Disassemble_Relative("BMI", relative));
@@ -109,7 +109,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SEC
-                                    output.Append(this.Disassemble_Implied("SEC"));
+                                    output.Append(Disassemble_Implied("SEC"));
                                     break;
                                 case 0b111: // TOP/NOP (0b00111100, 0x3c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -124,13 +124,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // RTI
-                                    output.Append(this.Disassemble_Implied("RTI"));
+                                    output.Append(Disassemble_Implied("RTI"));
                                     break;
                                 case 0b001: // DOP/NOP (0x44)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PHA
-                                    output.Append(this.Disassemble_Implied("PHA"));
+                                    output.Append(Disassemble_Implied("PHA"));
                                     break;
                                 case 0b011: // JMP
                                     output.Append(this.Disassemble_Absolute("JMP"));
@@ -142,7 +142,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLI
-                                    output.Append(this.Disassemble_Implied("CLI"));
+                                    output.Append(Disassemble_Implied("CLI"));
                                     break;
                                 case 0b111: // TOP/NOP (0b01011100, 0x5c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -156,13 +156,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // RTS
-                                    output.Append(this.Disassemble_Implied("RTS"));
+                                    output.Append(Disassemble_Implied("RTS"));
                                     break;
                                 case 0b001: // DOP/NOP (0x64)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PLA
-                                    output.Append(this.Disassemble_Implied("PLA"));
+                                    output.Append(Disassemble_Implied("PLA"));
                                     break;
                                 case 0b011: // JMP (abs)
                                     output.Append(this.Disassemble_Indirect("JMP"));
@@ -174,7 +174,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SEI
-                                    output.Append(this.Disassemble_Implied("SEI"));
+                                    output.Append(Disassemble_Implied("SEI"));
                                     break;
                                 case 0b111: // TOP/NOP (0b01111100, 0x7c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -191,13 +191,13 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // DEY
-                                    output.Append(this.Disassemble_Implied("DEY"));
+                                    output.Append(Disassemble_Implied("DEY"));
                                     break;
                                 case 0b100: // BCC
                                     output.Append(this.Disassemble_Relative("BCC", relative));
                                     break;
                                 case 0b110: // TYA
-                                    output.Append(this.Disassemble_Implied("TYA"));
+                                    output.Append(Disassemble_Implied("TYA"));
                                     break;
                                 default: // STY
                                     output.Append(this.Disassemble_AM_00(bbb, "STY"));
@@ -209,13 +209,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // TAY
-                                    output.Append(this.Disassemble_Implied("TAY"));
+                                    output.Append(Disassemble_Implied("TAY"));
                                     break;
                                 case 0b100: // BCS
                                     output.Append(this.Disassemble_Relative("BCS", relative));
                                     break;
                                 case 0b110: // CLV
-                                    output.Append(this.Disassemble_Implied("CLV"));
+                                    output.Append(Disassemble_Implied("CLV"));
                                     break;
                                 default: // LDY
                                     output.Append(this.Disassemble_AM_00(bbb, "LDY"));
@@ -227,7 +227,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // INY
-                                    output.Append(this.Disassemble_Implied("INY"));
+                                    output.Append(Disassemble_Implied("INY"));
                                     break;
                                 case 0b100: // BNE
                                     output.Append(this.Disassemble_Relative("BNE", relative));
@@ -236,7 +236,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLD
-                                    output.Append(this.Disassemble_Implied("CLD"));
+                                    output.Append(Disassemble_Implied("CLD"));
                                     break;
                                 case 0b111: // TOP/NOP (0b11011100, 0xdc)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -251,7 +251,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // INX
-                                    output.Append(this.Disassemble_Implied("INX"));
+                                    output.Append(Disassemble_Implied("INX"));
                                     break;
                                 case 0b100: // BEQ
                                     output.Append(this.Disassemble_Relative("BEQ", relative));
@@ -260,7 +260,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SED
-                                    output.Append(this.Disassemble_Implied("SED"));
+                                    output.Append(Disassemble_Implied("SED"));
                                     break;
                                 case 0b111: // TOP/NOP (0b11111100, 0xfc)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -313,7 +313,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x1a
-                                    output.Append(this.Disassemble_Implied("*NOP"));
+                                    output.Append(Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "ASL"));
@@ -325,7 +325,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x3a
-                                    output.Append(this.Disassemble_Implied("*NOP"));
+                                    output.Append(Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "ROL"));
@@ -337,7 +337,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x5a
-                                    output.Append(this.Disassemble_Implied("*NOP"));
+                                    output.Append(Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "LSR"));
@@ -349,7 +349,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x7a
-                                    output.Append(this.Disassemble_Implied("*NOP"));
+                                    output.Append(Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "ROR"));
@@ -361,10 +361,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // TXA
-                                    output.Append(this.Disassemble_Implied("TXA"));
+                                    output.Append(Disassemble_Implied("TXA"));
                                     break;
                                 case 0b110: // TXS
-                                    output.Append(this.Disassemble_Implied("TXS"));
+                                    output.Append(Disassemble_Implied("TXS"));
                                     break;
                                 default: // STX
                                     output.Append(this.Disassemble_AM_10_x(bbb, "STX"));
@@ -376,10 +376,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // TAX
-                                    output.Append(this.Disassemble_Implied("TAX"));
+                                    output.Append(Disassemble_Implied("TAX"));
                                     break;
                                 case 0b110: // TSX
-                                    output.Append(this.Disassemble_Implied("TSX"));
+                                    output.Append(Disassemble_Implied("TSX"));
                                     break;
                                 default: // LDX
                                     output.Append(this.Disassemble_AM_10_x(bbb, "LDX"));
@@ -391,10 +391,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // DEX
-                                    output.Append(this.Disassemble_Implied("DEX"));
+                                    output.Append(Disassemble_Implied("DEX"));
                                     break;
                                 case 0b110: // 0xda
-                                    output.Append(this.Disassemble_Implied("*NOP"));
+                                    output.Append(Disassemble_Implied("*NOP"));
                                     break;
                                 default: // DEC
                                     output.Append(this.Disassemble_AM_10(bbb, "DEC"));
@@ -406,10 +406,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // NOP
-                                    output.Append(this.Disassemble_Implied("NOP"));
+                                    output.Append(Disassemble_Implied("NOP"));
                                     break;
                                 case 0b110: // 0xfa
-                                    output.Append(this.Disassemble_Implied("*NOP"));
+                                    output.Append(Disassemble_Implied("*NOP"));
                                     break;
                                 default: // INC
                                     output.Append(this.Disassemble_AM_10(bbb, "INC"));
@@ -497,31 +497,31 @@ namespace EightBit
             return output.ToString();
         }
 
-        private string ConvertAddress(ushort absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + Dump_WordValue(absolute);
+        private string ConvertAddress(ushort absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + DumpWordValue(absolute);
 
-        private string ConvertAddress(byte absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + Dump_ByteValue(absolute);
+        private string ConvertAddress(byte absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + DumpByteValue(absolute);
 
         private string ConvertConstant(ushort constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : this.Dump_DByte(constant);
 
-        private string ConvertConstant(byte constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : Dump_ByteValue(constant);
+        private string ConvertConstant(byte constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : DumpByteValue(constant);
 
         private byte GetByte(ushort absolute) => this.bus.Peek(absolute);
 
         private ushort GetWord(ushort absolute) => this.processor.PeekWord(absolute).Word;
 
-        private string Dump_Byte(ushort absolute) => Disassembler.Dump_ByteValue(this.GetByte(absolute));
+        private string Dump_Byte(ushort absolute) => Disassembler.DumpByteValue(this.GetByte(absolute));
 
         private string Dump_DByte(ushort absolute) => this.Dump_Byte(absolute) + " " + this.Dump_Byte(++absolute);
 
-        private string Dump_Word(ushort absolute) => Disassembler.Dump_WordValue(this.GetWord(absolute));
+        private string Dump_Word(ushort absolute) => Disassembler.DumpWordValue(this.GetWord(absolute));
 
-        private string Disassemble_Implied(string instruction) => "\t" + instruction;
+        private static string Disassemble_Implied(string instruction) => "\t" + instruction;
 
         private string Disassemble_Absolute(string instruction) => this.AM_Absolute_dump() + "\t" + instruction + " " + this.AM_Absolute();
 
         private string Disassemble_Indirect(string instruction) => this.AM_Absolute_dump() + "\t" + instruction + " (" + this.AM_Absolute() + ")";
 
-        private string Disassemble_Relative(string instruction, ushort absolute) => this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembler.Dump_WordValue(absolute);
+        private string Disassemble_Relative(string instruction, ushort absolute) => this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembler.DumpWordValue(absolute);
 
         private string Disassemble_Immediate(string instruction) => this.AM_Immediate_dump() + "\t" + instruction + " " + this.AM_Immediate();
 
@@ -573,288 +573,144 @@ namespace EightBit
 
         private string AM_IndirectIndexedY() => "($" + this.Dump_Byte((ushort)(this.address + 1)) + "),Y";
 
-        private string AM_00_dump(int bbb)
+        private string AM_00_dump(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_Immediate_dump();
-                case 0b001:
-                    return this.AM_ZeroPage_dump();
-                case 0b011:
-                    return this.AM_Absolute_dump();
-                case 0b101:
-                    return this.AM_ZeroPageX_dump();
-                case 0b111:
-                    return this.AM_AbsoluteX_dump();
-                case 0b010:
-                case 0b100:
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_Immediate_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_00(int bbb)
+        private string AM_00(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_Immediate();
-                case 0b001:
-                    return this.AM_ZeroPage();
-                case 0b011:
-                    return this.AM_Absolute();
-                case 0b101:
-                    return this.AM_ZeroPageX();
-                case 0b111:
-                    return this.AM_AbsoluteX();
-                case 0b010:
-                case 0b100:
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_Immediate(),
+            0b001 => this.AM_ZeroPage(),
+            0b011 => this.AM_Absolute(),
+            0b101 => this.AM_ZeroPageX(),
+            0b111 => this.AM_AbsoluteX(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_01_dump(int bbb)
+        private string AM_01_dump(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_IndexedIndirectX_dump();
-                case 0b001:
-                    return this.AM_ZeroPage_dump();
-                case 0b010:
-                    return this.AM_Immediate_dump();
-                case 0b011:
-                    return this.AM_Absolute_dump();
-                case 0b100:
-                    return this.AM_IndirectIndexedY_dump();
-                case 0b101:
-                    return this.AM_ZeroPageX_dump();
-                case 0b110:
-                    return this.AM_AbsoluteY_dump();
-                case 0b111:
-                    return this.AM_AbsoluteX_dump();
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_IndexedIndirectX_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => this.AM_Immediate_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b100 => this.AM_IndirectIndexedY_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b110 => this.AM_AbsoluteY_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_01(int bbb)
+        private string AM_01(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_IndexedIndirectX();
-                case 0b001:
-                    return this.AM_ZeroPage();
-                case 0b010:
-                    return this.AM_Immediate();
-                case 0b011:
-                    return this.AM_Absolute();
-                case 0b100:
-                    return this.AM_IndirectIndexedY();
-                case 0b101:
-                    return this.AM_ZeroPageX();
-                case 0b110:
-                    return this.AM_AbsoluteY();
-                case 0b111:
-                    return this.AM_AbsoluteX();
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_IndexedIndirectX(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => this.AM_Immediate(),
+            0b011 => this.AM_Absolute(),
+            0b100 => this.AM_IndirectIndexedY(),
+            0b101 => this.AM_ZeroPageX(),
+            0b110 => this.AM_AbsoluteY(),
+            0b111 => this.AM_AbsoluteX(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_10_dump(int bbb)
+        private string AM_10_dump(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_Immediate_dump();
-                case 0b001:
-                    return this.AM_ZeroPage_dump();
-                case 0b010:
-                    return string.Empty;
-                case 0b011:
-                    return this.AM_Absolute_dump();
-                case 0b101:
-                    return this.AM_ZeroPageX_dump();
-                case 0b111:
-                    return this.AM_AbsoluteX_dump();
-                case 0b100:
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_Immediate_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => string.Empty,
+            0b011 => this.AM_Absolute_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_10(int bbb)
+        private string AM_10(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_Immediate();
-                case 0b001:
-                    return this.AM_ZeroPage();
-                case 0b010:
-                    return "A";
-                case 0b011:
-                    return this.AM_Absolute();
-                case 0b101:
-                    return this.AM_ZeroPageX();
-                case 0b111:
-                    return this.AM_AbsoluteX();
-                case 0b100:
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_Immediate(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => "A",
+            0b011 => this.AM_Absolute(),
+            0b101 => this.AM_ZeroPageX(),
+            0b111 => this.AM_AbsoluteX(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_10_x_dump(int bbb)
+        private string AM_10_x_dump(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_Immediate_dump();
-                case 0b001:
-                    return this.AM_ZeroPage_dump();
-                case 0b010:
-                    return string.Empty;
-                case 0b011:
-                    return this.AM_Absolute_dump();
-                case 0b101:
-                    return this.AM_ZeroPageY_dump();
-                case 0b111:
-                    return this.AM_AbsoluteY_dump();
-                case 0b100:
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_Immediate_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => string.Empty,
+            0b011 => this.AM_Absolute_dump(),
+            0b101 => this.AM_ZeroPageY_dump(),
+            0b111 => this.AM_AbsoluteY_dump(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_10_x(int bbb)
+        private string AM_10_x(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_Immediate();
-                case 0b001:
-                    return this.AM_ZeroPage();
-                case 0b010:
-                    return "A";
-                case 0b011:
-                    return this.AM_Absolute();
-                case 0b101:
-                    return this.AM_ZeroPageY();
-                case 0b111:
-                    return this.AM_AbsoluteY();
-                case 0b100:
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_Immediate(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => "A",
+            0b011 => this.AM_Absolute(),
+            0b101 => this.AM_ZeroPageY(),
+            0b111 => this.AM_AbsoluteY(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_11_dump(int bbb)
+        private string AM_11_dump(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_IndexedIndirectX_dump();
-                case 0b001:
-                    return this.AM_ZeroPage_dump();
-                case 0b010:
-                    return this.AM_Immediate_dump();
-                case 0b011:
-                    return this.AM_Absolute_dump();
-                case 0b100:
-                    return this.AM_IndirectIndexedY_dump();
-                case 0b101:
-                    return this.AM_ZeroPageY_dump();
-                case 0b111:
-                    return this.AM_AbsoluteY_dump();
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_IndexedIndirectX_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => this.AM_Immediate_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b100 => this.AM_IndirectIndexedY_dump(),
+            0b101 => this.AM_ZeroPageY_dump(),
+            0b111 => this.AM_AbsoluteY_dump(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_11_x_dump(int bbb)
+        private string AM_11_x_dump(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_IndexedIndirectX_dump();
-                case 0b001:
-                    return this.AM_ZeroPage_dump();
-                case 0b010:
-                    return this.AM_Immediate_dump();
-                case 0b011:
-                    return this.AM_Absolute_dump();
-                case 0b100:
-                    return this.AM_IndirectIndexedY_dump();
-                case 0b101:
-                    return this.AM_ZeroPageX_dump();
-                case 0b110:
-                    return this.AM_AbsoluteY_dump();
-                case 0b111:
-                    return this.AM_AbsoluteX_dump();
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_IndexedIndirectX_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => this.AM_Immediate_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b100 => this.AM_IndirectIndexedY_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b110 => this.AM_AbsoluteY_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_11(int bbb)
+        private string AM_11(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_IndexedIndirectX();
-                case 0b001:
-                    return this.AM_ZeroPage();
-                case 0b010:
-                    return this.AM_Immediate();
-                case 0b011:
-                    return this.AM_Absolute();
-                case 0b100:
-                    return this.AM_IndirectIndexedY();
-                case 0b101:
-                    return this.AM_ZeroPageY();
-                case 0b111:
-                    return this.AM_AbsoluteY();
-                case 0b110:
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_IndexedIndirectX(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => this.AM_Immediate(),
+            0b011 => this.AM_Absolute(),
+            0b100 => this.AM_IndirectIndexedY(),
+            0b101 => this.AM_ZeroPageY(),
+            0b111 => this.AM_AbsoluteY(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
 
-        private string AM_11_x(int bbb)
+        private string AM_11_x(int bbb) => bbb switch
         {
-            switch (bbb)
-            {
-                case 0b000:
-                    return this.AM_IndexedIndirectX();
-                case 0b001:
-                    return this.AM_ZeroPage();
-                case 0b010:
-                    return this.AM_Immediate();
-                case 0b011:
-                    return this.AM_Absolute();
-                case 0b100:
-                    return this.AM_IndirectIndexedY();
-                case 0b101:
-                    return this.AM_ZeroPageX();
-                case 0b110:
-                    return this.AM_AbsoluteY();
-                case 0b111:
-                    return this.AM_AbsoluteX();
-                default:
-                    throw new System.InvalidOperationException("Illegal addressing mode");
-            }
-        }
+            0b000 => this.AM_IndexedIndirectX(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => this.AM_Immediate(),
+            0b011 => this.AM_Absolute(),
+            0b100 => this.AM_IndirectIndexedY(),
+            0b101 => this.AM_ZeroPageX(),
+            0b110 => this.AM_AbsoluteY(),
+            0b111 => this.AM_AbsoluteX(),
+            _ => throw new System.InvalidOperationException("Illegal addressing mode"),
+        };
     }
 }

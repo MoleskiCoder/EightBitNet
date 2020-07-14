@@ -80,7 +80,7 @@ namespace M6502.Test
                 var test = this.Peek(0x0200);
                 System.Console.Out.WriteLine();
                 System.Console.Out.Write("** Test=");
-                System.Console.Out.WriteLine(Disassembler.Dump_ByteValue(test));
+                System.Console.Out.WriteLine(Disassembler.DumpByteValue(test));
             }
         }
 
@@ -91,27 +91,27 @@ namespace M6502.Test
             var output = new StringBuilder();
 
             output.Append("PC=");
-            output.Append(Disassembler.Dump_WordValue(address));
+            output.Append(Disassembler.DumpWordValue(address));
             output.Append(":");
 
             output.Append("P=");
-            output.Append(Disassembler.Dump_Flags(this.CPU.P));
+            output.Append(Disassembler.DumpFlags(this.CPU.P));
             output.Append(", ");
 
             output.Append("A=");
-            output.Append(Disassembler.Dump_ByteValue(this.CPU.A));
+            output.Append(Disassembler.DumpByteValue(this.CPU.A));
             output.Append(", ");
 
             output.Append("X=");
-            output.Append(Disassembler.Dump_ByteValue(this.CPU.X));
+            output.Append(Disassembler.DumpByteValue(this.CPU.X));
             output.Append(", ");
 
             output.Append("Y=");
-            output.Append(Disassembler.Dump_ByteValue(this.CPU.Y));
+            output.Append(Disassembler.DumpByteValue(this.CPU.Y));
             output.Append(", ");
 
             output.Append("S=");
-            output.Append(Disassembler.Dump_ByteValue(this.CPU.S));
+            output.Append(Disassembler.DumpByteValue(this.CPU.S));
             output.Append("\t");
 
             output.Append(this.disassembler.Disassemble(address));
