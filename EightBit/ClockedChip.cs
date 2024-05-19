@@ -12,7 +12,7 @@ namespace EightBit
         {
         }
 
-        public event EventHandler<EventArgs> Ticked;
+        public event EventHandler<EventArgs>? Ticked;
 
         public int Cycles { get; protected set; }
 

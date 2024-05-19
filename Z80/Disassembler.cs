@@ -6,16 +6,14 @@ namespace EightBit
 {
     using System;
 
-    public class Disassembler
+    public class Disassembler(Bus bus)
     {
         private bool prefixCB = false;
         private bool prefixDD = false;
         private bool prefixED = false;
         private bool prefixFD = false;
 
-        public Disassembler(Bus bus) => this.Bus = bus;
-
-        public Bus Bus { get; }
+        public Bus Bus { get; } = bus;
 
         public static string AsFlag(byte value, StatusBits flag, string represents) => (value & (byte)flag) != 0 ? represents : "-";
 
@@ -31,10 +29,7 @@ namespace EightBit
 
         public static string State(Z80 cpu)
         {
-            if (cpu == null)
-            {
-                throw new ArgumentNullException(nameof(cpu));
-            }
+            ArgumentNullException.ThrowIfNull(cpu);
 
             var pc = cpu.PC;
             var sp = cpu.SP;
@@ -75,11 +70,7 @@ namespace EightBit
 
         public string Disassemble(Z80 cpu)
         {
-            if (cpu == null)
-            {
-                throw new ArgumentNullException(nameof(cpu));
-            }
-
+            ArgumentNullException.ThrowIfNull(cpu);
             this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
             return this.Disassemble(cpu, cpu.PC.Word);
         }

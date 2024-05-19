@@ -10,13 +10,13 @@ namespace EightBit
     {
         private byte data;
 
-        public event EventHandler<EventArgs> WritingByte;
+        public event EventHandler<EventArgs>? WritingByte;
 
-        public event EventHandler<EventArgs> WrittenByte;
+        public event EventHandler<EventArgs>? WrittenByte;
 
-        public event EventHandler<EventArgs> ReadingByte;
+        public event EventHandler<EventArgs>? ReadingByte;
 
-        public event EventHandler<EventArgs> ReadByte;
+        public event EventHandler<EventArgs>? ReadByte;
 
         public byte Data { get => this.data; set => this.data = value; }
 
@@ -113,7 +113,7 @@ namespace EightBit
         protected ref byte Reference(ushort absolute)
         {
             var mapped = this.Mapping(absolute);
-            var offset = (ushort)((absolute - mapped.Begin) & mapped.Mask);
+            var offset = (ushort)mapped.Offset(absolute);
             if (mapped.Access == AccessLevel.ReadOnly)
             {
                 this.Data = mapped.Memory.Peek(offset);
@@ -131,16 +131,14 @@ namespace EightBit
 
         protected void LoadHexFile(string path)
         {
-            using (var file = new IntelHexFile(path))
+            using var file = new IntelHexFile(path);
+            foreach (var chunk in file.Parse())
             {
-                foreach (var chunk in file.Parse())
-                {
-                    var address = chunk.Item1;
-                    var content = chunk.Item2;
-                    var mapped = this.Mapping(address);
-                    var offset = address - mapped.Begin;
-                    mapped.Memory.Load(content, offset);
-                }
+                var address = chunk.Item1;
+                var content = chunk.Item2;
+                var mapped = this.Mapping(address);
+                var offset = address - mapped.Begin;
+                mapped.Memory.Load(content, offset);
             }
         }
     }

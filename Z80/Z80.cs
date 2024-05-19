@@ -6,11 +6,11 @@ namespace EightBit
 {
     using System;
 
-    public class Z80 : IntelProcessor
+    public class Z80(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
-        private readonly InputOutput ports;
+        private readonly InputOutput ports = ports;
 
-        private readonly Register16[] accumulatorFlags = { new Register16(), new Register16() };
+        private readonly Register16[] accumulatorFlags = [new Register16(), new Register16()];
         private readonly Register16[,] registers =
         {
             {
@@ -21,9 +21,9 @@ namespace EightBit
             },
         };
 
-        private readonly Register16 intermediate = new Register16();
+        private readonly Register16 intermediate = new();
 
-        private RefreshRegister refresh = new RefreshRegister(0x7f);
+        private RefreshRegister refresh = new(0x7f);
 
         private bool prefixCB = false;
         private bool prefixDD = false;
@@ -44,68 +44,65 @@ namespace EightBit
         private sbyte displacement = 0;
         private bool displaced = false;
 
-        public Z80(Bus bus, InputOutput ports)
-        : base(bus) => this.ports = ports;
+        public event EventHandler<EventArgs>? ExecutingInstruction;
 
-        public event EventHandler<EventArgs> ExecutingInstruction;
+        public event EventHandler<EventArgs>? ExecutedInstruction;
 
-        public event EventHandler<EventArgs> ExecutedInstruction;
+        public event EventHandler<EventArgs>? RaisingNMI;
 
-        public event EventHandler<EventArgs> RaisingNMI;
+        public event EventHandler<EventArgs>? RaisedNMI;
 
-        public event EventHandler<EventArgs> RaisedNMI;
+        public event EventHandler<EventArgs>? LoweringNMI;
 
-        public event EventHandler<EventArgs> LoweringNMI;
+        public event EventHandler<EventArgs>? LoweredNMI;
 
-        public event EventHandler<EventArgs> LoweredNMI;
+        public event EventHandler<EventArgs>? RaisingM1;
 
-        public event EventHandler<EventArgs> RaisingM1;
+        public event EventHandler<EventArgs>? RaisedM1;
 
-        public event EventHandler<EventArgs> RaisedM1;
+        public event EventHandler<EventArgs>? LoweringM1;
 
-        public event EventHandler<EventArgs> LoweringM1;
+        public event EventHandler<EventArgs>? LoweredM1;
 
-        public event EventHandler<EventArgs> LoweredM1;
+        public event EventHandler<EventArgs>? RaisingRFSH;
 
-        public event EventHandler<EventArgs> RaisingRFSH;
+        public event EventHandler<EventArgs>? RaisedRFSH;
 
-        public event EventHandler<EventArgs> RaisedRFSH;
+        public event EventHandler<EventArgs>? LoweringRFSH;
 
-        public event EventHandler<EventArgs> LoweringRFSH;
+        public event EventHandler<EventArgs>? LoweredRFSH;
 
-        public event EventHandler<EventArgs> LoweredRFSH;
+        public event EventHandler<EventArgs>? RaisingMREQ;
 
-        public event EventHandler<EventArgs> RaisingMREQ;
+        public event EventHandler<EventArgs>? RaisedMREQ;
 
-        public event EventHandler<EventArgs> RaisedMREQ;
+        public event EventHandler<EventArgs>? LoweringMREQ;
 
-        public event EventHandler<EventArgs> LoweringMREQ;
+        public event EventHandler<EventArgs>? LoweredMREQ;
 
-        public event EventHandler<EventArgs> LoweredMREQ;
+        public event EventHandler<EventArgs>? RaisingIORQ;
 
-        public event EventHandler<EventArgs> RaisingIORQ;
+        public event EventHandler<EventArgs>? RaisedIORQ;
 
-        public event EventHandler<EventArgs> RaisedIORQ;
+        public event EventHandler<EventArgs>? LoweringIORQ;
 
-        public event EventHandler<EventArgs> LoweringIORQ;
+        public event EventHandler<EventArgs>? LoweredIORQ;
 
-        public event EventHandler<EventArgs> LoweredIORQ;
+        public event EventHandler<EventArgs>? RaisingRD;
 
-        public event EventHandler<EventArgs> RaisingRD;
+        public event EventHandler<EventArgs>? RaisedRD;
 
-        public event EventHandler<EventArgs> RaisedRD;
+        public event EventHandler<EventArgs>? LoweringRD;
 
-        public event EventHandler<EventArgs> LoweringRD;
+        public event EventHandler<EventArgs>? LoweredRD;
 
-        public event EventHandler<EventArgs> LoweredRD;
+        public event EventHandler<EventArgs>? RaisingWR;
 
-        public event EventHandler<EventArgs> RaisingWR;
+        public event EventHandler<EventArgs>? RaisedWR;
 
-        public event EventHandler<EventArgs> RaisedWR;
+        public event EventHandler<EventArgs>? LoweringWR;
 
-        public event EventHandler<EventArgs> LoweringWR;
-
-        public event EventHandler<EventArgs> LoweredWR;
+        public event EventHandler<EventArgs>? LoweredWR;
 
         public byte IV { get; set; } = 0xff;
 
@@ -390,7 +387,7 @@ namespace EightBit
                     // received from the memory is ignored and an NOP instruction is forced internally to the
                     // CPU.The HALT acknowledge signal is active during this time indicating that the processor
                     // is in the HALT state.
-                    var discarded = this.ReadInitialOpCode();
+                    _ = this.ReadInitialOpCode();
                     this.Execute(0); // NOP
                     handled = true;
                 }
@@ -864,26 +861,13 @@ namespace EightBit
 
                             break;
                         case 6: // Set interrupt mode
-                            switch (y)
+                            this.IM = y switch
                             {
-                                case 0:
-                                case 1:
-                                case 4:
-                                case 5:
-                                    this.IM = 0;
-                                    break;
-                                case 2:
-                                case 6:
-                                    this.IM = 1;
-                                    break;
-                                case 3:
-                                case 7:
-                                    this.IM = 2;
-                                    break;
-                                default:
-                                    throw new NotSupportedException("Invalid operation mode");
-                            }
-
+                                0 or 1 or 4 or 5 => 0,
+                                2 or 6 => 1,
+                                3 or 7 => 2,
+                                _ => throw new NotSupportedException("Invalid operation mode"),
+                            };
                             break;
                         case 7: // Assorted ops
                             switch (y)
@@ -1566,7 +1550,7 @@ namespace EightBit
             this.IFF2 = this.IFF1;
             this.IFF1 = false;
             this.LowerM1();
-            var discarded = this.Bus.Data;
+            _ = this.Bus.Data;
             this.RaiseM1();
             this.Restart(0x66);
         }

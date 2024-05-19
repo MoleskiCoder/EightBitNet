@@ -8,8 +8,8 @@ namespace EightBit
 
     public abstract class IntelProcessor : LittleEndianProcessor
     {
-        private static readonly int[] HalfCarryTableAdd = new int[8] { 0, 0, 1, 0, 1, 0, 1, 1 };
-        private static readonly int[] HalfCarryTableSub = new int[8] { 0, 1, 1, 1, 0, 0, 0, 1 };
+        private static readonly int[] HalfCarryTableAdd = [0, 0, 1, 0, 1, 0, 1, 1];
+        private static readonly int[] HalfCarryTableSub = [0, 1, 1, 1, 0, 0, 0, 1];
 
         private readonly IntelOpCodeDecoded[] decodedOpCodes = new IntelOpCodeDecoded[0x100];
 
@@ -24,13 +24,13 @@ namespace EightBit
             }
         }
 
-        public event EventHandler<EventArgs> RaisingHALT;
+        public event EventHandler<EventArgs>? RaisingHALT;
 
-        public event EventHandler<EventArgs> RaisedHALT;
+        public event EventHandler<EventArgs>? RaisedHALT;
 
-        public event EventHandler<EventArgs> LoweringHALT;
+        public event EventHandler<EventArgs>? LoweringHALT;
 
-        public event EventHandler<EventArgs> LoweredHALT;
+        public event EventHandler<EventArgs>? LoweredHALT;
 
         public Register16 SP { get; } = new Register16((ushort)Mask.Sixteen);
 

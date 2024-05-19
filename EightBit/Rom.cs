@@ -7,11 +7,9 @@ namespace EightBit
     using System;
     using System.IO;
 
-    public class Rom : Memory
+    public class Rom(int size) : Memory
     {
-        private byte[] bytes;
-
-        public Rom(int size) => this.bytes = new byte[size];
+        private byte[] bytes = new byte[size];
 
         public Rom()
         : this(0)
@@ -53,10 +51,8 @@ namespace EightBit
 
         public static int Load(string path, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
-            using (var file = File.Open(path, FileMode.Open))
-            {
-                return Load(file, ref output, writeOffset, readOffset, limit, maximumSize);
-            }
+            using var file = File.Open(path, FileMode.Open);
+            return Load(file, ref output, writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1)

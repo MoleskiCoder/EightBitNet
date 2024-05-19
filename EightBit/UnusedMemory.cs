@@ -6,16 +6,10 @@ namespace EightBit
 {
     using System.IO;
 
-    public class UnusedMemory : Memory
+    public class UnusedMemory(int size, byte unchanging) : Memory
     {
-        private readonly int size;
-        private readonly byte unchanging;
-
-        public UnusedMemory(int size, byte unchanging)
-        {
-            this.size = size;
-            this.unchanging = unchanging;
-        }
+        private readonly int size = size;
+        private readonly byte unchanging = unchanging;
 
         public override int Size => this.size;
 

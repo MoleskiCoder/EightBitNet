@@ -6,34 +6,32 @@ namespace EightBit
 {
     using System;
 
-    public abstract class Processor : ClockedChip
+    public abstract class Processor(Bus memory) : ClockedChip
     {
         private PinLevel resetLine;
         private PinLevel intLine;
 
-        protected Processor(Bus memory) => this.Bus = memory;
+        public event EventHandler<EventArgs>? RaisingRESET;
 
-        public event EventHandler<EventArgs> RaisingRESET;
+        public event EventHandler<EventArgs>? RaisedRESET;
 
-        public event EventHandler<EventArgs> RaisedRESET;
+        public event EventHandler<EventArgs>? LoweringRESET;
 
-        public event EventHandler<EventArgs> LoweringRESET;
+        public event EventHandler<EventArgs>? LoweredRESET;
 
-        public event EventHandler<EventArgs> LoweredRESET;
+        public event EventHandler<EventArgs>? RaisingINT;
 
-        public event EventHandler<EventArgs> RaisingINT;
+        public event EventHandler<EventArgs>? RaisedINT;
 
-        public event EventHandler<EventArgs> RaisedINT;
+        public event EventHandler<EventArgs>? LoweringINT;
 
-        public event EventHandler<EventArgs> LoweringINT;
-
-        public event EventHandler<EventArgs> LoweredINT;
+        public event EventHandler<EventArgs>? LoweredINT;
 
         public ref PinLevel RESET => ref this.resetLine;
 
         public ref PinLevel INT => ref this.intLine;
 
-        public Bus Bus { get; }
+        public Bus Bus { get; } = memory;
 
         public Register16 PC { get; } = new Register16();
 

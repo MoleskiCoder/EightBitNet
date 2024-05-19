@@ -15,13 +15,13 @@ namespace EightBit
         {
         }
 
-        public event EventHandler<PortEventArgs> ReadingPort;
+        public event EventHandler<PortEventArgs>? ReadingPort;
 
-        public event EventHandler<PortEventArgs> ReadPort;
+        public event EventHandler<PortEventArgs>? ReadPort;
 
-        public event EventHandler<PortEventArgs> WritingPort;
+        public event EventHandler<PortEventArgs>? WritingPort;
 
-        public event EventHandler<PortEventArgs> WrittenPort;
+        public event EventHandler<PortEventArgs>? WrittenPort;
 
         public byte Read(byte port) => this.ReadInputPort(port);
 

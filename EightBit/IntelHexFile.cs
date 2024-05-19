@@ -8,13 +8,11 @@ namespace EightBit
     using System.Collections.Generic;
     using System.IO;
 
-    public class IntelHexFile : IDisposable
+    public class IntelHexFile(string path) : IDisposable
     {
-        private readonly StreamReader reader;
+        private readonly StreamReader reader = File.OpenText(path);
         private bool eof;
         private bool disposed = false;
-
-        public IntelHexFile(string path) => this.reader = File.OpenText(path);
 
         public void Dispose()
         {
@@ -27,7 +25,7 @@ namespace EightBit
             this.eof = false;
             while (!this.reader.EndOfStream && !this.eof)
             {
-                var line = this.reader.ReadLine();
+                var line = this.reader.ReadLine() ?? throw new InvalidOperationException("Early EOF detected");
                 var parsed = this.Parse(line);
                 if (parsed != null)
                 {
@@ -78,14 +76,14 @@ namespace EightBit
             return data;
         }
 
-        private Tuple<ushort, byte[]> Parse(string line)
+        private Tuple<ushort, byte[]>? Parse(string line)
         {
             if (string.IsNullOrEmpty(line))
             {
                 throw new ArgumentNullException(nameof(line));
             }
 
-            var colon = line.Substring(0, 1);
+            var colon = line[..1];
             if (colon != ":")
             {
                 throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line does not begin with a colon");

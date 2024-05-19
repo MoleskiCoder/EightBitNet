@@ -3,14 +3,9 @@
 // </copyright>
 namespace EightBit
 {
-    public abstract class BigEndianProcessor : Processor
+    public abstract class BigEndianProcessor(Bus memory) : Processor(memory)
     {
-        private readonly Register16 intermediate = new Register16();
-
-        protected BigEndianProcessor(Bus memory)
-        : base(memory)
-        {
-        }
+        private readonly Register16 intermediate = new();
 
         public override Register16 PeekWord(ushort address)
         {

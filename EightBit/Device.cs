@@ -14,13 +14,13 @@ namespace EightBit
         {
         }
 
-        public event EventHandler<EventArgs> RaisingPOWER;
+        public event EventHandler<EventArgs>? RaisingPOWER;
 
-        public event EventHandler<EventArgs> RaisedPOWER;
+        public event EventHandler<EventArgs>? RaisedPOWER;
 
-        public event EventHandler<EventArgs> LoweringPOWER;
+        public event EventHandler<EventArgs>? LoweringPOWER;
 
-        public event EventHandler<EventArgs> LoweredPOWER;
+        public event EventHandler<EventArgs>? LoweredPOWER;
 
         public bool Powered => this.POWER.Raised();
 

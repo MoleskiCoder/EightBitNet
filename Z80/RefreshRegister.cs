@@ -4,16 +4,10 @@
 
 namespace EightBit
 {
-    public struct RefreshRegister : System.IEquatable<RefreshRegister>
+    public struct RefreshRegister(byte value) : System.IEquatable<RefreshRegister>
     {
-        private readonly byte high;
-        private byte variable;
-
-        public RefreshRegister(byte value)
-        {
-            this.high = (byte)(value & (byte)Bits.Bit7);
-            this.variable = (byte)(value & (byte)Mask.Seven);
-        }
+        private readonly byte high = (byte)(value & (byte)Bits.Bit7);
+        private byte variable = (byte)(value & (byte)Mask.Seven);
 
         public static implicit operator byte(RefreshRegister input) => ToByte(input);
 
@@ -33,14 +27,22 @@ namespace EightBit
             return value;
         }
 
-        public static RefreshRegister FromByte(byte input) => new RefreshRegister(input);
+        public static RefreshRegister FromByte(byte input) => new(input);
 
-        public byte ToByte() => ToByte(this);
+        public readonly byte ToByte() => ToByte(this);
 
-        public override bool Equals(object obj) => obj is RefreshRegister ? this.Equals((RefreshRegister)obj) : false;
+        public override readonly bool Equals(object? obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
 
-        public override int GetHashCode() => this.high + this.variable;
+            return this.Equals((RefreshRegister)obj);
+        }
+        public readonly bool Equals(RefreshRegister other) => other.high == this.high && other.variable == this.variable;
 
-        public bool Equals(RefreshRegister other) => other.high == this.high && other.variable == this.variable;
+        public override readonly int GetHashCode() => this.high + this.variable;
+
     }
 }

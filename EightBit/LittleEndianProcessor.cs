@@ -4,14 +4,9 @@
 
 namespace EightBit
 {
-    public abstract class LittleEndianProcessor : Processor
+    public abstract class LittleEndianProcessor(Bus memory) : Processor(memory)
     {
-        private readonly Register16 intermediate = new Register16();
-
-        protected LittleEndianProcessor(Bus memory)
-        : base(memory)
-        {
-        }
+        private readonly Register16 intermediate = new();
 
         public override Register16 PeekWord(ushort address)
         {

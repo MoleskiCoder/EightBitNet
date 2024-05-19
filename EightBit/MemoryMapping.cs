@@ -4,27 +4,24 @@
 
 namespace EightBit
 {
-    public class MemoryMapping
+    public class MemoryMapping(Memory memory, ushort begin, ushort mask, AccessLevel access)
     {
-        public MemoryMapping(Memory memory, ushort begin, ushort mask, AccessLevel access)
-        {
-            this.Memory = memory;
-            this.Begin = begin;
-            this.Mask = mask;
-            this.Access = access;
-        }
-
         public MemoryMapping(Memory memory, ushort begin, Mask mask, AccessLevel access)
         : this(memory, begin, (ushort)mask, access)
         {
         }
 
-        public Memory Memory { get; set; }
+        public Memory Memory { get; set; } = memory;
 
-        public ushort Begin { get; set; }
+        public ushort Begin { get; set; } = begin;
 
-        public ushort Mask { get; set; }
+        public ushort Mask { get; set; } = mask;
 
-        public AccessLevel Access { get; set; }
+        public AccessLevel Access { get; set; } = access;
+
+        public int Offset(ushort absolute)
+        {
+            return (absolute - this.Begin) & this.Mask;
+        }
     }
 }

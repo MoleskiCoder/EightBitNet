@@ -6,10 +6,8 @@ namespace EightBit
 {
     using System;
 
-    public sealed class PortEventArgs : EventArgs
+    public sealed class PortEventArgs(byte value) : EventArgs
     {
-        public PortEventArgs(byte value) => this.Port = value;
-
-        public byte Port { get; }
+        public byte Port { get; } = value;
     }
 }

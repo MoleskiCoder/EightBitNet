@@ -69,12 +69,26 @@ namespace EightBit
 
         public static bool operator !=(Register16 left, Register16 right) => !(left == right);
 
-        public override bool Equals(object obj)
+        public override int GetHashCode() => this.Word;
+
+        public override bool Equals(object? obj)
         {
-            var rhs = obj as Register16;
-            return rhs == null ? false : rhs.Low == this.Low && rhs.High == this.High;
+            return Equals(obj as Register16);
         }
 
-        public override int GetHashCode() => this.Word;
+        public bool Equals(Register16? rhs)
+        {
+            if (ReferenceEquals(this, rhs))
+            {
+                return true;
+            }
+
+            if (rhs is null)
+            {
+                return false;
+            }
+
+            return rhs.Low == this.Low && rhs.High == this.High;
+        }
     }
 }

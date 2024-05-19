@@ -4,13 +4,8 @@
 
 namespace EightBit
 {
-    public class Ram : Rom
+    public class Ram(int size) : Rom(size)
     {
-        public Ram(int size)
-        : base(size)
-        {
-        }
-
         public Ram()
         : this(0)
         {
