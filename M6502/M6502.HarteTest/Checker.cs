@@ -77,11 +77,31 @@
             }
         }
 
-        private bool Check<T>(string what, T expected, T actual)
+        private bool Check(string what, ushort expected, ushort actual)
+        {
+            var success = actual == expected;
+            if (!success)
+            {
+                this.Raise(what, expected, actual);
+            }
+            return success;
+        }
+
+        private bool Check(string what, byte expected, byte actual)
+        {
+            var success = actual == expected;
+            if (!success)
+            {
+                this.Raise(what, expected, actual);
+            }
+            return success;
+        }
+
+        private bool Check(string what, string? expected, string? actual)
         {
             ArgumentNullException.ThrowIfNull(expected);
             ArgumentNullException.ThrowIfNull(actual);
-            var success = actual.Equals(expected);
+            var success = actual == expected;
             if (!success)
             {
                 this.Raise(what, expected, actual);
@@ -162,9 +182,7 @@
             var ram_problem = false;
             foreach (var entry in final.RAM)
             {
-
-                var count = entry.Length;
-                if (count != 2)
+                if (entry.Length != 2)
                 {
                     throw new InvalidOperationException("RAM entry length must be 2");
                 }
@@ -185,7 +203,11 @@
                 && !ram_problem;
         }
 
-        private void Raise<T>(string what, T expected, T actual) => this.Messages.Add($"{what}: expected: {expected}, actual: {actual}");
+        private void Raise(string what, ushort expected, ushort actual) => this.Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");
+
+        private void Raise(string what, byte expected, byte actual) => this.Messages.Add($"{what}: expected: {expected:X2}, actual: {actual:X2}");
+
+        private void Raise(string what, string expected, string actual) => this.Messages.Add($"{what}: expected: {expected}, actual: {actual}");
 
         public void Initialise()
         {
@@ -195,18 +217,23 @@
 
         private void InitialiseState(Test test)
         {
+            var initial = test.Initial ?? throw new InvalidOperationException("Test cannot have an invalid initial state");
+            this.InitialiseState(initial);
+        }
+
+        private void InitialiseState(State state)
+        {
             var cpu = this.Runner.CPU;
             var ram = this.Runner.RAM;
 
-            var initial = test.Initial ?? throw new InvalidOperationException("Test cannot have an invalid initial state");
-            cpu.PC.Word = initial.PC;
-            cpu.S = initial.S;
-            cpu.A = initial.A;
-            cpu.X = initial.X;
-            cpu.Y = initial.Y;
-            cpu.P = initial.P;
+            cpu.PC.Word = state.PC;
+            cpu.S = state.S;
+            cpu.A = state.A;
+            cpu.X = state.X;
+            cpu.Y = state.Y;
+            cpu.P = state.P;
 
-            var initialRAM = initial.RAM ?? throw new InvalidOperationException("Initial test state cannot have invalid RAM");
+            var initialRAM = state.RAM ?? throw new InvalidOperationException("Initial test state cannot have invalid RAM");
             foreach (var entry in initialRAM)
             {
                 var count = entry.Length;
@@ -236,7 +263,7 @@
         private void DumpCycle(ushort address, byte value, string? action)
         {
             ArgumentNullException.ThrowIfNull(action);
-            this.Messages.Add($"Address: {address}, value: {value}, action: {action}");
+            this.Messages.Add($"Address: {address:X4}, value: {value:X2}, action: {action}");
         }
 
         private void DumpCycle(Cycle cycle) => this.DumpCycle(cycle.Address, cycle.Value, cycle.Type);
