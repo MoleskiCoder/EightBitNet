@@ -19,8 +19,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="M6502.HarteTest\**" />
     <Compile Remove="M6502.Test\**" />
+    <EmbeddedResource Remove="M6502.HarteTest\**" />
     <EmbeddedResource Remove="M6502.Test\**" />
+    <None Remove="M6502.HarteTest\**" />
     <None Remove="M6502.Test\**" />
   </ItemGroup>
 
