@@ -6,19 +6,12 @@ namespace EightBit
 {
     using System.Text;
 
-    public class Disassembler
+    public class Disassembler(Bus bus, M6502 processor, Symbols symbols)
     {
-        private readonly Bus bus;
-        private readonly M6502 processor;
-        private readonly Symbols symbols;
+        private readonly Bus bus = bus;
+        private readonly M6502 processor = processor;
+        private readonly Symbols symbols = symbols;
         private ushort address;
-
-        public Disassembler(Bus bus, M6502 processor, Symbols symbols)
-        {
-            this.bus = bus;
-            this.processor = processor;
-            this.symbols = symbols;
-        }
 
         public static string DumpFlags(byte value)
         {
@@ -47,7 +40,7 @@ namespace EightBit
             var cell = this.bus.Peek(current);
 
             output.Append(DumpByteValue(cell));
-            output.Append(" ");
+            output.Append(' ');
 
             var next = this.bus.Peek((ushort)(current + 1));
             var relative = (ushort)(this.processor.PC.Word + 2 + (sbyte)next);

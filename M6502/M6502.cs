@@ -6,13 +6,13 @@ namespace EightBit
 {
     using System;
 
-    public class M6502 : LittleEndianProcessor
+    public class M6502(Bus bus) : LittleEndianProcessor(bus)
     {
         private const byte IRQvector = 0xfe;  // IRQ vector
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
-        private readonly Register16 intermediate = new Register16();
+        private readonly Register16 intermediate = new();
         private byte crossedPage;
 
         private bool handlingRESET = false;
@@ -25,54 +25,49 @@ namespace EightBit
         private PinLevel rdyLine = PinLevel.Low;
         private PinLevel rwLine = PinLevel.Low;
 
-        public M6502(Bus bus)
-        : base(bus)
-        {
-        }
+        public event EventHandler<EventArgs>? ExecutingInstruction;
 
-        public event EventHandler<EventArgs> ExecutingInstruction;
+        public event EventHandler<EventArgs>? ExecutedInstruction;
 
-        public event EventHandler<EventArgs> ExecutedInstruction;
+        public event EventHandler<EventArgs>? RaisingNMI;
 
-        public event EventHandler<EventArgs> RaisingNMI;
+        public event EventHandler<EventArgs>? RaisedNMI;
 
-        public event EventHandler<EventArgs> RaisedNMI;
+        public event EventHandler<EventArgs>? LoweringNMI;
 
-        public event EventHandler<EventArgs> LoweringNMI;
+        public event EventHandler<EventArgs>? LoweredNMI;
 
-        public event EventHandler<EventArgs> LoweredNMI;
+        public event EventHandler<EventArgs>? RaisingSO;
 
-        public event EventHandler<EventArgs> RaisingSO;
+        public event EventHandler<EventArgs>? RaisedSO;
 
-        public event EventHandler<EventArgs> RaisedSO;
+        public event EventHandler<EventArgs>? LoweringSO;
 
-        public event EventHandler<EventArgs> LoweringSO;
+        public event EventHandler<EventArgs>? LoweredSO;
 
-        public event EventHandler<EventArgs> LoweredSO;
+        public event EventHandler<EventArgs>? RaisingSYNC;
 
-        public event EventHandler<EventArgs> RaisingSYNC;
+        public event EventHandler<EventArgs>? RaisedSYNC;
 
-        public event EventHandler<EventArgs> RaisedSYNC;
+        public event EventHandler<EventArgs>? LoweringSYNC;
 
-        public event EventHandler<EventArgs> LoweringSYNC;
+        public event EventHandler<EventArgs>? LoweredSYNC;
 
-        public event EventHandler<EventArgs> LoweredSYNC;
+        public event EventHandler<EventArgs>? RaisingRDY;
 
-        public event EventHandler<EventArgs> RaisingRDY;
+        public event EventHandler<EventArgs>? RaisedRDY;
 
-        public event EventHandler<EventArgs> RaisedRDY;
+        public event EventHandler<EventArgs>? LoweringRDY;
 
-        public event EventHandler<EventArgs> LoweringRDY;
+        public event EventHandler<EventArgs>? LoweredRDY;
 
-        public event EventHandler<EventArgs> LoweredRDY;
+        public event EventHandler<EventArgs>? RaisingRW;
 
-        public event EventHandler<EventArgs> RaisingRW;
+        public event EventHandler<EventArgs>? RaisedRW;
 
-        public event EventHandler<EventArgs> RaisedRW;
+        public event EventHandler<EventArgs>? LoweringRW;
 
-        public event EventHandler<EventArgs> LoweringRW;
-
-        public event EventHandler<EventArgs> LoweredRW;
+        public event EventHandler<EventArgs>? LoweredRW;
 
         public ref PinLevel NMI => ref this.nmiLine;
 
