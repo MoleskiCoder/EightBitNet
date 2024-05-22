@@ -187,7 +187,7 @@ namespace EightBit
 
             switch (this.OpCode)
             {
-                case 0x00: this.FetchByte(); this.Interrupt(); break;                                                           // BRK (implied)
+                case 0x00: this.FetchByte(); this.Interrupt(IRQvector, InterruptSource.software); break;                        // BRK (implied)
                 case 0x01: this.A = this.OrR(this.A, this.AM_IndexedIndirectX()); break;                                        // ORA (indexed indirect X)
                 case 0x02: break;
                 case 0x03: this.SLO(this.AM_IndexedIndirectX()); break;                                                         // *SLO (indexed indirect X)
@@ -555,10 +555,18 @@ namespace EightBit
             this.LowerRW();
             base.OnRaisedPOWER();
         }
+        
+        protected override byte Pop()
+        {
+            this.RaiseStack();
+            return this.MemoryRead();
+        }
 
-        protected override byte Pop() => this.MemoryRead(++this.S, 1);
-
-        protected override void Push(byte value) => this.MemoryWrite(this.S--, 1, value);
+        protected override void Push(byte value)
+        {
+            this.LowerStack();
+            this.MemoryWrite(value);
+        }
 
         protected virtual void RaiseSYNC()
         {
@@ -577,15 +585,13 @@ namespace EightBit
         protected override sealed void HandleRESET()
         {
             this.RaiseRESET();
-            this.handlingRESET = true;
-            this.OpCode = 0x00; // BRK
+            this.Interrupt(RSTvector, InterruptSource.hardware, InterruptType.reset);
         }
 
         protected override sealed void HandleINT()
         {
             this.RaiseINT();
-            this.handlingINT = true;
-            this.OpCode = 0x00; // BRK
+            this.Interrupt(IRQvector);
         }
 
         protected override sealed void BusWrite()
@@ -612,11 +618,15 @@ namespace EightBit
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
+        private void SetFlag(StatusBits flag)
+        {
+            this.P = SetBit(this.P, flag);
+        }
+
         private void HandleNMI()
         {
             this.RaiseNMI();
-            this.handlingNMI = true;
-            this.OpCode = 0x00; // BRK
+            this.Interrupt(NMIvector);
         }
 
         private void HandleSO()
@@ -625,37 +635,46 @@ namespace EightBit
             this.P |= (byte)StatusBits.VF;
         }
 
-        private void Interrupt()
+        enum InterruptSource { hardware, software };
+
+        enum InterruptType { reset, non_reset };
+
+        private void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
         {
-            var reset = this.handlingRESET;
-            var nmi = this.handlingNMI;
-            var irq = this.handlingINT;
-            var hardware = nmi || irq || reset;
-            var software = !hardware;
-            if (reset)
+	        if (type == InterruptType.reset)
             {
-                this.DummyPush(this.PC.High);
-                this.DummyPush(this.PC.Low);
-                this.DummyPush(this.P);
+		        this.DummyPush();
+                this.DummyPush();
+                this.DummyPush();
             }
             else
             {
                 this.PushWord(this.PC);
-                this.Push((byte)(this.P | (int)(software ? StatusBits.BF : 0)));
+                this.Push((byte)(this.P | (int)(source == InterruptSource.hardware ? 0 : StatusBits.BF)));
             }
-
-            this.P = SetBit(this.P, StatusBits.IF);   // Disable IRQ
-            var vector = reset ? RSTvector : (nmi ? NMIvector : IRQvector);
+            this.SetFlag(StatusBits.IF);   // Disable IRQ
             this.Jump(this.GetWordPaged(0xff, vector).Word);
-            this.handlingRESET = this.handlingNMI = this.handlingINT = false;
         }
 
-        private void DummyPush(byte value)
+        private void UpdateStack(byte position)
         {
+            this.Bus.Address.Word = new Register16(position, 1).Word;
+        }
+
+        private void LowerStack()
+        {
+            this.UpdateStack(this.S--);
+        }
+		
+        private void RaiseStack()
+        {
+            this.UpdateStack(++this.S);
+        }
+
+        private void DummyPush()
+        {
+            this.LowerStack();
             this.Tick();
-            this.Bus.Data = value;
-            this.Bus.Address.Low = this.S--;
-            this.Bus.Address.High = 1;
         }
 
         private Register16 Address_Absolute() => this.FetchWord();
