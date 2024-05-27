@@ -119,7 +119,20 @@
             return success;
         }
 
-        private void AddDisassembly(ushort address) => this.Messages.Add(this.Disassemble(address));
+        private void AddDisassembly(ushort address)
+        {
+            string message;
+            try
+            {
+                message = this.Disassemble(address);
+            }
+            catch (InvalidOperationException error)
+            {
+                message = $"Disassembly problem: {error.Message}";
+            }
+
+            this.Messages.Add(message);
+        }
 
         private string Disassemble(ushort address) => this.Disassembler.Disassemble(address);
 
