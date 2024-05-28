@@ -1020,16 +1020,16 @@ namespace EightBit
 	        var operand = this.A;
             var data = this.Bus.Data;
 
-            Register16 low = new(LowerNibble(operand) + LowerNibble(data) + this.Carry);
-            intermediate.Word = (ushort)(HigherNibble(operand) + HigherNibble(data));
+            var low = (ushort)(LowerNibble(operand) + LowerNibble(data) + this.Carry);
+            this.intermediate.Word = (ushort)(HigherNibble(operand) + HigherNibble(data));
 
-            AdjustZero(new Register16(low.Word + this.intermediate.Word).Low);
+            this.AdjustZero(LowByte((ushort)(low + this.intermediate.Word)));
 
-            if (low.Word > 0x09)
+            if (low > 0x09)
             {
                 this.intermediate.Word += 0x10;
-                low.Word += 0x06;
-            }
+                low += 0x06;
+            } 
 
             this.AdjustNegative(this.intermediate.Low);
             this.AdjustOverflow_add(operand);
@@ -1039,7 +1039,7 @@ namespace EightBit
 
             this.SetFlag(StatusBits.CF, this.intermediate.High);
 
-            this.A = (byte)(LowerNibble(low.Low) | HigherNibble(this.intermediate.Low));
+            this.A = (byte)(LowerNibble(LowByte(low)) | HigherNibble(this.intermediate.Low));
         }
 
         // Undocumented compound instructions (with BCD effects)
