@@ -36,10 +36,11 @@ namespace EightBit
             return this.intermediate;
         }
 
-        protected override Register16 GetWordPaged(byte page, byte offset)
+        protected override Register16 GetWordPaged()
         {
-            this.intermediate.Low = this.MemoryRead(offset, page);
-            this.intermediate.High = this.MemoryRead(++offset, page);
+            this.intermediate.Low = this.MemoryRead();
+            ++this.Bus.Address.Low;
+            this.intermediate.High = this.MemoryRead();
             return this.intermediate;
         }
 
@@ -63,10 +64,11 @@ namespace EightBit
             this.MemoryWrite(value.High);
         }
 
-        protected override void SetWordPaged(byte page, byte offset, Register16 value)
+        protected override void SetWordPaged(Register16 value)
         {
-            this.MemoryWrite(offset, page, value.Low);
-            this.MemoryWrite(++offset, page, value.High);
+            this.MemoryWrite(value.Low);
+            ++this.Bus.Address.Low;
+            this.MemoryWrite(value.High);
         }
     }
 }

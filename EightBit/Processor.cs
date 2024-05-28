@@ -49,7 +49,7 @@ namespace EightBit
 
         public abstract int Step();
 
-        public abstract int Execute();
+        public abstract void Execute();
 
         public int Run(int limit)
         {
@@ -62,10 +62,10 @@ namespace EightBit
             return current;
         }
 
-        public int Execute(byte value)
+        public void Execute(byte value)
         {
             this.OpCode = value;
-            return this.Execute();
+            this.Execute();
         }
 
         public abstract Register16 PeekWord(ushort address);
@@ -184,9 +184,33 @@ namespace EightBit
 
         protected abstract void SetWord(Register16 value);
 
-        protected abstract Register16 GetWordPaged(byte page, byte offset);
+        protected abstract Register16 GetWordPaged();
 
-        protected abstract void SetWordPaged(byte page, byte offset, Register16 value);
+        protected Register16 GetWordPaged(Register16 address)
+        {
+            this.Bus.Address.Word = address.Word;
+            return this.GetWordPaged();
+        }
+
+        protected Register16 GetWordPaged(byte page, byte offset)
+        {
+            this.Bus.Address.Word = new Register16(offset, page).Word;
+        	return this.GetWordPaged();
+        }
+
+        protected abstract void SetWordPaged(Register16 value);
+
+        protected void SetWordPaged(Register16 address, Register16 value)
+        {
+	        this.Bus.Address.Word = address.Word;
+            this.SetWordPaged(value);
+        }
+
+        protected void SetWordPaged(byte page, byte offset, Register16 value)
+        {
+            this.Bus.Address.Word = new Register16(offset, page).Word;
+            this.SetWordPaged(value);
+        }
 
         protected abstract Register16 FetchWord();
 
