@@ -40,7 +40,7 @@ namespace EightBit.GameBoy
 
         private bool Stopped { get; set; } = false;
 
-        public override int Execute()
+        public override void Execute()
         {
             var decoded = this.GetDecodedOpCode(this.OpCode);
 
@@ -61,7 +61,6 @@ namespace EightBit.GameBoy
             }
 
             System.Diagnostics.Debug.Assert(this.Cycles > 0, $"No timing associated with instruction (CB prefixed? {this.prefixCB}) 0x{this.OpCode:X2}");
-            return this.ClockCycles;
         }
 
         public override int Step()

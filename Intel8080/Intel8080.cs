@@ -36,7 +36,7 @@ namespace EightBit
 
         public override Register16 HL { get; } = new Register16((int)Mask.Sixteen);
 
-        public override int Execute()
+        public override void Execute()
         {
             var decoded = this.GetDecodedOpCode(this.OpCode);
 
@@ -48,8 +48,6 @@ namespace EightBit
             var q = decoded.Q;
 
             this.Execute(x, y, z, p, q);
-
-            return this.Cycles;
         }
 
         public override int Step()

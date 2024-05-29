@@ -211,7 +211,7 @@ namespace EightBit
             return this.Cycles;
         }
 
-        public override int Execute()
+        public override void Execute()
         {
             this.LowerBA();
             this.LowerBS();
@@ -232,8 +232,6 @@ namespace EightBit
                     this.Execute11();
                 }
             }
-
-            return this.Cycles;
         }
 
         public void RaiseNMI()

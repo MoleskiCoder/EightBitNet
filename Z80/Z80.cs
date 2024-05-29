@@ -316,7 +316,7 @@ namespace EightBit
             }
         }
 
-        public override int Execute()
+        public override void Execute()
         {
             var decoded = this.GetDecodedOpCode(this.OpCode);
 
@@ -339,8 +339,6 @@ namespace EightBit
             {
                 this.ExecuteOther(x, y, z, p, q);
             }
-
-            return this.Cycles;
         }
 
         public override int Step()
