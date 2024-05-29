@@ -730,15 +730,21 @@ namespace EightBit
 		}
 
 
-		// Addressing modes
+        // Addressing modes
 
-		private void NoteFixedAddress(Register16 fixing)
-		{
-            this.fixedPage = fixing.High;
-            this.Bus.Address.Low = fixing.Low;
-		}
+        private void NoteFixedAddress(int address)
+        {
+            this.NoteFixedAddress((ushort)address);
+        }
 
-		private void Address_Immediate() => this.Bus.Address.Word = this.PC.Word++;
+        private void NoteFixedAddress(ushort address)
+        {
+            this.intermediate.Word = address;
+            this.fixedPage = this.intermediate.High;
+            this.Bus.Address.Low = this.intermediate.Low;
+        }
+
+        private void Address_Immediate() => this.Bus.Address.Word = this.PC.Word++;
 
 		private void Address_Absolute() => this.Bus.Address.Word = this.FetchWord().Word;
 
@@ -773,8 +779,7 @@ namespace EightBit
 		private void Address_AbsoluteWithIndex(byte index)
 		{
             this.Address_Absolute();
-            this.intermediate.Word = (ushort)(this.Bus.Address.Word + index);
-            this.NoteFixedAddress(this.intermediate);
+            this.NoteFixedAddress(this.Bus.Address.Word + index);
         }
 
         private void Address_AbsoluteX() => this.Address_AbsoluteWithIndex(X);
@@ -790,8 +795,7 @@ namespace EightBit
 		private void Address_IndirectIndexedY()
 		{
             this.Address_ZeroPageIndirect();
-            this.intermediate.Word = (ushort)(this.Bus.Address.Word + Y);
-            this.NoteFixedAddress(this.intermediate);
+            this.NoteFixedAddress(this.Bus.Address.Word + Y);
         }
 
         // Addressing modes, with read
@@ -869,8 +873,7 @@ namespace EightBit
             {
                 var relative = (sbyte)this.Bus.Data;
                 this.Swallow();
-                this.intermediate.Word = (ushort)(this.PC.Word + relative);
-                this.NoteFixedAddress(this.intermediate);
+                this.NoteFixedAddress(this.PC.Word + relative);
                 this.Jump(this.intermediate.Word);
                 this.MaybeFixup();
             }
@@ -937,7 +940,6 @@ namespace EightBit
             this.MemoryRead();
 		}
 
-
 		// Chew up a cycle
 
 		private void Swallow() => this.MemoryRead(this.PC);
@@ -960,7 +962,7 @@ namespace EightBit
             this.ResetFlag(StatusBits.CF, this.intermediate.High);
         }
 
-        private byte SUB(byte operand, int borrow = 0) => this.Decimal != 0 ? SUB_d(operand, borrow) : SUB_b(operand, borrow);
+        private byte SUB(byte operand, int borrow) => this.Decimal != 0 ? SUB_d(operand, borrow) : SUB_b(operand, borrow);
 
         private byte SUB_b(byte operand, int borrow = 0)
         {
@@ -971,10 +973,9 @@ namespace EightBit
 
         private byte SUB_d(byte operand, int borrow)
         {
+            _ = this.SUB_b(operand, borrow);
+
             var data = this.Bus.Data;
-
-            this.intermediate.Word = (ushort)(operand - data - borrow);
-
             var low = (byte)(LowNibble(operand) - LowNibble(data) - borrow);
             var lowNegative = NegativeTest(low);
             if (lowNegative != 0)
@@ -991,7 +992,6 @@ namespace EightBit
 
             return (byte)(PromoteNibble(high) | LowNibble(low));
         }
-
 
         private void ADC()
         {
