@@ -4,9 +4,8 @@
 
 namespace EightBit
 {
-    using System;
-
     [Flags]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1028:Enum Storage should be Int32", Justification = "Must be castable to byte")]
     public enum StatusBits : byte
     {
         None = 0,

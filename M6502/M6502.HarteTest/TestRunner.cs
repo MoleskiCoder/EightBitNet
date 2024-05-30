@@ -1,12 +1,12 @@
-﻿using EightBit;
-
-namespace M6502.HarteTest
+﻿namespace M6502.HarteTest
 {
-    internal class TestRunner : EightBit.Bus
-    {
-        public EightBit.Ram RAM { get; } = new(0x10000);
+    using EightBit;
 
-        public EightBit.M6502 CPU { get; }
+    internal class TestRunner : Bus
+    {
+        public Ram RAM { get; } = new(0x10000);
+
+        public M6502 CPU { get; }
 
         private readonly MemoryMapping mapping;
 

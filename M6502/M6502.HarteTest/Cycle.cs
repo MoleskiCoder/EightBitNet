@@ -23,8 +23,8 @@
             }
 
             this.Address = ((System.Text.Json.JsonElement)input[0]).GetUInt16();
-            this.Value = ((System.Text.Json.JsonElement)input[1]).GetByte(); ;
-            this.Type = ((System.Text.Json.JsonElement)input[2]).GetString(); ;
+            this.Value = ((System.Text.Json.JsonElement)input[1]).GetByte();
+            this.Type = ((System.Text.Json.JsonElement)input[2]).GetString();
         }
     }
 }

@@ -105,6 +105,7 @@ namespace EightBit
 
         private static int CarryTest(byte data) => data & (byte)StatusBits.CF;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseNMI()
         {
             if (this.NMI.Lowered())
@@ -125,6 +126,7 @@ namespace EightBit
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseSO()
         {
             if (this.SO.Lowered())
@@ -145,6 +147,7 @@ namespace EightBit
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRDY()
         {
             if (this.RDY.Lowered())
@@ -165,6 +168,7 @@ namespace EightBit
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRW()
         {
             if (this.RW.Lowered())
@@ -586,6 +590,7 @@ namespace EightBit
             this.MemoryWrite(value);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         protected virtual void RaiseSYNC()
         {
             this.OnRaisingSYNC();
@@ -634,8 +639,6 @@ namespace EightBit
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
-        private static byte ClearBit(byte f, StatusBits flag, bool condition) => ClearBit(f, (byte)flag, condition);
-
         // Status flag operations
 
         private void SetFlag(StatusBits flag)
@@ -659,11 +662,6 @@ namespace EightBit
         }
 
         private void ResetFlag(StatusBits which, int condition)
-        {
-            this.P = ClearBit(this.P, which, condition);
-        }
-
-        private void ResetFlag(StatusBits which, bool condition)
         {
             this.P = ClearBit(this.P, which, condition);
         }
@@ -856,7 +854,7 @@ namespace EightBit
 
         private void AdjustZero(byte datum) => this.ResetFlag(StatusBits.ZF, datum);
 
-        private void AdjustNegative(byte datum) => SetFlag(StatusBits.NF, NegativeTest(datum));
+        private void AdjustNegative(byte datum) => this.SetFlag(StatusBits.NF, NegativeTest(datum));
 
         private void AdjustNZ(byte datum)
         {
@@ -874,8 +872,8 @@ namespace EightBit
                 var relative = (sbyte)this.Bus.Data;
                 this.Swallow();
                 this.NoteFixedAddress(this.PC.Word + relative);
-                this.Jump(this.intermediate.Word);
                 this.MaybeFixup();
+                this.Jump(this.Bus.Address.Word);
             }
         }
 
@@ -1262,4 +1260,3 @@ namespace EightBit
             this.CMP(this.A);
         }
 	}
-}

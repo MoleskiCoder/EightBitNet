@@ -1,8 +1,8 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace M6502.HarteTest
+﻿namespace M6502.HarteTest
 {
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
+
     internal class OpcodeTestSuite(string path) : IDisposable
     {
         private static readonly JsonSerializerOptions SerializerOptions = new()

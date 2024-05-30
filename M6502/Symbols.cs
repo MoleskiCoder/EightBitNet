@@ -4,10 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-
     public class Symbols
     {
         private readonly Dictionary<string, Dictionary<string, Dictionary<string, string>>> parsed = [];
@@ -98,7 +94,7 @@ namespace EightBit
                     {
                         if (!this.parsed.ContainsKey(type))
                         {
-                            this.parsed[type] = new Dictionary<string, Dictionary<string, string>>();
+                            this.parsed[type] = [];
                         }
 
                         var id = data["id"];
