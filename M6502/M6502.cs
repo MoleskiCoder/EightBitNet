@@ -7,8 +7,8 @@ namespace EightBit
     using System;
 
     public class M6502(Bus bus) : LittleEndianProcessor(bus)
-	{
-		private const byte IRQvector = 0xfe;  // IRQ vector
+    {
+        private const byte IRQvector = 0xfe;  // IRQ vector
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
@@ -89,7 +89,7 @@ namespace EightBit
 
         private int Decimal => this.P & (byte)StatusBits.DF;
 
-		private int Negative => NegativeTest(this.P);
+        private int Negative => NegativeTest(this.P);
 
         private int Zero => ZeroTest(this.P);
 
@@ -190,10 +190,10 @@ namespace EightBit
         }
 
         public override void Execute()
-		{
-			switch (this.OpCode)
-			{
-				case 0x00: this.SwallowFetch(); this.Interrupt(IRQvector, InterruptSource.software); break;             // BRK (implied)
+        {
+            switch (this.OpCode)
+            {
+                case 0x00: this.SwallowFetch(); this.Interrupt(IRQvector, InterruptSource.software); break;             // BRK (implied)
                 case 0x01: this.AM_IndexedIndirectX(); this.OrR(); break;                                               // ORA (indexed indirect X)
                 case 0x02: this.Jam(); break;                                                                           // *JAM
                 case 0x03: this.AM_IndexedIndirectX(); this.SLO(); break;                                               // *SLO (indexed indirect X)
@@ -210,107 +210,107 @@ namespace EightBit
                 case 0x0e: this.AM_Absolute(); this.ModifyWrite(this.ASL()); break;                                     // ASL (absolute)
                 case 0x0f: this.AM_Absolute(); this.SLO(); break;                                                       // *SLO (absolute)
 
-                case 0x10: this.Branch(this.Negative == 0); break;														// BPL (relative)
-				case 0x11: this.AM_IndirectIndexedY(); this.OrR(); break;												// ORA (indirect indexed Y)
-				case 0x12: this.Jam(); break;																			// *JAM
-				case 0x13: this.Address_IndirectIndexedY(); this.FixupR(); this.SLO(); break;							// *SLO (indirect indexed Y)
-				case 0x14: this.AM_ZeroPageX(); break;																	// *NOP (zero page, X)
-				case 0x15: this.AM_ZeroPageX(); this.OrR(); break;														// ORA (zero page, X)
-				case 0x16: this.AM_ZeroPageX(); this.ModifyWrite(this.ASL()); break;						            // ASL (zero page, X)
-				case 0x17: this.AM_ZeroPageX(); this.SLO(); break;														// *SLO (zero page, X)
-				case 0x18: this.Swallow(); this.ResetFlag(StatusBits.CF); break;										// CLC (implied)
-				case 0x19: this.AM_AbsoluteY(); this.OrR(); break;														// ORA (absolute, Y)
-				case 0x1a: this.Swallow(); break;																		// *NOP (implied)
-				case 0x1b: this.Address_AbsoluteY(); this.FixupR(); this.SLO(); break;									// *SLO (absolute, Y)
-				case 0x1c: this.Address_AbsoluteX(); this.MaybeFixupR(); break;											// *NOP (absolute, X)
-				case 0x1d: this.AM_AbsoluteX(); this.OrR(); break;														// ORA (absolute, X)
-				case 0x1e: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.ASL()); break;	            // ASL (absolute, X)
-				case 0x1f: this.Address_AbsoluteX(); this.FixupR(); this.SLO(); break;									// *SLO (absolute, X)
+                case 0x10: this.Branch(this.Negative == 0); break;                                                      // BPL (relative)
+                case 0x11: this.AM_IndirectIndexedY(); this.OrR(); break;                                               // ORA (indirect indexed Y)
+                case 0x12: this.Jam(); break;                                                                           // *JAM
+                case 0x13: this.Address_IndirectIndexedY(); this.FixupR(); this.SLO(); break;                           // *SLO (indirect indexed Y)
+                case 0x14: this.AM_ZeroPageX(); break;                                                                  // *NOP (zero page, X)
+                case 0x15: this.AM_ZeroPageX(); this.OrR(); break;                                                      // ORA (zero page, X)
+                case 0x16: this.AM_ZeroPageX(); this.ModifyWrite(this.ASL()); break;                                    // ASL (zero page, X)
+                case 0x17: this.AM_ZeroPageX(); this.SLO(); break;                                                      // *SLO (zero page, X)
+                case 0x18: this.Swallow(); this.ResetFlag(StatusBits.CF); break;                                        // CLC (implied)
+                case 0x19: this.AM_AbsoluteY(); this.OrR(); break;                                                      // ORA (absolute, Y)
+                case 0x1a: this.Swallow(); break;                                                                       // *NOP (implied)
+                case 0x1b: this.Address_AbsoluteY(); this.FixupR(); this.SLO(); break;                                  // *SLO (absolute, Y)
+                case 0x1c: this.Address_AbsoluteX(); this.MaybeFixupR(); break;                                         // *NOP (absolute, X)
+                case 0x1d: this.AM_AbsoluteX(); this.OrR(); break;                                                      // ORA (absolute, X)
+                case 0x1e: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.ASL()); break;                // ASL (absolute, X)
+                case 0x1f: this.Address_AbsoluteX(); this.FixupR(); this.SLO(); break;                                  // *SLO (absolute, X)
 
-				case 0x20: this.JSR(); break;																			// JSR (absolute)
-				case 0x21: this.AM_IndexedIndirectX(); this.AndR(); break;												// AND (indexed indirect X)
-				case 0x22: this.Jam(); break;																			// *JAM
-				case 0x23: this.AM_IndexedIndirectX(); this.RLA(); ; break;												// *RLA (indexed indirect X)
-				case 0x24: this.AM_ZeroPage(); this.BIT(); break;														// BIT (zero page)
-				case 0x25: this.AM_ZeroPage(); this.AndR(); break;														// AND (zero page)
-				case 0x26: this.AM_ZeroPage(); this.ModifyWrite(this.ROL()); break;						                // ROL (zero page)
-				case 0x27: this.AM_ZeroPage(); this.RLA(); ; break;														// *RLA (zero page)
-				case 0x28: this.Swallow(); this.PLP(); break;															// PLP (implied)
-				case 0x29: this.AM_Immediate(); this.AndR(); break;														// AND (immediate)
-				case 0x2a: this.Swallow(); this.A = this.ROL(this.A); break;											// ROL A (implied)
-				case 0x2b: this.AM_Immediate(); this.ANC(); break;														// *ANC (immediate)
-				case 0x2c: this.AM_Absolute(); this.BIT(); break;														// BIT (absolute)
-				case 0x2d: this.AM_Absolute(); this.AndR(); break;														// AND (absolute)
-				case 0x2e: this.AM_Absolute(); this.ModifyWrite(this.ROL()); break;             						// ROL (absolute)
-				case 0x2f: this.AM_Absolute(); this.RLA(); break;                                                       // *RLA (absolute)
+                case 0x20: this.JSR(); break;                                                                           // JSR (absolute)
+                case 0x21: this.AM_IndexedIndirectX(); this.AndR(); break;                                              // AND (indexed indirect X)
+                case 0x22: this.Jam(); break;                                                                           // *JAM
+                case 0x23: this.AM_IndexedIndirectX(); this.RLA(); ; break;                                             // *RLA (indexed indirect X)
+                case 0x24: this.AM_ZeroPage(); this.BIT(); break;                                                       // BIT (zero page)
+                case 0x25: this.AM_ZeroPage(); this.AndR(); break;                                                      // AND (zero page)
+                case 0x26: this.AM_ZeroPage(); this.ModifyWrite(this.ROL()); break;                                     // ROL (zero page)
+                case 0x27: this.AM_ZeroPage(); this.RLA(); ; break;                                                     // *RLA (zero page)
+                case 0x28: this.Swallow(); this.PLP(); break;                                                           // PLP (implied)
+                case 0x29: this.AM_Immediate(); this.AndR(); break;                                                     // AND (immediate)
+                case 0x2a: this.Swallow(); this.A = this.ROL(this.A); break;                                            // ROL A (implied)
+                case 0x2b: this.AM_Immediate(); this.ANC(); break;                                                      // *ANC (immediate)
+                case 0x2c: this.AM_Absolute(); this.BIT(); break;                                                       // BIT (absolute)
+                case 0x2d: this.AM_Absolute(); this.AndR(); break;                                                      // AND (absolute)
+                case 0x2e: this.AM_Absolute(); this.ModifyWrite(this.ROL()); break;                                     // ROL (absolute)
+                case 0x2f: this.AM_Absolute(); this.RLA(); break;                                                       // *RLA (absolute)
 
-				case 0x30: this.Branch(this.Negative); break;															// BMI (relative)
-				case 0x31: this.AM_IndirectIndexedY(); this.AndR(); break;												// AND (indirect indexed Y)
-				case 0x32: this.Jam(); break;																			// *JAM
-                case 0x33: this.Address_IndirectIndexedY(); this.FixupR(); this.RLA(); break;							// *RLA (indirect indexed Y)
-				case 0x34: this.AM_ZeroPageX(); break;																	// *NOP (zero page, X)
-				case 0x35: this.AM_ZeroPageX(); this.AndR(); break;														// AND (zero page, X)
-				case 0x36: this.AM_ZeroPageX(); this.ModifyWrite(this.ROL()); break;						            // ROL (zero page, X)
-				case 0x37: this.AM_ZeroPageX(); this.RLA(); ; break;													// *RLA (zero page, X)
-				case 0x38: this.Swallow(); this.SetFlag(StatusBits.CF); break;											// SEC (implied)
-				case 0x39: this.AM_AbsoluteY(); this.AndR(); break;														// AND (absolute, Y)
-				case 0x3a: this.Swallow(); break;																		// *NOP (implied)
-				case 0x3b: this.Address_AbsoluteY(); this.FixupR(); this.RLA(); break;									// *RLA (absolute, Y)
-				case 0x3c: this.Address_AbsoluteX(); this.MaybeFixupR(); break;											// *NOP (absolute, X)
-				case 0x3d: this.AM_AbsoluteX(); this.AndR(); break;														// AND (absolute, X)
-				case 0x3e: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.ROL()); break;	            // ROL (absolute, X)
-				case 0x3f: this.Address_AbsoluteX(); this.FixupR(); this.RLA(); break;									// *RLA (absolute, X)
+                case 0x30: this.Branch(this.Negative); break;                                                           // BMI (relative)
+                case 0x31: this.AM_IndirectIndexedY(); this.AndR(); break;                                              // AND (indirect indexed Y)
+                case 0x32: this.Jam(); break;																			// *JAM
+                case 0x33: this.Address_IndirectIndexedY(); this.FixupR(); this.RLA(); break;                           // *RLA (indirect indexed Y)
+                case 0x34: this.AM_ZeroPageX(); break;                                                                  // *NOP (zero page, X)
+                case 0x35: this.AM_ZeroPageX(); this.AndR(); break;                                                     // AND (zero page, X)
+                case 0x36: this.AM_ZeroPageX(); this.ModifyWrite(this.ROL()); break;                                    // ROL (zero page, X)
+                case 0x37: this.AM_ZeroPageX(); this.RLA(); ; break;                                                    // *RLA (zero page, X)
+                case 0x38: this.Swallow(); this.SetFlag(StatusBits.CF); break;                                          // SEC (implied)
+                case 0x39: this.AM_AbsoluteY(); this.AndR(); break;                                                     // AND (absolute, Y)
+                case 0x3a: this.Swallow(); break;                                                                       // *NOP (implied)
+                case 0x3b: this.Address_AbsoluteY(); this.FixupR(); this.RLA(); break;                                  // *RLA (absolute, Y)
+                case 0x3c: this.Address_AbsoluteX(); this.MaybeFixupR(); break;                                         // *NOP (absolute, X)
+                case 0x3d: this.AM_AbsoluteX(); this.AndR(); break;                                                     // AND (absolute, X)
+                case 0x3e: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.ROL()); break;                // ROL (absolute, X)
+                case 0x3f: this.Address_AbsoluteX(); this.FixupR(); this.RLA(); break;                                  // *RLA (absolute, X)
 
-				case 0x40: this.Swallow(); this.RTI(); break;															// RTI (implied)
-				case 0x41: this.AM_IndexedIndirectX(); this.EorR(); break;												// EOR (indexed indirect X)
-				case 0x42: this.Jam(); break;																			// *JAM
-				case 0x43: this.AM_IndexedIndirectX(); this.SRE(); break;												// *SRE (indexed indirect X)
-				case 0x44: this.AM_ZeroPage(); break;																	// *NOP (zero page)
-				case 0x45: this.AM_ZeroPage(); this.EorR(); break;														// EOR (zero page)
-				case 0x46: this.AM_ZeroPage(); this.ModifyWrite(this.LSR()); break;						                // LSR (zero page)
-				case 0x47: this.AM_ZeroPage(); this.SRE(); break;														// *SRE (zero page)
-				case 0x48: this.Swallow(); this.Push(this.A); break;													// PHA (implied)
-				case 0x49: this.AM_Immediate(); this.EorR(); break;														// EOR (immediate)
-				case 0x4a: this.Swallow(); this.A = this.LSR(this.A); break;											// LSR A (implied)
-				case 0x4b: this.AM_Immediate(); this.ASR(); break;														// *ASR (immediate)
-				case 0x4c: this.Address_Absolute(); this.Jump(this.Bus.Address.Word); break;							// JMP (absolute)
-				case 0x4d: this.AM_Absolute(); this.EorR(); break;														// EOR (absolute)
-				case 0x4e: this.AM_Absolute(); this.ModifyWrite(this.LSR()); break;						                // LSR (absolute)
-				case 0x4f: this.AM_Absolute(); this.SRE(); break;														// *SRE (absolute)
+                case 0x40: this.Swallow(); this.RTI(); break;                                                           // RTI (implied)
+                case 0x41: this.AM_IndexedIndirectX(); this.EorR(); break;                                              // EOR (indexed indirect X)
+                case 0x42: this.Jam(); break;                                                                           // *JAM
+                case 0x43: this.AM_IndexedIndirectX(); this.SRE(); break;                                               // *SRE (indexed indirect X)
+                case 0x44: this.AM_ZeroPage(); break;                                                                   // *NOP (zero page)
+                case 0x45: this.AM_ZeroPage(); this.EorR(); break;                                                      // EOR (zero page)
+                case 0x46: this.AM_ZeroPage(); this.ModifyWrite(this.LSR()); break;                                     // LSR (zero page)
+                case 0x47: this.AM_ZeroPage(); this.SRE(); break;                                                       // *SRE (zero page)
+                case 0x48: this.Swallow(); this.Push(this.A); break;                                                    // PHA (implied)
+                case 0x49: this.AM_Immediate(); this.EorR(); break;                                                     // EOR (immediate)
+                case 0x4a: this.Swallow(); this.A = this.LSR(this.A); break;                                            // LSR A (implied)
+                case 0x4b: this.AM_Immediate(); this.ASR(); break;                                                      // *ASR (immediate)
+                case 0x4c: this.Address_Absolute(); this.Jump(this.Bus.Address.Word); break;                            // JMP (absolute)
+                case 0x4d: this.AM_Absolute(); this.EorR(); break;                                                      // EOR (absolute)
+                case 0x4e: this.AM_Absolute(); this.ModifyWrite(this.LSR()); break;                                     // LSR (absolute)
+                case 0x4f: this.AM_Absolute(); this.SRE(); break;                                                       // *SRE (absolute)
 
-				case 0x50: this.Branch(this.Overflow == 0); break;														// BVC (relative)
-				case 0x51: this.AM_IndirectIndexedY(); this.EorR(); break;												// EOR (indirect indexed Y)
-				case 0x52: this.Jam(); break;																			// *JAM
-				case 0x53: this.Address_IndirectIndexedY(); this.FixupR(); this.SRE(); break;							// *SRE (indirect indexed Y)
-				case 0x54: this.AM_ZeroPageX(); break;																	// *NOP (zero page, X)
-				case 0x55: this.AM_ZeroPageX(); this.EorR(); break;														// EOR (zero page, X)
-				case 0x56: this.AM_ZeroPageX(); this.ModifyWrite(this.LSR()); break;						            // LSR (zero page, X)
-				case 0x57: this.AM_ZeroPageX(); this.SRE(); break;														// *SRE (zero page, X)
-				case 0x58: this.Swallow(); this.ResetFlag(StatusBits.IF); break;										// CLI (implied)
-				case 0x59: this.AM_AbsoluteY(); this.EorR(); break;														// EOR (absolute, Y)
-				case 0x5a: this.Swallow(); break;																		// *NOP (implied)
-				case 0x5b: this.Address_AbsoluteY(); this.FixupR(); this.SRE(); break;									// *SRE (absolute, Y)
-				case 0x5c: this.Address_AbsoluteX(); this.MaybeFixupR(); break;											// *NOP (absolute, X)
-				case 0x5d: this.AM_AbsoluteX(); this.EorR(); break;														// EOR (absolute, X)
-				case 0x5e: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.LSR()); break;	            // LSR (absolute, X)
-				case 0x5f: this.Address_AbsoluteX(); this.FixupR(); this.SRE(); break;									// *SRE (absolute, X)
+                case 0x50: this.Branch(this.Overflow == 0); break;                                                      // BVC (relative)
+                case 0x51: this.AM_IndirectIndexedY(); this.EorR(); break;                                              // EOR (indirect indexed Y)
+                case 0x52: this.Jam(); break;                                                                           // *JAM
+                case 0x53: this.Address_IndirectIndexedY(); this.FixupR(); this.SRE(); break;                           // *SRE (indirect indexed Y)
+                case 0x54: this.AM_ZeroPageX(); break;                                                                  // *NOP (zero page, X)
+                case 0x55: this.AM_ZeroPageX(); this.EorR(); break;                                                     // EOR (zero page, X)
+                case 0x56: this.AM_ZeroPageX(); this.ModifyWrite(this.LSR()); break;                                    // LSR (zero page, X)
+                case 0x57: this.AM_ZeroPageX(); this.SRE(); break;                                                      // *SRE (zero page, X)
+                case 0x58: this.Swallow(); this.ResetFlag(StatusBits.IF); break;                                        // CLI (implied)
+                case 0x59: this.AM_AbsoluteY(); this.EorR(); break;                                                     // EOR (absolute, Y)
+                case 0x5a: this.Swallow(); break;                                                                       // *NOP (implied)
+                case 0x5b: this.Address_AbsoluteY(); this.FixupR(); this.SRE(); break;                                  // *SRE (absolute, Y)
+                case 0x5c: this.Address_AbsoluteX(); this.MaybeFixupR(); break;                                         // *NOP (absolute, X)
+                case 0x5d: this.AM_AbsoluteX(); this.EorR(); break;                                                     // EOR (absolute, X)
+                case 0x5e: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.LSR()); break;                // LSR (absolute, X)
+                case 0x5f: this.Address_AbsoluteX(); this.FixupR(); this.SRE(); break;                                  // *SRE (absolute, X)
 
-				case 0x60: this.Swallow(); this.RTS(); break;                                                           // RTS (implied)
+                case 0x60: this.Swallow(); this.RTS(); break;                                                           // RTS (implied)
                 case 0x61: this.AM_IndexedIndirectX(); this.ADC(); break;                                               // ADC (indexed indirect X)
                 case 0x62: this.Jam(); break;                                                                           // *JAM
-				case 0x63: this.AM_IndexedIndirectX(); this.RRA(); break;                                               // *RRA (indexed indirect X)
-				case 0x64: this.AM_ZeroPage(); break;                                                                   // *NOP (zero page)
+                case 0x63: this.AM_IndexedIndirectX(); this.RRA(); break;                                               // *RRA (indexed indirect X)
+                case 0x64: this.AM_ZeroPage(); break;                                                                   // *NOP (zero page)
                 case 0x65: this.AM_ZeroPage(); this.ADC(); break;                                                       // ADC (zero page)
                 case 0x66: this.AM_ZeroPage(); this.ModifyWrite(this.ROR()); break;                                     // ROR (zero page)
-				case 0x67: this.AM_ZeroPage(); this.RRA(); break;                                                       // *RRA (zero page)
-				case 0x68: this.Swallow(); this.SwallowStack(); this.A = this.Through(this.Pop()); break;               // PLA (implied)
+                case 0x67: this.AM_ZeroPage(); this.RRA(); break;                                                       // *RRA (zero page)
+                case 0x68: this.Swallow(); this.SwallowStack(); this.A = this.Through(this.Pop()); break;               // PLA (implied)
                 case 0x69: this.AM_Immediate(); this.ADC(); break;                                                      // ADC (immediate)
                 case 0x6a: this.Swallow(); this.A = this.ROR(this.A); break;                                            // ROR A (implied)
                 case 0x6b: this.AM_Immediate(); this.ARR(); break;                                                      // *ARR (immediate)
                 case 0x6c: this.Address_Indirect(); this.Jump(this.Bus.Address.Word); break;                            // JMP (indirect)
                 case 0x6d: this.AM_Absolute(); this.ADC(); break;                                                       // ADC (absolute)
                 case 0x6e: this.AM_Absolute(); this.ModifyWrite(this.ROR()); break;                                     // ROR (absolute)
-				case 0x6f: this.AM_Absolute(); this.RRA(); break;                                                       // *RRA (absolute)
+                case 0x6f: this.AM_Absolute(); this.RRA(); break;                                                       // *RRA (absolute)
 
                 case 0x70: this.Branch(this.Overflow); break;                                                           // BVS (relative)
                 case 0x71: this.AM_IndirectIndexedY(); this.ADC(); break;                                               // ADC (indirect indexed Y)
@@ -393,9 +393,9 @@ namespace EightBit
                 case 0xba: this.Swallow(); this.X = this.Through(this.S); break;                                        // TSX (implied)
                 case 0xbb: this.Address_AbsoluteY(); this.MaybeFixup(); this.LAS(); break;                              // *LAS (absolute, Y)
                 case 0xbc: this.AM_AbsoluteX(); this.Y = this.Through(); break;                                         // LDY (absolute, X)
-				case 0xbd: this.AM_AbsoluteX(); this.A = this.Through(); break;                                         // LDA (absolute, X)
-				case 0xbe: this.AM_AbsoluteY(); this.X = this.Through(); break;                                         // LDX (absolute, Y)
-				case 0xbf: this.AM_AbsoluteY(); this.A = this.X = this.Through(); break;                                // *LAX (absolute, Y)
+                case 0xbd: this.AM_AbsoluteX(); this.A = this.Through(); break;                                         // LDA (absolute, X)
+                case 0xbe: this.AM_AbsoluteY(); this.X = this.Through(); break;                                         // LDX (absolute, Y)
+                case 0xbf: this.AM_AbsoluteY(); this.A = this.X = this.Through(); break;                                // *LAX (absolute, Y)
 
                 case 0xc0: this.AM_Immediate(); this.CMP(this.Y); break;                                                // CPY (immediate)
                 case 0xc1: this.AM_IndexedIndirectX(); this.CMP(this.A); break;                                         // CMP (indexed indirect X)
@@ -465,9 +465,9 @@ namespace EightBit
                 case 0xfe: this.Address_AbsoluteX(); this.FixupR(); this.ModifyWrite(this.INC()); break;                // INC (absolute, X)
                 case 0xff: this.Address_AbsoluteX(); this.FixupR(); this.ISB(); break;	                                // *ISB (absolute, X)
             }
-		}
+        }
 
-		public override int Step()
+        public override int Step()
         {
             this.ResetCycles();
             this.OnExecutingInstruction();
@@ -505,10 +505,11 @@ namespace EightBit
             return this.Cycles;
         }
 
-        private void FetchInstruction() {
+        private void FetchInstruction()
+        {
 
-			// Instruction fetch beginning
-			this.LowerSYNC();
+            // Instruction fetch beginning
+            this.LowerSYNC();
 
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "An extra cycle has occurred");
 
@@ -522,7 +523,7 @@ namespace EightBit
             this.RaiseSYNC();
         }
 
-		protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
@@ -583,8 +584,8 @@ namespace EightBit
             this.RaiseStack();
             return this.MemoryRead();
         }
-		
-		protected override void Push(byte value)
+
+        protected override void Push(byte value)
         {
             this.LowerStack();
             this.MemoryWrite(value);
@@ -619,14 +620,14 @@ namespace EightBit
 
         protected override sealed void BusWrite()
         {
-	        this.Tick();
+            this.Tick();
             this.WriteToBus();
         }
 
         protected override sealed byte BusRead()
         {
-	        this.Tick();
-	        return this.ReadFromBus();
+            this.Tick();
+            return this.ReadFromBus();
         }
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
@@ -666,7 +667,7 @@ namespace EightBit
             this.P = ClearBit(this.P, which, condition);
         }
 
-		private void HandleNMI()
+        private void HandleNMI()
         {
             this.RaiseNMI();
             this.Interrupt(NMIvector);
@@ -680,24 +681,24 @@ namespace EightBit
 
         enum InterruptSource { hardware, software };
 
-		enum InterruptType { reset, non_reset };
+        enum InterruptType { reset, non_reset };
 
-		private void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
-		{
-			if (type == InterruptType.reset)
-			{
-				this.DummyPush();
+        private void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
+        {
+            if (type == InterruptType.reset)
+            {
                 this.DummyPush();
                 this.DummyPush();
-			}
-			else
-			{
-				this.PushWord(this.PC);
-				this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
-			}
-			this.SetFlag(StatusBits.IF);   // Disable IRQ
-			this.Jump(this.GetWordPaged(0xff, vector).Word);
-		}
+                this.DummyPush();
+            }
+            else
+            {
+                this.PushWord(this.PC);
+                this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
+            }
+            this.SetFlag(StatusBits.IF);   // Disable IRQ
+            this.Jump(this.GetWordPaged(0xff, vector).Word);
+        }
 
         private void UpdateStack(byte position)
         {
@@ -706,26 +707,26 @@ namespace EightBit
         }
 
         private void LowerStack() => this.UpdateStack(this.S--);
-		
-		private void RaiseStack() => this.UpdateStack(++this.S);
 
-		private void DummyPush()
-		{
-			this.LowerStack();
-			this.Tick();	// In place of the memory write
-		}
+        private void RaiseStack() => this.UpdateStack(++this.S);
 
-		private byte ReadFromBus()
-		{
-			this.RaiseRW();
-			return base.BusRead();
-		}
+        private void DummyPush()
+        {
+            this.LowerStack();
+            this.Tick();    // In place of the memory write
+        }
 
-		private void WriteToBus()
-		{
-			this.LowerRW();
+        private byte ReadFromBus()
+        {
+            this.RaiseRW();
+            return base.BusRead();
+        }
+
+        private void WriteToBus()
+        {
+            this.LowerRW();
             base.BusWrite();
-		}
+        }
 
 
         // Addressing modes
@@ -744,7 +745,7 @@ namespace EightBit
 
         private void Address_Immediate() => this.Bus.Address.Word = this.PC.Word++;
 
-		private void Address_Absolute() => this.Bus.Address.Word = this.FetchWord().Word;
+        private void Address_Absolute() => this.Bus.Address.Word = this.FetchWord().Word;
 
         private void Address_ZeroPage()
         {
@@ -753,45 +754,45 @@ namespace EightBit
         }
 
         private void Address_ZeroPageIndirect()
-		{
+        {
             this.Address_ZeroPage();
             this.Bus.Address.Word = this.GetWordPaged().Word;
-		}
+        }
 
-		private void Address_Indirect()
-		{
+        private void Address_Indirect()
+        {
             this.Address_Absolute();
             this.Bus.Address.Word = this.GetWordPaged().Word;
-		}
-		
-		private void Address_ZeroPageWithIndex(byte index)
-		{
+        }
+
+        private void Address_ZeroPageWithIndex(byte index)
+        {
             this.AM_ZeroPage();
             this.Bus.Address.Low += index;
-		}
-		
-		private void Address_ZeroPageX() => this.Address_ZeroPageWithIndex(this.X);
-		
-		private void Address_ZeroPageY() => this.Address_ZeroPageWithIndex(this.Y);
-		
-		private void Address_AbsoluteWithIndex(byte index)
-		{
+        }
+
+        private void Address_ZeroPageX() => this.Address_ZeroPageWithIndex(this.X);
+
+        private void Address_ZeroPageY() => this.Address_ZeroPageWithIndex(this.Y);
+
+        private void Address_AbsoluteWithIndex(byte index)
+        {
             this.Address_Absolute();
             this.NoteFixedAddress(this.Bus.Address.Word + index);
         }
 
         private void Address_AbsoluteX() => this.Address_AbsoluteWithIndex(X);
-				
-		private void Address_AbsoluteY() => this.Address_AbsoluteWithIndex(Y);
-	
-		private void Address_IndexedIndirectX()
-		{
+
+        private void Address_AbsoluteY() => this.Address_AbsoluteWithIndex(Y);
+
+        private void Address_IndexedIndirectX()
+        {
             this.Address_ZeroPageX();
             this.Bus.Address.Word = this.GetWordPaged().Word;
-		}
+        }
 
-		private void Address_IndirectIndexedY()
-		{
+        private void Address_IndirectIndexedY()
+        {
             this.Address_ZeroPageIndirect();
             this.NoteFixedAddress(this.Bus.Address.Word + Y);
         }
@@ -799,58 +800,58 @@ namespace EightBit
         // Addressing modes, with read
 
         private void AM_Immediate()
-		{
+        {
             this.Address_Immediate();
             this.MemoryRead();
-		}
-		
-		private void AM_Absolute()
-		{
+        }
+
+        private void AM_Absolute()
+        {
             this.Address_Absolute();
             this.MemoryRead();
-		}
-		
-		private void AM_ZeroPage()
-		{
-			this.Address_ZeroPage();
-			this.MemoryRead();
-		}
+        }
 
-		private void AM_ZeroPageX()
-		{
+        private void AM_ZeroPage()
+        {
+            this.Address_ZeroPage();
+            this.MemoryRead();
+        }
+
+        private void AM_ZeroPageX()
+        {
             this.Address_ZeroPageX();
             this.MemoryRead();
-		}
-	
-		private void AM_ZeroPageY()
-		{
+        }
+
+        private void AM_ZeroPageY()
+        {
             this.Address_ZeroPageY();
             this.MemoryRead();
-		}
-		
-		private void AM_IndexedIndirectX()
-		{
-			this.Address_IndexedIndirectX();
-            this.MemoryRead();
-		}
+        }
 
-		private void AM_AbsoluteX()
-		{
+        private void AM_IndexedIndirectX()
+        {
+            this.Address_IndexedIndirectX();
+            this.MemoryRead();
+        }
+
+        private void AM_AbsoluteX()
+        {
             this.Address_AbsoluteX();
             this.MaybeFixupR();
-		}
-	
-		private void AM_AbsoluteY()
-		{
+        }
+
+        private void AM_AbsoluteY()
+        {
             this.Address_AbsoluteY();
             this.MaybeFixupR();
-		}
+        }
 
-		private void AM_IndirectIndexedY()
-		{
+        private void AM_IndirectIndexedY()
+        {
             this.Address_IndirectIndexedY();
             this.MaybeFixupR();
-		}
+        }
 
         private void AdjustZero(byte datum) => this.ResetFlag(StatusBits.ZF, datum);
 
@@ -877,7 +878,7 @@ namespace EightBit
             }
         }
 
-		private byte Through() => this.Through(this.Bus.Data);
+        private byte Through() => this.Through(this.Bus.Data);
 
         private byte Through(int data) => this.Through((byte)data);
 
@@ -898,53 +899,53 @@ namespace EightBit
 
         private void AdjustOverflow_add(byte operand)
         {
-        	var data = Bus.Data;
+            var data = Bus.Data;
             var intermediate = this.intermediate.Low;
             this.SetFlag(StatusBits.VF, NegativeTest((byte)(~(operand ^ data) & (operand ^ intermediate))));
         }
 
         private void AdjustOverflow_subtract(byte operand)
         {
-    		var data = Bus.Data;
+            var data = Bus.Data;
             var intermediate = this.intermediate.Low;
             this.SetFlag(StatusBits.VF, NegativeTest((byte)((operand ^ data) & (operand ^ intermediate))));
-    	}
+        }
 
         // Miscellaneous
 
         private void MaybeFixup()
-		{
+        {
             if (this.Bus.Address.High != this.fixedPage)
             {
                 this.Fixup();
             }
-		}
+        }
 
-		private void Fixup()
-		{
+        private void Fixup()
+        {
             this.MemoryRead();
             this.Bus.Address.High = this.fixedPage;
-		}
+        }
 
-		private void MaybeFixupR()
-		{
+        private void MaybeFixupR()
+        {
             this.MaybeFixup();
             this.MemoryRead();
-		}
+        }
 
-		private void FixupR()
-		{
+        private void FixupR()
+        {
             this.Fixup();
             this.MemoryRead();
-		}
+        }
 
-		// Chew up a cycle
+        // Chew up a cycle
 
-		private void Swallow() => this.MemoryRead(this.PC);
+        private void Swallow() => this.MemoryRead(this.PC);
 
-		private void SwallowStack() => this.MemoryRead(this.S, 1);
+        private void SwallowStack() => this.MemoryRead(this.S, 1);
 
-		private void SwallowFetch() => this.FetchByte();
+        private void SwallowFetch() => this.FetchByte();
 
         // Instruction implementations
 
@@ -964,9 +965,9 @@ namespace EightBit
 
         private byte SUB_b(byte operand, int borrow = 0)
         {
-	        var data = Bus.Data;
+            var data = Bus.Data;
             this.intermediate.Word = (ushort)(operand - data - borrow);
-	        return this.intermediate.Low;
+            return this.intermediate.Low;
         }
 
         private byte SUB_d(byte operand, int borrow)
@@ -1001,7 +1002,7 @@ namespace EightBit
 
         private void ADC_b()
         {
-	        var operand = A;
+            var operand = A;
             var data = Bus.Data;
             this.intermediate.Word = (ushort)(operand + data + this.Carry);
 
@@ -1015,7 +1016,7 @@ namespace EightBit
 
         private void ADC_d()
         {
-	        var operand = this.A;
+            var operand = this.A;
             var data = this.Bus.Data;
 
             var low = (ushort)(LowerNibble(operand) + LowerNibble(data) + this.Carry);
@@ -1027,7 +1028,7 @@ namespace EightBit
             {
                 this.intermediate.Word += 0x10;
                 low += 0x06;
-            } 
+            }
 
             this.AdjustNegative(this.intermediate.Low);
             this.AdjustOverflow_add(operand);
@@ -1095,7 +1096,7 @@ namespace EightBit
 
         private void CMP(byte first)
         {
-	        var second = Bus.Data;
+            var second = Bus.Data;
             this.intermediate.Word = (ushort)(first - second);
             AdjustNZ(this.intermediate.Low);
             ResetFlag(StatusBits.CF, this.intermediate.High);
@@ -1111,88 +1112,88 @@ namespace EightBit
         private byte INC(byte value) => this.Through(value + 1);
 
         private void JSR()
-		{
-			this.intermediate.Low = this.FetchByte();
+        {
+            this.intermediate.Low = this.FetchByte();
             this.SwallowStack();
             this.PushWord(this.PC);
             this.intermediate.High = this.FetchByte();
             this.PC.Word = this.intermediate.Word;
-		}
+        }
 
-		private void PHP() => this.Push((byte)(this.P | (byte)StatusBits.BF));
+        private void PHP() => this.Push((byte)(this.P | (byte)StatusBits.BF));
 
         private void PLP()
-		{
+        {
             this.SwallowStack();
             this.P = (byte)((this.Pop() | (byte)StatusBits.RF) & (byte)~StatusBits.BF);
         }
 
         private void RTI()
-		{
+        {
             this.PLP();
             this.Return();
-		}
+        }
 
         private void RTS()
-		{
+        {
             this.SwallowStack();
             this.Return();
             this.SwallowFetch();
-		}
+        }
 
         private byte ASL() => this.ASL(this.Bus.Data);
-        
+
         private byte ASL(byte value)
-		{
-    		this.SetFlag(StatusBits.CF, NegativeTest(value));
-			return this.Through(value << 1);
-		}
+        {
+            this.SetFlag(StatusBits.CF, NegativeTest(value));
+            return this.Through(value << 1);
+        }
 
         private byte ROL() => this.ROL(this.Bus.Data);
 
-		private byte ROL(byte value)
-		{
-			var carryIn = this.Carry;
-			return this.Through(this.ASL(value) | carryIn);
-		}
+        private byte ROL(byte value)
+        {
+            var carryIn = this.Carry;
+            return this.Through(this.ASL(value) | carryIn);
+        }
 
         private byte LSR() => this.LSR(this.Bus.Data);
-        
+
         private byte LSR(byte value)
-		{
+        {
             this.SetFlag(StatusBits.CF, CarryTest(value));
-			return this.Through(value >> 1);
-		}
+            return this.Through(value >> 1);
+        }
 
         private byte ROR() => this.ROR(this.Bus.Data);
-        
+
         private byte ROR(byte value)
-		{
-			var carryIn = this.Carry;
-			return this.Through(this.LSR(value) | (carryIn << 7));
-		}
+        {
+            var carryIn = this.Carry;
+            return this.Through(this.LSR(value) | (carryIn << 7));
+        }
 
-		// Undocumented compound instructions
+        // Undocumented compound instructions
 
-		private void ANC()
-		{
-			this.AndR();
+        private void ANC()
+        {
+            this.AndR();
             this.SetFlag(StatusBits.CF, NegativeTest(this.A));
-	    }
+        }
 
         private void AXS()
         {
-	        this.X = this.Through(this.SUB_b((byte)(this.A & this.X)));
-	        this.ResetFlag(StatusBits.CF, this.intermediate.High);
+            this.X = this.Through(this.SUB_b((byte)(this.A & this.X)));
+            this.ResetFlag(StatusBits.CF, this.intermediate.High);
         }
 
 
         private void Jam()
-		{
+        {
             this.Bus.Address.Word = this.PC.Word--;
             this.MemoryRead();
             this.MemoryRead();
-		}
+        }
 
         private void StoreFixupEffect(byte data)
         {
@@ -1215,14 +1216,14 @@ namespace EightBit
         private void LAS() => this.A = this.X = this.S = this.Through(this.MemoryRead() & this.S);
 
         private void ANE() => this.A = this.Through((this.A | 0xee) & this.X & this.Bus.Data);
-        
+
         private void ATX() => this.A = this.X = this.Through((this.A | 0xee) & this.Bus.Data);
-        
-		private void ASR()
-		{
+
+        private void ASR()
+        {
             this.AndR();
             this.A = this.LSR(this.A);
-		}
+        }
 
         private void ISB()
         {
@@ -1241,22 +1242,23 @@ namespace EightBit
             this.ModifyWrite(this.ROR());
             this.ADC();
         }
-        
-		private void SLO()
-		{
+
+        private void SLO()
+        {
             this.ModifyWrite(this.ASL());
-			this.OrR();
-		}
+            this.OrR();
+        }
 
-		private void SRE()
-		{
+        private void SRE()
+        {
             this.ModifyWrite(this.LSR());
-			this.EorR();
-		}
+            this.EorR();
+        }
 
-		private void DCP()
-		{
+        private void DCP()
+        {
             this.ModifyWrite(this.DEC());
             this.CMP(this.A);
         }
-	}
+    }
+}
