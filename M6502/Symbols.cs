@@ -4,6 +4,8 @@
 
 namespace EightBit
 {
+    using System.Globalization;
+
     public class Symbols
     {
         private readonly Dictionary<string, Dictionary<string, Dictionary<string, string>>> parsed = [];
@@ -13,8 +15,9 @@ namespace EightBit
         {
         }
 
-        public Symbols(string path)
+        public Symbols(string? path)
         {
+            ArgumentNullException.ThrowIfNull(path);
             if (path.Length > 0)
             {
                 this.Parse(path);
@@ -40,7 +43,7 @@ namespace EightBit
                 var name = parsedScope["name"];
                 var trimmedName = name[1..^1];
                 var size = parsedScope["size"];
-                this.Scopes[trimmedName] = ushort.Parse(size);
+                this.Scopes[trimmedName] = ushort.Parse(size, CultureInfo.InvariantCulture);
             }
         }
 

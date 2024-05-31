@@ -4,6 +4,7 @@
 
 namespace EightBit
 {
+    using System.Globalization;
     using System.Text;
 
     public class Disassembler(Bus bus, M6502 processor, Symbols symbols)
@@ -27,9 +28,9 @@ namespace EightBit
             return returned.ToString();
         }
 
-        public static string DumpByteValue(byte value) => value.ToString("X2");
+        public static string DumpByteValue(byte value) => value.ToString("X2", CultureInfo.InvariantCulture);
 
-        public static string DumpWordValue(ushort value) => value.ToString("X4");
+        public static string DumpWordValue(ushort value) => value.ToString("X4", CultureInfo.InvariantCulture);
 
         public string Disassemble(ushort current)
         {
