@@ -4,106 +4,34 @@
 
 namespace EightBit
 {
-    using System;
-
     public class M6502(Bus bus) : LittleEndianProcessor(bus)
     {
-        private const byte IRQvector = 0xfe;  // IRQ vector
-        private const byte RSTvector = 0xfc;  // RST vector
-        private const byte NMIvector = 0xfa;  // NMI vector
-
         private readonly Register16 intermediate = new();
-        private byte fixedPage;
 
-        private PinLevel nmiLine = PinLevel.Low;
-        private PinLevel soLine = PinLevel.Low;
-        private PinLevel syncLine = PinLevel.Low;
-        private PinLevel rdyLine = PinLevel.Low;
-        private PinLevel rwLine = PinLevel.Low;
+        #region Instruction execution events
 
         public event EventHandler<EventArgs>? ExecutingInstruction;
-
         public event EventHandler<EventArgs>? ExecutedInstruction;
+        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
 
-        public event EventHandler<EventArgs>? RaisingNMI;
+        #endregion
 
-        public event EventHandler<EventArgs>? RaisedNMI;
+        #region Pin controls
 
-        public event EventHandler<EventArgs>? LoweringNMI;
-
-        public event EventHandler<EventArgs>? LoweredNMI;
-
-        public event EventHandler<EventArgs>? RaisingSO;
-
-        public event EventHandler<EventArgs>? RaisedSO;
-
-        public event EventHandler<EventArgs>? LoweringSO;
-
-        public event EventHandler<EventArgs>? LoweredSO;
-
-        public event EventHandler<EventArgs>? RaisingSYNC;
-
-        public event EventHandler<EventArgs>? RaisedSYNC;
-
-        public event EventHandler<EventArgs>? LoweringSYNC;
-
-        public event EventHandler<EventArgs>? LoweredSYNC;
-
-        public event EventHandler<EventArgs>? RaisingRDY;
-
-        public event EventHandler<EventArgs>? RaisedRDY;
-
-        public event EventHandler<EventArgs>? LoweringRDY;
-
-        public event EventHandler<EventArgs>? LoweredRDY;
-
-        public event EventHandler<EventArgs>? RaisingRW;
-
-        public event EventHandler<EventArgs>? RaisedRW;
-
-        public event EventHandler<EventArgs>? LoweringRW;
-
-        public event EventHandler<EventArgs>? LoweredRW;
+        #region NMI pin
 
         public ref PinLevel NMI => ref this.nmiLine;
+        private PinLevel nmiLine = PinLevel.Low;
+        public event EventHandler<EventArgs>? RaisingNMI;
+        public event EventHandler<EventArgs>? RaisedNMI;
+        public event EventHandler<EventArgs>? LoweringNMI;
+        public event EventHandler<EventArgs>? LoweredNMI;
+        protected virtual void OnRaisingNMI() => this.RaisingNMI?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedNMI() => this.RaisedNMI?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringNMI() => this.LoweringNMI?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredNMI() => this.LoweredNMI?.Invoke(this, EventArgs.Empty);
 
-        public ref PinLevel SO => ref this.soLine;
-
-        public ref PinLevel SYNC => ref this.syncLine;
-
-        public ref PinLevel RDY => ref this.rdyLine;
-
-        public ref PinLevel RW => ref this.rwLine;
-
-        public byte X { get; set; }
-
-        public byte Y { get; set; }
-
-        public byte A { get; set; }
-
-        public byte S { get; set; }
-
-        public byte P { get; set; }
-
-        private int InterruptMasked => this.P & (byte)StatusBits.IF;
-
-        private int Decimal => this.P & (byte)StatusBits.DF;
-
-        private int Negative => NegativeTest(this.P);
-
-        private int Zero => ZeroTest(this.P);
-
-        private int Overflow => OverflowTest(this.P);
-
-        private int Carry => CarryTest(this.P);
-
-        private static int NegativeTest(byte data) => data & (byte)StatusBits.NF;
-
-        private static int ZeroTest(byte data) => data & (byte)StatusBits.ZF;
-
-        private static int OverflowTest(byte data) => data & (byte)StatusBits.VF;
-
-        private static int CarryTest(byte data) => data & (byte)StatusBits.CF;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseNMI()
@@ -126,6 +54,23 @@ namespace EightBit
             }
         }
 
+        #endregion
+
+        #region SO pin
+
+        public ref PinLevel SO => ref this.soLine;
+        private PinLevel soLine = PinLevel.Low;
+        public event EventHandler<EventArgs>? RaisingSO;
+        public event EventHandler<EventArgs>? RaisedSO;
+        public event EventHandler<EventArgs>? LoweringSO;
+        public event EventHandler<EventArgs>? LoweredSO;
+
+        protected virtual void OnRaisingSO() => this.RaisingSO?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedSO() => this.RaisedSO?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringSO() => this.LoweringSO?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredSO() => this.LoweredSO?.Invoke(this, EventArgs.Empty);
+
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseSO()
         {
@@ -146,6 +91,52 @@ namespace EightBit
                 this.OnLoweredSO();
             }
         }
+
+        #endregion
+
+        #region SYNC pin
+
+        public ref PinLevel SYNC => ref this.syncLine;
+        private PinLevel syncLine = PinLevel.Low;
+        public event EventHandler<EventArgs>? RaisingSYNC;
+        public event EventHandler<EventArgs>? RaisedSYNC;
+        public event EventHandler<EventArgs>? LoweringSYNC;
+        public event EventHandler<EventArgs>? LoweredSYNC;
+
+        protected virtual void OnRaisingSYNC() => this.RaisingSYNC?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedSYNC() => this.RaisedSYNC?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringSYNC() => this.LoweringSYNC?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredSYNC() => this.LoweredSYNC?.Invoke(this, EventArgs.Empty);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        protected virtual void RaiseSYNC()
+        {
+            this.OnRaisingSYNC();
+            this.SYNC.Raise();
+            this.OnRaisedSYNC();
+        }
+
+        protected virtual void LowerSYNC()
+        {
+            this.OnLoweringSYNC();
+            this.SYNC.Lower();
+            this.OnLoweredSYNC();
+        }
+
+        #endregion
+
+        #region RDY pin
+
+        public ref PinLevel RDY => ref this.rdyLine;
+        private PinLevel rdyLine = PinLevel.Low;
+        public event EventHandler<EventArgs>? RaisingRDY;
+        public event EventHandler<EventArgs>? RaisedRDY;
+        public event EventHandler<EventArgs>? LoweringRDY;
+        public event EventHandler<EventArgs>? LoweredRDY;
+        protected virtual void OnRaisingRDY() => this.RaisingRDY?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedRDY() => this.RaisedRDY?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringRDY() => this.LoweringRDY?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredRDY() => this.LoweredRDY?.Invoke(this, EventArgs.Empty);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRDY()
@@ -168,6 +159,21 @@ namespace EightBit
             }
         }
 
+        #endregion
+
+        #region RW pin
+
+        public ref PinLevel RW => ref this.rwLine;
+        private PinLevel rwLine = PinLevel.Low;
+        public event EventHandler<EventArgs>? RaisingRW;
+        public event EventHandler<EventArgs>? RaisedRW;
+        public event EventHandler<EventArgs>? LoweringRW;
+        public event EventHandler<EventArgs>? LoweredRW;
+        protected virtual void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRW()
         {
@@ -188,6 +194,164 @@ namespace EightBit
                 this.OnLoweredRW();
             }
         }
+
+        #endregion
+
+        protected override void OnRaisedPOWER()
+        {
+            this.X = (byte)Bits.Bit7;
+            this.Y = 0;
+            this.A = 0;
+            this.P = (byte)StatusBits.RF;
+            this.S = (byte)Mask.Eight;
+            this.LowerSYNC();
+            this.LowerRW();
+            base.OnRaisedPOWER();
+        }
+
+        #endregion
+
+        #region Interrupts
+
+        private const byte IRQvector = 0xfe;  // IRQ vector
+        private const byte RSTvector = 0xfc;  // RST vector
+        private const byte NMIvector = 0xfa;  // NMI vector
+
+        enum InterruptSource { hardware, software };
+
+        enum InterruptType { reset, non_reset };
+
+        private void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
+        {
+            if (type == InterruptType.reset)
+            {
+                this.DummyPush();
+                this.DummyPush();
+                this.DummyPush();
+            }
+            else
+            {
+                this.PushWord(this.PC);
+                this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
+            }
+            this.SetFlag(StatusBits.IF);   // Disable IRQ
+            this.Jump(this.GetWordPaged(0xff, vector).Word);
+        }
+
+        #region Interrupt etc. handlers
+
+        protected override sealed void HandleRESET()
+        {
+            this.RaiseRESET();
+            this.Interrupt(RSTvector, InterruptSource.hardware, InterruptType.reset);
+        }
+
+        protected override sealed void HandleINT()
+        {
+            this.RaiseINT();
+            this.Interrupt(IRQvector);
+        }
+
+        private void HandleNMI()
+        {
+            this.RaiseNMI();
+            this.Interrupt(NMIvector);
+        }
+
+        private void HandleSO()
+        {
+            this.RaiseSO();
+            this.SetFlag(StatusBits.VF);
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Registers
+
+        public byte X { get; set; }
+        public byte Y { get; set; }
+        public byte A { get; set; }
+        public byte S { get; set; }
+        public byte P { get; set; }
+
+        #endregion
+
+        #region Processor state helpers
+
+        private int InterruptMasked => this.P & (byte)StatusBits.IF;
+        private int Decimal => this.P & (byte)StatusBits.DF;
+        private int Negative => NegativeTest(this.P);
+        private int Zero => ZeroTest(this.P);
+        private int Overflow => OverflowTest(this.P);
+        private int Carry => CarryTest(this.P);
+
+        private static int NegativeTest(byte data) => data & (byte)StatusBits.NF;
+        private static int ZeroTest(byte data) => data & (byte)StatusBits.ZF;
+        private static int OverflowTest(byte data) => data & (byte)StatusBits.VF;
+        private static int CarryTest(byte data) => data & (byte)StatusBits.CF;
+
+        #endregion
+
+        #region Bit/state twiddling
+
+        #region Bit twiddling
+
+        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
+
+        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
+
+        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
+
+        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
+
+        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
+
+        #endregion
+
+        #region State flag twiddling
+
+        private void SetFlag(StatusBits flag)
+        {
+            this.P = SetBit(this.P, flag);
+        }
+
+        private void SetFlag(StatusBits which, int condition)
+        {
+            this.P = SetBit(this.P, which, condition);
+        }
+
+        private void SetFlag(StatusBits which, bool condition)
+        {
+            this.P = SetBit(this.P, which, condition);
+        }
+
+        private void ResetFlag(StatusBits which)
+        {
+            this.P = ClearBit(this.P, which);
+        }
+
+        private void ResetFlag(StatusBits which, int condition)
+        {
+            this.P = ClearBit(this.P, which, condition);
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Cycle wastage
+
+        private void Swallow() => this.MemoryRead(this.PC);
+
+        private void SwallowStack() => this.MemoryRead(this.S, 1);
+
+        private void SwallowFetch() => this.FetchByte();
+
+        #endregion
+
+        #region Core instruction dispatching
 
         public override void Execute()
         {
@@ -210,7 +374,7 @@ namespace EightBit
                 case 0x0e: this.AM_Absolute(); this.ModifyWrite(this.ASL()); break;                                     // ASL (absolute)
                 case 0x0f: this.AM_Absolute(); this.SLO(); break;                                                       // *SLO (absolute)
 
-                case 0x10: this.Branch(this.Negative == 0); break;                                                      // BPL (relative)
+                case 0x10: this.BranchNot(this.Negative); break;                                                        // BPL (relative)
                 case 0x11: this.AM_IndirectIndexedY(); this.OrR(); break;                                               // ORA (indirect indexed Y)
                 case 0x12: this.Jam(); break;                                                                           // *JAM
                 case 0x13: this.Address_IndirectIndexedY(); this.FixupR(); this.SLO(); break;                           // *SLO (indirect indexed Y)
@@ -278,7 +442,7 @@ namespace EightBit
                 case 0x4e: this.AM_Absolute(); this.ModifyWrite(this.LSR()); break;                                     // LSR (absolute)
                 case 0x4f: this.AM_Absolute(); this.SRE(); break;                                                       // *SRE (absolute)
 
-                case 0x50: this.Branch(this.Overflow == 0); break;                                                      // BVC (relative)
+                case 0x50: this.BranchNot(this.Overflow); break;                                                        // BVC (relative)
                 case 0x51: this.AM_IndirectIndexedY(); this.EorR(); break;                                              // EOR (indirect indexed Y)
                 case 0x52: this.Jam(); break;                                                                           // *JAM
                 case 0x53: this.Address_IndirectIndexedY(); this.FixupR(); this.SRE(); break;                           // *SRE (indirect indexed Y)
@@ -346,7 +510,7 @@ namespace EightBit
                 case 0x8e: this.Address_Absolute(); this.MemoryWrite(this.X); break;	                                // STX (absolute)
                 case 0x8f: this.Address_Absolute(); this.MemoryWrite((byte)(this.A & this.X)); break;	                // *SAX (absolute)
 
-                case 0x90: this.Branch(this.Carry == 0); break;                                                         // BCC (relative)
+                case 0x90: this.BranchNot(this.Carry); break;                                                           // BCC (relative)
                 case 0x91: this.Address_IndirectIndexedY(); this.Fixup(); this.MemoryWrite(this.A); break;              // STA (indirect indexed Y)
                 case 0x92: this.Jam(); break;                                                                           // *JAM
                 case 0x93: this.Address_IndirectIndexedY(); this.Fixup(); this.SHA(); break;                            // *SHA (indirect indexed, Y)
@@ -414,7 +578,7 @@ namespace EightBit
                 case 0xce: this.AM_Absolute(); this.ModifyWrite(this.DEC()); break;                                     // DEC (absolute)
                 case 0xcf: this.AM_Absolute(); this.DCP(); break;                                                       // *DCP (absolute)
 
-                case 0xd0: this.Branch(this.Zero == 0); break;                                                          // BNE (relative)
+                case 0xd0: this.BranchNot(this.Zero); break;                                                            // BNE (relative)
                 case 0xd1: this.AM_IndirectIndexedY(); this.CMP(this.A); break;                                         // CMP (indirect indexed Y)
                 case 0xd2: this.Jam(); break;                                                                           // *JAM
                 case 0xd3: this.Address_IndirectIndexedY(); this.FixupR(); this.DCP(); break;                           // *DCP (indirect indexed Y)
@@ -507,7 +671,6 @@ namespace EightBit
 
         private void FetchInstruction()
         {
-
             // Instruction fetch beginning
             this.LowerSYNC();
 
@@ -523,100 +686,9 @@ namespace EightBit
             this.RaiseSYNC();
         }
 
-        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
+        #endregion
 
-        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisingNMI() => this.RaisingNMI?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedNMI() => this.RaisedNMI?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringNMI() => this.LoweringNMI?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredNMI() => this.LoweredNMI?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisingSO() => this.RaisingSO?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedSO() => this.RaisedSO?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringSO() => this.LoweringSO?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredSO() => this.LoweredSO?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisingSYNC() => this.RaisingSYNC?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedSYNC() => this.RaisedSYNC?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringSYNC() => this.LoweringSYNC?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredSYNC() => this.LoweredSYNC?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisingRDY() => this.RaisingRDY?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedRDY() => this.RaisedRDY?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringRDY() => this.LoweringRDY?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredRDY() => this.LoweredRDY?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
-
-        protected override void OnRaisedPOWER()
-        {
-            this.X = (byte)Bits.Bit7;
-            this.Y = 0;
-            this.A = 0;
-            this.P = (byte)StatusBits.RF;
-            this.S = (byte)Mask.Eight;
-            this.LowerSYNC();
-            this.LowerRW();
-            base.OnRaisedPOWER();
-        }
-
-        protected override byte Pop()
-        {
-            this.RaiseStack();
-            return this.MemoryRead();
-        }
-
-        protected override void Push(byte value)
-        {
-            this.LowerStack();
-            this.MemoryWrite(value);
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        protected virtual void RaiseSYNC()
-        {
-            this.OnRaisingSYNC();
-            this.SYNC.Raise();
-            this.OnRaisedSYNC();
-        }
-
-        protected virtual void LowerSYNC()
-        {
-            this.OnLoweringSYNC();
-            this.SYNC.Lower();
-            this.OnLoweredSYNC();
-        }
-
-        protected override sealed void HandleRESET()
-        {
-            this.RaiseRESET();
-            this.Interrupt(RSTvector, InterruptSource.hardware, InterruptType.reset);
-        }
-
-        protected override sealed void HandleINT()
-        {
-            this.RaiseINT();
-            this.Interrupt(IRQvector);
-        }
+        #region Bus/Memory access
 
         protected override sealed void BusWrite()
         {
@@ -630,74 +702,39 @@ namespace EightBit
             return this.ReadFromBus();
         }
 
-        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
-
-        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
-
-        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
-
-        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
-
-        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
-
-        // Status flag operations
-
-        private void SetFlag(StatusBits flag)
+        private byte ReadFromBus()
         {
-            this.P = SetBit(this.P, flag);
+            this.RaiseRW();
+            return base.BusRead();
         }
 
-        private void SetFlag(StatusBits which, int condition)
+        private void WriteToBus()
         {
-            this.P = SetBit(this.P, which, condition);
+            this.LowerRW();
+            base.BusWrite();
         }
 
-        private void SetFlag(StatusBits which, bool condition)
+        private void ModifyWrite(byte data)
         {
-            this.P = SetBit(this.P, which, condition);
+            // The read will have already taken place...
+            this.MemoryWrite();
+            this.MemoryWrite(data);
         }
 
-        private void ResetFlag(StatusBits which)
+        #endregion
+
+        #region Stack access
+
+        protected override byte Pop()
         {
-            this.P = ClearBit(this.P, which);
+            this.RaiseStack();
+            return this.MemoryRead();
         }
 
-        private void ResetFlag(StatusBits which, int condition)
+        protected override void Push(byte value)
         {
-            this.P = ClearBit(this.P, which, condition);
-        }
-
-        private void HandleNMI()
-        {
-            this.RaiseNMI();
-            this.Interrupt(NMIvector);
-        }
-
-        private void HandleSO()
-        {
-            this.RaiseSO();
-            this.P |= (byte)StatusBits.VF;
-        }
-
-        enum InterruptSource { hardware, software };
-
-        enum InterruptType { reset, non_reset };
-
-        private void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
-        {
-            if (type == InterruptType.reset)
-            {
-                this.DummyPush();
-                this.DummyPush();
-                this.DummyPush();
-            }
-            else
-            {
-                this.PushWord(this.PC);
-                this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
-            }
-            this.SetFlag(StatusBits.IF);   // Disable IRQ
-            this.Jump(this.GetWordPaged(0xff, vector).Word);
+            this.LowerStack();
+            this.MemoryWrite(value);
         }
 
         private void UpdateStack(byte position)
@@ -716,20 +753,43 @@ namespace EightBit
             this.Tick();    // In place of the memory write
         }
 
-        private byte ReadFromBus()
+        #endregion
+
+        #region Addressing modes
+
+        #region Address page fixup
+
+        private byte fixedPage;
+
+        private void MaybeFixup()
         {
-            this.RaiseRW();
-            return base.BusRead();
+            if (this.Bus.Address.High != this.fixedPage)
+            {
+                this.Fixup();
+            }
         }
 
-        private void WriteToBus()
+        private void Fixup()
         {
-            this.LowerRW();
-            base.BusWrite();
+            this.MemoryRead();
+            this.Bus.Address.High = this.fixedPage;
         }
 
+        private void MaybeFixupR()
+        {
+            this.MaybeFixup();
+            this.MemoryRead();
+        }
 
-        // Addressing modes
+        private void FixupR()
+        {
+            this.Fixup();
+            this.MemoryRead();
+        }
+
+        #endregion
+
+        #region Address resolution
 
         private void NoteFixedAddress(int address)
         {
@@ -797,7 +857,9 @@ namespace EightBit
             this.NoteFixedAddress(this.Bus.Address.Word + Y);
         }
 
-        // Addressing modes, with read
+        #endregion
+
+        #region Address and read
 
         private void AM_Immediate()
         {
@@ -853,15 +915,13 @@ namespace EightBit
             this.MaybeFixupR();
         }
 
-        private void AdjustZero(byte datum) => this.ResetFlag(StatusBits.ZF, datum);
+        #endregion
 
-        private void AdjustNegative(byte datum) => this.SetFlag(StatusBits.NF, NegativeTest(datum));
+        #endregion
 
-        private void AdjustNZ(byte datum)
-        {
-            this.AdjustZero(datum);
-            this.AdjustNegative(datum);
-        }
+        #region Branching
+
+        private void BranchNot(int condition) => this.Branch(condition == 0);
 
         private void Branch(int condition) => this.Branch(condition != 0);
 
@@ -878,6 +938,20 @@ namespace EightBit
             }
         }
 
+        #endregion
+
+        #region Data flag adjustment
+
+        private void AdjustZero(byte datum) => this.ResetFlag(StatusBits.ZF, datum);
+
+        private void AdjustNegative(byte datum) => this.SetFlag(StatusBits.NF, NegativeTest(datum));
+
+        private void AdjustNZ(byte datum)
+        {
+            this.AdjustZero(datum);
+            this.AdjustNegative(datum);
+        }
+
         private byte Through() => this.Through(this.Bus.Data);
 
         private byte Through(int data) => this.Through((byte)data);
@@ -888,14 +962,11 @@ namespace EightBit
             return data;
         }
 
-        private void ModifyWrite(byte data)
-        {
-            // The read will have already taken place...
-            this.MemoryWrite();
-            this.MemoryWrite(data);
-        }
+        #endregion
 
-        // Flag adjustment
+        #region Instruction implementations
+
+        #region Instructions with BCD effects
 
         private void AdjustOverflow_add(byte operand)
         {
@@ -911,45 +982,9 @@ namespace EightBit
             this.SetFlag(StatusBits.VF, NegativeTest((byte)((operand ^ data) & (operand ^ intermediate))));
         }
 
-        // Miscellaneous
+        #region Addition/subtraction
 
-        private void MaybeFixup()
-        {
-            if (this.Bus.Address.High != this.fixedPage)
-            {
-                this.Fixup();
-            }
-        }
-
-        private void Fixup()
-        {
-            this.MemoryRead();
-            this.Bus.Address.High = this.fixedPage;
-        }
-
-        private void MaybeFixupR()
-        {
-            this.MaybeFixup();
-            this.MemoryRead();
-        }
-
-        private void FixupR()
-        {
-            this.Fixup();
-            this.MemoryRead();
-        }
-
-        // Chew up a cycle
-
-        private void Swallow() => this.MemoryRead(this.PC);
-
-        private void SwallowStack() => this.MemoryRead(this.S, 1);
-
-        private void SwallowFetch() => this.FetchByte();
-
-        // Instruction implementations
-
-        // Instructions with BCD effects
+        #region Subtraction
 
         private void SBC()
         {
@@ -991,6 +1026,10 @@ namespace EightBit
 
             return (byte)(PromoteNibble(high) | LowNibble(low));
         }
+
+        #endregion
+
+        #region Addition
 
         private void ADC()
         {
@@ -1041,7 +1080,11 @@ namespace EightBit
             this.A = (byte)(LowerNibble(LowByte(low)) | HigherNibble(this.intermediate.Low));
         }
 
-        // Undocumented compound instructions (with BCD effects)
+        #endregion
+
+        #endregion
+
+        #region ARR (undocument instruction)
 
         private void ARR()
         {
@@ -1079,6 +1122,11 @@ namespace EightBit
             this.SetFlag(StatusBits.VF, OverflowTest((byte)(this.A ^ (this.A << 1))));
         }
 
+        #endregion
+
+        #endregion
+
+        #region Bitwise operations
 
         private void OrR() => this.A = this.Through(this.A | this.Bus.Data);
 
@@ -1094,6 +1142,8 @@ namespace EightBit
             this.AdjustNegative(data);
         }
 
+        #endregion
+
         private void CMP(byte first)
         {
             var second = Bus.Data;
@@ -1102,6 +1152,7 @@ namespace EightBit
             ResetFlag(StatusBits.CF, this.intermediate.High);
         }
 
+        #region Increment/decrement
 
         private byte DEC() => this.DEC(this.Bus.Data);
 
@@ -1110,6 +1161,10 @@ namespace EightBit
         private byte INC() => this.INC(this.Bus.Data);
 
         private byte INC(byte value) => this.Through(value + 1);
+
+        #endregion
+
+        #region Stack operations
 
         private void JSR()
         {
@@ -1120,12 +1175,12 @@ namespace EightBit
             this.PC.Word = this.intermediate.Word;
         }
 
-        private void PHP() => this.Push((byte)(this.P | (byte)StatusBits.BF));
+        private void PHP() => this.Push(SetBit(this.P, StatusBits.BF));
 
         private void PLP()
         {
             this.SwallowStack();
-            this.P = (byte)((this.Pop() | (byte)StatusBits.RF) & (byte)~StatusBits.BF);
+            this.P = ClearBit(SetBit(this.Pop(), StatusBits.RF), StatusBits.BF);
         }
 
         private void RTI()
@@ -1141,20 +1196,18 @@ namespace EightBit
             this.SwallowFetch();
         }
 
+        #endregion
+
+        #region Shift/rotate operations
+
+        #region Shift
+
         private byte ASL() => this.ASL(this.Bus.Data);
 
         private byte ASL(byte value)
         {
             this.SetFlag(StatusBits.CF, NegativeTest(value));
             return this.Through(value << 1);
-        }
-
-        private byte ROL() => this.ROL(this.Bus.Data);
-
-        private byte ROL(byte value)
-        {
-            var carryIn = this.Carry;
-            return this.Through(this.ASL(value) | carryIn);
         }
 
         private byte LSR() => this.LSR(this.Bus.Data);
@@ -1165,6 +1218,18 @@ namespace EightBit
             return this.Through(value >> 1);
         }
 
+        #endregion
+
+        #region Rotate
+
+        private byte ROL() => this.ROL(this.Bus.Data);
+
+        private byte ROL(byte value)
+        {
+            var carryIn = this.Carry;
+            return this.Through(this.ASL(value) | carryIn);
+        }
+
         private byte ROR() => this.ROR(this.Bus.Data);
 
         private byte ROR(byte value)
@@ -1173,7 +1238,27 @@ namespace EightBit
             return this.Through(this.LSR(value) | (carryIn << 7));
         }
 
-        // Undocumented compound instructions
+        #endregion
+
+        #endregion
+
+        #region Undocumented instructions
+
+        #region Undocumented instructions with fixup effects
+        
+        private void StoreFixupEffect(byte data)
+        {
+            var fixedAddress = (byte)(this.Bus.Address.High + 1);
+            this.MemoryWrite((byte)(data & fixedAddress));
+        }
+
+        private void SHA() => this.StoreFixupEffect((byte)(this.A & this.X));
+
+        private void SYA() => this.StoreFixupEffect(this.Y);
+
+        private void SXA() => this.StoreFixupEffect(this.X);
+
+        #endregion
 
         private void ANC()
         {
@@ -1187,7 +1272,6 @@ namespace EightBit
             this.ResetFlag(StatusBits.CF, this.intermediate.High);
         }
 
-
         private void Jam()
         {
             this.Bus.Address.Word = this.PC.Word--;
@@ -1195,17 +1279,6 @@ namespace EightBit
             this.MemoryRead();
         }
 
-        private void StoreFixupEffect(byte data)
-        {
-            var fixedAddress = (byte)(this.Bus.Address.High + 1);
-            this.MemoryWrite((byte)(data & fixedAddress));
-        }
-
-        private void SHA() => this.StoreFixupEffect((byte)(this.A & this.X));
-
-        private void SYA() => this.StoreFixupEffect(this.Y);
-
-        private void SXA() => this.StoreFixupEffect(this.X);
 
         private void TAS()
         {
@@ -1260,5 +1333,9 @@ namespace EightBit
             this.ModifyWrite(this.DEC());
             this.CMP(this.A);
         }
+
+        #endregion
+
+        #endregion
     }
 }
