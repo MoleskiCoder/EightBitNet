@@ -14,9 +14,17 @@ namespace M6502.Test
 
         public bool DebugMode { get; set; } = false;
 
+        public bool BreakOnRead { get; } = true;
+
         public Register16 LoadAddress { get; } = new Register16(0x400);
 
         public Register16 StartAddress { get; } = new Register16(0x400);
+
+        public Register16 InputAddress { get; } = new Register16(0xf004);
+
+        public Register16 OutputAddress { get; } = new Register16(0xf001);
+
+        public int PollingTickInterval { get; } = 10000000;
 
         public string RomDirectory { get; } = "roms";
 

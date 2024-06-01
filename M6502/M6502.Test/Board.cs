@@ -16,6 +16,11 @@ namespace M6502.Test
         private readonly MemoryMapping mapping;
 
         private ushort oldPC;
+        private int cyclesPolled;
+
+        private char key;
+        private bool keyHandled;
+        private bool keyAvailable;
 
         public Board(Configuration configuration)
         {
@@ -56,10 +61,19 @@ namespace M6502.Test
 
             if (this.configuration.DebugMode)
             {
-                this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction;
+                this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_Debugging;
+            }
+
+            if (!this.configuration.BreakOnRead)
+            {
+                this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Polling;
             }
 
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
+
+            this.CPU.Bus.WrittenByte += this.Bus_WrittenByte;
+            this.CPU.Bus.ReadingByte += this.Bus_ReadingByte;
+            this.CPU.Bus.ReadByte += this.Bus_ReadByte;
 
             this.Poke(0x00, 0x4c);
             this.CPU.PokeWord(0x01, this.configuration.StartAddress);
@@ -67,7 +81,50 @@ namespace M6502.Test
 
         public override MemoryMapping Mapping(ushort absolute) => this.mapping;
 
-        private void CPU_ExecutedInstruction(object sender, System.EventArgs e)
+        private void Bus_ReadingByte(object? sender, EventArgs e)
+        {
+            var address = this.CPU.Bus.Address;
+            if (address == this.configuration.InputAddress)
+            {
+                var ready = this.keyAvailable && !this.keyHandled;
+                if (ready && (this.CPU.Bus.Peek(address) == 0))
+                {
+                    this.CPU.Bus.Poke(address, (byte)this.key);
+                    this.keyHandled = true;
+                }
+            }
+        }
+
+        private void Bus_ReadByte(object? sender, EventArgs e)
+        {
+            var address = this.CPU.Bus.Address;
+            if (address == this.configuration.InputAddress)
+            {
+                if (this.configuration.BreakOnRead)
+                {
+                    this.LowerPOWER();
+                }
+                else
+                {
+                    if (this.keyHandled)
+                    {
+                        this.CPU.Bus.Poke(address, 0);
+                        this.keyAvailable = false;
+                    }
+                }
+            }
+        }
+
+        private void Bus_WrittenByte(object? sender, EventArgs e)
+        {
+            if (this.CPU.Bus.Address == this.configuration.OutputAddress)
+            {
+                var contents = this.CPU.Bus.Peek(this.CPU.Bus.Address);
+                Console.Out.Write((char)contents);
+            }
+        }
+
+        private void CPU_ExecutedInstruction(object? sender, EventArgs e)
         {
             var pc = this.CPU.PC.Word;
             if (this.oldPC != pc)
@@ -84,7 +141,30 @@ namespace M6502.Test
             }
         }
 
-        private void CPU_ExecutingInstruction(object sender, System.EventArgs e)
+        private void CPU_ExecutedInstruction_Polling(object? sender, EventArgs e)
+        {
+            var cycles = this.CPU.Cycles;
+            this.cyclesPolled += cycles;
+            System.Diagnostics.Debug.Assert(cycles > 0, "Invalid pollingcycle count");
+            if (this.cyclesPolled > this.configuration.PollingTickInterval)
+            {
+                this.cyclesPolled = 0;
+                this.PollHostKeyboard();
+            }
+        }
+
+        private void PollHostKeyboard()
+        {
+            if (Console.KeyAvailable)
+            {
+                var key = Console.ReadKey(true);
+                this.key = key.KeyChar;
+                this.keyAvailable = true;
+                this.keyHandled = false;
+            }
+        }
+
+        private void CPU_ExecutingInstruction_Debugging(object? sender, EventArgs e)
         {
             var address = this.CPU.PC.Word;
 
