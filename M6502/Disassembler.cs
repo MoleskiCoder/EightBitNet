@@ -59,13 +59,62 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // BRK
-                                    output.Append(Disassemble_Implied("BRK"));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                    output.Append(this.Disassemble_Implied("BRK"));
                                     break;
                                 case 0b001: // DOP/NOP (0x04)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PHP
-                                    output.Append(Disassemble_Implied("PHP"));
+                                    output.Append(this.Disassemble_Implied("PHP"));
                                     break;
                                 case 0b011: // TOP/NOP (0b00001100, 0x0c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -77,7 +126,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLC
-                                    output.Append(Disassemble_Implied("CLC"));
+                                    output.Append(this.Disassemble_Implied("CLC"));
                                     break;
                                 case 0b111: // TOP/NOP (0b00011100, 0x1c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -94,7 +143,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_Absolute("JSR"));
                                     break;
                                 case 0b010: // PLP
-                                    output.Append(Disassemble_Implied("PLP"));
+                                    output.Append(this.Disassemble_Implied("PLP"));
                                     break;
                                 case 0b100: // BMI
                                     output.Append(this.Disassemble_Relative("BMI", relative));
@@ -103,7 +152,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SEC
-                                    output.Append(Disassemble_Implied("SEC"));
+                                    output.Append(this.Disassemble_Implied("SEC"));
                                     break;
                                 case 0b111: // TOP/NOP (0b00111100, 0x3c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -118,13 +167,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // RTI
-                                    output.Append(Disassemble_Implied("RTI"));
+                                    output.Append(this.Disassemble_Implied("RTI"));
                                     break;
                                 case 0b001: // DOP/NOP (0x44)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PHA
-                                    output.Append(Disassemble_Implied("PHA"));
+                                    output.Append(this.Disassemble_Implied("PHA"));
                                     break;
                                 case 0b011: // JMP
                                     output.Append(this.Disassemble_Absolute("JMP"));
@@ -136,7 +185,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLI
-                                    output.Append(Disassemble_Implied("CLI"));
+                                    output.Append(this.Disassemble_Implied("CLI"));
                                     break;
                                 case 0b111: // TOP/NOP (0b01011100, 0x5c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -150,13 +199,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // RTS
-                                    output.Append(Disassemble_Implied("RTS"));
+                                    output.Append(this.Disassemble_Implied("RTS"));
                                     break;
                                 case 0b001: // DOP/NOP (0x64)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PLA
-                                    output.Append(Disassemble_Implied("PLA"));
+                                    output.Append(this.Disassemble_Implied("PLA"));
                                     break;
                                 case 0b011: // JMP (abs)
                                     output.Append(this.Disassemble_Indirect("JMP"));
@@ -168,7 +217,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SEI
-                                    output.Append(Disassemble_Implied("SEI"));
+                                    output.Append(this.Disassemble_Implied("SEI"));
                                     break;
                                 case 0b111: // TOP/NOP (0b01111100, 0x7c)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -185,13 +234,13 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // DEY
-                                    output.Append(Disassemble_Implied("DEY"));
+                                    output.Append(this.Disassemble_Implied("DEY"));
                                     break;
                                 case 0b100: // BCC
                                     output.Append(this.Disassemble_Relative("BCC", relative));
                                     break;
                                 case 0b110: // TYA
-                                    output.Append(Disassemble_Implied("TYA"));
+                                    output.Append(this.Disassemble_Implied("TYA"));
                                     break;
                                 default: // STY
                                     output.Append(this.Disassemble_AM_00(bbb, "STY"));
@@ -203,13 +252,13 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // TAY
-                                    output.Append(Disassemble_Implied("TAY"));
+                                    output.Append(this.Disassemble_Implied("TAY"));
                                     break;
                                 case 0b100: // BCS
                                     output.Append(this.Disassemble_Relative("BCS", relative));
                                     break;
                                 case 0b110: // CLV
-                                    output.Append(Disassemble_Implied("CLV"));
+                                    output.Append(this.Disassemble_Implied("CLV"));
                                     break;
                                 default: // LDY
                                     output.Append(this.Disassemble_AM_00(bbb, "LDY"));
@@ -221,7 +270,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // INY
-                                    output.Append(Disassemble_Implied("INY"));
+                                    output.Append(this.Disassemble_Implied("INY"));
                                     break;
                                 case 0b100: // BNE
                                     output.Append(this.Disassemble_Relative("BNE", relative));
@@ -230,7 +279,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLD
-                                    output.Append(Disassemble_Implied("CLD"));
+                                    output.Append(this.Disassemble_Implied("CLD"));
                                     break;
                                 case 0b111: // TOP/NOP (0b11011100, 0xdc)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -245,7 +294,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // INX
-                                    output.Append(Disassemble_Implied("INX"));
+                                    output.Append(this.Disassemble_Implied("INX"));
                                     break;
                                 case 0b100: // BEQ
                                     output.Append(this.Disassemble_Relative("BEQ", relative));
@@ -254,7 +303,7 @@ namespace EightBit
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SED
-                                    output.Append(Disassemble_Implied("SED"));
+                                    output.Append(this.Disassemble_Implied("SED"));
                                     break;
                                 case 0b111: // TOP/NOP (0b11111100, 0xfc)
                                     output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
@@ -307,7 +356,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x1a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "ASL"));
@@ -319,7 +368,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x3a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "ROL"));
@@ -331,7 +380,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x5a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "LSR"));
@@ -343,7 +392,7 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b110: // 0x7a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
                                     output.Append(this.Disassemble_AM_10(bbb, "ROR"));
@@ -355,10 +404,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // TXA
-                                    output.Append(Disassemble_Implied("TXA"));
+                                    output.Append(this.Disassemble_Implied("TXA"));
                                     break;
                                 case 0b110: // TXS
-                                    output.Append(Disassemble_Implied("TXS"));
+                                    output.Append(this.Disassemble_Implied("TXS"));
                                     break;
                                 default: // STX
                                     output.Append(this.Disassemble_AM_10_x(bbb, "STX"));
@@ -370,10 +419,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // TAX
-                                    output.Append(Disassemble_Implied("TAX"));
+                                    output.Append(this.Disassemble_Implied("TAX"));
                                     break;
                                 case 0b110: // TSX
-                                    output.Append(Disassemble_Implied("TSX"));
+                                    output.Append(this.Disassemble_Implied("TSX"));
                                     break;
                                 default: // LDX
                                     output.Append(this.Disassemble_AM_10_x(bbb, "LDX"));
@@ -385,10 +434,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // DEX
-                                    output.Append(Disassemble_Implied("DEX"));
+                                    output.Append(this.Disassemble_Implied("DEX"));
                                     break;
                                 case 0b110: // 0xda
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default: // DEC
                                     output.Append(this.Disassemble_AM_10(bbb, "DEC"));
@@ -400,10 +449,10 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b010: // NOP
-                                    output.Append(Disassemble_Implied("NOP"));
+                                    output.Append(this.Disassemble_Implied("NOP"));
                                     break;
                                 case 0b110: // 0xfa
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default: // INC
                                     output.Append(this.Disassemble_AM_10(bbb, "INC"));
@@ -491,13 +540,62 @@ namespace EightBit
             return output.ToString();
         }
 
-        private string ConvertAddress(ushort absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + DumpWordValue(absolute);
+        #region Symbols
 
-        private string ConvertAddress(byte absolute) => this.symbols.Labels.TryGetValue(absolute, out var label) ? label : "$" + DumpByteValue(absolute);
+        #region Label conversions
+
+        private string ConvertAddressAt(ushort absolute) => this.ConvertAddress(this.GetWord(absolute));
+
+        private string ConvertAddress(ushort absolute) => this.TryGetLabel(absolute, out var label) ? label : "$" + DumpWordValue(absolute);
+
+        private string ConvertZPAddressAt(ushort absolute) => this.ConvertZPAddress(this.GetByte(absolute));
+
+        private string ConvertZPAddress(byte absolute) => this.TryGetLabel(absolute, out var label) ? label : "$" + DumpByteValue(absolute);
+
+        private bool TryGetLabel(ushort absolute, out string label)
+        {
+            return this.symbols.Labels.TryGetValue(absolute, value: out label);
+        }
+
+        private string MayeGetLabel(ushort absolute)
+        {
+            if (this.TryGetLabel(absolute, out var label))
+            {
+                return label;
+            }
+            return string.Empty;
+        }
+
+        private string MaybeGetCodeLabel(ushort absolute)
+        {
+            var label = this.MayeGetLabel(absolute);
+            if (string.IsNullOrEmpty(label))
+            {
+                return string.Empty;
+            }
+            return label + ": ";
+        }
+
+        private string MaybeGetCodeLabel()
+        {
+            return Pad(this.MaybeGetCodeLabel(this.address), 20);
+        }
+
+        #endregion
+
+        #region Constants conversion
+
+        private string ConvertConstantWord(ushort address) => this.ConvertConstant(this.GetWord(address));
 
         private string ConvertConstant(ushort constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : this.Dump_DByte(constant);
 
-        private string ConvertConstant(byte constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : DumpByteValue(constant);
+        private string ConvertConstantByte(ushort address) => this.ConvertConstant(this.GetByte(address));
+
+        private string ConvertConstant(byte constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : "$" + DumpByteValue(constant);
+
+        #endregion
+
+        #endregion
 
         private byte GetByte(ushort absolute) => this.bus.Peek(absolute);
 
@@ -509,39 +607,52 @@ namespace EightBit
 
         private string Dump_Word(ushort absolute) => Disassembler.DumpWordValue(this.GetWord(absolute));
 
-        private static string Disassemble_Implied(string instruction) => "\t" + instruction;
+        private string Disassemble_Implied(string instruction) => $"{Pad()}\t{this.MaybeGetCodeLabel()}" + instruction;
 
-        private string Disassemble_Absolute(string instruction) => this.AM_Absolute_dump() + "\t" + instruction + " " + this.AM_Absolute();
+        private string Disassemble_Absolute(string instruction) => this.AM_Absolute_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_Absolute();
 
-        private string Disassemble_Indirect(string instruction) => this.AM_Absolute_dump() + "\t" + instruction + " (" + this.AM_Absolute() + ")";
+        private string Disassemble_Indirect(string instruction) => this.AM_Absolute_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " (" + this.AM_Absolute() + ")";
 
-        private string Disassemble_Relative(string instruction, ushort absolute) => this.AM_Immediate_dump() + "\t" + instruction + " $" + Disassembler.DumpWordValue(absolute);
+        private string Disassemble_Relative(string instruction, ushort absolute) => this.AM_Immediate_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.ConvertAddress(absolute);
 
-        private string Disassemble_Immediate(string instruction) => this.AM_Immediate_dump() + "\t" + instruction + " " + this.AM_Immediate();
+        private string Disassemble_Immediate(string instruction) => this.AM_Immediate_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_Immediate();
 
-        private string Disassemble_AM_00(int bbb, string instruction) => this.AM_00_dump(bbb) + "\t" + instruction + " " + this.AM_00(bbb);
+        private string Disassemble_AM_00(int bbb, string instruction) => this.AM_00_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_00(bbb);
 
-        private string Disassemble_AM_01(int bbb, string instruction) => this.AM_01_dump(bbb) + "\t" + instruction + " " + this.AM_01(bbb);
+        private string Disassemble_AM_01(int bbb, string instruction) => this.AM_01_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_01(bbb);
 
-        private string Disassemble_AM_10(int bbb, string instruction) => this.AM_10_dump(bbb) + "\t" + instruction + " " + this.AM_10(bbb);
+        private string Disassemble_AM_10(int bbb, string instruction) => this.AM_10_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_10(bbb);
 
-        private string Disassemble_AM_10_x(int bbb, string instruction) => this.AM_10_x_dump(bbb) + "\t" + instruction + " " + this.AM_10_x(bbb);
+        private string Disassemble_AM_10_x(int bbb, string instruction) => this.AM_10_x_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_10_x(bbb);
 
-        private string Disassemble_AM_11(int bbb, string instruction) => this.AM_11_dump(bbb) + "\t" + instruction + " " + this.AM_11(bbb);
+        private string Disassemble_AM_11(int bbb, string instruction) => this.AM_11_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_11(bbb);
 
-        private string Disassemble_AM_11_x(int bbb, string instruction) => this.AM_11_x_dump(bbb) + "\t" + instruction + " " + this.AM_11_x(bbb);
+        private string Disassemble_AM_11_x(int bbb, string instruction) => this.AM_11_x_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_11_x(bbb);
 
-        private string AM_Immediate_dump() => this.Dump_Byte((ushort)(this.address + 1));
 
-        private string AM_Immediate() => "#$" + this.AM_Immediate_dump();
+        private static string Pad(string? value = null, int limit = 10)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return new string(' ', limit);
+            }
+            var used = value.Length;
+            var needed = limit - used;
+            var padding = new string(' ', needed);
+            return value + padding;
+        }
 
-        private string AM_Absolute_dump() => this.Dump_DByte((ushort)(this.address + 1));
+        private string AM_Immediate_dump() => Pad(this.Dump_Byte((ushort)(this.address + 1)));
 
-        private string AM_Absolute() => "$" + this.Dump_Word((ushort)(this.address + 1));
+        private string AM_Immediate() => "#" + this.ConvertConstantByte((ushort)(this.address + 1));
 
-        private string AM_ZeroPage_dump() => this.Dump_Byte((ushort)(this.address + 1));
+        private string AM_Absolute_dump() => Pad(this.Dump_DByte((ushort)(this.address + 1)));
 
-        private string AM_ZeroPage() => "$" + this.Dump_Byte((ushort)(this.address + 1));
+        private string AM_Absolute() => this.ConvertAddressAt((ushort)(this.address + 1));
+
+        private string AM_ZeroPage_dump() => Pad(this.Dump_Byte((ushort)(this.address + 1)));
+
+        private string AM_ZeroPage() => this.ConvertZPAddressAt((ushort)(this.address + 1));
 
         private string AM_ZeroPageX_dump() => this.AM_ZeroPage_dump();
 
@@ -561,11 +672,11 @@ namespace EightBit
 
         private string AM_IndexedIndirectX_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_IndexedIndirectX() => "($" + this.Dump_Byte((ushort)(this.address + 1)) + ",X)";
+        private string AM_IndexedIndirectX() => "(" + this.ConvertZPAddressAt((ushort)(this.address + 1)) + ",X)";
 
         private string AM_IndirectIndexedY_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_IndirectIndexedY() => "($" + this.Dump_Byte((ushort)(this.address + 1)) + "),Y";
+        private string AM_IndirectIndexedY() => "(" + this.ConvertZPAddressAt((ushort)(this.address + 1)) + "),Y";
 
         private string AM_00_dump(int bbb) => bbb switch
         {
