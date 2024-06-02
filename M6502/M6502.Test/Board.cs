@@ -27,7 +27,7 @@ namespace M6502.Test
             this.configuration = configuration;
             this.ram = new Ram(0x10000);
             this.CPU = new M6502(this);
-            this.symbols = new Symbols();
+            this.symbols = new Symbols(this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
             this.disassembler = new Disassembler(this, this.CPU, this.symbols);
             this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
 
@@ -64,7 +64,7 @@ namespace M6502.Test
                 this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_Debugging;
             }
 
-            if (!this.configuration.BreakOnRead)
+            if (this.configuration.AllowKeyRead)
             {
                 this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Polling;
             }
@@ -72,8 +72,12 @@ namespace M6502.Test
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
 
             this.CPU.Bus.WrittenByte += this.Bus_WrittenByte;
-            this.CPU.Bus.ReadingByte += this.Bus_ReadingByte;
-            this.CPU.Bus.ReadByte += this.Bus_ReadByte;
+
+            if (this.configuration.AllowKeyRead)
+            {
+                this.CPU.Bus.ReadingByte += this.Bus_ReadingByte;
+                this.CPU.Bus.ReadByte += this.Bus_ReadByte;
+            }
 
             this.Poke(0x00, 0x4c);
             this.CPU.PokeWord(0x01, this.configuration.StartAddress);
@@ -100,7 +104,7 @@ namespace M6502.Test
             var address = this.CPU.Bus.Address;
             if (address == this.configuration.InputAddress)
             {
-                if (this.configuration.BreakOnRead)
+                if (this.configuration.BreakOnKeyRead)
                 {
                     this.LowerPOWER();
                 }
