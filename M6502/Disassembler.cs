@@ -7,11 +7,11 @@ namespace EightBit
     using System.Globalization;
     using System.Text;
 
-    public class Disassembler(Bus bus, M6502 processor, Symbols symbols)
+    public class Disassembler(Bus bus, M6502 processor, Files.Symbols.Parser symbols)
     {
         private readonly Bus bus = bus;
         private readonly M6502 processor = processor;
-        private readonly Symbols symbols = symbols;
+        private readonly Files.Symbols.Parser symbols = symbols;
         private ushort address;
 
         public static string DumpFlags(byte value)
@@ -59,55 +59,6 @@ namespace EightBit
                             switch (bbb)
                             {
                                 case 0b000: // BRK
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                                     output.Append(this.Disassemble_Implied("BRK"));
                                     break;
                                 case 0b001: // DOP/NOP (0x04)
@@ -552,23 +503,19 @@ namespace EightBit
 
         private string ConvertZPAddress(byte absolute) => this.TryGetLabel(absolute, out var label) ? label : "$" + DumpByteValue(absolute);
 
-        private bool TryGetLabel(ushort absolute, out string label)
+        private bool TryGetLabel(ushort absolute, out string name)
         {
-            return this.symbols.Labels.TryGetValue(absolute, value: out label);
+            return this.symbols.TryGetQualifiedLabel(absolute, out name);
         }
 
-        private string MayeGetLabel(ushort absolute)
+        private string MaybeGetLabel(ushort absolute)
         {
-            if (this.TryGetLabel(absolute, out var label))
-            {
-                return label;
-            }
-            return string.Empty;
+            return this.symbols.MaybeGetQualifiedLabel(absolute);
         }
 
         private string MaybeGetCodeLabel(ushort absolute)
         {
-            var label = this.MayeGetLabel(absolute);
+            var label = this.MaybeGetLabel(absolute);
             if (string.IsNullOrEmpty(label))
             {
                 return string.Empty;
@@ -578,20 +525,25 @@ namespace EightBit
 
         private string MaybeGetCodeLabel()
         {
-            return Pad(this.MaybeGetCodeLabel(this.address), 20);
+            return Pad(this.MaybeGetCodeLabel(this.address), 30);
         }
 
         #endregion
 
         #region Constants conversion
 
+        private bool TryGetConstant(ushort value, out string name)
+        {
+            return this.symbols.TryGetQualifiedEquate(value, out name);
+        }
+
         private string ConvertConstantWord(ushort address) => this.ConvertConstant(this.GetWord(address));
 
-        private string ConvertConstant(ushort constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : this.Dump_DByte(constant);
+        private string ConvertConstant(ushort constant) => this.TryGetConstant(constant, out var label) ? label : this.Dump_DByte(constant);
 
         private string ConvertConstantByte(ushort address) => this.ConvertConstant(this.GetByte(address));
 
-        private string ConvertConstant(byte constant) => this.symbols.Constants.TryGetValue(constant, out var label) ? label : "$" + DumpByteValue(constant);
+        private string ConvertConstant(byte constant) => this.TryGetConstant(constant, out var label) ? label : "$" + DumpByteValue(constant);
 
         #endregion
 

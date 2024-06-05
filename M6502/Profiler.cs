@@ -6,32 +6,29 @@
         private readonly int[] addressProfiles;
         private readonly int[] addressCounts;
 
-        private readonly string[] addressScopes;
         private readonly Dictionary<string, int> scopeCycles;
 
         private readonly M6502 processor;
         private readonly Disassembler disassembler;
-        private readonly Symbols symbols;
-
-        private readonly bool countInstructions;
-        private readonly bool profileAddresses;
+        private readonly Files.Symbols.Parser symbols;
 
         private int priorCycleCount;
         private ushort executingAddress;
 
-        public Profiler(M6502 processor, Disassembler disassembler, Symbols symbols, bool countInstructions, bool profileAddresses)
+        public Profiler(M6502 processor, Disassembler disassembler, Files.Symbols.Parser symbols, bool countInstructions, bool profileAddresses)
         {
             ArgumentNullException.ThrowIfNull(processor);
+            ArgumentNullException.ThrowIfNull(disassembler);
+            ArgumentNullException.ThrowIfNull(symbols);
 
             this.processor = processor;
             this.disassembler = disassembler;
             this.symbols = symbols;
-            this.countInstructions = countInstructions;
-            this.profileAddresses = profileAddresses;
 
             if (profileAddresses || countInstructions)
             {
                 this.processor.ExecutingInstruction += this.Processor_ExecutingInstruction_Prequel;
+                this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction_Sequal;
             }
             if (profileAddresses)
             {
@@ -48,10 +45,7 @@
             this.addressProfiles = new int[0x10000];
             this.addressCounts = new int[0x10000];
 
-            this.addressScopes = new string[0x10000];
             this.scopeCycles = [];
-
-            this.BuildAddressScopes();
         }
 
 
@@ -70,6 +64,8 @@
         public event EventHandler<EventArgs>? FinishedScopeOutput;
 
         public event EventHandler<ProfileScopeEventArgs>? EmitScope;
+
+        public long TotalCycleCount { get; private set; }
 
         public void Generate()
         {
@@ -116,7 +112,7 @@
                 {
                     var name = scopeCycle.Key;
                     var cycles = scopeCycle.Value;
-                    var count = this.addressCounts[this.symbols.Addresses[name]];
+                    var count = this.addressCounts[this.symbols.LookupLabel(name).Value];
                     this.OnEmitScope(name, cycles, count);
                 }
             }
@@ -129,6 +125,11 @@
         private void Processor_ExecutingInstruction_Prequel(object? sender, EventArgs e)
         {
             this.executingAddress = this.processor.PC.Word;
+        }
+
+        private void Processor_ExecutedInstruction_Sequal(object? sender, EventArgs e)
+        {
+            this.TotalCycleCount += this.processor.Cycles;
         }
 
         private void Processor_ExecutingInstruction_ProfileAddresses(object? sender, EventArgs e)
@@ -149,31 +150,15 @@
 
             this.addressProfiles[address] += cycles;
 
-            var addressScope = this.addressScopes[address];
+            var addressScope = this.symbols.LookupScope(address);
             if (addressScope != null)
             {
-                if (!this.scopeCycles.ContainsKey(addressScope))
+                if (!this.scopeCycles.ContainsKey(addressScope.Name))
                 {
-                    this.scopeCycles[addressScope] = 0;
+                    this.scopeCycles[addressScope.Name] = 0;
                 }
 
-                this.scopeCycles[addressScope] += cycles;
-            }
-        }
-
-        private void BuildAddressScopes()
-        {
-            foreach (var label in this.symbols.Labels)
-            {
-                var key = label.Value;
-                if (this.symbols.Scopes.TryGetValue(key, out var scope))
-                {
-                    var address = label.Key;
-                    for (ushort i = address; i < address + scope; ++i)
-                    {
-                        this.addressScopes[i] = key;
-                    }
-                }
+                this.scopeCycles[addressScope.Name] += cycles;
             }
         }
 

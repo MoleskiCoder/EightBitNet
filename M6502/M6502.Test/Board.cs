@@ -4,6 +4,7 @@
 
 namespace M6502.Test
 {
+    using System.Globalization;
     using System.Text;
     using EightBit;
 
@@ -11,8 +12,9 @@ namespace M6502.Test
     {
         private readonly Configuration configuration;
         private readonly Ram ram;
-        private readonly Symbols symbols;
+        private readonly EightBit.Files.Symbols.Parser symbols;
         private readonly Disassembler disassembler;
+        private readonly Profiler profiler;
         private readonly MemoryMapping mapping;
 
         private ushort oldPC;
@@ -27,11 +29,26 @@ namespace M6502.Test
             this.configuration = configuration;
             this.ram = new Ram(0x10000);
             this.CPU = new M6502(this);
-            this.symbols = new Symbols(this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
+            this.symbols = new EightBit.Files.Symbols.Parser();
             this.disassembler = new Disassembler(this, this.CPU, this.symbols);
             this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
 
             this.oldPC = (ushort)Mask.Sixteen;
+
+            this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
+
+            this.profiler = new Profiler(this.CPU, this.disassembler, this.symbols, this.configuration.Profile, this.configuration.Profile);
+            if (this.configuration.Profile)
+            {
+                this.profiler.StartingOutput += this.Profiler_StartingOutput;
+                this.profiler.FinishedOutput += this.Profiler_FinishedOutput;
+                this.profiler.StartingLineOutput += this.Profiler_StartingLineOutput;
+                this.profiler.FinishedLineOutput += this.Profiler_FinishedLineOutput;
+                this.profiler.StartingScopeOutput += this.Profiler_StartingScopeOutput;
+                this.profiler.FinishedScopeOutput += this.Profiler_FinishedScopeOutput;
+                this.profiler.EmitLine += this.Profiler_EmitLine;
+                this.profiler.EmitScope += this.Profiler_EmitScope;
+            }
         }
 
         public M6502 CPU { get; }
@@ -51,6 +68,10 @@ namespace M6502.Test
         {
             this.CPU.LowerPOWER();
             base.LowerPOWER();
+            if (this.configuration.Profile)
+            {
+                this.profiler.Generate();
+            }
         }
 
         public override void Initialize()
@@ -200,7 +221,49 @@ namespace M6502.Test
 
             output.Append(this.disassembler.Disassemble(address));
 
-            System.Console.Out.WriteLine(output.ToString());
+            Console.Out.WriteLine(output.ToString());
+        }
+
+        private void Profiler_EmitScope(object? sender, ProfileScopeEventArgs e)
+        {
+            var proportion = (double)e.Cycles / this.CPU.Cycles;
+            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, e.Scope));
+        }
+
+        private void Profiler_EmitLine(object? sender, ProfileLineEventArgs e)
+        {
+            var proportion = (double)e.Cycles / this.profiler.TotalCycleCount;
+            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}]\t{2}\n", proportion, e.Cycles, e.Source));
+        }
+
+        private void Profiler_FinishedScopeOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Finished profiler scope output...\n");
+        }
+
+        private void Profiler_StartingScopeOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Starting profiler scope output...\n");
+        }
+
+        private void Profiler_FinishedLineOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Finished profiler line output...\n");
+        }
+
+        private void Profiler_StartingLineOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Starting profiler line output...\n");
+        }
+
+        private void Profiler_FinishedOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Finished profiler output...\n");
+        }
+
+        private void Profiler_StartingOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Starting profiler output...\n");
         }
     }
 }

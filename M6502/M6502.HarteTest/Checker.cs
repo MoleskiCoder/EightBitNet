@@ -4,7 +4,7 @@
     {
         private TestRunner Runner { get; }
 
-        private EightBit.Symbols Symbols { get; } = new();
+        private EightBit.Files.Symbols.Parser Symbols { get; } = new();
 
         private EightBit.Disassembler Disassembler { get; }
 
