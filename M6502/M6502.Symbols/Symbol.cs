@@ -42,11 +42,12 @@
                     base.Parse(parent, entries);
                     if (this.Type is "lab")
                     {
-                        this._parent.Labels.Add(this);
+                        this._parent?.AddLabel(this);
+
                     }
                     else if (this.Type is "equ")
                     {
-                        this._parent.Equates.Add(this);
+                        this._parent?.AddEquate(this);
                     }
                     else
                     {

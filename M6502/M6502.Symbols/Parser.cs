@@ -32,24 +32,40 @@
                 public List<Symbol> Labels { get; } = [];
                 public List<Symbol> Equates { get; } = [];
 
+                // Value lookup structures
+                public Dictionary<int, List<Symbol>> Addresses { get; } = [];
+                public Dictionary<int, List<Symbol>> Constants { get; } = [];
+
                 #endregion
 
                 #region Lookups
 
                 #region Label lookup
 
-                public List<Symbol> LookupLabels(int address)
+                public void AddLabel(Symbol symbol)
                 {
-                    var returned = new List<Symbol>();
-                    foreach (var label in this.Labels)
+                    if (symbol.Type != "lab")
                     {
-                        if (label.Value == address)
-                        {
-                            returned.Add(label);
-                        }
+                        throw new ArgumentOutOfRangeException(nameof(symbol), "Not a label");
                     }
-                    return returned;
+                    this.Labels.Add(symbol);
+                    this.AddAddress(symbol);
                 }
+
+                private void AddAddress(Symbol symbol)
+                {
+                    var value = symbol.Value;
+                    if (this.Addresses.TryGetValue(value, out var symbols))
+                    {
+                        symbols.Add(symbol);
+                    }
+                    else
+                    {
+                        this.Addresses.Add(value, [symbol]);
+                    }
+                }
+
+                public List<Symbol> LookupLabels(int address) => this.Addresses.TryGetValue(address, out var symbols) ? symbols : [];
 
                 public Symbol? LookupLabel(int address)
                 {
@@ -80,18 +96,30 @@
 
                 #region Constant lookup
 
-                public List<Symbol> LookupEquates(int constant)
+                public void AddEquate(Symbol symbol)
                 {
-                    var returned = new List<Symbol>();
-                    foreach (var equate in this.Equates)
+                    if (symbol.Type != "equ")
                     {
-                        if (equate.Value == constant)
-                        {
-                            returned.Add(equate);
-                        }
+                        throw new ArgumentOutOfRangeException(nameof(symbol), "Not an equate");
                     }
-                    return returned;
+                    this.Equates.Add(symbol);
+                    this.AddConstant(symbol);
                 }
+
+                private void AddConstant(Symbol symbol)
+                {
+                    var value = symbol.Value;
+                    if (this.Constants.TryGetValue(value, out var symbols))
+                    {
+                        symbols.Add(symbol);
+                    }
+                    else
+                    {
+                        this.Constants.Add(value, [symbol]);
+                    }
+                }
+
+                public List<Symbol> LookupEquates(int constant) => this.Constants.TryGetValue(constant, out var symbols) ? symbols : [];
 
                 public Symbol? LookupEquate(int constant)
                 {
