@@ -35,7 +35,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z80.FuseTest", "Z80\Z80.Fus
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z80.Test", "Z80\Z80.Test\Z80.Test.csproj", "{E6AE640E-4A42-4D8F-8ECE-2FBEBC29741B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M6502.HarteTest", "M6502\M6502.HarteTest\M6502.HarteTest.csproj", "{8686B0DC-A431-4239-836E-ABC90BD69920}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "M6502.HarteTest", "M6502\M6502.HarteTest\M6502.HarteTest.csproj", "{8686B0DC-A431-4239-836E-ABC90BD69920}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M6502.Symbols", "M6502\M6502.Symbols\M6502.Symbols.csproj", "{77B4729A-1899-44D3-92A6-334FF9CA8A65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,10 @@ Global
 		{8686B0DC-A431-4239-836E-ABC90BD69920}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8686B0DC-A431-4239-836E-ABC90BD69920}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8686B0DC-A431-4239-836E-ABC90BD69920}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77B4729A-1899-44D3-92A6-334FF9CA8A65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77B4729A-1899-44D3-92A6-334FF9CA8A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77B4729A-1899-44D3-92A6-334FF9CA8A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77B4729A-1899-44D3-92A6-334FF9CA8A65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

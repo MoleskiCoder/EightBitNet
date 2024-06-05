@@ -25,15 +25,19 @@
 
   <ItemGroup>
     <Compile Remove="M6502.HarteTest\**" />
+    <Compile Remove="M6502.Symbols\**" />
     <Compile Remove="M6502.Test\**" />
     <EmbeddedResource Remove="M6502.HarteTest\**" />
+    <EmbeddedResource Remove="M6502.Symbols\**" />
     <EmbeddedResource Remove="M6502.Test\**" />
     <None Remove="M6502.HarteTest\**" />
+    <None Remove="M6502.Symbols\**" />
     <None Remove="M6502.Test\**" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EightBit\EightBit.csproj" />
+    <ProjectReference Include="M6502.Symbols\M6502.Symbols.csproj" />
   </ItemGroup>
 
 </Project>

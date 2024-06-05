@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\M6502.csproj" />
+    <ProjectReference Include="..\M6502.Symbols\M6502.Symbols.csproj" />
   </ItemGroup>
 
 </Project>
