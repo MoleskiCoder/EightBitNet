@@ -200,8 +200,12 @@
                     return returned;
                 }
 
-                public static string PrefixNamespace(Symbol symbol)
+                public static string PrefixNamespace(Symbol? symbol)
                 {
+                    if (symbol is null)
+                    {
+                        return string.Empty;
+                    }
                     var prefix = BuildNamespace(symbol);
                     var name = symbol.Name;
                     return string.IsNullOrEmpty(prefix) ? name : $"{prefix}.{name}";
@@ -214,9 +218,8 @@
                 public bool TryGetQualifiedLabel(ushort absolute, out string label)
                 {
                     var symbol = this.LookupLabel(absolute);
-                    var available = symbol != null;
-                    label = available ? PrefixNamespace(symbol) : string.Empty;
-                    return available;
+                    label = PrefixNamespace(symbol);
+                    return symbol != null;
                 }
 
                 public string MaybeGetQualifiedLabel(ushort absolute) => this.TryGetQualifiedLabel(absolute, out var label) ? label : string.Empty;
@@ -224,9 +227,8 @@
                 public bool TryGetQualifiedEquate(ushort value, out string name)
                 {
                     var symbol = this.LookupEquate(value);
-                    var available = symbol != null;
-                    name = available ? PrefixNamespace(symbol) : string.Empty;
-                    return available;
+                    name = PrefixNamespace(symbol);
+                    return symbol != null;
                 }
 
                 #endregion
