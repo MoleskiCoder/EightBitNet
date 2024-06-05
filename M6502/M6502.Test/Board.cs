@@ -38,17 +38,6 @@ namespace M6502.Test
             this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
 
             this.profiler = new Profiler(this.CPU, this.disassembler, this.symbols, this.configuration.Profile, this.configuration.Profile);
-            if (this.configuration.Profile)
-            {
-                this.profiler.StartingOutput += this.Profiler_StartingOutput;
-                this.profiler.FinishedOutput += this.Profiler_FinishedOutput;
-                this.profiler.StartingLineOutput += this.Profiler_StartingLineOutput;
-                this.profiler.FinishedLineOutput += this.Profiler_FinishedLineOutput;
-                this.profiler.StartingScopeOutput += this.Profiler_StartingScopeOutput;
-                this.profiler.FinishedScopeOutput += this.Profiler_FinishedScopeOutput;
-                this.profiler.EmitLine += this.Profiler_EmitLine;
-                this.profiler.EmitScope += this.Profiler_EmitScope;
-            }
         }
 
         public M6502 CPU { get; }
@@ -98,6 +87,18 @@ namespace M6502.Test
             {
                 this.CPU.Bus.ReadingByte += this.Bus_ReadingByte;
                 this.CPU.Bus.ReadByte += this.Bus_ReadByte;
+            }
+
+            if (this.configuration.Profile)
+            {
+                this.profiler.StartingOutput += this.Profiler_StartingOutput;
+                this.profiler.FinishedOutput += this.Profiler_FinishedOutput;
+                this.profiler.StartingLineOutput += this.Profiler_StartingLineOutput;
+                this.profiler.FinishedLineOutput += this.Profiler_FinishedLineOutput;
+                this.profiler.StartingScopeOutput += this.Profiler_StartingScopeOutput;
+                this.profiler.FinishedScopeOutput += this.Profiler_FinishedScopeOutput;
+                this.profiler.EmitLine += this.Profiler_EmitLine;
+                this.profiler.EmitScope += this.Profiler_EmitScope;
             }
 
             this.Poke(0x00, 0x4c);

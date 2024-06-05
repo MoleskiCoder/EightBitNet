@@ -296,11 +296,16 @@
 
                 #region Parser driver
 
-                public void Parse(string path)
+                public void Parse(string? path)
                 {
                     if (this.Parsed)
                     {
                         throw new InvalidOperationException("A file has already been parsed.");
+                    }
+
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        return;
                     }
 
                     using var reader = new StreamReader(path);
