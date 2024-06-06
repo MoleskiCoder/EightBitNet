@@ -1,4 +1,7 @@
-﻿namespace EightBit
+﻿#define FAST_SYMBOL_LOOKUP
+#define FAST_SIZE_LOOKUP
+
+namespace EightBit
 {
     namespace Files
     {
@@ -13,12 +16,32 @@
 
                 public string? Type => this.MaybeTakeString("type");
 
+#if FAST_SIZE_LOOKUP
+                public int Size;
+#else
                 public int Size => this.TakeInteger("size");
+#endif
 
                 public Scope? Parent => this.MaybeTakeParentReference();
 
+#if FAST_SYMBOL_LOOKUP
+                private bool _symbolAvailable;
+                private Symbols.Symbol? _symbol;
+                public Symbols.Symbol? Symbol
+                {
+                    get
+                    {
+                        if (!this._symbolAvailable)
+                        {
+                            this._symbol = this.MaybeTakeSymbolReference();
+                            this._symbolAvailable = true;
+                        }
+                        return this._symbol;
+                    }
+                }
+#else
                 public Symbols.Symbol? Symbol => this.MaybeTakeSymbolReference();
-
+#endif
                 public List<Span> Spans => this.TakeSpanReferences();
 
                 public Scope()
@@ -30,6 +53,15 @@
                     _ = this._integer_keys.Add("sym");
                     _ = this._multiple_keys.Add("span");
                 }
+
+#if FAST_SIZE_LOOKUP
+                public override void Parse(Parser parent, Dictionary<string, string> entries)
+                {
+                    base.Parse(parent, entries);
+                    this.Size = this.TakeInteger("size");
+                }
+#endif
+
             }
         }
     }

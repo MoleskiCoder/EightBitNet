@@ -1,4 +1,7 @@
-﻿namespace EightBit
+﻿#define BINARY_SCOPE_SEARCH
+//#define LINEAR_SCOPE_SEARCH
+
+namespace EightBit
 {
     namespace Files
     {
@@ -35,6 +38,9 @@
                 // Value lookup structures
                 public Dictionary<int, List<Symbol>> Addresses { get; } = [];
                 public Dictionary<int, List<Symbol>> Constants { get; } = [];
+
+                // Scope clarification
+                public List<Scope> AddressableScopes { get; } = [];
 
                 #endregion
 
@@ -143,25 +149,83 @@
                     return null;
                 }
 
+                private static Tuple<int, int> AddressRange(Scope scope)
+                {
+                    var symbol = scope.Symbol ?? throw new ArgumentOutOfRangeException(nameof(scope), "Non-addressable scope used");
+                    var start = symbol.Value;
+                    return Tuple.Create(start, start + scope.Size - 1);
+                }
+
+                private static bool AddressContained(int address, int start, int end) => (address >= start) && (address <= end);
+
+                private static bool AddressContained(int address, Tuple<int, int>? range)
+                {
+                    if (range == null)
+                    {
+                        return false;
+                    }
+                    var (start, end) = range;
+                    return AddressContained(address, start, end);
+                }
+
+                private static bool AddressContained(int address, Scope scope) => AddressContained(address, AddressRange(scope));
+
+#if BINARY_SCOPE_SEARCH
+                private int LocateScope(int address)
+                {
+                    var low = 0;
+                    var high = this.AddressableScopes.Count - 1;
+
+                    while (low <= high)
+                    {
+                        var mid = low + (high - low) / 2;
+
+                        var scope = this.AddressableScopes[mid];
+                        var range = AddressRange(scope);
+
+                        if (AddressContained(address, range))
+                        {
+                            return mid;
+                        }
+
+                        var (_, end) = range;
+
+                        // If x greater, ignore left half
+                        if (end < address)
+                        {
+                            low = mid + 1;
+                        }
+                        // If x is smaller, ignore right half
+                        else
+                        {
+                            high = mid - 1;
+                        }
+                    }
+
+                    // If we reach here, then element was not present
+                    return -1;
+                }
+#endif
+
                 public Scope? LookupScope(int address)
                 {
-                    foreach (var scope in this.Scopes)
+#if BINARY_SCOPE_SEARCH
+                    var index = this.LocateScope(address);
+                    return index == -1 ? null : this.AddressableScopes[index];
+#endif
+#if LINEAR_SCOPE_SEARCH
+                    foreach (var scope in this.AddressableScopes)
                     {
-                        var symbol = scope.Symbol;
-                        if (symbol != null)
+                        if (AddressContained(address, scope))
                         {
-                            var symbolAddress = symbol.Value;
-                            var size = scope.Size;
-                            if ((address >= symbolAddress) && (address < symbolAddress + size))
-                            {
-                                return scope;
-                            }
+                            return scope;
                         }
                     }
                     return null;
+#endif
                 }
 
-                #endregion
+#endregion
 
                 #region Scope evaluation
 
@@ -233,7 +297,7 @@
 
                 #endregion
 
-                #endregion
+#endregion
 
                 #region Metadata lookup
 
@@ -330,6 +394,23 @@
                     this.ExtractTypes();
 
                     this.Parsed = true;
+
+                    this.BuildAddressableScopes();
+                }
+
+                private void BuildAddressableScopes()
+                {
+                    if (!this.Parsed)
+                    {
+                        throw new InvalidOperationException("Fully parsed scopes are unavailable");
+                    }
+                    foreach (var scope in this.Scopes)
+                    {
+                        if (scope.Symbol != null)
+                        {
+                            this.AddressableScopes.Add(scope);
+                        }
+                    }
                 }
 
                 private void ParseLine(string[] elements)
