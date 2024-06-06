@@ -1,6 +1,4 @@
-﻿#define FAST_VALUE_LOOKUP
-
-namespace EightBit
+﻿namespace EightBit
 {
     namespace Files
     {
@@ -13,7 +11,7 @@ namespace EightBit
             {
                 public string AddressSize => this.TakeString("addrsize");
 
-                public int Size => this.TakeInteger("size");
+                public int? Size { get; private set; }
 
                 public Symbols.Scope Scope => this.TakeScopeReference();
 
@@ -21,11 +19,7 @@ namespace EightBit
 
                 public List<Line> References => this.TakeLineReferences("ref"); // Guess
 
-#if FAST_VALUE_LOOKUP
-                public int Value;
-#else
-                public int Value => this.TakeInteger("val");
-#endif
+                public int Value { get; private set; }
 
                 public Symbols.Segment Segment => this.TakeSegmentReference();
 
@@ -46,9 +40,10 @@ namespace EightBit
                 public override void Parse(Parser parent, Dictionary<string, string> entries)
                 {
                     base.Parse(parent, entries);
-#if FAST_VALUE_LOOKUP
+
                     this.Value = this.TakeInteger("val");
-#endif
+                    this.Size = this.MaybeTakeInteger("size");
+
                     if (this.Type is "lab")
                     {
                         this._parent?.AddLabel(this);

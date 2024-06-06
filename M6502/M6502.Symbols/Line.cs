@@ -9,12 +9,10 @@
             {
                 public Symbols.File File => this.TakeFileReference();
 
-                public int LineNumber => this.TakeInteger("line");
-
+                public int LineNumber { get; private set; }
                 public Symbols.Type Type => this.TakeTypeReference();
 
-                public int Count => this.TakeInteger("count");
-
+                public int? Count { get; private set; }
                 public List<Span> Spans => this.TakeSpanReferences();
                 
                 public Line()
@@ -24,6 +22,13 @@
                     _ = this._integer_keys.Add("type");
                     _ = this._integer_keys.Add("count");
                     _ = this._multiple_keys.Add("span");
+                }
+
+                public override void Parse(Parser parent, Dictionary<string, string> entries)
+                {
+                    base.Parse(parent, entries);
+                    this.LineNumber = this.TakeInteger("line");
+                    this.Count = this.MaybeTakeInteger("count");
                 }
             }
         }

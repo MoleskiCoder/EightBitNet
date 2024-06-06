@@ -1,6 +1,4 @@
-﻿#define FAST_ID_LOOKUP
-
-namespace EightBit
+﻿namespace EightBit
 {
     namespace Files
     {
@@ -8,21 +6,14 @@ namespace EightBit
         {
             public class IdentifiableSection : Section
             {
-#if FAST_ID_LOOKUP
                 public int ID { get; private set; }
-#else
-                public int ID => this.TakeInteger("id");
-#endif
-
                 protected IdentifiableSection() => _ = this._integer_keys.Add("id");
 
-#if FAST_ID_LOOKUP
                 public override void Parse(Parser parent, Dictionary<string, string> entries)
                 {
                     base.Parse(parent, entries);
                     this.ID = this.TakeInteger("id");
                 }
-#endif
 
                 #region Foreign key constraints
 

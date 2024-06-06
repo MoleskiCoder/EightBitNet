@@ -1,7 +1,4 @@
-﻿#define BINARY_SCOPE_SEARCH
-//#define LINEAR_SCOPE_SEARCH
-
-namespace EightBit
+﻿namespace EightBit
 {
     namespace Files
     {
@@ -170,7 +167,6 @@ namespace EightBit
 
                 private static bool AddressContained(int address, Scope scope) => AddressContained(address, AddressRange(scope));
 
-#if BINARY_SCOPE_SEARCH
                 private int LocateScope(int address)
                 {
                     var low = 0;
@@ -205,27 +201,14 @@ namespace EightBit
                     // If we reach here, then element was not present
                     return -1;
                 }
-#endif
 
                 public Scope? LookupScope(int address)
                 {
-#if BINARY_SCOPE_SEARCH
                     var index = this.LocateScope(address);
                     return index == -1 ? null : this.AddressableScopes[index];
-#endif
-#if LINEAR_SCOPE_SEARCH
-                    foreach (var scope in this.AddressableScopes)
-                    {
-                        if (AddressContained(address, scope))
-                        {
-                            return scope;
-                        }
-                    }
-                    return null;
-#endif
                 }
 
-#endregion
+                #endregion
 
                 #region Scope evaluation
 
@@ -253,7 +236,7 @@ namespace EightBit
                     {
                         var scope = scopes[i];
                         var name = scope.Name;
-                        Debug.Assert(name.Length > 0);
+                        Debug.Assert(!string.IsNullOrEmpty(name));
                         returned += name;
                         var last = i == 0;
                         if (!last)
@@ -272,6 +255,7 @@ namespace EightBit
                     }
                     var prefix = BuildNamespace(symbol);
                     var name = symbol.Name;
+                    Debug.Assert(!string.IsNullOrEmpty(name));
                     return string.IsNullOrEmpty(prefix) ? name : $"{prefix}.{name}";
                 }
 
@@ -297,7 +281,7 @@ namespace EightBit
 
                 #endregion
 
-#endregion
+                #endregion
 
                 #region Metadata lookup
 
