@@ -27,7 +27,7 @@
                     _ = this._enumeration_keys.Add("type");
                     _ = this._integer_keys.Add("size");
                     _ = this._integer_keys.Add("parent");
-                    _ = this._multiple_keys.Add("sym");
+                    _ = this._integer_keys.Add("sym");
                     _ = this._multiple_keys.Add("span");
                 }
             }

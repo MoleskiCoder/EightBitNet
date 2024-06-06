@@ -227,7 +227,7 @@ namespace M6502.Test
 
         private void Profiler_EmitScope(object? sender, ProfileScopeEventArgs e)
         {
-            var proportion = (double)e.Cycles / this.CPU.Cycles;
+            var proportion = (double)e.Cycles / this.profiler.TotalCycleCount;
             Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, e.Scope));
         }
 
