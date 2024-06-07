@@ -4,6 +4,7 @@
     {
         namespace Symbols
         {
+            using System;
             using System.Diagnostics;
 
             public sealed class Parser
@@ -146,26 +147,15 @@
                     return null;
                 }
 
-                private static Tuple<int, int> AddressRange(Scope scope)
+                private static void AddressRange(Scope scope, out int start, out int end)
                 {
-                    var symbol = scope.Symbol ?? throw new ArgumentOutOfRangeException(nameof(scope), "Non-addressable scope used");
-                    var start = symbol.Value;
-                    return Tuple.Create(start, start + scope.Size - 1);
+                    var symbol = scope.Symbol;
+                    Debug.Assert(symbol != null);
+                    start = symbol.Value;
+                    end = start + scope.Size - 1;
                 }
 
                 private static bool AddressContained(int address, int start, int end) => (address >= start) && (address <= end);
-
-                private static bool AddressContained(int address, Tuple<int, int>? range)
-                {
-                    if (range == null)
-                    {
-                        return false;
-                    }
-                    var (start, end) = range;
-                    return AddressContained(address, start, end);
-                }
-
-                private static bool AddressContained(int address, Scope scope) => AddressContained(address, AddressRange(scope));
 
                 private int LocateScope(int address)
                 {
@@ -177,28 +167,26 @@
                         var mid = low + (high - low) / 2;
 
                         var scope = this.AddressableScopes[mid];
-                        var range = AddressRange(scope);
+                        AddressRange(scope, out var start, out var end);
 
-                        if (AddressContained(address, range))
+                        if (AddressContained(address, start, end))
                         {
                             return mid;
                         }
 
-                        var (_, end) = range;
-
-                        // If x greater, ignore left half
+                        // If referenced scope greater, ignore left half
                         if (end < address)
                         {
                             low = mid + 1;
                         }
-                        // If x is smaller, ignore right half
+                        // If referenced scope is smaller, ignore right half
                         else
                         {
                             high = mid - 1;
                         }
                     }
 
-                    // If we reach here, then element was not present
+                    // If we reach here, then scope was not present
                     return -1;
                 }
 
