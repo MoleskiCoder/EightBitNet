@@ -1,5 +1,7 @@
 ﻿namespace EightBit
 {
+    using System.Diagnostics;
+
     public sealed class Profiler
     {
         private readonly int[] instructionCounts;
@@ -15,7 +17,7 @@
         private int priorCycleCount;
         private ushort executingAddress;
 
-        public Profiler(M6502 processor, Disassembler disassembler, Files.Symbols.Parser symbols, bool countInstructions, bool profileAddresses)
+        public Profiler(M6502 processor, Disassembler disassembler, Files.Symbols.Parser symbols, bool activate)
         {
             ArgumentNullException.ThrowIfNull(processor);
             ArgumentNullException.ThrowIfNull(disassembler);
@@ -25,20 +27,10 @@
             this.disassembler = disassembler;
             this.symbols = symbols;
 
-            if (profileAddresses || countInstructions)
+            if (activate)
             {
-                this.processor.ExecutingInstruction += this.Processor_ExecutingInstruction_Prequel;
-                this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction_Sequal;
-            }
-            if (profileAddresses)
-            {
-                this.processor.ExecutingInstruction += this.Processor_ExecutingInstruction_ProfileAddresses;
-                this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction_ProfileAddresses;
-            }
-
-            if (countInstructions)
-            {
-                this.processor.ExecutingInstruction += this.Processor_ExecutingInstruction_CountInstructions;
+                this.processor.ExecutingInstruction += this.Processor_ExecutingInstruction;
+                this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction;
             }
 
             this.instructionCounts = new int[0x100];
@@ -111,8 +103,11 @@
                 foreach (var scopeCycle in this.scopeCycles)
                 {
                     var name = scopeCycle.Key;
+                    Debug.Assert(name != null);
                     var cycles = scopeCycle.Value;
-                    var count = this.addressCounts[this.symbols.LookupLabel(name).Value];
+                    var symbol = this.symbols.LookupLabel(name);
+                    Debug.Assert(symbol != null);
+                    var count = this.addressCounts[symbol.Value];
                     this.OnEmitScope(name, cycles, count);
                 }
             }
@@ -122,43 +117,34 @@
             }
         }
 
-        private void Processor_ExecutingInstruction_Prequel(object? sender, EventArgs e)
+        private void Processor_ExecutingInstruction(object? sender, EventArgs e)
         {
+            // Everything needs this
             this.executingAddress = this.processor.PC.Word;
-        }
 
-        private void Processor_ExecutedInstruction_Sequal(object? sender, EventArgs e)
-        {
-            this.TotalCycleCount += this.processor.Cycles;
-        }
-
-        private void Processor_ExecutingInstruction_ProfileAddresses(object? sender, EventArgs e)
-        {
             this.priorCycleCount = this.processor.Cycles;
             ++this.addressCounts[this.executingAddress];
-        }
-
-        private void Processor_ExecutingInstruction_CountInstructions(object? sender, EventArgs e)
-        {
             ++this.instructionCounts[this.processor.Bus.Peek(this.executingAddress)];
         }
 
-        private void Processor_ExecutedInstruction_ProfileAddresses(object? sender, EventArgs e)
+        private void Processor_ExecutedInstruction(object? sender, EventArgs e)
         {
+            this.TotalCycleCount += this.processor.Cycles;
+
             var address = this.executingAddress;
             var cycles = this.processor.Cycles - this.priorCycleCount;
 
             this.addressProfiles[address] += cycles;
 
-            var addressScope = this.symbols.LookupScope(address);
-            if (addressScope != null)
+            var scope = this.symbols.LookupScope(address);
+            if (scope != null)
             {
-                if (!this.scopeCycles.ContainsKey(addressScope.Name))
+                var name = scope.Name;
+                Debug.Assert(name != null);
+                if (!this.scopeCycles.TryAdd(name, 0))
                 {
-                    this.scopeCycles[addressScope.Name] = 0;
+                    this.scopeCycles[name] += cycles;
                 }
-
-                this.scopeCycles[addressScope.Name] += cycles;
             }
         }
 

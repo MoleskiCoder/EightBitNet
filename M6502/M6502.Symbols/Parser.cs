@@ -147,16 +147,6 @@
                     return null;
                 }
 
-                private static void AddressRange(Scope scope, out int start, out int end)
-                {
-                    var symbol = scope.Symbol;
-                    Debug.Assert(symbol != null);
-                    start = symbol.Value;
-                    end = start + scope.Size - 1;
-                }
-
-                private static bool AddressContained(int address, int start, int end) => (address >= start) && (address <= end);
-
                 private int LocateScope(int address)
                 {
                     var low = 0;
@@ -167,22 +157,26 @@
                         var mid = low + (high - low) / 2;
 
                         var scope = this.AddressableScopes[mid];
-                        AddressRange(scope, out var start, out var end);
 
-                        if (AddressContained(address, start, end))
-                        {
-                            return mid;
-                        }
+                        var symbol = scope.Symbol;
+                        Debug.Assert(symbol != null);
+                        var start = symbol.Value;
 
-                        // If referenced scope greater, ignore left half
-                        if (end < address)
-                        {
-                            low = mid + 1;
-                        }
-                        // If referenced scope is smaller, ignore right half
-                        else
+                        if (address < start)
                         {
                             high = mid - 1;
+                        }
+                        else
+                        {
+                            var end = start + scope.Size;
+                            if (address >= end)
+                            {
+                                low = mid + 1;
+                            }
+                            else
+                            {
+                                return mid;
+                            }
                         }
                     }
 

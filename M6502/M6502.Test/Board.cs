@@ -37,7 +37,7 @@ namespace M6502.Test
 
             this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
 
-            this.profiler = new Profiler(this.CPU, this.disassembler, this.symbols, this.configuration.Profile, this.configuration.Profile);
+            this.profiler = new Profiler(this.CPU, this.disassembler, this.symbols, this.configuration.Profile);
         }
 
         public M6502 CPU { get; }
