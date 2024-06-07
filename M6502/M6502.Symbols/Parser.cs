@@ -44,6 +44,8 @@
 
                 #region Lookups
 
+                public static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T> items) where T : NamedSection => from item in items where item.Name == name select item;
+
                 #region Label lookup
 
                 public void AddLabel(Symbol symbol)
@@ -77,22 +79,11 @@
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
-                public List<Symbol> LookupLabels(string name)
-                {
-                    var returned = new List<Symbol>();
-                    foreach (var label in this.Labels)
-                    {
-                        if (label.Name == name)
-                        {
-                            returned.Add(label);
-                        }
-                    }
-                    return returned;
-                }
+                public IEnumerable<Symbol> LookupLabels(string name) => SelectNameMatching(name, this.Labels);
 
                 public Symbol? LookupLabel(string name)
                 {
-                    var labels = this.LookupLabels(name);
+                    var labels = this.LookupLabels(name).ToList();
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
@@ -135,16 +126,12 @@
 
                 #region Scope lookup
 
+                public IEnumerable<Scope> LookupScopes(string name) => SelectNameMatching(name, this.Scopes);
+
                 public Scope? LookupScope(string name)
                 {
-                    foreach (var scope in this.Scopes)
-                    {
-                        if (scope.Name == name)
-                        {
-                            return scope;
-                        }
-                    }
-                    return null;
+                    var scopes = this.LookupScopes(name).ToList();
+                    return scopes.Count > 0 ? scopes[0] : null;
                 }
 
                 private int LocateScope(int address)
@@ -370,13 +357,8 @@
                     {
                         throw new InvalidOperationException("Fully parsed scopes are unavailable");
                     }
-                    foreach (var scope in this.Scopes)
-                    {
-                        if (scope.Symbol != null)
-                        {
-                            this.AddressableScopes.Add(scope);
-                        }
-                    }
+                    var scopes = from scope in this.Scopes where scope.Symbol != null select scope;
+                    this.AddressableScopes.AddRange(scopes);
                 }
 
                 private void ParseLine(string[] elements)
