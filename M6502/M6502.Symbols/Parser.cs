@@ -40,6 +40,9 @@
                 // Scope clarification
                 public List<Scope> AddressableScopes { get; } = [];
 
+                // Scope cache for precomputed ranges
+                private readonly int?[] _scopeAddressCache = new int?[0x10000];
+
                 #endregion
 
                 #region Lookups
@@ -141,7 +144,7 @@
 
                     while (low <= high)
                     {
-                        var mid = low + (high - low) / 2;
+                        var mid = low + ((high - low) / 2);
 
                         var scope = this.AddressableScopes[mid];
 
@@ -173,8 +176,8 @@
 
                 public Scope? LookupScope(int address)
                 {
-                    var index = this.LocateScope(address);
-                    return index == -1 ? null : this.AddressableScopes[index];
+                    var index = _scopeAddressCache[address] ?? (_scopeAddressCache[address] = this.LocateScope(address));
+                    return index == -1 ? null : this.AddressableScopes[index.Value];
                 }
 
                 #endregion
