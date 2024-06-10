@@ -537,10 +537,6 @@ namespace EightBit
             return this.symbols.TryGetQualifiedEquate(value, out name);
         }
 
-        private string ConvertConstantWord(ushort address) => this.ConvertConstant(this.GetWord(address));
-
-        private string ConvertConstant(ushort constant) => this.TryGetConstant(constant, out var label) ? label : this.Dump_DByte(constant);
-
         private string ConvertConstantByte(ushort address) => this.ConvertConstant(this.GetByte(address));
 
         private string ConvertConstant(byte constant) => this.TryGetConstant(constant, out var label) ? label : "$" + DumpByteValue(constant);
@@ -553,11 +549,9 @@ namespace EightBit
 
         private ushort GetWord(ushort absolute) => this.processor.PeekWord(absolute).Word;
 
-        private string Dump_Byte(ushort absolute) => Disassembler.DumpByteValue(this.GetByte(absolute));
+        private string Dump_Byte(ushort absolute) => DumpByteValue(this.GetByte(absolute));
 
         private string Dump_DByte(ushort absolute) => this.Dump_Byte(absolute) + " " + this.Dump_Byte(++absolute);
-
-        private string Dump_Word(ushort absolute) => Disassembler.DumpWordValue(this.GetWord(absolute));
 
         private string Disassemble_Implied(string instruction) => $"{Pad()}\t{this.MaybeGetCodeLabel()}" + instruction;
 

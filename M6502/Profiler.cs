@@ -80,9 +80,9 @@
                 {
                     // If there are any cycles associated
                     var cycles = this.addressProfiles[i];
-                    var count = this.addressCounts[i];
                     if (cycles > 0)
                     {
+                        var count = this.addressCounts[i];
                         Debug.Assert(count > 0);
                         var address = (ushort)i;
 
