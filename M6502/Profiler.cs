@@ -14,7 +14,6 @@
         private readonly Disassembler disassembler;
         private readonly Files.Symbols.Parser symbols;
 
-        private int priorCycleCount;
         private ushort executingAddress;
 
         public Profiler(M6502 processor, Disassembler disassembler, Files.Symbols.Parser symbols, bool activate)
@@ -29,7 +28,7 @@
 
             if (activate)
             {
-                this.processor.ExecutingInstruction += this.Processor_ExecutingInstruction;
+                this.processor.RaisingSYNC += this.Processor_RaisingSYNC;
                 this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction;
             }
 
@@ -39,7 +38,6 @@
 
             this.scopeCycles = [];
         }
-
 
         public event EventHandler<EventArgs>? StartingOutput;
 
@@ -82,13 +80,15 @@
                 {
                     // If there are any cycles associated
                     var cycles = this.addressProfiles[i];
+                    var count = this.addressCounts[i];
                     if (cycles > 0)
                     {
+                        Debug.Assert(count > 0);
                         var address = (ushort)i;
 
                         // Dump a profile/disassembly line
                         var source = this.disassembler.Disassemble(address);
-                        this.OnEmitLine(source, cycles);
+                        this.OnEmitLine(source, cycles, count);
                     }
                 }
             }
@@ -117,33 +117,29 @@
             }
         }
 
-        private void Processor_ExecutingInstruction(object? sender, EventArgs e)
+        private void Processor_RaisingSYNC(object? sender, EventArgs e)
         {
             // Everything needs this
-            this.executingAddress = this.processor.PC.Word;
+            this.executingAddress = this.processor.Bus.Address.Word;
 
-            this.priorCycleCount = this.processor.Cycles;
             ++this.addressCounts[this.executingAddress];
-            ++this.instructionCounts[this.processor.Bus.Peek(this.executingAddress)];
+            ++this.instructionCounts[this.processor.Bus.Data];
         }
 
         private void Processor_ExecutedInstruction(object? sender, EventArgs e)
         {
             this.TotalCycleCount += this.processor.Cycles;
 
-            var address = this.executingAddress;
-            var cycles = this.processor.Cycles - this.priorCycleCount;
+            this.addressProfiles[this.executingAddress] += this.processor.Cycles;
 
-            this.addressProfiles[address] += cycles;
-
-            var scope = this.symbols.LookupScope(address);
+            var scope = this.symbols.LookupScope(this.executingAddress);
             if (scope != null)
             {
                 var name = scope.Name;
                 Debug.Assert(name != null);
                 if (!this.scopeCycles.TryAdd(name, 0))
                 {
-                    this.scopeCycles[name] += cycles;
+                    this.scopeCycles[name] += this.processor.Cycles;
                 }
             }
         }
@@ -178,9 +174,9 @@
             this.FinishedScopeOutput?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnEmitLine(string source, int cycles)
+        private void OnEmitLine(string source, int cycles, int count)
         {
-            this.EmitLine?.Invoke(this, new ProfileLineEventArgs(source, cycles));
+            this.EmitLine?.Invoke(this, new ProfileLineEventArgs(source, cycles, count));
         }
 
         private void OnEmitScope(string scope, int cycles, int count)
