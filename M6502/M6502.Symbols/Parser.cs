@@ -300,6 +300,8 @@
                     {
                         throw new InvalidOperationException($"Debugging section: '{key}' is unavailable");
                     }
+                    Debug.Assert(into.Count == 0);
+                    into.Capacity = parsed.Count;
                     foreach (var element in parsed)
                     {
                         var id = element.Key;

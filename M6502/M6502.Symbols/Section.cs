@@ -89,8 +89,8 @@
                 protected static List<string> ExtractCompoundString(string value) => new(value.Split('+'));
                 protected static List<int> ExtractCompoundInteger(string value)
                 {
-                    var returned = new List<int>();
                     var elements = ExtractCompoundString(value);
+                    var returned = new List<int>(elements.Count);
                     foreach (var element in elements)
                     {
                         returned.Add(ExtractInteger(element));

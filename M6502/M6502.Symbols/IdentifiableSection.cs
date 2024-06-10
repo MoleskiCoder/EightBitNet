@@ -38,16 +38,17 @@
                 protected List<T> TakeReferences<T>(string key, List<T>? from) where T : IdentifiableSection
                 {
                     ArgumentNullException.ThrowIfNull(from);
-                    List<T> returned = [];
                     var ids = this.MaybeTakeMultiple(key);
                     if (ids != null)
                     {
+                        var returned = new List<T>(ids.Count);
                         foreach (var id in ids)
                         {
                             returned.Add(from[id]);
                         }
+                        return returned;
                     }
-                    return returned;
+                    return [];
                 }
 
                 #endregion
