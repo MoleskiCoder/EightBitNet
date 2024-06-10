@@ -44,7 +44,7 @@ namespace EightBit
             output.Append(' ');
 
             var next = this.bus.Peek((ushort)(current + 1));
-            var relative = (ushort)(this.processor.PC.Word + 2 + (sbyte)next);
+            var relative = (ushort)(current + 2 + (sbyte)next);
 
             var aaa = (cell & 0b11100000) >> 5;
             var bbb = (cell & 0b00011100) >> 2;
