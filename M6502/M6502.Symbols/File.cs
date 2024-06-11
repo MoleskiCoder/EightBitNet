@@ -19,7 +19,7 @@
                     _ = this._integer_keys.Add("mod");
                 }
 
-                public override void Parse(Parser parent, Dictionary<string, string> entries)
+                public override void Parse(Parser parent, IDictionary<string, string> entries)
                 {
                     base.Parse(parent, entries);
                     this.Size = this.TakeInteger("size");

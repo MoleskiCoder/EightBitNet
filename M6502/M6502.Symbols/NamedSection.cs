@@ -10,7 +10,7 @@
 
                 protected NamedSection() => _ = this._string_keys.Add("name");
 
-                public override void Parse(Parser parent, Dictionary<string, string> entries)
+                public override void Parse(Parser parent, IDictionary<string, string> entries)
                 {
                     base.Parse(parent, entries);
                     this.Name = this.TakeString("name");

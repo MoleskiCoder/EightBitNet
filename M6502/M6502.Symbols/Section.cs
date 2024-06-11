@@ -23,7 +23,7 @@
                 protected readonly HashSet<string> _hex_long_keys = [];
                 protected readonly HashSet<string> _multiple_keys = [];
 
-                public virtual void Parse(Parser parent, Dictionary<string, string> entries)
+                public virtual void Parse(Parser parent, IDictionary<string, string> entries)
                 {
                     this._parent = parent;
                     foreach (var entry in entries)
