@@ -5,6 +5,7 @@
         namespace Symbols
         {
             using System;
+            using System.Collections.Frozen;
             using System.Diagnostics;
 
             public sealed class Parser
@@ -15,7 +16,8 @@
 
                 // Section -> Unique ID list of dictionary entries
                 // Being sorted allows us to verify IDs as they arrive
-                private readonly Dictionary<string, SortedDictionary<int, Dictionary<string, string>>> _parsed = [];
+                private readonly Dictionary<string, SortedDictionary<int, FrozenDictionary<string, string>>> _parsed_intermediate = [];
+                private FrozenDictionary<string, FrozenDictionary<int, FrozenDictionary<string, string>>>? _parsed;
 
                 private Version? _version;
                 private Information? _information;
@@ -47,7 +49,7 @@
 
                 #region Lookups
 
-                public static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T> items) where T : NamedSection => from item in items where item.Name == name select item;
+                private static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T> items) where T : NamedSection => from item in items where item.Name == name select item;
 
                 #region Label lookup
 
@@ -74,7 +76,7 @@
                     }
                 }
 
-                public List<Symbol> LookupLabels(int address) => this.Addresses.TryGetValue(address, out var symbols) ? symbols : [];
+                private List<Symbol> LookupLabels(int address) => this.Addresses.TryGetValue(address, out var symbols) ? symbols : [];
 
                 public Symbol? LookupLabel(int address)
                 {
@@ -82,7 +84,7 @@
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
-                public IEnumerable<Symbol> LookupLabels(string name) => SelectNameMatching(name, this.Labels);
+                private IEnumerable<Symbol> LookupLabels(string name) => SelectNameMatching(name, this.Labels);
 
                 public Symbol? LookupLabel(string name)
                 {
@@ -117,7 +119,7 @@
                     }
                 }
 
-                public List<Symbol> LookupEquates(int constant) => this.Constants.TryGetValue(constant, out var symbols) ? symbols : [];
+                private List<Symbol> LookupEquates(int constant) => this.Constants.TryGetValue(constant, out var symbols) ? symbols : [];
 
                 public Symbol? LookupEquate(int constant)
                 {
@@ -128,14 +130,6 @@
                 #endregion
 
                 #region Scope lookup
-
-                public IEnumerable<Scope> LookupScopes(string name) => SelectNameMatching(name, this.Scopes);
-
-                public Scope? LookupScope(string name)
-                {
-                    var scopes = this.LookupScopes(name).ToList();
-                    return scopes.Count > 0 ? scopes[0] : null;
-                }
 
                 private int LocateScope(int address)
                 {
@@ -184,7 +178,7 @@
 
                 #region Scope evaluation
 
-                public static List<Scope> EvaluateScope(Scope start)
+                private static List<Scope> EvaluateScope(Scope start)
                 {
                     var returned = new List<Scope>();
                     for (var current = start; current.Parent != null; current = current.Parent)
@@ -194,13 +188,13 @@
                     return returned;
                 }
 
-                public static List<Scope> EvaluateScope(Symbol symbol) => EvaluateScope(symbol.Scope);
+                private static List<Scope> EvaluateScope(Symbol symbol) => EvaluateScope(symbol.Scope);
 
                 #endregion
 
                 #region Namespace evaluation from scope
 
-                public static string BuildNamespace(Symbol symbol)
+                private static string BuildNamespace(Symbol symbol)
                 {
                     var returned = string.Empty;
                     var scopes = EvaluateScope(symbol);
@@ -219,7 +213,7 @@
                     return returned;
                 }
 
-                public static string PrefixNamespace(Symbol? symbol)
+                private static string PrefixNamespace(Symbol? symbol)
                 {
                     if (symbol is null)
                     {
@@ -296,10 +290,16 @@
 
                 private void Extract<T>(string key, List<T> into) where T : IdentifiableSection, new()
                 {
+                    if (this._parsed == null)
+                    {
+                        throw new InvalidOperationException("Parsed dictionary has not been frozen");
+                    }
+
                     if (!this._parsed.TryGetValue(key, out var parsed))
                     {
                         throw new InvalidOperationException($"Debugging section: '{key}' is unavailable");
                     }
+
                     Debug.Assert(into.Count == 0);
                     into.Capacity = parsed.Count;
                     foreach (var element in parsed)
@@ -342,6 +342,8 @@
                         this.ParseLine(line.Split(' ', '\t'));
                     }
 
+                    this.FreezeParsedData();
+
                     this.ExtractFiles();
                     this.ExtractLines();
                     this.ExtractModules();
@@ -354,6 +356,17 @@
                     this.Parsed = true;
 
                     this.BuildAddressableScopes();
+                }
+
+                private void FreezeParsedData()
+                {
+                    var intermediateSections = new Dictionary<string, FrozenDictionary<int, FrozenDictionary<string, string>>>(this._parsed_intermediate.Count);
+                    foreach (var (name, entries) in this._parsed_intermediate)
+                    {
+                        intermediateSections.Add(name, FrozenDictionary.ToFrozenDictionary(entries));
+                    }
+                    this._parsed = FrozenDictionary.ToFrozenDictionary(intermediateSections);
+                    this._parsed_intermediate.Clear();
                 }
 
                 private void BuildAddressableScopes()
@@ -395,10 +408,10 @@
 
                 private void Parse(string key, string[] parts)
                 {
-                    if (!this._parsed.TryGetValue(key, out var section))
+                    if (!this._parsed_intermediate.TryGetValue(key, out var section))
                     {
-                        this._parsed[key] = [];
-                        section = this._parsed[key];
+                        this._parsed_intermediate[key] = [];
+                        section = this._parsed_intermediate[key];
                     }
 
                     var dictionary = BuildDictionary(parts);
@@ -427,9 +440,9 @@
                     section.Add(identifier, dictionary);
                 }
 
-                private static Dictionary<string, string> BuildDictionary(string[] parts)
+                private static FrozenDictionary<string, string> BuildDictionary(string[] parts)
                 {
-                    var dictionary = new Dictionary<string, string>();
+                    var dictionary = new Dictionary<string, string>(parts.Length);
                     foreach (var part in parts)
                     {
                         var definition = part.Split('=');
@@ -443,7 +456,7 @@
                         dictionary[key] = value;
                     }
 
-                    return dictionary;
+                    return FrozenDictionary.ToFrozenDictionary(dictionary);
                 }
 
                 #endregion
