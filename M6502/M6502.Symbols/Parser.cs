@@ -302,11 +302,9 @@
 
                     Debug.Assert(into.Count == 0);
                     into.Capacity = parsed.Count;
-                    foreach (var element in parsed)
+                    foreach (var (id, information) in parsed)
                     {
-                        var id = element.Key;
                         Debug.Assert(into.Count == id);
-                        var information = element.Value;
                         var entry = new T();
                         entry.Parse(this, information);
                         into.Add(entry);

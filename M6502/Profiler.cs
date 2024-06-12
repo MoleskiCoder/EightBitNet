@@ -4,11 +4,11 @@
 
     public sealed class Profiler
     {
-        private readonly int[] instructionCounts;
-        private readonly int[] addressProfiles;
-        private readonly int[] addressCounts;
+        private readonly int[] instructionCounts = new int[0x100];
+        private readonly int[] addressProfiles = new int[0x10000];
+        private readonly int[] addressCounts = new int[0x10000];
 
-        private readonly Dictionary<string, int> scopeCycles;
+        private readonly Dictionary<string, int> scopeCycles = [];
 
         private readonly M6502 processor;
         private readonly Disassembler disassembler;
@@ -31,12 +31,6 @@
                 this.processor.RaisingSYNC += this.Processor_RaisingSYNC;
                 this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction;
             }
-
-            this.instructionCounts = new int[0x100];
-            this.addressProfiles = new int[0x10000];
-            this.addressCounts = new int[0x10000];
-
-            this.scopeCycles = [];
         }
 
         public event EventHandler<EventArgs>? StartingOutput;
@@ -100,11 +94,9 @@
             this.OnStartingScopeOutput();
             try
             {
-                foreach (var scopeCycle in this.scopeCycles)
+                foreach (var (name, cycles) in this.scopeCycles)
                 {
-                    var name = scopeCycle.Key;
                     Debug.Assert(name != null);
-                    var cycles = scopeCycle.Value;
                     var symbol = this.symbols.LookupLabel(name);
                     Debug.Assert(symbol != null);
                     var count = this.addressCounts[symbol.Value];

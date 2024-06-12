@@ -132,10 +132,8 @@ namespace EightBit
         protected void LoadHexFile(string path)
         {
             using var file = new IntelHexFile(path);
-            foreach (var chunk in file.Parse())
+            foreach (var (address, content) in file.Parse())
             {
-                var address = chunk.Item1;
-                var content = chunk.Item2;
                 var mapped = this.Mapping(address);
                 var offset = address - mapped.Begin;
                 mapped.Memory.Load(content, offset);
