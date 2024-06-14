@@ -342,6 +342,11 @@
 
                     this.FreezeParsedData();
 
+                    // Intermediate data no longer needed
+                    // Only "frozen" parsed data is needed.
+#if DEBUG
+                    this._parsed_intermediate.Clear();
+#endif
                     this.ExtractFiles();
                     this.ExtractLines();
                     this.ExtractModules();
@@ -351,8 +356,15 @@
                     this.ExtractSymbols();
                     this.ExtractTypes();
 
+                    // Frozen parsed data is no longer needed
+#if DEBUG
+                    this._parsed = null;
+#endif
+
+                    // We are now mostly parsed
                     this.Parsed = true;
 
+                    // Oh, except for marking addressable scopes
                     this.BuildAddressableScopes();
                 }
 
@@ -364,7 +376,6 @@
                         intermediateSections.Add(name, FrozenDictionary.ToFrozenDictionary(entries));
                     }
                     this._parsed = FrozenDictionary.ToFrozenDictionary(intermediateSections);
-                    this._parsed_intermediate.Clear();
                 }
 
                 private void BuildAddressableScopes()
@@ -457,7 +468,7 @@
                     return FrozenDictionary.ToFrozenDictionary(dictionary);
                 }
 
-                #endregion
+#endregion
             }
         }
     }
