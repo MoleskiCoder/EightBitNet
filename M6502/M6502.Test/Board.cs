@@ -81,12 +81,12 @@ namespace M6502.Test
 
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
 
-            this.CPU.Bus.WrittenByte += this.Bus_WrittenByte;
+            this.WrittenByte += this.Bus_WrittenByte;
 
             if (this.configuration.AllowKeyRead)
             {
-                this.CPU.Bus.ReadingByte += this.Bus_ReadingByte;
-                this.CPU.Bus.ReadByte += this.Bus_ReadByte;
+                this.ReadingByte += this.Bus_ReadingByte;
+                this.ReadByte += this.Bus_ReadByte;
             }
 
             if (this.configuration.Profile)
@@ -109,13 +109,13 @@ namespace M6502.Test
 
         private void Bus_ReadingByte(object? sender, EventArgs e)
         {
-            var address = this.CPU.Bus.Address;
+            var address = this.Address;
             if (address == this.configuration.InputAddress)
             {
                 var ready = this.keyAvailable && !this.keyHandled;
-                if (ready && (this.CPU.Bus.Peek(address) == 0))
+                if (ready && (this.Peek(address) == 0))
                 {
-                    this.CPU.Bus.Poke(address, (byte)this.key);
+                    this.Poke(address, (byte)this.key);
                     this.keyHandled = true;
                 }
             }
@@ -123,7 +123,7 @@ namespace M6502.Test
 
         private void Bus_ReadByte(object? sender, EventArgs e)
         {
-            var address = this.CPU.Bus.Address;
+            var address = this.Address;
             if (address == this.configuration.InputAddress)
             {
                 if (this.configuration.BreakOnKeyRead)
@@ -134,7 +134,7 @@ namespace M6502.Test
                 {
                     if (this.keyHandled)
                     {
-                        this.CPU.Bus.Poke(address, 0);
+                        this.Poke(address, 0);
                         this.keyAvailable = false;
                     }
                 }
@@ -143,9 +143,9 @@ namespace M6502.Test
 
         private void Bus_WrittenByte(object? sender, EventArgs e)
         {
-            if (this.CPU.Bus.Address == this.configuration.OutputAddress)
+            if (this.Address == this.configuration.OutputAddress)
             {
-                var contents = this.CPU.Bus.Peek(this.CPU.Bus.Address);
+                var contents = this.Peek(this.Address);
                 Console.Out.Write((char)contents);
             }
         }
@@ -161,9 +161,8 @@ namespace M6502.Test
             {
                 this.LowerPOWER();
                 var test = this.Peek(0x0200);
-                System.Console.Out.WriteLine();
-                System.Console.Out.Write("** Test=");
-                System.Console.Out.WriteLine(Disassembler.DumpByteValue(test));
+                Console.Out.WriteLine();
+                Console.Out.WriteLine($"** Test={Disassembler.DumpByteValue(test)}");
             }
         }
 
@@ -196,30 +195,12 @@ namespace M6502.Test
 
             var output = new StringBuilder();
 
-            output.Append("PC=");
-            output.Append(Disassembler.DumpWordValue(address));
-            output.Append(":");
-
-            output.Append("P=");
-            output.Append(Disassembler.DumpFlags(this.CPU.P));
-            output.Append(", ");
-
-            output.Append("A=");
-            output.Append(Disassembler.DumpByteValue(this.CPU.A));
-            output.Append(", ");
-
-            output.Append("X=");
-            output.Append(Disassembler.DumpByteValue(this.CPU.X));
-            output.Append(", ");
-
-            output.Append("Y=");
-            output.Append(Disassembler.DumpByteValue(this.CPU.Y));
-            output.Append(", ");
-
-            output.Append("S=");
-            output.Append(Disassembler.DumpByteValue(this.CPU.S));
-            output.Append("\t");
-
+            output.Append($"PC={Disassembler.DumpWordValue(address)}:");
+            output.Append($"P={Disassembler.DumpFlags(this.CPU.P)}, ");
+            output.Append($"A={Disassembler.DumpByteValue(this.CPU.A)}, ");
+            output.Append($"X={Disassembler.DumpByteValue(this.CPU.X)}, ");
+            output.Append($"Y={Disassembler.DumpByteValue(this.CPU.Y)}, ");
+            output.Append($"S={Disassembler.DumpByteValue(this.CPU.S)}\t");
             output.Append(this.disassembler.Disassemble(address));
 
             Console.Out.WriteLine(output.ToString());
