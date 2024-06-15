@@ -759,11 +759,24 @@ namespace EightBit
 
         #region Address page fixup
 
+        private byte unfixedPage;
         private byte fixedPage;
+
+        public byte UnfixedPage
+        {
+            get => this.unfixedPage;
+            private set => this.unfixedPage = value;
+        }
+
+        public byte FixedPage
+        {
+            get => this.fixedPage;
+            private set => this.fixedPage = value;
+        }
 
         private void MaybeFixup()
         {
-            if (this.Bus.Address.High != this.fixedPage)
+            if (this.Bus.Address.High != this.FixedPage)
             {
                 this.Fixup();
             }
@@ -772,7 +785,8 @@ namespace EightBit
         private void Fixup()
         {
             this.MemoryRead();
-            this.Bus.Address.High = this.fixedPage;
+            this.UnfixedPage = this.Bus.Address.High;
+            this.Bus.Address.High = this.FixedPage;
         }
 
         private void MaybeFixupR()
@@ -799,7 +813,7 @@ namespace EightBit
         private void NoteFixedAddress(ushort address)
         {
             this.intermediate.Word = address;
-            this.fixedPage = this.intermediate.High;
+            this.FixedPage = this.intermediate.High;
             this.Bus.Address.Low = this.intermediate.Low;
         }
 
