@@ -70,6 +70,8 @@
                     throw new InvalidOperationException("test cycles cannot be null");
                 }
 
+                this.Messages.Add($"Unfixed page: {cpu.UnfixedPage:X2}, fixed page is: {cpu.FixedPage:X2}");
+
                 this.Messages.Add($"Stepped cycles: {this.Cycles}, expected events: {test.Cycles.Count}, actual events: {this.ActualCycles.Count}");
 
                 this.DumpCycles("-- Expected cycles", test.AvailableCycles());
