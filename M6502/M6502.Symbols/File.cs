@@ -5,23 +5,20 @@
         namespace Symbols
         {
             // file id=0,name="sudoku.s",size=9141,mtime=0x6027C7F0,mod=0
-            public class File : NamedSection
+            public class File(Parser container) : NamedSection(container)
             {
+                [SectionProperty("size")]
                 public int Size { get; private set; }
 
+                [SectionProperty("mtime", hexadecimal: true)]
                 public long ModificationTime { get; private set; }
+
+                [SectionReference("mod")]
                 public Symbols.Module Module => this.TakeModuleReference();
 
-                public File()
+                public override void Parse(IDictionary<string, string> entries)
                 {
-                    _ = this._integer_keys.Add("size");
-                    _ = this._hex_long_keys.Add("mtime");
-                    _ = this._integer_keys.Add("mod");
-                }
-
-                public override void Parse(Parser parent, IDictionary<string, string> entries)
-                {
-                    base.Parse(parent, entries);
+                    base.Parse(entries);
                     this.Size = this.TakeInteger("size");
                     this.ModificationTime = this.TakeLong("mtime");
                 }

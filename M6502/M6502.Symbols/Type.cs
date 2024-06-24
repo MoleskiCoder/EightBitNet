@@ -5,11 +5,10 @@
         namespace Symbols
         {
             // type id = 0, val = "800920"
-            public class Type : IdentifiableSection
+            public class Type(Parser container) : IdentifiableSection(container)
             {
+                [SectionProperty("val")]
                 public string Value => this.TakeString("val");
-
-                public Type() => _ = this._string_keys.Add("val");
             }
         }
     }

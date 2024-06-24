@@ -288,7 +288,7 @@
 
                 private void ExtractTypes() => this.Extract<Type>("type", this.Types);
 
-                private void Extract<T>(string key, List<T> into) where T : IdentifiableSection, new()
+                private void Extract<T>(string key, List<T> into) where T : IdentifiableSection//, new()
                 {
                     if (this._parsed == null)
                     {
@@ -305,8 +305,9 @@
                     foreach (var (id, information) in parsed)
                     {
                         Debug.Assert(into.Count == id);
-                        var entry = new T();
-                        entry.Parse(this, information);
+                        var entry = (T?)Activator.CreateInstance(typeof(T), this);
+                        Debug.Assert(entry != null);
+                        entry.Parse(information);
                         into.Add(entry);
                     }
                     this.VerifyInformationCount(key, into.Count);
@@ -401,13 +402,13 @@
 
                     if (key is "version")
                     {
-                        this._version = new Version();
-                        this._version.Parse(this, BuildDictionary(parts));
+                        this._version = new Version(this);
+                        this._version.Parse(BuildDictionary(parts));
                     }
                     else if (key is "info")
                     {
-                        this._information = new Information();
-                        this._information.Parse(this, BuildDictionary(parts));
+                        this._information = new Information(this);
+                        this._information.Parse(BuildDictionary(parts));
                     }
                     else
                     {
@@ -467,7 +468,6 @@
 
                     return FrozenDictionary.ToFrozenDictionary(dictionary);
                 }
-
 #endregion
             }
         }

@@ -5,28 +5,29 @@
         namespace Symbols
         {
             // seg	id=1,name="RODATA",start=0x00F471,size=0x0000,addrsize=absolute,type=ro,oname="sudoku.65b",ooffs=1137
-            public class Segment : NamedSection
+            public class Segment(Parser container) : NamedSection(container)
             {
+                [SectionProperty("start", hexadecimal: true)]
                 public int Start { get; private set; }
+
+                [SectionProperty("size", hexadecimal: true)]
                 public int Size { get; private set; }
+
+                [SectionEnumeration("addrsize")]
                 public string AddressSize => this.TakeString("addrsize");
+
+                [SectionEnumeration("type")]
                 public string Type => this.TakeString("type");
+
+                [SectionProperty("oname")]
                 public string OName => this.TakeString("oname");
+
+                [SectionProperty("ooffs")]
                 public int? OOFFS { get; private set; }  // ?? Offsets, perhaps?
 
-                public Segment()
+                public override void Parse(IDictionary<string, string> entries)
                 {
-                    _ = this._hex_integer_keys.Add("start");
-                    _ = this._hex_integer_keys.Add("size");
-                    _ = this._enumeration_keys.Add("addrsize");
-                    _ = this._enumeration_keys.Add("type");
-                    _ = this._string_keys.Add("oname");
-                    _ = this._integer_keys.Add("ooffs");
-                }
-
-                public override void Parse(Parser parent, IDictionary<string, string> entries)
-                {
-                    base.Parse(parent, entries);
+                    base.Parse(entries);
                     this.Start = this.TakeInteger("start");
                     this.Size = this.TakeInteger("size");
                     this.OOFFS = this.MaybeTakeInteger("ooffs");

@@ -6,13 +6,15 @@
         {
             public class NamedSection : IdentifiableSection
             {
+                [SectionProperty("name")]
                 public string? Name { get; private set; }
 
-                protected NamedSection() => _ = this._string_keys.Add("name");
+                protected NamedSection(Parser container)
+                : base(container) { }
 
-                public override void Parse(Parser parent, IDictionary<string, string> entries)
+                public override void Parse(IDictionary<string, string> entries)
                 {
-                    base.Parse(parent, entries);
+                    base.Parse(entries);
                     this.Name = this.TakeString("name");
                 }
             }

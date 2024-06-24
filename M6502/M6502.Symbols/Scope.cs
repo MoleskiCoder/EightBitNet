@@ -7,20 +7,27 @@
             //scope id = 0, name = "", mod = 0, size = 1137, span = 355 + 354
             //scope id = 1, name = "stack", mod = 0, type = scope, size = 7, parent = 0, span = 15
             //scope id = 7, name = "print_box_break_vertical", mod = 0, type = scope, size = 6, parent = 0, sym = 33, span = 72
-            public class Scope : NamedSection
+            public class Scope(Parser container) : NamedSection(container)
             {
+                [SectionReference("mod")]
                 public Symbols.Module Module => this.TakeModuleReference();
+
+                [SectionProperty("type")]
                 public string? Type => this.MaybeTakeString("type");
 
+                [SectionProperty("size")]
                 public int Size { get; private set; }
 
+                [SectionReference("parent")]
                 public Scope? Parent => this.MaybeTakeParentReference();
 
                 private bool _symbolAvailable;
                 private Symbols.Symbol? _symbol;
+
+                [SectionReference("sym")]
                 public Symbols.Symbol? Symbol
                 {
-                    get
+                    get 
                     {
                         if (!this._symbolAvailable)
                         {
@@ -30,21 +37,13 @@
                         return this._symbol;
                     }
                 }
+
+                [SectionReferences("span")]
                 public List<Span> Spans => this.TakeSpanReferences();
 
-                public Scope()
+                public override void Parse(IDictionary<string, string> entries)
                 {
-                    _ = this._integer_keys.Add("mod");
-                    _ = this._enumeration_keys.Add("type");
-                    _ = this._integer_keys.Add("size");
-                    _ = this._integer_keys.Add("parent");
-                    _ = this._integer_keys.Add("sym");
-                    _ = this._multiple_keys.Add("span");
-                }
-
-                public override void Parse(Parser parent, IDictionary<string, string> entries)
-                {
-                    base.Parse(parent, entries);
+                    base.Parse(entries);
                     this.Size = this.TakeInteger("size");
                 }
             }

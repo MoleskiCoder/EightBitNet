@@ -6,12 +6,16 @@
         {
             public class IdentifiableSection : Section
             {
+                [SectionProperty("id")]
                 public int ID { get; private set; }
-                protected IdentifiableSection() => _ = this._integer_keys.Add("id");
 
-                public override void Parse(Parser parent, IDictionary<string, string> entries)
+                protected IdentifiableSection(Parser container)
+                : base(container)
+                {}
+
+                public override void Parse(IDictionary<string, string> entries)
                 {
-                    base.Parse(parent, entries);
+                    base.Parse(entries);
                     this.ID = this.TakeInteger("id");
                 }
 
@@ -55,23 +59,23 @@
 
                 #region Specific FK access
 
-                protected Module TakeModuleReference(string key = "mod") => this.TakeReference<Module>(key, this._parent?.Modules);
+                protected Module TakeModuleReference(string key = "mod") => this.TakeReference<Module>(key, this._container?.Modules);
 
-                protected File TakeFileReference(string key = "file") => this.TakeReference<File>(key, this._parent?.Files);
+                protected File TakeFileReference(string key = "file") => this.TakeReference<File>(key, this._container?.Files);
 
-                protected Type TakeTypeReference(string key = "type") => this.TakeReference<Type>(key, this._parent?.Types);
+                protected Type TakeTypeReference(string key = "type") => this.TakeReference<Type>(key, this._container?.Types);
 
-                protected Segment TakeSegmentReference(string key = "seg") => this.TakeReference<Segment>(key, this._parent?.Segments);
+                protected Segment TakeSegmentReference(string key = "seg") => this.TakeReference<Segment>(key, this._container?.Segments);
 
-                protected Scope TakeScopeReference(string key = "scope") => this.TakeReference<Scope>(key, this._parent?.Scopes);
+                protected Scope TakeScopeReference(string key = "scope") => this.TakeReference<Scope>(key, this._container?.Scopes);
 
-                protected Scope? MaybeTakeParentReference(string key = "parent") => this.MaybeTakeReference<Scope>(key, this._parent?.Scopes);
+                protected Scope? MaybeTakeParentReference(string key = "parent") => this.MaybeTakeReference<Scope>(key, this._container?.Scopes);
 
-                protected Symbol? MaybeTakeSymbolReference(string key = "sym") => this.MaybeTakeReference<Symbol>(key, this._parent?.Symbols);
+                protected Symbol? MaybeTakeSymbolReference(string key = "sym") => this.MaybeTakeReference<Symbol>(key, this._container?.Symbols);
 
-                protected List<Span> TakeSpanReferences(string key = "span") => this.TakeReferences<Span>(key, this._parent?.Spans);
+                protected List<Span> TakeSpanReferences(string key = "span") => this.TakeReferences<Span>(key, this._container?.Spans);
 
-                protected List<Line> TakeLineReferences(string key) => this.TakeReferences<Line>(key, this._parent?.Lines);
+                protected List<Line> TakeLineReferences(string key) => this.TakeReferences<Line>(key, this._container?.Lines);
 
                 #endregion
 
