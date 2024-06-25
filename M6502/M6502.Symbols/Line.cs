@@ -11,23 +11,16 @@
                 public Symbols.File File => this.TakeFileReference();
 
                 [SectionProperty("line")]
-                public int LineNumber { get; private set; }
+                public int LineNumber => this.TakeInteger("line");
 
                 [SectionReference("type")]
                 public Symbols.Type Type => this.TakeTypeReference();
 
                 [SectionProperty("count")]
-                public int? Count { get; private set; }
+                public int? Count => this.MaybeTakeInteger("count");
 
                 [SectionReferences("span")]
                 public List<Span> Spans => this.TakeSpanReferences();
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.LineNumber = this.TakeInteger("line");
-                    this.Count = this.MaybeTakeInteger("count");
-                }
             }
         }
     }

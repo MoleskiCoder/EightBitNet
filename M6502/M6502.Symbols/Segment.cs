@@ -8,10 +8,10 @@
             public class Segment(Parser container) : NamedSection(container)
             {
                 [SectionProperty("start", hexadecimal: true)]
-                public int Start { get; private set; }
+                public int Start => this.TakeInteger("start");
 
                 [SectionProperty("size", hexadecimal: true)]
-                public int Size { get; private set; }
+                public int Size => this.TakeInteger("size");
 
                 [SectionEnumeration("addrsize")]
                 public string AddressSize => this.TakeString("addrsize");
@@ -23,15 +23,7 @@
                 public string OName => this.TakeString("oname");
 
                 [SectionProperty("ooffs")]
-                public int? OOFFS { get; private set; }  // ?? Offsets, perhaps?
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.Start = this.TakeInteger("start");
-                    this.Size = this.TakeInteger("size");
-                    this.OOFFS = this.MaybeTakeInteger("ooffs");
-                }
+                public int? OOFFS => this.MaybeTakeInteger("ooffs");  // ?? Offsets, perhaps?
             }
         }
     }

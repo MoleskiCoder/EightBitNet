@@ -13,7 +13,7 @@
                 public string AddressSize => this.TakeString("addrsize");
 
                 [SectionProperty("size")]
-                public int? Size { get; private set; }
+                public int? Size => this.MaybeTakeInteger("size");
 
                 [SectionReference("scope")]
                 public Symbols.Scope Scope => this.TakeScopeReference();
@@ -25,7 +25,7 @@
                 public List<Line> References => this.TakeLineReferences("ref"); // Guess
 
                 [SectionProperty("val", hexadecimal: true)]
-                public int Value { get; private set; }
+                public int Value => this.TakeInteger("val");
 
                 [SectionReference("seg")]
                 public Symbols.Segment Segment => this.TakeSegmentReference();
@@ -36,10 +36,6 @@
                 public override void Parse(IDictionary<string, string> entries)
                 {
                     base.Parse(entries);
-
-                    this.Value = this.TakeInteger("val");
-                    this.Size = this.MaybeTakeInteger("size");
-
                     if (this.Type is "lab")
                     {
                         this._container?.AddLabel(this);

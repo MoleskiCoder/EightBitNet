@@ -11,20 +11,13 @@
                 public Symbols.Segment Segment => this.TakeSegmentReference();
 
                 [SectionProperty("start")]
-                public int Start { get; private set; }
+                public int Start => this.TakeInteger("start");
 
                 [SectionProperty("size")]
-                public int Size { get; private set; }
+                public int Size => this.TakeInteger("size");
 
                 [SectionReference("type")]
                 public Symbols.Type Type => this.TakeTypeReference();
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.Start = this.TakeInteger("start");
-                    this.Size = this.TakeInteger("size");
-                }
             }
         }
     }

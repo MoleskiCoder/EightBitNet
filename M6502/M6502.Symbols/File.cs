@@ -8,20 +8,13 @@
             public class File(Parser container) : NamedSection(container)
             {
                 [SectionProperty("size")]
-                public int Size { get; private set; }
+                public int Size => this.TakeInteger("size");
 
                 [SectionProperty("mtime", hexadecimal: true)]
-                public long ModificationTime { get; private set; }
+                public long ModificationTime => this.TakeLong("mtime");
 
                 [SectionReference("mod")]
                 public Symbols.Module Module => this.TakeModuleReference();
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.Size = this.TakeInteger("size");
-                    this.ModificationTime = this.TakeLong("mtime");
-                }
             }
         }
     }

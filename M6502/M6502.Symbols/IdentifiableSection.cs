@@ -7,17 +7,11 @@
             public class IdentifiableSection : Section
             {
                 [SectionProperty("id")]
-                public int ID { get; private set; }
+                public int ID => this.TakeInteger("id");
 
                 protected IdentifiableSection(Parser container)
                 : base(container)
                 {}
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.ID = this.TakeInteger("id");
-                }
 
                 #region Foreign key constraints
 
