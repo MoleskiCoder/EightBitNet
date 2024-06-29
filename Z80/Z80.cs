@@ -715,7 +715,7 @@ namespace EightBit
                     this.L = value;
                     break;
                 case 6:
-                    this.MemoryWrite(this.HL, value);
+                    this.MemoryWrite(this.HL.Word, value);
                     break;
                 case 7:
                     this.A = value;
