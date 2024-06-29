@@ -27,13 +27,13 @@ namespace EightBit
                 case 0x0f: this.AbsoluteRead(); this.SLO(); break;                                                      // *SLO (absolute)
 
                 case 0x12: this.Jam(); break;                                                                           // *JAM
-                case 0x13: this.IndirectIndexedYAddress(); this.FixupR(); this.SLO(); break;                            // *SLO (indirect indexed Y)
+                case 0x13: this.IndirectIndexedYAddress(); this.FixupRead(); this.SLO(); break;                         // *SLO (indirect indexed Y)
                 case 0x14: this.ZeroPageXRead(); break;                                                                 // *NOP (zero page, X)
                 case 0x17: this.ZeroPageXRead(); this.SLO(); break;                                                     // *SLO (zero page, X)
-                case 0x1a: this.Swallow(); break;                                                                       // *NOP (implied)
-                case 0x1b: this.AbsoluteYAddress(); this.FixupR(); this.SLO(); break;                                   // *SLO (absolute, Y)
-                case 0x1c: this.AbsoluteXAddress(); this.MaybeFixupR(); break;                                          // *NOP (absolute, X)
-                case 0x1f: this.AbsoluteXAddress(); this.FixupR(); this.SLO(); break;                                   // *SLO (absolute, X)
+                case 0x1a: this.SwallowRead(); break;                                                                       // *NOP (implied)
+                case 0x1b: this.AbsoluteYAddress(); this.FixupRead(); this.SLO(); break;                                // *SLO (absolute, Y)
+                case 0x1c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                                       // *NOP (absolute, X)
+                case 0x1f: this.AbsoluteXAddress(); this.FixupRead(); this.SLO(); break;                                // *SLO (absolute, X)
 
                 case 0x22: this.Jam(); break;                                                                           // *JAM
                 case 0x23: this.IndexedIndirectXRead(); this.RLA(); ; break;                                            // *RLA (indexed indirect X)
@@ -42,13 +42,13 @@ namespace EightBit
                 case 0x2f: this.AbsoluteRead(); this.RLA(); break;                                                      // *RLA (absolute)
 
                 case 0x32: this.Jam(); break;																			// *JAM
-                case 0x33: this.IndirectIndexedYAddress(); this.FixupR(); this.RLA(); break;                            // *RLA (indirect indexed Y)
+                case 0x33: this.IndirectIndexedYAddress(); this.FixupRead(); this.RLA(); break;                         // *RLA (indirect indexed Y)
                 case 0x34: this.ZeroPageXRead(); break;                                                                 // *NOP (zero page, X)
                 case 0x37: this.ZeroPageXRead(); this.RLA(); ; break;                                                   // *RLA (zero page, X)
-                case 0x3a: this.Swallow(); break;                                                                       // *NOP (implied)
-                case 0x3b: this.AbsoluteYAddress(); this.FixupR(); this.RLA(); break;                                   // *RLA (absolute, Y)
-                case 0x3c: this.AbsoluteXAddress(); this.MaybeFixupR(); break;                                          // *NOP (absolute, X)
-                case 0x3f: this.AbsoluteXAddress(); this.FixupR(); this.RLA(); break;                                   // *RLA (absolute, X)
+                case 0x3a: this.SwallowRead(); break;                                                                       // *NOP (implied)
+                case 0x3b: this.AbsoluteYAddress(); this.FixupRead(); this.RLA(); break;                                // *RLA (absolute, Y)
+                case 0x3c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                                       // *NOP (absolute, X)
+                case 0x3f: this.AbsoluteXAddress(); this.FixupRead(); this.RLA(); break;                                // *RLA (absolute, X)
 
                 case 0x42: this.Jam(); break;                                                                           // *JAM
                 case 0x43: this.IndexedIndirectXRead(); this.SRE(); break;                                              // *SRE (indexed indirect X)
@@ -58,13 +58,13 @@ namespace EightBit
                 case 0x4f: this.AbsoluteRead(); this.SRE(); break;                                                      // *SRE (absolute)
 
                 case 0x52: this.Jam(); break;                                                                           // *JAM
-                case 0x53: this.IndirectIndexedYAddress(); this.FixupR(); this.SRE(); break;                            // *SRE (indirect indexed Y)
+                case 0x53: this.IndirectIndexedYAddress(); this.FixupRead(); this.SRE(); break;                         // *SRE (indirect indexed Y)
                 case 0x54: this.ZeroPageXRead(); break;                                                                 // *NOP (zero page, X)
                 case 0x57: this.ZeroPageXRead(); this.SRE(); break;                                                     // *SRE (zero page, X)
-                case 0x5a: this.Swallow(); break;                                                                       // *NOP (implied)
-                case 0x5b: this.AbsoluteYAddress(); this.FixupR(); this.SRE(); break;                                   // *SRE (absolute, Y)
-                case 0x5c: this.AbsoluteXAddress(); this.MaybeFixupR(); break;                                          // *NOP (absolute, X)
-                case 0x5f: this.AbsoluteXAddress(); this.FixupR(); this.SRE(); break;                                   // *SRE (absolute, X)
+                case 0x5a: this.SwallowRead(); break;                                                                       // *NOP (implied)
+                case 0x5b: this.AbsoluteYAddress(); this.FixupRead(); this.SRE(); break;                                // *SRE (absolute, Y)
+                case 0x5c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                                       // *NOP (absolute, X)
+                case 0x5f: this.AbsoluteXAddress(); this.FixupRead(); this.SRE(); break;                                // *SRE (absolute, X)
 
                 case 0x62: this.Jam(); break;                                                                           // *JAM
                 case 0x63: this.IndexedIndirectXRead(); this.RRA(); break;                                              // *RRA (indexed indirect X)
@@ -74,13 +74,13 @@ namespace EightBit
                 case 0x6f: this.AbsoluteRead(); this.RRA(); break;                                                      // *RRA (absolute)
 
                 case 0x72: this.Jam(); break;                                                                           // *JAM
-                case 0x73: this.IndirectIndexedYAddress(); this.FixupR(); this.RRA(); break;                            // *RRA (indirect indexed Y)
+                case 0x73: this.IndirectIndexedYAddress(); this.FixupRead(); this.RRA(); break;                         // *RRA (indirect indexed Y)
                 case 0x74: this.ZeroPageXRead(); break;                                                                 // *NOP (zero page, X)
                 case 0x77: this.ZeroPageXRead(); this.RRA(); break;                                                     // *RRA (zero page, X)
-                case 0x7a: this.Swallow(); break;                                                                       // *NOP (implied)
-                case 0x7b: this.AbsoluteYAddress(); this.FixupR(); this.RRA(); break;                                   // *RRA (absolute, Y)
-                case 0x7c: this.AbsoluteXAddress(); this.MaybeFixupR(); break;                                          // *NOP (absolute, X)
-                case 0x7f: this.AbsoluteXAddress(); this.FixupR(); this.RRA(); break;                                   // *RRA (absolute, X)
+                case 0x7a: this.SwallowRead(); break;                                                                       // *NOP (implied)
+                case 0x7b: this.AbsoluteYAddress(); this.FixupRead(); this.RRA(); break;                                // *RRA (absolute, Y)
+                case 0x7c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                                       // *NOP (absolute, X)
+                case 0x7f: this.AbsoluteXAddress(); this.FixupRead(); this.RRA(); break;                                // *RRA (absolute, X)
 
                 case 0x80: this.ImmediateRead(); break;                                                                 // *NOP (immediate)
                 case 0x82: this.ImmediateRead(); break;                                                                 // *NOP (immediate)
@@ -116,13 +116,13 @@ namespace EightBit
                 case 0xcf: this.AbsoluteRead(); this.DCP(); break;                                                      // *DCP (absolute)
 
                 case 0xd2: this.Jam(); break;                                                                           // *JAM
-                case 0xd3: this.IndirectIndexedYAddress(); this.FixupR(); this.DCP(); break;                            // *DCP (indirect indexed Y)
+                case 0xd3: this.IndirectIndexedYAddress(); this.FixupRead(); this.DCP(); break;                         // *DCP (indirect indexed Y)
                 case 0xd4: this.ZeroPageXRead(); break;                                                                 // *NOP (zero page, X)
                 case 0xd7: this.ZeroPageXRead(); this.DCP(); break;                                                     // *DCP (zero page, X)
-                case 0xda: this.Swallow(); break;                                                                       // *NOP (implied)
-                case 0xdb: this.AbsoluteYAddress(); this.FixupR(); this.DCP(); break;                                   // *DCP (absolute, Y)
-                case 0xdc: this.AbsoluteXAddress(); this.MaybeFixupR(); break;                                          // *NOP (absolute, X)
-                case 0xdf: this.AbsoluteXAddress(); this.FixupR(); this.DCP(); break;                                   // *DCP (absolute, X)
+                case 0xda: this.SwallowRead(); break;                                                                       // *NOP (implied)
+                case 0xdb: this.AbsoluteYAddress(); this.FixupRead(); this.DCP(); break;                                // *DCP (absolute, Y)
+                case 0xdc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                                       // *NOP (absolute, X)
+                case 0xdf: this.AbsoluteXAddress(); this.FixupRead(); this.DCP(); break;                                // *DCP (absolute, X)
 
                 case 0xe2: this.ImmediateRead(); break;                                                                 // *NOP (immediate)
                 case 0xe3: this.IndexedIndirectXRead(); this.ISB(); break;                                              // *ISB (indexed indirect X)
@@ -131,13 +131,13 @@ namespace EightBit
                 case 0xef: this.AbsoluteRead(); this.ISB(); break;                                                      // *ISB (absolute)
 
                 case 0xf2: this.Jam(); break;                                                                           // *JAM
-                case 0xf3: this.IndirectIndexedYAddress(); this.FixupR(); this.ISB(); break;                            // *ISB (indirect indexed Y)
+                case 0xf3: this.IndirectIndexedYAddress(); this.FixupRead(); this.ISB(); break;                         // *ISB (indirect indexed Y)
                 case 0xf4: this.ZeroPageXRead(); break;                                                                 // *NOP (zero page, X)
                 case 0xf7: this.ZeroPageXRead(); this.ISB(); break;                                                     // *ISB (zero page, X)
-                case 0xfa: this.Swallow(); break;                                                                       // *NOP (implied)
-                case 0xfb: this.AbsoluteYAddress(); this.FixupR(); this.ISB(); break;                                   // *ISB (absolute, Y)
-                case 0xfc: this.AbsoluteXAddress(); this.MaybeFixupR(); break;                                          // *NOP (absolute, X)
-                case 0xff: this.AbsoluteXAddress(); this.FixupR(); this.ISB(); break;	                                // *ISB (absolute, X)
+                case 0xfa: this.SwallowRead(); break;                                                                       // *NOP (implied)
+                case 0xfb: this.AbsoluteYAddress(); this.FixupRead(); this.ISB(); break;                                // *ISB (absolute, Y)
+                case 0xfc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                                       // *NOP (absolute, X)
+                case 0xff: this.AbsoluteXAddress(); this.FixupRead(); this.ISB(); break;	                            // *ISB (absolute, X)
             }
 
             return cycles != this.Cycles;
