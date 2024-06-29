@@ -20,7 +20,7 @@ namespace EightBit
 
         public byte Data { get => this.data; set => this.data = value; }
 
-        public Register16 Address { get; } = new Register16();
+        public Register16 Address { get; } = new();
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
@@ -30,15 +30,11 @@ namespace EightBit
 
         public byte Peek(Register16 absolute) => this.Peek(absolute.Word);
 
-        public byte Peek(byte low, byte high) => this.Reference(low, high);
-
         public void Poke(byte value) => this.Reference() = value;
 
         public void Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
 
         public void Poke(Register16 absolute, byte value) => this.Poke(absolute.Word, value);
-
-        public void Poke(byte low, byte high, byte value) => this.Reference(low, high) = value;
 
         public byte Read()
         {
@@ -126,8 +122,6 @@ namespace EightBit
         protected ref byte Reference(Register16 absolute) => ref this.Reference(absolute.Word);
 
         protected ref byte Reference() => ref this.Reference(this.Address);
-
-        protected ref byte Reference(byte low, byte high) => ref this.Reference(new Register16(low, high).Word);
 
         protected void LoadHexFile(string path)
         {

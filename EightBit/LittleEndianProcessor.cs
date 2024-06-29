@@ -6,13 +6,11 @@ namespace EightBit
 {
     public abstract class LittleEndianProcessor(Bus memory) : Processor(memory)
     {
-        private readonly Register16 intermediate = new();
-
         public override Register16 PeekWord(ushort address)
         {
-            this.intermediate.Low = this.Bus.Peek(address);
-            this.intermediate.High = this.Bus.Peek(++address);
-            return this.intermediate;
+            this.Intermediate.Low = this.Bus.Peek(address);
+            this.Intermediate.High = this.Bus.Peek(++address);
+            return this.Intermediate;
         }
 
         public override void PokeWord(ushort address, Register16 value)
@@ -23,32 +21,32 @@ namespace EightBit
 
         protected override Register16 FetchWord()
         {
-            this.intermediate.Low = this.FetchByte();
-            this.intermediate.High = this.FetchByte();
-            return this.intermediate;
+            this.Intermediate.Low = this.FetchByte();
+            this.Intermediate.High = this.FetchByte();
+            return this.Intermediate;
         }
 
         protected override Register16 GetWord()
         {
-            this.intermediate.Low = this.MemoryRead();
+            this.Intermediate.Low = this.MemoryRead();
             ++this.Bus.Address.Word;
-            this.intermediate.High = this.MemoryRead();
-            return this.intermediate;
+            this.Intermediate.High = this.MemoryRead();
+            return this.Intermediate;
         }
 
         protected override Register16 GetWordPaged()
         {
-            this.intermediate.Low = this.MemoryRead();
+            this.Intermediate.Low = this.MemoryRead();
             ++this.Bus.Address.Low;
-            this.intermediate.High = this.MemoryRead();
-            return this.intermediate;
+            this.Intermediate.High = this.MemoryRead();
+            return this.Intermediate;
         }
 
         protected override Register16 PopWord()
         {
-            this.intermediate.Low = this.Pop();
-            this.intermediate.High = this.Pop();
-            return this.intermediate;
+            this.Intermediate.Low = this.Pop();
+            this.Intermediate.High = this.Pop();
+            return this.Intermediate;
         }
 
         protected override void PushWord(Register16 value)

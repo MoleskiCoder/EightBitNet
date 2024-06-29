@@ -21,8 +21,6 @@ namespace EightBit
             },
         };
 
-        private readonly Register16 intermediate = new();
-
         private RefreshRegister refresh = new(0x7f);
 
         private bool prefixCB = false;
@@ -539,7 +537,9 @@ namespace EightBit
                     break;
                 case 2:
                     this.Tick(7);
-                    this.Call(this.MEMPTR.Word = new Register16(data, this.IV).Word);
+                    this.MEMPTR.Low = data;
+                    this.MEMPTR.High = this.IV;
+                    this.Call(this.MEMPTR.Word);
                     break;
                 default:
                     throw new NotSupportedException("Invalid interrupt mode");
@@ -762,7 +762,7 @@ namespace EightBit
                     break;
                 case 1: // BIT y, r[z]
                     this.BIT(y, operand);
-                    this.F = direct ? AdjustXY(this.F, operand) : AdjustXY(this.F, this.MEMPTR.High);
+                    this.F = AdjustXY(this.F, direct ? operand : this.MEMPTR.High);
                     break;
                 case 2: // RES y, r[z]
                     operand = RES(y, operand);
@@ -1591,14 +1591,14 @@ namespace EightBit
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            this.intermediate.Word = (ushort)(operand - value - carry);
-            var result = this.intermediate.Low;
+            this.Intermediate.Word = (ushort)(operand - value - carry);
+            var result = this.Intermediate.Low;
 
             this.F = AdjustHalfCarrySub(this.F, operand, value, result);
             this.F = AdjustOverflowSub(this.F, operand, value, result);
 
             this.F = SetBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, this.Intermediate.High & (byte)StatusBits.CF);
             this.F = AdjustSZ(this.F, result);
 
             return result;
@@ -1663,66 +1663,66 @@ namespace EightBit
         private ushort SBC(Register16 operand, Register16 value)
         {
             var subtraction = operand.Word - value.Word - (this.F & (byte)StatusBits.CF);
-            this.intermediate.Word = (ushort)subtraction;
+            this.Intermediate.Word = (ushort)subtraction;
 
             this.F = SetBit(this.F, StatusBits.NF);
-            this.F = ClearBit(this.F, StatusBits.ZF, this.intermediate.Word);
+            this.F = ClearBit(this.F, StatusBits.ZF, this.Intermediate.Word);
             this.F = SetBit(this.F, StatusBits.CF, subtraction & (int)Bits.Bit16);
-            this.F = AdjustHalfCarrySub(this.F, operand.High, value.High, this.intermediate.High);
-            this.F = AdjustXY(this.F, this.intermediate.High);
+            this.F = AdjustHalfCarrySub(this.F, operand.High, value.High, this.Intermediate.High);
+            this.F = AdjustXY(this.F, this.Intermediate.High);
 
             var beforeNegative = operand.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
-            var afterNegative = this.intermediate.High & (byte)StatusBits.SF;
+            var afterNegative = this.Intermediate.High & (byte)StatusBits.SF;
 
             this.F = SetBit(this.F, StatusBits.SF, afterNegative);
             this.F = AdjustOverflowSub(this.F, beforeNegative, valueNegative, afterNegative);
 
             this.MEMPTR.Word = (ushort)(operand.Word + 1);
 
-            return this.intermediate.Word;
+            return this.Intermediate.Word;
         }
 
         private ushort ADC(Register16 operand, Register16 value)
         {
             this.Add(operand, value, this.F & (byte)StatusBits.CF); // Leaves result in intermediate anyway
-            this.F = ClearBit(this.F, StatusBits.ZF, this.intermediate.Word);
+            this.F = ClearBit(this.F, StatusBits.ZF, this.Intermediate.Word);
 
             var beforeNegative = operand.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
-            var afterNegative = this.intermediate.High & (byte)StatusBits.SF;
+            var afterNegative = this.Intermediate.High & (byte)StatusBits.SF;
 
             this.F = SetBit(this.F, StatusBits.SF, afterNegative);
             this.F = AdjustOverflowAdd(this.F, beforeNegative, valueNegative, afterNegative);
 
-            return this.intermediate.Word;
+            return this.Intermediate.Word;
         }
 
         private ushort Add(Register16 operand, Register16 value, int carry = 0)
         {
             var addition = operand.Word + value.Word + carry;
-            this.intermediate.Word = (ushort)addition;
+            this.Intermediate.Word = (ushort)addition;
 
             this.F = ClearBit(this.F, StatusBits.NF);
             this.F = SetBit(this.F, StatusBits.CF, addition & (int)Bits.Bit16);
-            this.F = AdjustHalfCarryAdd(this.F, operand.High, value.High, this.intermediate.High);
-            this.F = AdjustXY(this.F, this.intermediate.High);
+            this.F = AdjustHalfCarryAdd(this.F, operand.High, value.High, this.Intermediate.High);
+            this.F = AdjustXY(this.F, this.Intermediate.High);
 
             this.MEMPTR.Word = (ushort)(operand.Word + 1);
 
-            return this.intermediate.Word;
+            return this.Intermediate.Word;
         }
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.intermediate.Word = (ushort)(operand + value + carry);
-            var result = this.intermediate.Low;
+            this.Intermediate.Word = (ushort)(operand + value + carry);
+            var result = this.Intermediate.Low;
 
             this.F = AdjustHalfCarryAdd(this.F, operand, value, result);
             this.F = AdjustOverflowAdd(this.F, operand, value, result);
 
             this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, this.intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, this.Intermediate.High & (byte)StatusBits.CF);
             this.F = AdjustSZXY(this.F, result);
 
             return result;
@@ -2104,8 +2104,8 @@ namespace EightBit
 
         private void WritePort(byte port)
         {
-            this.MEMPTR.Word = this.Bus.Address.Word = new Register16(port, this.A).Word;
-            this.Bus.Data = this.A;
+            this.MEMPTR.Low = this.Bus.Address.Low = port;
+            this.MEMPTR.High = this.Bus.Address.High = this.Bus.Data = this.A;
             this.WritePort();
             ++this.MEMPTR.Low;
         }
@@ -2122,7 +2122,8 @@ namespace EightBit
 
         private byte ReadPort(byte port)
         {
-            this.MEMPTR.Word = this.Bus.Address.Word = new Register16(port, this.A).Word;
+            this.MEMPTR.Low = this.Bus.Address.Low = port;
+            this.MEMPTR.High = this.Bus.Address.High = this.A;
             ++this.MEMPTR.Low;
             return this.ReadPort();
         }

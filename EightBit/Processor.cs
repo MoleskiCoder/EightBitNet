@@ -33,7 +33,9 @@ namespace EightBit
 
         public Bus Bus { get; } = memory;
 
-        public Register16 PC { get; } = new Register16();
+        public Register16 PC { get; } = new();
+
+        public Register16 Intermediate { get; } = new();
 
         protected byte OpCode { get; set; }
 
@@ -194,7 +196,8 @@ namespace EightBit
 
         protected Register16 GetWordPaged(byte page, byte offset)
         {
-            this.Bus.Address.Word = new Register16(offset, page).Word;
+            this.Bus.Address.Low = offset;
+            this.Bus.Address.High = page;
         	return this.GetWordPaged();
         }
 
@@ -208,7 +211,8 @@ namespace EightBit
 
         protected void SetWordPaged(byte page, byte offset, Register16 value)
         {
-            this.Bus.Address.Word = new Register16(offset, page).Word;
+            this.Bus.Address.Low = offset;
+            this.Bus.Address.High = page;
             this.SetWordPaged(value);
         }
 
