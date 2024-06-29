@@ -190,8 +190,7 @@ namespace EightBit
 
         protected Register16 GetWordPaged(Register16 address)
         {
-            this.Bus.Address.Word = address.Word;
-            return this.GetWordPaged();
+            return this.GetWordPaged(address.High, address.Low);
         }
 
         protected Register16 GetWordPaged(byte page, byte offset)
@@ -205,8 +204,7 @@ namespace EightBit
 
         protected void SetWordPaged(Register16 address, Register16 value)
         {
-	        this.Bus.Address.Word = address.Word;
-            this.SetWordPaged(value);
+            this.SetWordPaged(address.High, address.Low, value);
         }
 
         protected void SetWordPaged(byte page, byte offset, Register16 value)
