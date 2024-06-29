@@ -1047,13 +1047,10 @@ namespace EightBit
 
         private void ADC()
         {
-            if (this.Decimal != 0)
-                this.ADC_d();
-            else
-                this.ADC_b();
+            this.A = this.Decimal != 0 ? this.ADC_d() : this.ADC_b();
         }
 
-        private void ADC_b()
+        private byte ADC_b()
         {
             var operand = A;
             var data = Bus.Data;
@@ -1064,10 +1061,10 @@ namespace EightBit
 
             this.AdjustNZ(intermediate.Low);
 
-            this.A = intermediate.Low;
+            return intermediate.Low;
         }
 
-        private void ADC_d()
+        private byte ADC_d()
         {
             var operand = this.A;
             var data = this.Bus.Data;
@@ -1091,7 +1088,7 @@ namespace EightBit
 
             this.SetFlag(StatusBits.CF, this.intermediate.High);
 
-            this.A = (byte)(LowerNibble(LowByte(low)) | HigherNibble(this.intermediate.Low));
+            return (byte)(LowerNibble(LowByte(low)) | HigherNibble(this.intermediate.Low));
         }
 
         #endregion
