@@ -222,6 +222,14 @@ namespace EightBit
                 case 1:
                     switch (z)
                     {
+                        case 0:
+                            specification = $"IN {this.R(y)}, (C)";
+                            break;
+
+                        case 1:
+                            specification = $"OUT (C), {this.R(y)}";
+                            break;
+
                         case 2:
                             switch (q)
                             {

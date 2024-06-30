@@ -33,12 +33,14 @@ namespace Fuse
         private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
         private readonly EightBit.InputOutput ports = new EightBit.InputOutput();
         private readonly EightBit.Z80 cpu;
+        private readonly EightBit.Disassembler disassembler;
 
         private int totalCycles = 0;
 
         public TestRunner(Test<RegisterState> test, Result<RegisterState> result)
         {
             this.cpu = new EightBit.Z80(this, this.ports);
+            this.disassembler = new EightBit.Disassembler(this);
             this.test = test ?? throw new ArgumentNullException(nameof(test));
             this.result = result ?? throw new ArgumentNullException(nameof(result));
 
@@ -388,6 +390,10 @@ namespace Fuse
                     var output = $"**** IM, Expected: {expectedState.IM}, Got: {this.cpu.IM}";
                     System.Console.Error.WriteLine(output);
                 }
+
+                this.cpu.PC.Word = this.test.RegisterState.Registers[(int)Register.PC].Word;
+                var disassembled = this.disassembler.Disassemble(this.cpu);
+                System.Console.Error.WriteLine(disassembled);
             }
         }
 
