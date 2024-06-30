@@ -136,6 +136,13 @@ namespace EightBit
 
         protected virtual void HandleINT() => this.RaiseINT();
 
+        protected void MemoryWrite(byte low, byte high)
+        {
+            this.Bus.Address.Low = low;
+            this.Bus.Address.High = high;
+            this.MemoryWrite();
+        }
+
         protected void MemoryWrite(byte low, byte high, byte data)
         {
             this.Bus.Address.Low = low;
@@ -150,6 +157,8 @@ namespace EightBit
         }
 
         protected void MemoryWrite(Register16 address, byte data) => this.MemoryWrite(address.Low, address.High, data);
+
+        protected void MemoryWrite(Register16 address) => this.MemoryWrite(address.Low, address.High);
 
         protected void MemoryWrite(byte data)
         {

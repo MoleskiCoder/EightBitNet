@@ -161,12 +161,13 @@ namespace EightBit
 
         public ref PinLevel WR => ref this.wrLine;
 
-        private ushort DisplacedAddress
+        private Register16 DisplacedAddress
         {
             get
             {
-                var returned = (this.prefixDD ? this.IX : this.IY).Word + this.displacement;
-                return this.MEMPTR.Word = (ushort)returned;
+                var displacement = (this.prefixDD ? this.IX : this.IY).Word + this.displacement;
+                this.MEMPTR.Word = (ushort)displacement;
+                return this.MEMPTR;
             }
         }
 
@@ -654,7 +655,7 @@ namespace EightBit
             3 => this.E,
             4 => this.HL2().High,
             5 => this.HL2().Low,
-            6 => this.MemoryRead(this.displaced ? this.DisplacedAddress : this.HL.Word),
+            6 => this.MemoryRead(this.displaced ? this.DisplacedAddress : this.HL),
             7 => this.A,
             _ => throw new ArgumentOutOfRangeException(nameof(r)),
         };
@@ -682,7 +683,7 @@ namespace EightBit
                     this.HL2().Low = value;
                     break;
                 case 6:
-                    this.MemoryWrite(this.displaced ? this.DisplacedAddress : this.HL.Word, value);
+                    this.MemoryWrite(this.displaced ? this.DisplacedAddress : this.HL, value);
                     break;
                 case 7:
                     this.A = value;
@@ -1939,7 +1940,7 @@ namespace EightBit
             exchange.Low = this.MEMPTR.Low;
         }
 
-        private void BlockCompare(ushort source, ushort counter)
+        private void BlockCompare(Register16 source, ushort counter)
         {
             var value = this.MemoryRead(source);
             var result = (byte)(this.A - value);
@@ -1958,7 +1959,8 @@ namespace EightBit
 
         private void CPI()
         {
-            this.BlockCompare(this.HL.Word++, --this.BC.Word);
+            this.BlockCompare(this.HL, --this.BC.Word);
+            ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
 
@@ -1970,7 +1972,8 @@ namespace EightBit
 
         private void CPD()
         {
-            this.BlockCompare(this.HL.Word--, --this.BC.Word);
+            this.BlockCompare(this.HL, --this.BC.Word);
+            --this.HL.Word;
             --this.MEMPTR.Word;
         }
 
@@ -1980,10 +1983,10 @@ namespace EightBit
             return ((this.F & (byte)StatusBits.PF) != 0) && ((this.F & (byte)StatusBits.ZF) == 0); // See CPD
         }
 
-        private void BlockLoad(ushort source, ushort destination, ushort counter)
+        private void BlockLoad(Register16 source, Register16 destination, ushort counter)
         {
             var value = this.MemoryRead(source);
-            this.MemoryWrite(destination, value);
+            this.MemoryWrite(destination);
             var xy = this.A + value;
             this.F = SetBit(this.F, StatusBits.XF, xy & (int)Bits.Bit3);
             this.F = SetBit(this.F, StatusBits.YF, xy & (int)Bits.Bit1);
@@ -1991,7 +1994,12 @@ namespace EightBit
             this.F = SetBit(this.F, StatusBits.PF, counter);
         }
 
-        private void LDI() => this.BlockLoad(this.HL.Word++, this.DE.Word++, --this.BC.Word);
+        private void LDI()
+        {
+            this.BlockLoad(this.HL, this.DE, --this.BC.Word);
+            ++this.HL.Word;
+            ++this.DE.Word;
+        }
 
         private bool LDIR()
         {
@@ -1999,7 +2007,12 @@ namespace EightBit
             return (this.F & (byte)StatusBits.PF) != 0; // See LDI
         }
 
-        private void LDD() => this.BlockLoad(this.HL.Word--, this.DE.Word--, --this.BC.Word);
+        private void LDD()
+        {
+            this.BlockLoad(this.HL, this.DE, --this.BC.Word);
+            --this.HL.Word;
+            --this.DE.Word;
+        }
 
         private bool LDDR()
         {
@@ -2007,20 +2020,22 @@ namespace EightBit
             return (this.F & (byte)StatusBits.PF) != 0; // See LDD
         }
 
-        private void BlockIn(Register16 source, ushort destination)
+        private void BlockIn(Register16 source, Register16 destination)
         {
-            this.MEMPTR.Word = this.Bus.Address.Word = source.Word;
+            this.MEMPTR.Low = this.Bus.Address.Low = source.Low;
+            this.MEMPTR.High = this.Bus.Address.High = source.High;
             this.Tick();
-            var value = this.ReadPort();
+            this.ReadPort();
             this.Tick(3);
-            this.MemoryWrite(destination, value);
+            this.MemoryWrite(destination);
             source.High = this.Decrement(source.High);
             this.F = SetBit(this.F, StatusBits.NF);
         }
 
         private void INI()
         {
-            this.BlockIn(this.BC, this.HL.Word++);
+            this.BlockIn(this.BC, this.HL);
+            ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
 
@@ -2032,7 +2047,8 @@ namespace EightBit
 
         private void IND()
         {
-            this.BlockIn(this.BC, this.HL.Word--);
+            this.BlockIn(this.BC, this.HL);
+            --this.HL.Word;
             --this.MEMPTR.Word;
         }
 
@@ -2042,14 +2058,22 @@ namespace EightBit
             return (this.F & (byte)StatusBits.ZF) == 0; // See IND
         }
 
-        private void BlockOut(ushort source, Register16 destination)
+        private void BlockOut(Register16 source, Register16 destination)
         {
             this.Tick();
-            var value = this.MemoryRead(source);
+            this.MemoryRead(source);
             destination.High = this.Decrement(destination.High);
-            this.Bus.Address.Word = destination.Word;
+            this.Bus.Address.Low = destination.Low;
+            this.Bus.Address.High = destination.High;
             this.WritePort();
-            this.MEMPTR.Word = destination.Word;
+            this.MEMPTR.Low = destination.Low;
+            this.MEMPTR.High = destination.High;
+        }
+
+        private void AdjustBlockOutFlags()
+        {
+            // HL needs to have been incremented or decremented prior to this call
+            var value = this.Bus.Data;
             this.F = SetBit(this.F, StatusBits.NF, value & (byte)Bits.Bit7);
             this.F = SetBit(this.F, StatusBits.HC | StatusBits.CF, (this.L + value) > 0xff);
             this.F = AdjustParity(this.F, (byte)(((value + this.L) & (int)Mask.Three) ^ this.B));
@@ -2057,7 +2081,9 @@ namespace EightBit
 
         private void OUTI()
         {
-            this.BlockOut(this.HL.Word++, this.BC);
+            this.BlockOut(this.HL, this.BC);
+            ++this.HL.Word;
+            this.AdjustBlockOutFlags();
             ++this.MEMPTR.Word;
         }
 
@@ -2069,7 +2095,9 @@ namespace EightBit
 
         private void OUTD()
         {
-            this.BlockOut(this.HL.Word--, this.BC);
+            this.BlockOut(this.HL, this.BC);
+            --this.HL.Word;
+            this.AdjustBlockOutFlags();
             --this.MEMPTR.Word;
         }
 
