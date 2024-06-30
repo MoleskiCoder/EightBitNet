@@ -17,12 +17,14 @@ namespace M6502.Test
         private readonly Profiler profiler;
         private readonly MemoryMapping mapping;
 
-        private ushort oldPC;
+        private readonly Register16 oldPC = new((ushort)Mask.Sixteen);
         private int cyclesPolled;
 
         private char key;
         private bool keyHandled;
         private bool keyAvailable;
+
+        private bool inputting = false;
 
         public Board(Configuration configuration)
         {
@@ -32,8 +34,6 @@ namespace M6502.Test
             this.symbols = new EightBit.Files.Symbols.Parser();
             this.disassembler = new Disassembler(this, this.CPU, this.symbols);
             this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
-
-            this.oldPC = (ushort)Mask.Sixteen;
 
             this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
 
@@ -77,17 +77,12 @@ namespace M6502.Test
             if (this.configuration.AllowKeyRead)
             {
                 this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Polling;
-            }
-
-            this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
-
-            this.WrittenByte += this.Bus_WrittenByte;
-
-            if (this.configuration.AllowKeyRead)
-            {
                 this.ReadingByte += this.Bus_ReadingByte;
                 this.ReadByte += this.Bus_ReadByte;
             }
+
+            this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
+            this.WrittenByte += this.Bus_WrittenByte;
 
             if (this.configuration.Profile)
             {
@@ -109,13 +104,12 @@ namespace M6502.Test
 
         private void Bus_ReadingByte(object? sender, EventArgs e)
         {
-            var address = this.Address;
-            if (address == this.configuration.InputAddress)
+            this.inputting = this.Address == this.configuration.InputAddress;
+            if (this.inputting && this.keyAvailable && !this.keyHandled)
             {
-                var ready = this.keyAvailable && !this.keyHandled;
-                if (ready && (this.Peek(address) == 0))
+                if (this.Peek(this.Address) == 0)
                 {
-                    this.Poke(address, (byte)this.key);
+                    this.Poke(this.Address, (byte)this.key);
                     this.keyHandled = true;
                 }
             }
@@ -123,8 +117,7 @@ namespace M6502.Test
 
         private void Bus_ReadByte(object? sender, EventArgs e)
         {
-            var address = this.Address;
-            if (address == this.configuration.InputAddress)
+            if (this.inputting)
             {
                 if (this.configuration.BreakOnKeyRead)
                 {
@@ -134,7 +127,7 @@ namespace M6502.Test
                 {
                     if (this.keyHandled)
                     {
-                        this.Poke(address, 0);
+                        this.Poke(this.Address, 0);
                         this.keyAvailable = false;
                     }
                 }
@@ -152,10 +145,10 @@ namespace M6502.Test
 
         private void CPU_ExecutedInstruction(object? sender, EventArgs e)
         {
-            var pc = this.CPU.PC.Word;
-            if (this.oldPC != pc)
+            if (this.oldPC != this.CPU.PC)
             {
-                this.oldPC = pc;
+                this.oldPC.Low = this.CPU.PC.Low;
+                this.oldPC.High = this.CPU.PC.High;
             }
             else
             {
