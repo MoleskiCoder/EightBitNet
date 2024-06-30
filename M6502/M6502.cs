@@ -219,7 +219,9 @@ namespace EightBit
 
         private void Jam()
         {
-            this.Bus.Address.Word = this.PC.Word--;
+            this.Bus.Address.Low = this.PC.Low;
+            this.Bus.Address.High = this.PC.High;
+            --this.PC.Word;
             this.MemoryRead();
             this.MemoryRead();
         }

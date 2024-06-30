@@ -2125,7 +2125,8 @@ namespace EightBit
 
         private void RRD()
         {
-            this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
+            this.MEMPTR.Low = this.Bus.Address.Low = this.HL.Low;
+            this.MEMPTR.High = this.Bus.Address.High = this.HL.High;
             ++this.MEMPTR.Word;
             var memory = this.MemoryRead();
             this.Tick(4);
@@ -2137,7 +2138,8 @@ namespace EightBit
 
         private void RLD()
         {
-            this.MEMPTR.Word = this.Bus.Address.Word = this.HL.Word;
+            this.MEMPTR.Low = this.Bus.Address.Low = this.HL.Low;
+            this.MEMPTR.High = this.Bus.Address.High = this.HL.High;
             ++this.MEMPTR.Word;
             var memory = this.MemoryRead();
             this.Tick(4);
