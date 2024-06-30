@@ -149,7 +149,7 @@ namespace EightBit
             this.MemoryWrite(data);
         }
 
-        protected void MemoryWrite(Register16 address, byte data) => this.MemoryWrite(address.Word, data);
+        protected void MemoryWrite(Register16 address, byte data) => this.MemoryWrite(address.Low, address.High, data);
 
         protected void MemoryWrite(byte data)
         {
@@ -174,13 +174,18 @@ namespace EightBit
             return this.MemoryRead();
         }
 
-        protected byte MemoryRead(Register16 address) => this.MemoryRead(address.Word);
+        protected byte MemoryRead(Register16 address) => this.MemoryRead(address.Low, address.High);
 
         protected virtual byte MemoryRead() => this.BusRead();
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte FetchByte() => this.MemoryRead(this.PC.Word++);
+        protected byte FetchByte()
+        {
+            var returned = this.MemoryRead(this.PC);
+            this.PC.Word++;
+            return returned;
+        }
 
         protected abstract Register16 GetWord();
 
@@ -216,6 +221,13 @@ namespace EightBit
 
         protected abstract Register16 FetchWord();
 
+        protected void FetchWordAddress()
+        {
+            this.FetchWord();
+            this.Bus.Address.Low = this.Intermediate.Low;
+            this.Bus.Address.High = this.Intermediate.High;
+        }
+
         protected abstract void Push(byte value);
 
         protected abstract byte Pop();
@@ -230,7 +242,12 @@ namespace EightBit
             return this.GetWord();
         }
 
-        protected Register16 GetWord(Register16 address) => this.GetWord(address.Word);
+        protected Register16 GetWord(Register16 address)
+        {
+            this.Bus.Address.Low = address.Low;
+            this.Bus.Address.High = address.High;
+            return this.GetWord();
+        }
 
         protected void SetWord(ushort address, Register16 value)
         {
@@ -238,16 +255,33 @@ namespace EightBit
             this.SetWord(value);
         }
 
-        protected void SetWord(Register16 address, Register16 value) => this.SetWord(address.Word, value);
+        protected void SetWord(Register16 address, Register16 value)
+        {
+            this.Bus.Address.Low = address.Low;
+            this.Bus.Address.High = address.High;
+            this.SetWord(value);
+        }
 
         protected void Jump(ushort destination) => this.PC.Word = destination;
 
-        protected virtual void Call(ushort destination)
+        protected void Jump(Register16 destination)
+        {
+            this.PC.Low = destination.Low;
+            this.PC.High = destination.High;
+        }
+
+        protected void Call(ushort destination)
+        {
+            this.Intermediate.Word = destination;
+            this.Call(this.Intermediate);
+        }
+
+        protected virtual void Call(Register16 destination)
         {
             this.PushWord(this.PC);
             this.Jump(destination);
         }
 
-        protected virtual void Return() => this.Jump(this.PopWord().Word);
+        protected virtual void Return() => this.Jump(this.PopWord());
     }
 }

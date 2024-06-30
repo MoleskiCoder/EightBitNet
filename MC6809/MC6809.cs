@@ -753,9 +753,7 @@ namespace EightBit
 
         private Register16 ST(Register16 data) => this.Through(data);
 
-        private void Jump(Register16 destination) => this.Jump(destination.Word);
-
-        private bool Branch(ushort destination, bool condition)
+        private bool Branch(Register16 destination, bool condition)
         {
             if (condition)
             {
@@ -764,8 +762,6 @@ namespace EightBit
 
             return condition;
         }
-
-        private bool Branch(Register16 destination, bool condition) => this.Branch(destination.Word, condition);
 
         private void BranchShort(bool condition) => this.Branch(this.Address_relative_byte(), condition);
 
@@ -1431,9 +1427,7 @@ namespace EightBit
             return result;
         }
 
-        private void JSR(ushort address) => this.Call(address);
-
-        private void JSR(Register16 address) => this.JSR(address.Word);
+        private void JSR(Register16 address) => this.Call(address);
 
         private byte LSR(byte operand)
         {

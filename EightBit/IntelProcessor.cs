@@ -127,21 +127,32 @@ namespace EightBit
             this.Jump(0);
         }
 
-        protected sealed override void Push(byte value) => this.MemoryWrite(--this.SP.Word, value);
+        protected sealed override void Push(byte value)
+        {
+            --this.SP.Word;
+            this.MemoryWrite(this.SP, value);
+        }
 
-        protected sealed override byte Pop() => this.MemoryRead(this.SP.Word++);
+        protected sealed override byte Pop()
+        {
+            var returned = this.MemoryRead(this.SP);
+            this.SP.Word++;
+            return returned;
+        }
 
         protected sealed override Register16 GetWord()
         {
             var returned = base.GetWord();
-            this.MEMPTR.Word = this.Bus.Address.Word;
+            this.MEMPTR.Low = this.Bus.Address.Low;
+            this.MEMPTR.High = this.Bus.Address.High;
             return returned;
         }
 
         protected sealed override void SetWord(Register16 value)
         {
             base.SetWord(value);
-            this.MEMPTR.Word = this.Bus.Address.Word;
+            this.MEMPTR.Low = this.Bus.Address.Low;
+            this.MEMPTR.High = this.Bus.Address.High;
         }
 
         ////
@@ -150,15 +161,15 @@ namespace EightBit
         {
             this.MEMPTR.Low = address;
             this.MEMPTR.High = 0;
-            this.Call(this.MEMPTR.Word);
+            this.Call(this.MEMPTR);
         }
 
         protected bool CallConditional(bool condition)
         {
-            this.MEMPTR.Word = this.FetchWord().Word;
+            this.FetchWordMEMPTR();
             if (condition)
             {
-                this.Call(this.MEMPTR.Word);
+                this.Call(this.MEMPTR);
             }
 
             return condition;
@@ -166,10 +177,10 @@ namespace EightBit
 
         protected bool JumpConditional(bool condition)
         {
-            this.MEMPTR.Word = this.FetchWord().Word;
+            this.FetchWordMEMPTR();
             if (condition)
             {
-                this.Jump(this.MEMPTR.Word);
+                this.Jump(this.MEMPTR);
             }
 
             return condition;
@@ -185,18 +196,39 @@ namespace EightBit
             return condition;
         }
 
+        protected void FetchWordMEMPTR()
+        {
+            this.FetchWord();
+            this.MEMPTR.Low = this.Intermediate.Low;
+            this.MEMPTR.High = this.Intermediate.High;
+        }
+
+        protected void JumpIndirect()
+        {
+            this.FetchWordMEMPTR();
+            this.Jump(this.MEMPTR);
+        }
+
+        protected void CallIndirect()
+        {
+            this.FetchWordMEMPTR();
+            this.Call(this.MEMPTR);
+        }
+
         protected void JumpRelative(sbyte offset)
         {
             this.MEMPTR.Word = (ushort)(this.PC.Word + offset);
-            this.Jump(this.MEMPTR.Word);
+            this.Jump(this.MEMPTR);
         }
 
         protected bool JumpRelativeConditional(bool condition)
         {
-            var offsetAddress = this.PC.Word++;
+            this.Intermediate.Low = this.PC.Low;
+            this.Intermediate.High = this.PC.High;
+            ++this.PC.Word;
             if (condition)
             {
-                var offset = (sbyte)this.MemoryRead(offsetAddress);
+                var offset = (sbyte)this.MemoryRead(this.Intermediate);
                 this.JumpRelative(offset);
             }
 
@@ -206,7 +238,8 @@ namespace EightBit
         protected override sealed void Return()
         {
             base.Return();
-            this.MEMPTR.Word = this.PC.Word;
+            this.MEMPTR.Low = this.PC.Low;
+            this.MEMPTR.High = this.PC.High;
         }
     }
 }

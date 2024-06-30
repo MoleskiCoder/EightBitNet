@@ -233,7 +233,7 @@ namespace EightBit
                 this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
             }
             this.SetFlag(StatusBits.IF);   // Disable IRQ
-            this.Jump(this.GetWordPaged(0xff, vector).Word);
+            this.Jump(this.GetWordPaged(0xff, vector));
         }
 
         #region Interrupt etc. handlers
@@ -341,7 +341,7 @@ namespace EightBit
 
         #region Cycle wastage
 
-        protected void SwallowRead() => this.MemoryRead(this.PC.Word);
+        protected void SwallowRead() => this.MemoryRead(this.PC);
 
         protected void SwallowPop() => this.MemoryRead(this.S, 1);
 
@@ -408,7 +408,7 @@ namespace EightBit
                 case 0x48: this.SwallowRead(); this.Push(this.A); break;                                                // PHA (implied)
                 case 0x49: this.ImmediateRead(); this.EorR(); break;                                                    // EOR (immediate)
                 case 0x4a: this.SwallowRead(); this.A = this.LSR(this.A); break;                                        // LSR A (implied)
-                case 0x4c: this.AbsoluteAddress(); this.Jump(this.Bus.Address.Word); break;                             // JMP (absolute)
+                case 0x4c: this.AbsoluteAddress(); this.Jump(this.Bus.Address); break;                                  // JMP (absolute)
                 case 0x4d: this.AbsoluteRead(); this.EorR(); break;                                                     // EOR (absolute)
                 case 0x4e: this.AbsoluteRead(); this.ModifyWrite(this.LSR()); break;                                    // LSR (absolute)
 
@@ -428,7 +428,7 @@ namespace EightBit
                 case 0x68: this.SwallowRead(); this.SwallowPop(); this.A = this.Through(this.Pop()); break;             // PLA (implied)
                 case 0x69: this.ImmediateRead(); this.ADC(); break;                                                     // ADC (immediate)
                 case 0x6a: this.SwallowRead(); this.A = this.ROR(this.A); break;                                        // ROR A (implied)
-                case 0x6c: this.IndirectAddress(); this.Jump(this.Bus.Address.Word); break;                             // JMP (indirect)
+                case 0x6c: this.IndirectAddress(); this.Jump(this.Bus.Address); break;                                  // JMP (indirect)
                 case 0x6d: this.AbsoluteRead(); this.ADC(); break;                                                      // ADC (absolute)
                 case 0x6e: this.AbsoluteRead(); this.ModifyWrite(this.ROR()); break;                                    // ROR (absolute)
 
@@ -718,9 +718,14 @@ namespace EightBit
             this.Bus.Address.Low = this.Intermediate.Low;
         }
 
-        protected void ImmediateAddress() => this.Bus.Address.Word = this.PC.Word++;
+        protected void ImmediateAddress()
+        {
+            this.Bus.Address.Low = this.PC.Low;
+            this.Bus.Address.High = this.PC.High;
+            ++this.PC.Word;
+        }
 
-        protected void AbsoluteAddress() => this.Bus.Address.Word = this.FetchWord().Word;
+        protected void AbsoluteAddress() => this.FetchWordAddress();
 
         protected void ZeroPageAddress()
         {
@@ -731,13 +736,17 @@ namespace EightBit
         protected void ZeroPageIndirectAddress()
         {
             this.ZeroPageAddress();
-            this.Bus.Address.Word = this.GetWordPaged().Word;
+            this.GetWordPaged();
+            this.Bus.Address.Low = this.Intermediate.Low;
+            this.Bus.Address.High = this.Intermediate.High;
         }
 
         protected void IndirectAddress()
         {
             this.AbsoluteAddress();
-            this.Bus.Address.Word = this.GetWordPaged().Word;
+            this.GetWordPaged();
+            this.Bus.Address.Low = this.Intermediate.Low;
+            this.Bus.Address.High = this.Intermediate.High;
         }
 
         protected void ZeroPageWithIndexAddress(byte index)
@@ -763,7 +772,9 @@ namespace EightBit
         protected void IndexedIndirectXAddress()
         {
             this.ZeroPageXAddress();
-            this.Bus.Address.Word = this.GetWordPaged().Word;
+            this.GetWordPaged();
+            this.Bus.Address.Low = this.Intermediate.Low;
+            this.Bus.Address.High = this.Intermediate.High;
         }
 
         protected void IndirectIndexedYAddress()
@@ -849,7 +860,7 @@ namespace EightBit
                 this.SwallowRead();
                 this.NoteFixedAddress(this.PC.Word + relative);
                 this.MaybeFixup();
-                this.Jump(this.Bus.Address.Word);
+                this.Jump(this.Bus.Address);
             }
         }
 

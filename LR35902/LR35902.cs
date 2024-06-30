@@ -746,7 +746,7 @@ namespace EightBit.GameBoy
                             switch (y)
                             {
                                 case 0: // JP nn
-                                    this.Jump(this.FetchWord().Word);
+                                    this.JumpIndirect();
                                     this.Tick(4);
                                     break;
                                 case 1: // CB prefix
@@ -786,7 +786,7 @@ namespace EightBit.GameBoy
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            this.Call(this.FetchWord().Word);
+                                            this.CallIndirect();
                                             this.Tick(6);
                                             break;
                                     }

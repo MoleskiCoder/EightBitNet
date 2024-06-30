@@ -499,7 +499,7 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0: // JP nn
-                                    this.Jump(this.FetchWord().Word);
+                                    this.JumpIndirect();
                                     this.Tick(10);
                                     break;
                                 case 2: // OUT (n),A
@@ -548,7 +548,7 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            this.Call(this.FetchWord().Word);
+                                            this.CallIndirect();
                                             this.Tick(17);
                                             break;
                                     }

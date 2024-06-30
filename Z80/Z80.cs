@@ -539,14 +539,14 @@ namespace EightBit
                     this.Tick(7);
                     this.MEMPTR.Low = data;
                     this.MEMPTR.High = this.IV;
-                    this.Call(this.MEMPTR.Word);
+                    this.Call(this.MEMPTR);
                     break;
                 default:
                     throw new NotSupportedException("Invalid interrupt mode");
             }
         }
 
-        protected override void Call(ushort destination)
+        protected override void Call(Register16 destination)
         {
             this.Tick();
             base.Call(destination);
@@ -715,7 +715,7 @@ namespace EightBit
                     this.L = value;
                     break;
                 case 6:
-                    this.MemoryWrite(this.HL.Word, value);
+                    this.MemoryWrite(this.HL, value);
                     break;
                 case 7:
                     this.A = value;
@@ -803,7 +803,8 @@ namespace EightBit
                     switch (z)
                     {
                         case 0: // Input from port with 16-bit address
-                            this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
+                            this.MEMPTR.Low = this.Bus.Address.Low = this.BC.Low;
+                            this.MEMPTR.High = this.Bus.Address.High = this.BC.High;
                             this.MEMPTR.Word++;
                             this.ReadPort();
                             if (y != 6)
@@ -815,7 +816,8 @@ namespace EightBit
                             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                             break;
                         case 1: // Output to port with 16-bit address
-                            this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
+                            this.MEMPTR.Low = this.Bus.Address.Low = this.BC.Low;
+                            this.MEMPTR.High = this.Bus.Address.High = this.BC.High;
                             this.MEMPTR.Word++;
                             this.Bus.Data = y != 6 ? this.R(y) : (byte)0;
                             this.WritePort();
@@ -829,7 +831,7 @@ namespace EightBit
                             };
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
-                            this.Bus.Address.Word = this.FetchWord().Word;
+                            this.FetchWordAddress();
                             switch (q)
                             {
                                 case 0: // LD (nn), rp[p]
@@ -920,7 +922,9 @@ namespace EightBit
                                 case 6: // LDIR
                                     if (this.LDIR())
                                     {
-                                        this.MEMPTR.Word = --this.PC.Word;
+                                        --this.PC.Word;
+                                        this.MEMPTR.Low = this.PC.Low;
+                                        this.MEMPTR.High = this.PC.High;
                                         --this.PC.Word;
                                     }
 
@@ -929,7 +933,9 @@ namespace EightBit
                                 case 7: // LDDR
                                     if (this.LDDR())
                                     {
-                                        this.MEMPTR.Word = --this.PC.Word;
+                                        --this.PC.Word;
+                                        this.MEMPTR.Low = this.PC.Low;
+                                        this.MEMPTR.High = this.PC.High;
                                         --this.PC.Word;
                                     }
 
@@ -950,7 +956,9 @@ namespace EightBit
                                 case 6: // CPIR
                                     if (this.CPIR())
                                     {
-                                        this.MEMPTR.Word = --this.PC.Word;
+                                        --this.PC.Word;
+                                        this.MEMPTR.Low = this.PC.Low;
+                                        this.MEMPTR.High = this.PC.High;
                                         --this.PC.Word;
                                         this.Tick(5);
                                     }
@@ -960,7 +968,9 @@ namespace EightBit
                                 case 7: // CPDR
                                     if (this.CPDR())
                                     {
-                                        this.MEMPTR.Word = --this.PC.Word;
+                                        --this.PC.Word;
+                                        this.MEMPTR.Low = this.PC.Low;
+                                        this.MEMPTR.High = this.PC.High;
                                         --this.PC.Word;
                                         this.Tick(3);
                                     }
@@ -1099,23 +1109,27 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
+                                            this.MEMPTR.Low = this.Bus.Address.Low = this.BC.Low;
+                                            this.MEMPTR.High = this.Bus.Address.High = this.BC.High;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.MemoryWrite();
                                             break;
                                         case 1: // LD (DE),A
-                                            this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
+                                            this.MEMPTR.Low = this.Bus.Address.Low = this.DE.Low;
+                                            this.MEMPTR.High = this.Bus.Address.High = this.DE.High;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.MemoryWrite();
                                             break;
                                         case 2: // LD (nn),HL
-                                            this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.FetchWordAddress();
                                             this.SetWord(this.HL2());
                                             break;
                                         case 3: // LD (nn),A
-                                            this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.FetchWordMEMPTR();
+                                            this.Bus.Address.Low = this.MEMPTR.Low;
+                                            this.Bus.Address.High = this.MEMPTR.High;
                                             ++this.MEMPTR.Word;
                                             this.MEMPTR.High = this.Bus.Data = this.A;
                                             this.MemoryWrite();
@@ -1129,21 +1143,25 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.MEMPTR.Word = this.Bus.Address.Word = this.BC.Word;
+                                            this.MEMPTR.Low = this.Bus.Address.Low = this.BC.Low;
+                                            this.MEMPTR.High = this.Bus.Address.High = this.BC.High;
                                             ++this.MEMPTR.Word;
                                             this.A = this.MemoryRead();
                                             break;
                                         case 1: // LD A,(DE)
-                                            this.MEMPTR.Word = this.Bus.Address.Word = this.DE.Word;
+                                            this.MEMPTR.Low = this.Bus.Address.Low = this.DE.Low;
+                                            this.MEMPTR.High = this.Bus.Address.High = this.DE.High;
                                             ++this.MEMPTR.Word;
                                             this.A = this.MemoryRead();
                                             break;
                                         case 2: // LD HL,(nn)
-                                            this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.FetchWordAddress();
                                             this.HL2().Word = this.GetWord().Word;
                                             break;
                                         case 3: // LD A,(nn)
-                                            this.MEMPTR.Word = this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.FetchWordMEMPTR();
+                                            this.Bus.Address.Low = this.MEMPTR.Low;
+                                            this.Bus.Address.High = this.MEMPTR.High;
                                             ++this.MEMPTR.Word;
                                             this.A = this.MemoryRead();
                                             break;
@@ -1395,7 +1413,7 @@ namespace EightBit
                                             this.Exx();
                                             break;
                                         case 2: // JP HL
-                                            this.Jump(this.HL2().Word);
+                                            this.Jump(this.HL2());
                                             break;
                                         case 3: // LD SP,HL
                                             this.SP.Word = this.HL2().Word;
@@ -1417,7 +1435,7 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0: // JP nn
-                                    this.Jump(this.MEMPTR.Word = this.FetchWord().Word);
+                                    this.JumpIndirect();
                                     break;
                                 case 1: // CB prefix
                                     this.prefixCB = true;
@@ -1469,8 +1487,7 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            this.MEMPTR.Word = this.FetchWord().Word;
-                                            this.Call(this.MEMPTR.Word);
+                                            this.CallIndirect();
                                             break;
                                         case 1: // DD prefix
                                             this.displaced = this.prefixDD = true;
@@ -1578,7 +1595,7 @@ namespace EightBit
         {
             this.Tick();
             this.LowerM1();
-            var returned = this.MemoryRead(this.PC.Word);
+            var returned = this.MemoryRead(this.PC);
             this.RaiseM1();
             this.Bus.Address.Low = this.REFRESH;
             this.Bus.Address.High = this.IV;
@@ -1911,7 +1928,7 @@ namespace EightBit
 
         private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.MemoryRead(this.SP.Word);
+            this.MEMPTR.Low = this.MemoryRead(this.SP);
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.MemoryRead();
             this.Tick();
