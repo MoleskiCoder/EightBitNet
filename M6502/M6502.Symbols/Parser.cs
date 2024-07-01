@@ -51,6 +51,8 @@
 
                 private static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T> items) where T : NamedSection => from item in items where item.Name == name select item;
 
+                private static IEnumerable<T> SelectIdMatching<T>(int id, IEnumerable<T> items) where T : IdentifiableSection => from item in items where item.ID == id select item;
+
                 #region Label lookup
 
                 public void AddLabel(Symbol symbol)
@@ -76,19 +78,27 @@
                     }
                 }
 
-                private List<Symbol> LookupLabels(int address) => this.Addresses.TryGetValue(address, out var symbols) ? symbols : [];
+                private List<Symbol> LookupLabelsByAddress(int address) => this.Addresses.TryGetValue(address, out var symbols) ? symbols : [];
 
-                public Symbol? LookupLabel(int address)
+                public Symbol? LookupLabelByAddress(int address)
                 {
-                    var labels = this.LookupLabels(address);
+                    var labels = this.LookupLabelsByAddress(address);
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
-                private IEnumerable<Symbol> LookupLabels(string name) => SelectNameMatching(name, this.Labels);
+                private IEnumerable<Symbol> LookupLabelsByName(string name) => SelectNameMatching(name, this.Labels);
 
-                public Symbol? LookupLabel(string name)
+                public Symbol? LookupLabelByName(string name)
                 {
-                    var labels = this.LookupLabels(name).ToList();
+                    var labels = this.LookupLabelsByName(name).ToList();
+                    return labels.Count > 0 ? labels[0] : null;
+                }
+
+                private IEnumerable<Symbol> LookupLabelsByID(int id) => SelectIdMatching(id, this.Labels);
+
+                public Symbol? LookupLabelByID(int id)
+                {
+                    var labels = this.LookupLabelsByID(id).ToList();
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
@@ -119,11 +129,11 @@
                     }
                 }
 
-                private List<Symbol> LookupEquates(int constant) => this.Constants.TryGetValue(constant, out var symbols) ? symbols : [];
+                private List<Symbol> LookupEquatesByValue(int constant) => this.Constants.TryGetValue(constant, out var symbols) ? symbols : [];
 
-                public Symbol? LookupEquate(int constant)
+                public Symbol? LookupEquateByValue(int constant)
                 {
-                    var equates = this.LookupEquates(constant);
+                    var equates = this.LookupEquatesByValue(constant);
                     return equates.Count > 0 ? equates[0] : null;
                 }
 
@@ -131,7 +141,7 @@
 
                 #region Scope lookup
 
-                private int LocateScope(int address)
+                private int LocateScopeByAddress(int address)
                 {
                     var low = 0;
                     var high = this.AddressableScopes.Count - 1;
@@ -168,10 +178,18 @@
                     return -1;
                 }
 
-                public Scope? LookupScope(int address)
+                public Scope? LookupScopeByAddress(int address)
                 {
-                    var index = _scopeAddressCache[address] ?? (_scopeAddressCache[address] = this.LocateScope(address));
+                    var index = _scopeAddressCache[address] ?? (_scopeAddressCache[address] = this.LocateScopeByAddress(address));
                     return index == -1 ? null : this.AddressableScopes[index.Value];
+                }
+
+                private IEnumerable<Scope> LookupScopesByID(int id) => SelectIdMatching(id, this.Scopes);
+
+                public Scope? LookupScopeByID(int id)
+                {
+                    var scopes = this.LookupScopesByID(id).ToList();
+                    return scopes.Count > 0 ? scopes[0] : null;
                 }
 
                 #endregion
@@ -229,18 +247,18 @@
 
                 #region Qualified symbol lookup
 
-                public bool TryGetQualifiedLabel(ushort absolute, out string label)
+                public bool TryGetQualifiedLabelByAddress(ushort absolute, out string label)
                 {
-                    var symbol = this.LookupLabel(absolute);
+                    var symbol = this.LookupLabelByAddress(absolute);
                     label = PrefixNamespace(symbol);
                     return symbol != null;
                 }
 
-                public string MaybeGetQualifiedLabel(ushort absolute) => this.TryGetQualifiedLabel(absolute, out var label) ? label : string.Empty;
+                public string MaybeGetQualifiedLabelByAddress(ushort absolute) => this.TryGetQualifiedLabelByAddress(absolute, out var label) ? label : string.Empty;
 
-                public bool TryGetQualifiedEquate(ushort value, out string name)
+                public bool TryGetQualifiedEquateyValue(ushort value, out string name)
                 {
-                    var symbol = this.LookupEquate(value);
+                    var symbol = this.LookupEquateByValue(value);
                     name = PrefixNamespace(symbol);
                     return symbol != null;
                 }

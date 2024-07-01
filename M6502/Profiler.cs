@@ -8,7 +8,7 @@
         private readonly int[] addressProfiles = new int[0x10000];
         private readonly int[] addressCounts = new int[0x10000];
 
-        private readonly Dictionary<string, int> scopeCycles = [];
+        private readonly Dictionary<int, int> scopeCycles = []; // ID -> Cycles
 
         private readonly M6502 processor;
         private readonly Disassembler disassembler;
@@ -94,13 +94,12 @@
             this.OnStartingScopeOutput();
             try
             {
-                foreach (var (name, cycles) in this.scopeCycles)
+                foreach (var (id, cycles) in this.scopeCycles)
                 {
-                    Debug.Assert(name != null);
-                    var symbol = this.symbols.LookupLabel(name);
+                    var symbol = this.symbols.LookupLabelByID(id);
                     Debug.Assert(symbol != null);
                     var count = this.addressCounts[symbol.Value];
-                    this.OnEmitScope(name, cycles, count);
+                    this.OnEmitScope(id, cycles, count);
                 }
             }
             finally
@@ -124,14 +123,13 @@
 
             this.addressProfiles[this.executingAddress] += this.processor.Cycles;
 
-            var scope = this.symbols.LookupScope(this.executingAddress);
+            var scope = this.symbols.LookupScopeByAddress(this.executingAddress);
             if (scope != null)
             {
-                var name = scope.Name;
-                Debug.Assert(name != null);
-                if (!this.scopeCycles.TryAdd(name, 0))
+                var id = scope.ID;
+                if (!this.scopeCycles.TryAdd(id, 0))
                 {
-                    this.scopeCycles[name] += this.processor.Cycles;
+                    this.scopeCycles[id] += this.processor.Cycles;
                 }
             }
         }
@@ -171,9 +169,9 @@
             this.EmitLine?.Invoke(this, new ProfileLineEventArgs(source, cycles, count));
         }
 
-        private void OnEmitScope(string scope, int cycles, int count)
+        private void OnEmitScope(int id, int cycles, int count)
         {
-            this.EmitScope?.Invoke(this, new ProfileScopeEventArgs(scope, cycles, count));
+            this.EmitScope?.Invoke(this, new ProfileScopeEventArgs(id, cycles, count));
         }
     }
 }

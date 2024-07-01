@@ -505,12 +505,12 @@ namespace EightBit
 
         private bool TryGetLabel(ushort absolute, out string name)
         {
-            return this.symbols.TryGetQualifiedLabel(absolute, out name);
+            return this.symbols.TryGetQualifiedLabelByAddress(absolute, out name);
         }
 
         private string MaybeGetLabel(ushort absolute)
         {
-            return this.symbols.MaybeGetQualifiedLabel(absolute);
+            return this.symbols.MaybeGetQualifiedLabelByAddress(absolute);
         }
 
         private string MaybeGetCodeLabel(ushort absolute)
@@ -534,7 +534,7 @@ namespace EightBit
 
         private bool TryGetConstant(ushort value, out string name)
         {
-            return this.symbols.TryGetQualifiedEquate(value, out name);
+            return this.symbols.TryGetQualifiedEquateyValue(value, out name);
         }
 
         private string ConvertConstantByte(ushort address) => this.ConvertConstant(this.GetByte(address));

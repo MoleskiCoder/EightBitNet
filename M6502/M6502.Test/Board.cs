@@ -4,6 +4,7 @@
 
 namespace M6502.Test
 {
+    using System.Diagnostics;
     using System.Globalization;
     using System.Text;
     using EightBit;
@@ -147,8 +148,7 @@ namespace M6502.Test
         {
             if (this.oldPC != this.CPU.PC)
             {
-                this.oldPC.Low = this.CPU.PC.Low;
-                this.oldPC.High = this.CPU.PC.High;
+                this.oldPC.Assign(this.CPU.PC);
             }
             else
             {
@@ -163,7 +163,7 @@ namespace M6502.Test
         {
             var cycles = this.CPU.Cycles;
             this.cyclesPolled += cycles;
-            System.Diagnostics.Debug.Assert(cycles > 0, "Invalid pollingcycle count");
+            Debug.Assert(cycles > 0, "Invalid pollingcycle count");
             if (this.cyclesPolled > this.configuration.PollingTickInterval)
             {
                 this.cyclesPolled = 0;
@@ -202,8 +202,9 @@ namespace M6502.Test
         private void Profiler_EmitScope(object? sender, ProfileScopeEventArgs e)
         {
             var proportion = (double)e.Cycles / this.profiler.TotalCycleCount;
-            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, e.Scope));
-            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, cycles, count, name));
+            var scope = this.symbols.LookupScopeByID(e.ID);
+            Debug.Assert(scope != null);
+            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, scope.Name));
         }
 
         private void Profiler_EmitLine(object? sender, ProfileLineEventArgs e)
