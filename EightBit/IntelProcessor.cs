@@ -143,24 +143,21 @@ namespace EightBit
         protected sealed override Register16 GetWord()
         {
             var returned = base.GetWord();
-            this.MEMPTR.Low = this.Bus.Address.Low;
-            this.MEMPTR.High = this.Bus.Address.High;
+            this.MEMPTR.Assign(this.Bus.Address);
             return returned;
         }
 
         protected sealed override void SetWord(Register16 value)
         {
             base.SetWord(value);
-            this.MEMPTR.Low = this.Bus.Address.Low;
-            this.MEMPTR.High = this.Bus.Address.High;
+            this.MEMPTR.Assign(this.Bus.Address);
         }
 
         ////
 
         protected void Restart(byte address)
         {
-            this.MEMPTR.Low = address;
-            this.MEMPTR.High = 0;
+            this.MEMPTR.Assign(address, 0);
             this.Call(this.MEMPTR);
         }
 
@@ -199,8 +196,7 @@ namespace EightBit
         protected void FetchWordMEMPTR()
         {
             this.FetchWord();
-            this.MEMPTR.Low = this.Intermediate.Low;
-            this.MEMPTR.High = this.Intermediate.High;
+            this.MEMPTR.Assign(this.Intermediate);
         }
 
         protected void JumpIndirect()
@@ -223,8 +219,7 @@ namespace EightBit
 
         protected bool JumpRelativeConditional(bool condition)
         {
-            this.Intermediate.Low = this.PC.Low;
-            this.Intermediate.High = this.PC.High;
+            this.Intermediate.Assign(this.PC);
             ++this.PC.Word;
             if (condition)
             {
@@ -238,8 +233,7 @@ namespace EightBit
         protected override sealed void Return()
         {
             base.Return();
-            this.MEMPTR.Low = this.PC.Low;
-            this.MEMPTR.High = this.PC.High;
+            this.MEMPTR.Assign(this.PC);
         }
     }
 }

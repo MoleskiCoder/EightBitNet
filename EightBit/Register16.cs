@@ -90,5 +90,16 @@ namespace EightBit
 
             return rhs.Low == this.Low && rhs.High == this.High;
         }
+
+        public void Assign(byte low, byte high)
+        {
+            this.low = low;
+            this.high = high;
+        }
+
+        public void Assign(Register16 from)
+        {
+            this.Assign(from.low, from.high);
+        }
     }
 }

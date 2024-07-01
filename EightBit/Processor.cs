@@ -138,15 +138,13 @@ namespace EightBit
 
         protected void MemoryWrite(byte low, byte high)
         {
-            this.Bus.Address.Low = low;
-            this.Bus.Address.High = high;
+            this.Bus.Address.Assign(low, high);
             this.MemoryWrite();
         }
 
         protected void MemoryWrite(byte low, byte high, byte data)
         {
-            this.Bus.Address.Low = low;
-            this.Bus.Address.High = high;
+            this.Bus.Address.Assign(low, high);
             this.MemoryWrite(data);
         }
 
@@ -172,8 +170,7 @@ namespace EightBit
 
         protected byte MemoryRead(byte low, byte high)
         {
-            this.Bus.Address.Low = low;
-            this.Bus.Address.High = high;
+            this.Bus.Address.Assign(low, high);
             return this.MemoryRead();
         }
 
@@ -191,9 +188,9 @@ namespace EightBit
 
         protected byte FetchByte()
         {
-            var returned = this.MemoryRead(this.PC);
+            this.Bus.Address.Assign(this.PC);
             this.PC.Word++;
-            return returned;
+            return this.MemoryRead();
         }
 
         protected abstract Register16 GetWord();
@@ -209,8 +206,7 @@ namespace EightBit
 
         protected Register16 GetWordPaged(byte page, byte offset)
         {
-            this.Bus.Address.Low = offset;
-            this.Bus.Address.High = page;
+            this.Bus.Address.Assign(offset, page);
         	return this.GetWordPaged();
         }
 
@@ -223,8 +219,7 @@ namespace EightBit
 
         protected void SetWordPaged(byte page, byte offset, Register16 value)
         {
-            this.Bus.Address.Low = offset;
-            this.Bus.Address.High = page;
+            this.Bus.Address.Assign(offset, page);
             this.SetWordPaged(value);
         }
 
@@ -233,8 +228,7 @@ namespace EightBit
         protected void FetchWordAddress()
         {
             this.FetchWord();
-            this.Bus.Address.Low = this.Intermediate.Low;
-            this.Bus.Address.High = this.Intermediate.High;
+            this.Bus.Address.Assign(this.Intermediate);
         }
 
         protected abstract void Push(byte value);
@@ -253,8 +247,7 @@ namespace EightBit
 
         protected Register16 GetWord(Register16 address)
         {
-            this.Bus.Address.Low = address.Low;
-            this.Bus.Address.High = address.High;
+            this.Bus.Address.Assign(address);
             return this.GetWord();
         }
 
@@ -266,8 +259,7 @@ namespace EightBit
 
         protected void SetWord(Register16 address, Register16 value)
         {
-            this.Bus.Address.Low = address.Low;
-            this.Bus.Address.High = address.High;
+            this.Bus.Address.Assign(address);
             this.SetWord(value);
         }
 
@@ -275,8 +267,7 @@ namespace EightBit
 
         protected void Jump(Register16 destination)
         {
-            this.PC.Low = destination.Low;
-            this.PC.High = destination.High;
+            this.PC.Assign(destination);
         }
 
         protected void Call(ushort destination)

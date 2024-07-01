@@ -203,6 +203,7 @@ namespace M6502.Test
         {
             var proportion = (double)e.Cycles / this.profiler.TotalCycleCount;
             Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, e.Scope));
+            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, cycles, count, name));
         }
 
         private void Profiler_EmitLine(object? sender, ProfileLineEventArgs e)

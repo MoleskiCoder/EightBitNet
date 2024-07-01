@@ -54,8 +54,7 @@ namespace EightBit
 
         public byte Read(byte low, byte high)
         {
-            this.Address.Low = low;
-            this.Address.High = high;
+            this.Address.Assign(low, high);
             return this.Read();
         }
 
@@ -83,8 +82,7 @@ namespace EightBit
 
         public void Write(byte low, byte high, byte value)
         {
-            this.Address.Low = low;
-            this.Address.High = high;
+            this.Address.Assign(low, high);
             this.Write(value);
         }
 

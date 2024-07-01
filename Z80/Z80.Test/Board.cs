@@ -83,7 +83,12 @@ namespace Z80.Test
 
         private void CPU_ExecutingInstruction_CPM(object sender, System.EventArgs e)
         {
-            switch (this.CPU.PC.Word)
+            if (this.CPU.PC.High != 0)
+            {
+                // We're only interested in zero page
+                return;
+            }
+            switch (this.CPU.PC.Low)
             {
                 case 0x0: // CP/M warm start
                     if (++this.warmstartCount == 2)

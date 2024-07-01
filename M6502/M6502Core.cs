@@ -640,8 +640,7 @@ namespace EightBit
 
         private void UpdateStack(byte position)
         {
-            this.Bus.Address.Low = position;
-            this.Bus.Address.High = 1;
+            this.Bus.Address.Assign(position, 1);
         }
 
         private void LowerStack() => this.UpdateStack(this.S--);
@@ -718,10 +717,15 @@ namespace EightBit
             this.Bus.Address.Low = this.Intermediate.Low;
         }
 
+        private void GetAddressPaged()
+        {
+            this.GetWordPaged();
+            this.Bus.Address.Assign(this.Intermediate);
+        }
+
         protected void ImmediateAddress()
         {
-            this.Bus.Address.Low = this.PC.Low;
-            this.Bus.Address.High = this.PC.High;
+            this.Bus.Address.Assign(this.PC);
             ++this.PC.Word;
         }
 
@@ -729,24 +733,19 @@ namespace EightBit
 
         protected void ZeroPageAddress()
         {
-            this.Bus.Address.Low = this.FetchByte();
-            this.Bus.Address.High = 0;
+            this.Bus.Address.Assign(this.FetchByte(), 0);
         }
 
         protected void ZeroPageIndirectAddress()
         {
             this.ZeroPageAddress();
-            this.GetWordPaged();
-            this.Bus.Address.Low = this.Intermediate.Low;
-            this.Bus.Address.High = this.Intermediate.High;
+            this.GetAddressPaged();
         }
 
         protected void IndirectAddress()
         {
             this.AbsoluteAddress();
-            this.GetWordPaged();
-            this.Bus.Address.Low = this.Intermediate.Low;
-            this.Bus.Address.High = this.Intermediate.High;
+            this.GetAddressPaged();
         }
 
         protected void ZeroPageWithIndexAddress(byte index)
@@ -772,9 +771,7 @@ namespace EightBit
         protected void IndexedIndirectXAddress()
         {
             this.ZeroPageXAddress();
-            this.GetWordPaged();
-            this.Bus.Address.Low = this.Intermediate.Low;
-            this.Bus.Address.High = this.Intermediate.High;
+            this.GetAddressPaged();
         }
 
         protected void IndirectIndexedYAddress()
@@ -1054,8 +1051,8 @@ namespace EightBit
             this.Intermediate.Low = this.FetchByte();
             this.SwallowPop();
             this.PushWord(this.PC);
-            this.PC.High = this.FetchByte();
-            this.PC.Low = this.Intermediate.Low;
+            this.Intermediate.High = this.FetchByte();
+            this.PC.Assign(this.Intermediate);
         }
 
         private void PHP() => this.Push(SetBit(this.P, StatusBits.BF));
