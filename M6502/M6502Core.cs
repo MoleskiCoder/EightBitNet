@@ -1051,8 +1051,8 @@ namespace EightBit
             this.Intermediate.Low = this.FetchByte();
             this.SwallowPop();
             this.PushWord(this.PC);
-            this.Intermediate.High = this.FetchByte();
-            this.PC.Assign(this.Intermediate);
+            this.PC.High = this.FetchByte();
+            this.PC.Low = this.Intermediate.Low;
         }
 
         private void PHP() => this.Push(SetBit(this.P, StatusBits.BF));
