@@ -18,7 +18,7 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? ReadByte;
 
-        public byte Data { get => this.data; set => this.data = value; }
+        public ref byte Data => ref this.data;
 
         public Register16 Address { get; } = new();
 

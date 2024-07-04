@@ -38,27 +38,27 @@ namespace EightBit
 
         public abstract Register16 AF { get; }
 
-        public byte A { get => this.AF.High; set => this.AF.High = value; }
+        public ref byte A => ref this.AF.High;
 
-        public byte F { get => this.AF.Low; set => this.AF.Low = value; }
+        public ref byte F => ref this.AF.Low;
 
         public abstract Register16 BC { get; }
 
-        public byte B { get => this.BC.High; set => this.BC.High = value; }
+        public ref byte B => ref this.BC.High;
 
-        public byte C { get => this.BC.Low; set => this.BC.Low = value; }
+        public ref byte C => ref this.BC.Low;
 
         public abstract Register16 DE { get; }
 
-        public byte D { get => this.DE.High; set => this.DE.High = value; }
+        public ref byte D => ref this.DE.High;
 
-        public byte E { get => this.DE.Low; set => this.DE.Low = value; }
+        public ref byte E => ref this.DE.Low;
 
         public abstract Register16 HL { get; }
 
-        public byte H { get => this.HL.High; set => this.HL.High = value; }
+        public ref byte H => ref this.HL.High;
 
-        public byte L { get => this.HL.Low; set => this.HL.Low = value; }
+        public ref byte L => ref this.HL.Low;
 
         public ref PinLevel HALT => ref this.haltLine;
 

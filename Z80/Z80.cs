@@ -646,80 +646,66 @@ namespace EightBit
             _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
-        private byte R(int r) => r switch
-        {
-            0 => this.B,
-            1 => this.C,
-            2 => this.D,
-            3 => this.E,
-            4 => this.HL2().High,
-            5 => this.HL2().Low,
-            6 => this.MemoryRead(this.displaced ? this.DisplacedAddress : this.HL),
-            7 => this.A,
-            _ => throw new ArgumentOutOfRangeException(nameof(r)),
-        };
-
-        private void R(int r, byte value)
+        private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
             switch (r)
             {
                 case 0:
-                    this.B = value;
-                    break;
+                    return ref this.B;
                 case 1:
-                    this.C = value;
-                    break;
+                    return ref this.C;
                 case 2:
-                    this.D = value;
-                    break;
+                    return ref this.D;
                 case 3:
-                    this.E = value;
-                    break;
+                    return ref this.E;
                 case 4:
-                    this.HL2().High = value;
-                    break;
+                    return ref this.HL2().High;
                 case 5:
-                    this.HL2().Low = value;
-                    break;
+                    return ref this.HL2().Low;
                 case 6:
-                    this.MemoryWrite(this.displaced ? this.DisplacedAddress : this.HL, value);
-                    break;
+                    this.Bus.Address.Assign(this.displaced ? this.DisplacedAddress : this.HL);
+                    if (access == AccessLevel.ReadOnly)
+                    {
+                        MemoryRead();
+                    }
+                    // Will need a post-MemoryWrite
+                    return ref this.Bus.Data;
                 case 7:
-                    this.A = value;
-                    break;
+                    return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
             }
         }
 
-        private void R2(int r, byte value)
+        private void R(int r, byte value)
+        {
+            R(r, AccessLevel.WriteOnly) = value;
+            if (r == 6)
+                this.MemoryWrite();
+        }
+
+        private ref byte R2(int r)
         {
             switch (r)
             {
                 case 0:
-                    this.B = value;
-                    break;
+                    return ref this.B;
                 case 1:
-                    this.C = value;
-                    break;
+                    return ref this.C;
                 case 2:
-                    this.D = value;
-                    break;
+                    return ref this.D;
                 case 3:
-                    this.E = value;
-                    break;
+                    return ref this.E;
                 case 4:
-                    this.H = value;
-                    break;
+                    return ref this.H;
                 case 5:
-                    this.L = value;
-                    break;
+                    return ref this.L;
                 case 6:
-                    this.MemoryWrite(this.HL, value);
-                    break;
+                    // N.B. Write not possible, when r == 6
+                    MemoryRead(this.HL);
+                    return ref this.Bus.Data;
                 case 7:
-                    this.A = value;
-                    break;
+                    return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
             }
@@ -782,7 +768,7 @@ namespace EightBit
                     this.MemoryWrite(operand);
                     if (!memoryZ)
                     {
-                        this.R2(z, operand);
+                        this.R2(z) = operand;
                     }
                 }
                 else
@@ -809,7 +795,7 @@ namespace EightBit
                             this.ReadPort();
                             if (y != 6)
                             {
-                                this.R(y, this.Bus.Data); // IN r[y],(C)
+                                this.R(y, AccessLevel.WriteOnly) = this.Bus.Data; // IN r[y],(C)
                             }
 
                             this.F = AdjustSZPXY(this.F, this.Bus.Data);
