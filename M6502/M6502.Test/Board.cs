@@ -35,9 +35,6 @@ namespace M6502.Test
             this.symbols = new EightBit.Files.Symbols.Parser();
             this.disassembler = new Disassembler(this, this.CPU, this.symbols);
             this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
-
-            this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/"  + this.configuration.Symbols);
-
             this.profiler = new Profiler(this.CPU, this.disassembler, this.symbols, this.configuration.Profile);
         }
 
@@ -84,6 +81,11 @@ namespace M6502.Test
 
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
             this.WrittenByte += this.Bus_WrittenByte;
+
+            if (this.configuration.Profile || this.configuration.DebugMode)
+            {
+                this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/" + this.configuration.Symbols);
+            }
 
             if (this.configuration.Profile)
             {
