@@ -7,15 +7,15 @@ namespace M6502.Test
     using System;
     using System.Diagnostics;
 
-    internal class TestHarness : IDisposable
+    internal class TestHarness(Configuration configuration) : IDisposable
     {
-        private readonly Stopwatch timer = new Stopwatch();
-        private readonly Board board;
+        private readonly Process process = Process.GetCurrentProcess();
+        private readonly Stopwatch timer = new();
+        private readonly Board board = new(configuration);
         private long totalCycles = 0;
+        private TimeSpan totalUserProcessorTime;
 
         private bool disposed = false;
-
-        public TestHarness(Configuration configuration) => this.board = new Board(configuration);
 
         public void Dispose()
         {
@@ -25,18 +25,21 @@ namespace M6502.Test
 
         public void Run()
         {
+            this.timer.Start();
+            var startingUsage = this.process.UserProcessorTime;
+
             this.board.Initialize();
             this.board.RaisePOWER();
 
             var cpu = this.board.CPU;
-
-            this.timer.Start();
             while (cpu.Powered)
             {
                 this.totalCycles += cpu.Step();
             }
 
+            var finishingUsage = this.process.UserProcessorTime;
             this.timer.Stop();
+            this.totalUserProcessorTime = finishingUsage - startingUsage;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -46,6 +49,7 @@ namespace M6502.Test
                 if (disposing)
                 {
                     System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles}");
+                    System.Console.Out.WriteLine($"Processor time = {this.totalUserProcessorTime}");
                     System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
                 }
 
