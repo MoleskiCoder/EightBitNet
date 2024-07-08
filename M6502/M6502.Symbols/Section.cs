@@ -184,31 +184,31 @@
                     var value = entry.Value;
                     if (_string_keys.Contains(key))
                     {
-                        this._strings[key] = ExtractString(value);
+                        this._strings.Add(key, ExtractString(value));
                     }
                     else if (_enumeration_keys.Contains(key))
                     {
-                        this._strings[key] = ExtractEnumeration(value);
+                        this._strings.Add(key, ExtractEnumeration(value));
                     }
                     else if (_integer_keys.Contains(key))
                     {
-                        this._integers[key] = ExtractInteger(value);
+                        this._integers.Add(key, ExtractInteger(value));
                     }
                     else if (_hex_integer_keys.Contains(key))
                     {
-                        this._integers[key] = ExtractHexInteger(value);
+                        this._integers.Add(key, ExtractHexInteger(value));
                     }
                     else if (_long_keys.Contains(key))
                     {
-                        this._longs[key] = ExtractLong(value);
+                        this._longs.Add(key, ExtractLong(value));
                     }
                     else if (_hex_long_keys.Contains(key))
                     {
-                        this._longs[key] = ExtractHexLong(value);
+                        this._longs.Add(key, ExtractHexLong(value));
                     }
                     else if (_multiple_keys.Contains(key))
                     {
-                        this._multiples[key] = ExtractCompoundInteger(value);
+                        this._multiples.Add(key, ExtractCompoundInteger(value));
                     }
                     else
                     {
