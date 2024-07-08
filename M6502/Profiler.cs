@@ -119,18 +119,18 @@
 
         private void Processor_ExecutedInstruction(object? sender, EventArgs e)
         {
-            this.TotalCycleCount += this.processor.Cycles;
+            var cycles = this.processor.Cycles;
+            this.TotalCycleCount += cycles;
 
-            this.addressProfiles[this.executingAddress] += this.processor.Cycles;
+            this.addressProfiles[this.executingAddress] += cycles;
 
             var scope = this.symbols.LookupScopeByAddress(this.executingAddress);
             if (scope != null)
             {
                 var id = scope.ID;
-                if (!this.scopeCycles.TryAdd(id, 0))
-                {
-                    this.scopeCycles[id] += this.processor.Cycles;
-                }
+                // Current will be initialised to zero, if absent
+                _ = this.scopeCycles.TryGetValue(id, out var current);
+                this.scopeCycles[id] = current + cycles;
             }
         }
 
