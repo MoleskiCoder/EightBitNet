@@ -95,8 +95,11 @@ namespace M6502.Test
                 this.profiler.FinishedLineOutput += this.Profiler_FinishedLineOutput;
                 this.profiler.StartingScopeOutput += this.Profiler_StartingScopeOutput;
                 this.profiler.FinishedScopeOutput += this.Profiler_FinishedScopeOutput;
+                this.profiler.StartingInstructionOutput += this.Profiler_StartingInstructionOutput;
+                this.profiler.FinishedInstructionOutput += this.Profiler_FinishedInstructionOutput;
                 this.profiler.EmitLine += this.Profiler_EmitLine;
                 this.profiler.EmitScope += this.Profiler_EmitScope;
+                this.profiler.EmitInstruction += this.Profiler_EmitInstruction;
             }
 
             this.Poke(0x00, 0x4c);
@@ -203,7 +206,7 @@ namespace M6502.Test
 
         private void Profiler_EmitScope(object? sender, ProfileScopeEventArgs e)
         {
-            var proportion = (double)e.Cycles / this.profiler.TotalCycleCount;
+            var proportion = (double)e.Cycles / this.profiler.TotalCycles;
             var scope = this.symbols.LookupScopeByID(e.ID);
             Debug.Assert(scope != null);
             Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, scope.Name));
@@ -211,8 +214,14 @@ namespace M6502.Test
 
         private void Profiler_EmitLine(object? sender, ProfileLineEventArgs e)
         {
-            var proportion = (double)e.Cycles / this.profiler.TotalCycleCount;
+            var proportion = (double)e.Cycles / this.profiler.TotalCycles;
             Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, e.Source));
+        }
+
+        private void Profiler_EmitInstruction(object? sender, ProfileInstructionEventArgs e)
+        {
+            var proportion = (double)e.Cycles / this.profiler.TotalCycles;
+            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3:X2}\n", proportion, e.Cycles, e.Count, e.Instruction));
         }
 
         private void Profiler_FinishedScopeOutput(object? sender, EventArgs e)
@@ -243,6 +252,16 @@ namespace M6502.Test
         private void Profiler_StartingOutput(object? sender, EventArgs e)
         {
             Console.Out.Write("Starting profiler output...\n");
+        }
+
+        private void Profiler_FinishedInstructionOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Finished instruction output...\n");
+        }
+
+        private void Profiler_StartingInstructionOutput(object? sender, EventArgs e)
+        {
+            Console.Out.Write("Starting instruction output...\n");
         }
     }
 }
