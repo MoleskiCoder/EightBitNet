@@ -10,16 +10,18 @@
                 public Information(Parser container)
                 : base(container)
                 {
-                    this.AddIntegerKey("csym");
-                    this.AddIntegerKey("file");
-                    this.AddIntegerKey("lib");
-                    this.AddIntegerKey("line");
-                    this.AddIntegerKey("mod");
-                    this.AddIntegerKey("scope");
-                    this.AddIntegerKey("seg");
-                    this.AddIntegerKey("span");
-                    this.AddIntegerKey("sym");
-                    this.AddIntegerKey("type");
+                    this.ProcessAttributesOfProperties();
+                    var properties = _sectionPropertiesCache[this.GetType()];
+                    properties.AddIntegerKey("csym");
+                    properties.AddIntegerKey("file");
+                    properties.AddIntegerKey("lib");
+                    properties.AddIntegerKey("line");
+                    properties.AddIntegerKey("mod");
+                    properties.AddIntegerKey("scope");
+                    properties.AddIntegerKey("seg");
+                    properties.AddIntegerKey("span");
+                    properties.AddIntegerKey("sym");
+                    properties.AddIntegerKey("type");
                 }
 
                 public int Count(string key) => this.TakeInteger(key);

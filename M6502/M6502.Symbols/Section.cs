@@ -4,177 +4,51 @@
     {
         namespace Symbols
         {
+            using System;
+            using System.Diagnostics;
             using System.Globalization;
-            using System.Reflection;
+            using System.Numerics;
 
             public class Section
             {
+                protected static readonly Dictionary<System.Type, ReflectedSectionProperties> _sectionPropertiesCache = [];
+
                 protected readonly Parser _container;
 
                 protected readonly Dictionary<string, string> _strings = [];
-                private readonly HashSet<string> _string_keys = [];
-                private readonly HashSet<string> _enumeration_keys = [];
-
                 protected readonly Dictionary<string, int> _integers = [];
-                private readonly HashSet<string> _integer_keys = [];
-                private readonly HashSet<string> _hex_integer_keys = [];
-
                 protected readonly Dictionary<string, long> _longs = [];
-                private readonly HashSet<string> _long_keys = [];
-                private readonly HashSet<string> _hex_long_keys = [];
-
                 protected readonly Dictionary<string, List<int>> _multiples = [];
-                private readonly HashSet<string> _multiple_keys = [];
 
-                protected Section(Parser container)
+                protected ReflectedSectionProperties SectionProperties
                 {
-                    this.ProcessAttributesOfProperties();
-                    this._container = container;
+                    get
+                    {
+                        var type = this.GetType();
+                        var obtained = _sectionPropertiesCache.TryGetValue(type, out var properties);
+                        Debug.Assert(obtained, $"Section properties for {type.Name} have not been built");
+                        Debug.Assert(properties != null);
+                        return properties;
+                    }
+                }
+                protected Section(Parser container) => this._container = container;
+
+                protected void ProcessAttributesOfProperties()
+                {
+                    var type = this.GetType();
+                    Debug.Assert(_sectionPropertiesCache != null);
+                    if (!_sectionPropertiesCache.ContainsKey(type))
+                    {
+                        _sectionPropertiesCache.Add(type, new ReflectedSectionProperties(type));
+                    }
                 }
 
                 public virtual void Parse(IDictionary<string, string> entries)
                 {
+                    this.ProcessAttributesOfProperties();
                     foreach (var entry in entries)
                     {
                         this.Parse(entry);
-                    }
-                }
-
-                private void ProcessAttributesOfProperties()
-                {
-                    var type = this.GetType();
-                    foreach (var property in type.GetProperties())
-                    {
-                        this.ProcessPropertyAttributes(property);
-                    }
-                }
-
-                private void ProcessPropertyAttributes(PropertyInfo property)
-                {
-                    var attributes = property.GetCustomAttributes(typeof(SectionPropertyAttribute), true);
-                    if (attributes.Length > 0)
-                    {
-                        this.ProcessSectionPropertyAttribute(property.PropertyType, attributes[0]);
-                    }
-                }
-
-                private void ProcessSectionPropertyAttribute(System.Type? type, object attribute)
-                {
-                    ArgumentNullException.ThrowIfNull(type, nameof(type));
-                    this.ProcessSectionPropertyAttribute(type, (SectionPropertyAttribute)attribute);
-                }
-
-                protected void AddStringKey(string key)
-                {
-                    if (!this._string_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                protected void AddEnumerationKey(string key)
-                {
-                    if (!this._enumeration_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                protected void AddMultiplesKey(string key)
-                {
-                    if (!this._multiple_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                protected void AddHexIntegerKey(string key)
-                {
-                    if (!this._hex_integer_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                protected void AddIntegerKey(string key)
-                {
-                    if (!this._integer_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                protected void AddHexLongKey(string key)
-                {
-                    if (!this._hex_long_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                protected void AddLongKey(string key)
-                {
-                    if (!this._long_keys.Add(key))
-                    {
-                        throw new InvalidOperationException($"<{key}> already has an entry");
-                    }
-                }
-
-                private void ProcessSectionPropertyAttribute(System.Type originalType, SectionPropertyAttribute attribute)
-                {
-                    var key = attribute.Key;
-
-                    var multiples = attribute.Many;
-                    if (multiples)
-                    {
-                        // Type is irrelevant
-                        this.AddMultiplesKey(key);
-                        return;
-                    }
-
-                    var type = attribute.Type ?? originalType;
-
-                    var enumeration = attribute.Enumeration;
-                    if (enumeration)
-                    {
-                        System.Diagnostics.Debug.Assert(type == typeof(string), "Enumeration must be of type string");
-                        this.AddEnumerationKey(key);
-                        return;
-                    }
-
-                    var hex = attribute.Hexadecimal;
-
-                    if (type == typeof(string))
-                    {
-                        System.Diagnostics.Debug.Assert(!enumeration, "Enumeration case should already have been handled");
-                        System.Diagnostics.Debug.Assert(!hex, "Cannot have a hexadecimal string type");
-                        this.AddStringKey(key);
-                    }
-                    else if (type == typeof(int) || type == typeof(Nullable<int>))
-                    {
-                        if (hex)
-                        {
-                            this.AddHexIntegerKey(key);
-                        }
-                        else
-                        {
-                            this.AddIntegerKey(key);
-                        }
-                    }
-                    else if (type == typeof(long) || type == typeof(Nullable<long>))
-                    {
-                        if (hex)
-                        {
-                            this.AddHexLongKey(key);
-                        }
-                        else
-                        {
-                            this.AddLongKey(key);
-                        }
-                    }
-                    else
-                    {
-                        throw new NotImplementedException($"Property type <{type}> has not been implemented");
                     }
                 }
 
@@ -182,31 +56,31 @@
                 {
                     var key = entry.Key;
                     var value = entry.Value;
-                    if (_string_keys.Contains(key))
+                    if (this.SectionProperties.StringKeys.Contains(key))
                     {
                         this._strings.Add(key, ExtractString(value));
                     }
-                    else if (_enumeration_keys.Contains(key))
+                    else if (this.SectionProperties.EnumerationKeys.Contains(key))
                     {
                         this._strings.Add(key, ExtractEnumeration(value));
                     }
-                    else if (_integer_keys.Contains(key))
+                    else if (this.SectionProperties.IntegerKeys.Contains(key))
                     {
                         this._integers.Add(key, ExtractInteger(value));
                     }
-                    else if (_hex_integer_keys.Contains(key))
+                    else if (this.SectionProperties.HexIntegerKeys.Contains(key))
                     {
                         this._integers.Add(key, ExtractHexInteger(value));
                     }
-                    else if (_long_keys.Contains(key))
+                    else if (this.SectionProperties.LongKeys.Contains(key))
                     {
                         this._longs.Add(key, ExtractLong(value));
                     }
-                    else if (_hex_long_keys.Contains(key))
+                    else if (this.SectionProperties.HexLongKeys.Contains(key))
                     {
                         this._longs.Add(key, ExtractHexLong(value));
                     }
-                    else if (_multiple_keys.Contains(key))
+                    else if (this.SectionProperties.MultipleKeys.Contains(key))
                     {
                         this._multiples.Add(key, ExtractCompoundInteger(value));
                     }
@@ -228,10 +102,14 @@
 
                 protected static string ExtractString(string value) => value.Trim('"');
                 protected static string ExtractEnumeration(string value) => value;
-                protected static int ExtractHexInteger(string value) => int.Parse(value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                protected static long ExtractHexLong(string value) => long.Parse(value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                protected static int ExtractInteger(string value) => int.Parse(value);
-                protected static long ExtractLong(string value) => long.Parse(value);
+
+                private static T ExtractHexValue<T>(string value) where T : INumberBase<T> => T.Parse(value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                private static T ExtractNumericValue<T>(string value) where T : IParsable<T> => T.Parse(value, CultureInfo.InvariantCulture);
+
+                protected static int ExtractHexInteger(string value) => ExtractHexValue<int>(value);
+                protected static long ExtractHexLong(string value) => ExtractHexValue<long>(value);
+                protected static int ExtractInteger(string value) => ExtractNumericValue<int>(value);
+                protected static long ExtractLong(string value) => ExtractNumericValue<long>(value);
                 protected static List<string> ExtractCompoundString(string value) => new(value.Split('+'));
                 protected static List<int> ExtractCompoundInteger(string value)
                 {
