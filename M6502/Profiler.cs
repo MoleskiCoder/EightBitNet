@@ -132,7 +132,8 @@
 
                         // Dump a profile/disassembly line
                         var source = this.disassembler.Disassemble(address);
-                        this.OnEmitLine(source, cycles, count);
+                        var position = Disassembler.DumpWordValue(address);
+                        this.OnEmitLine($"{position}:{source}", cycles, count);
                     }
                 }
             }
