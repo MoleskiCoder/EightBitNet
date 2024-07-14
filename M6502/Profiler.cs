@@ -64,12 +64,14 @@
         {
             get
             {
+                Debug.Assert(this.totalCyclesValid);
                 return this.totalCycles;
             }
             private set
             {
                 Debug.Assert(!this.totalCyclesValid);
                 this.totalCycles = value;
+                this.totalCyclesValid = true;
             }
         }
         public void Generate()
@@ -88,7 +90,6 @@
         private void EmitProfileInformation()
         {
             this.TotalCycles = this.instructionCycles.Sum();
-            this.totalCyclesValid = true;
 
             this.EmitProfileLineInformation();
             this.EmitProfileScopeInformation();
