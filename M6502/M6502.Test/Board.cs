@@ -215,7 +215,17 @@ namespace M6502.Test
         private void Profiler_EmitLine(object? sender, ProfileLineEventArgs e)
         {
             var proportion = (double)e.Cycles / this.profiler.TotalCycles;
-            Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, e.Source));
+
+            var cycleDistributions = e.CycleDistributions;
+            Debug.Assert(cycleDistributions.Count > 0);
+            var distributions = "\t#";
+            foreach (var (cycles, count) in cycleDistributions)
+            {
+                distributions += $" {cycles}:{count:N0}";
+            }
+
+            var output = $"\t[{proportion:P2}][{e.Cycles:d9}][{e.Count:d9}]\t{Disassembler.DumpWordValue(e.Address)}:{e.Source}{distributions}";
+            Console.Out.WriteLine(output);
         }
 
         private void Profiler_EmitInstruction(object? sender, ProfileInstructionEventArgs e)

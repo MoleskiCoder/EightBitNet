@@ -1,7 +1,11 @@
 ﻿namespace EightBit
 {
-    public class ProfileLineEventArgs(string source, long cycles, long count) : CycleCountedEventArgs(cycles, count)
+    public class ProfileLineEventArgs(ushort address, string source, long cycles, long count, Dictionary<int, long> cycleDistributions) : CycleCountedEventArgs(cycles, count)
     {
+        public ushort Address { get; } = address;
+
         public string Source { get; } = source;
+
+        public Dictionary<int, long> CycleDistributions { get; } = cycleDistributions;
     }
 }

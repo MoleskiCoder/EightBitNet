@@ -6,9 +6,7 @@
     {
         private readonly long[] instructionCounts = new long[0x100];
         private readonly long[] instructionCycles = new long[0x100];
-        private readonly long[] addressCycles = new long[0x10000];
-        private readonly long[] addressCounts = new long[0x10000];
-
+        private readonly Dictionary<int, long>[] addressCycleDistributions = new Dictionary<int, long>[0x10000];  // Addresses -> cycles -> counts
         private readonly Dictionary<int, long> scopeCycles = []; // ID -> Cycles
 
         private readonly M6502 processor;
@@ -105,7 +103,8 @@
                 {
                     var symbol = this.symbols.LookupLabelByID(id);
                     Debug.Assert(symbol != null);
-                    var count = this.addressCounts[symbol.Value];
+                    var available = this.ExtractCycleDistribution((ushort)symbol.Value, out var _,out var _, out var count);
+                    Debug.Assert(available);
                     this.OnEmitScope(id, cycles, count);
                 }
             }
@@ -123,18 +122,13 @@
                 // For each memory address
                 for (var i = 0; i < 0x10000; ++i)
                 {
-                    // If there are any cycles associated
-                    var cycles = this.addressCycles[i];
-                    if (cycles > 0)
+                    var address = (ushort)i;
+                    var available = this.ExtractCycleDistribution(address, out var cycleDistributions, out var cycles, out var count);
+                    if (available)
                     {
-                        var count = this.addressCounts[i];
-                        Debug.Assert(count > 0);
-                        var address = (ushort)i;
-
                         // Dump a profile/disassembly line
                         var source = this.disassembler.Disassemble(address);
-                        var position = Disassembler.DumpWordValue(address);
-                        this.OnEmitLine($"{position}:{source}", cycles, count);
+                        this.OnEmitLine(address, source, cycles, count, cycleDistributions);
                     }
                 }
             }
@@ -177,7 +171,6 @@
             this.executingAddress = this.processor.Bus.Address.Word;
             this.executingInstruction = this.processor.Bus.Peek(this.executingAddress);
 
-            ++this.addressCounts[this.executingAddress];
             ++this.instructionCounts[this.processor.Bus.Data];
         }
 
@@ -185,17 +178,48 @@
         {
             var cycles = this.processor.Cycles;
 
-            this.addressCycles[this.executingAddress] += cycles;
+            {
+                var addressDistribution = this.addressCycleDistributions[this.executingAddress];
+                if (addressDistribution == null)
+                {
+                    this.addressCycleDistributions[this.executingAddress] = addressDistribution = [];
+                }
+                _ = addressDistribution.TryGetValue(cycles, out var current);
+                addressDistribution[cycles] = ++current;
+            }
+
             this.instructionCycles[this.executingInstruction] += cycles;
 
-            var scope = this.symbols.LookupScopeByAddress(this.executingAddress);
-            if (scope != null)
             {
-                var id = scope.ID;
-                // Current will be initialised to zero, if absent
-                _ = this.scopeCycles.TryGetValue(id, out var current);
-                this.scopeCycles[id] = current + cycles;
+                var scope = this.symbols.LookupScopeByAddress(this.executingAddress);
+                if (scope != null)
+                {
+                    var id = scope.ID;
+                    // Current will be initialised to zero, if absent
+                    _ = this.scopeCycles.TryGetValue(id, out var current);
+                    this.scopeCycles[id] = current + cycles;
+                }
             }
+        }
+
+        private bool ExtractCycleDistribution(ushort address, out Dictionary<int, long> cycleDistribution, out long cycleCount, out long hitCount)
+        {
+            cycleDistribution = addressCycleDistributions[address];
+            if (cycleDistribution == null)
+            {
+                cycleCount = -1;
+                hitCount = -1;
+                return false;
+            }
+
+            cycleCount = hitCount = 0L;
+            foreach (var (cycle, count) in cycleDistribution)
+            {
+                hitCount += count;
+                cycleCount += (cycle * count);
+            }
+
+            return true;
         }
 
         private void OnStartingOutput()
@@ -238,9 +262,9 @@
             this.FinishedScopeOutput?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnEmitLine(string source, long cycles, long count)
+        private void OnEmitLine(ushort address, string source, long cycles, long count, Dictionary<int, long> cycleDistributions)
         {
-            this.EmitLine?.Invoke(this, new ProfileLineEventArgs(source, cycles, count));
+            this.EmitLine?.Invoke(this, new ProfileLineEventArgs(address, source, cycles, count, cycleDistributions));
         }
 
         private void OnEmitScope(int id, long cycles, long count)
