@@ -128,6 +128,7 @@
                     {
                         // Dump a profile/disassembly line
                         var source = this.disassembler.Disassemble(address);
+                        Debug.Assert(cycleDistributions != null);
                         this.OnEmitLine(address, source, cycles, count, cycleDistributions);
                     }
                 }
@@ -202,7 +203,7 @@
             }
         }
 
-        private bool ExtractCycleDistribution(ushort address, out Dictionary<int, long> cycleDistribution, out long cycleCount, out long hitCount)
+        private bool ExtractCycleDistribution(ushort address, out Dictionary<int, long>? cycleDistribution, out long cycleCount, out long hitCount)
         {
             cycleDistribution = addressCycleDistributions[address];
             if (cycleDistribution == null)
@@ -212,12 +213,17 @@
                 return false;
             }
 
+            Debug.Assert(cycleDistribution.Count > 0);
+
             cycleCount = hitCount = 0L;
             foreach (var (cycle, count) in cycleDistribution)
             {
                 hitCount += count;
                 cycleCount += (cycle * count);
             }
+
+            Debug.Assert(hitCount > 0);
+            Debug.Assert(cycleCount > 0);
 
             return true;
         }

@@ -19,11 +19,11 @@ namespace Z80.Test
         public Board(Configuration configuration)
         {
             this.configuration = configuration;
-            this.ram = new Ram(0x10000);
-            this.ports = new InputOutput();
-            this.CPU = new Z80(this, this.ports);
-            this.disassembler = new Disassembler(this);
-            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.ram = new(0x10000);
+            this.ports = new();
+            this.CPU = new(this, this.ports);
+            this.disassembler = new(this);
+            this.mapping = new(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }
 
         public Z80 CPU { get; }
@@ -81,7 +81,7 @@ namespace Z80.Test
             }
         }
 
-        private void CPU_ExecutingInstruction_CPM(object sender, System.EventArgs e)
+        private void CPU_ExecutingInstruction_CPM(object? sender, System.EventArgs e)
         {
             if (this.CPU.PC.High != 0)
             {
@@ -105,8 +105,8 @@ namespace Z80.Test
             }
         }
 
-        private void CPU_LoweredHALT(object sender, System.EventArgs e) => this.LowerPOWER();
+        private void CPU_LoweredHALT(object? sender, System.EventArgs e) => this.LowerPOWER();
 
-        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
+        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
     }
 }

@@ -3,7 +3,7 @@
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
-    internal class OpcodeTestSuite(string path) : IDisposable
+    internal sealed class OpcodeTestSuite(string path) : IDisposable
     {
         private static readonly JsonSerializerOptions SerializerOptions = new()
         {
@@ -18,7 +18,7 @@
 
         public IAsyncEnumerable<Test?> TestsAsync => JsonSerializer.DeserializeAsyncEnumerable<Test>(this.stream, SerializerOptions);
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!this.disposed)
             {

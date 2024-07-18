@@ -118,13 +118,13 @@ namespace EightBit
 
         public override Register16 HL => this.registers[this.registerSet, (int)RegisterIndex.IndexHL];
 
-        public Register16 IX { get; } = new Register16(0xffff);
+        public Register16 IX { get; } = new(0xffff);
 
         public byte IXH { get => this.IX.High; set => this.IX.High = value; }
 
         public byte IXL { get => this.IX.Low; set => this.IX.Low = value; }
 
-        public Register16 IY { get; } = new Register16(0xffff);
+        public Register16 IY { get; } = new(0xffff);
 
         public byte IYH { get => this.IY.High; set => this.IY.High = value; }
 
@@ -410,7 +410,7 @@ namespace EightBit
             this.DisableInterrupts();
             this.IM = 0;
 
-            this.REFRESH = new RefreshRegister(0);
+            this.REFRESH = new(0);
             this.IV = (byte)Mask.Eight;
 
             this.ExxAF();

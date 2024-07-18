@@ -12,8 +12,8 @@ namespace M6502.Test
     internal class Board : Bus
     {
         private readonly Configuration configuration;
-        private readonly Ram ram;
-        private readonly EightBit.Files.Symbols.Parser symbols;
+        private readonly Ram ram = new(0x10000);
+        private readonly EightBit.Files.Symbols.Parser symbols = new();
         private readonly Disassembler disassembler;
         private readonly Profiler profiler;
         private readonly MemoryMapping mapping;
@@ -30,12 +30,10 @@ namespace M6502.Test
         public Board(Configuration configuration)
         {
             this.configuration = configuration;
-            this.ram = new Ram(0x10000);
-            this.CPU = new M6502(this);
-            this.symbols = new EightBit.Files.Symbols.Parser();
-            this.disassembler = new Disassembler(this, this.CPU, this.symbols);
-            this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
-            this.profiler = new Profiler(this.CPU, this.disassembler, this.symbols, this.configuration.Profile);
+            this.CPU = new(this);
+            this.disassembler = new(this, this.CPU, this.symbols);
+            this.mapping = new(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.profiler = new(this.CPU, this.disassembler, this.symbols, this.configuration.Profile);
         }
 
         public M6502 CPU { get; }

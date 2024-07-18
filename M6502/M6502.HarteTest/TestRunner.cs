@@ -2,7 +2,7 @@
 {
     using EightBit;
 
-    internal class TestRunner : Bus
+    internal sealed class TestRunner : Bus
     {
         public Ram RAM { get; } = new(0x10000);
 
@@ -26,7 +26,7 @@
             base.LowerPOWER();
         }
 
-        public override MemoryMapping Mapping(ushort absolute) => this.mapping;
+        public override MemoryMapping Mapping(ushort _) => this.mapping;
 
         public override void RaisePOWER()
         {

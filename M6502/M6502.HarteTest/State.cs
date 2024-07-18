@@ -1,6 +1,6 @@
 ﻿namespace M6502.HarteTest
 {
-    public class State
+    public sealed class State
     {
         public ushort PC { get; set; }
 

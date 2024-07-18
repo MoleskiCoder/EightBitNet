@@ -20,7 +20,7 @@ namespace EightBit
         {
             for (var i = 0; i < 0x100; ++i)
             {
-                this.decodedOpCodes[i] = new IntelOpCodeDecoded((byte)i);
+                this.decodedOpCodes[i] = new((byte)i);
             }
         }
 
@@ -32,9 +32,9 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? LoweredHALT;
 
-        public Register16 SP { get; } = new Register16((ushort)Mask.Sixteen);
+        public Register16 SP { get; } = new((ushort)Mask.Sixteen);
 
-        public Register16 MEMPTR { get; } = new Register16((ushort)Mask.Sixteen);
+        public Register16 MEMPTR { get; } = new((ushort)Mask.Sixteen);
 
         public abstract Register16 AF { get; }
 

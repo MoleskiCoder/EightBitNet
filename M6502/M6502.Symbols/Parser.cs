@@ -306,7 +306,7 @@
 
                 private void ExtractTypes() => this.Extract<Type>("type", this.Types);
 
-                private void Extract<T>(string key, List<T> into) where T : IdentifiableSection//, new()
+                private void Extract<T>(string key, List<T> into) where T : IdentifiableSection
                 {
                     if (this._parsed == null)
                     {
@@ -420,12 +420,12 @@
 
                     if (key is "version")
                     {
-                        this._version = new Version(this);
+                        this._version = new(this);
                         this._version.Parse(BuildDictionary(parts));
                     }
                     else if (key is "info")
                     {
-                        this._information = new Information(this);
+                        this._information = new(this);
                         this._information.Parse(BuildDictionary(parts));
                     }
                     else

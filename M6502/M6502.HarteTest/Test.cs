@@ -1,6 +1,6 @@
 ﻿namespace M6502.HarteTest
 {
-    public class Test
+    public sealed class Test
     {
         public string? Name { get; set; }
 
@@ -21,16 +21,6 @@
             {
                 yield return new Cycle(cycle);
             }
-        }
-
-        public Cycle CycleAt(int index)
-        {
-            if (this.Cycles == null)
-            {
-                throw new InvalidOperationException("Cycles have not been initialised");
-            }
-
-            return new Cycle(this.Cycles[index]);
         }
     }
 }

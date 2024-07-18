@@ -14,9 +14,9 @@ namespace Z80.Test
 
         public bool DebugMode { get; set; } = false;
 
-        public Register16 LoadAddress { get; } = new Register16(0x100);
+        public Register16 LoadAddress { get; } = new(0x100);
 
-        public Register16 StartAddress { get; } = new Register16(0x100);
+        public Register16 StartAddress { get; } = new(0x100);
 
         public string RomDirectory { get; } = "roms";
 

@@ -1,6 +1,8 @@
 ﻿namespace M6502.HarteTest
 {
-    internal class Checker
+    using System.Diagnostics;
+
+    internal sealed class Checker
     {
         private TestRunner Runner { get; }
 
@@ -27,15 +29,14 @@
         public Checker(TestRunner runner)
         {
             this.Runner = runner;
-            this.Disassembler = new EightBit.Disassembler(this.Runner, this.Runner.CPU, this.Symbols);
+            this.Disassembler = new(this.Runner, this.Runner.CPU, this.Symbols);
         }
 
         public void Check(Test test)
         {
             var cpu = this.Runner.CPU;
 
-            this.Messages.Clear();
-            this.ActualCycles.Clear();
+            this.Reset();
 
             this.Runner.RaisePOWER();
             this.InitialiseState(test);
@@ -52,7 +53,8 @@
                 return;
             }
 
-            if (this.Invalid && this.Implemented)
+            Debug.Assert(this.Implemented);
+            if (this.Invalid)
             {
                 this.AddDisassembly(pc);
 
@@ -77,6 +79,16 @@
                 this.DumpCycles("-- Expected cycles", test.AvailableCycles());
                 this.DumpCycles("-- Actual cycles", this.ActualCycles);
             }
+        }
+
+        private void Reset()
+        {
+            this.Messages.Clear();
+            this.ActualCycles.Clear();
+
+            this.CycleCountMismatch = false;
+            this.Cycles = 0;
+            this.Valid = false;
         }
 
         private bool Check(string what, ushort expected, ushort actual)
@@ -143,34 +155,34 @@
             var cpu = this.Runner.CPU;
             var ram = this.Runner.RAM;
 
-            var expected_cycles = test.AvailableCycles() ?? throw new InvalidOperationException("Expected cycles cannot be null");
-            var actual_cycles = this.ActualCycles;
+            var expectedCycles = test.AvailableCycles();
+            var actualCycles = this.ActualCycles;
 
-            var actual_idx = 0;
-            foreach (var expected_cycle in expected_cycles) {
+            var actualIDX = 0;
+            foreach (var expectedCycle in expectedCycles) {
 
-                if (actual_idx >= actual_cycles.Count)
+                if (actualIDX >= actualCycles.Count)
                 {
                     this.CycleCountMismatch = true;
                     return false; // more expected cycles than actual
                 }
 
-                var actual_cycle = actual_cycles[actual_idx++];
+                var actualCycle = actualCycles[actualIDX++];
 
-                var expected_address = expected_cycle.Address;
-                var actual_address = actual_cycle.Address;
-                _ = this.Check("Cycle address", expected_address, actual_address);
+                var expectedAddress = expectedCycle.Address;
+                var actualAddress = actualCycle.Address;
+                _ = this.Check("Cycle address", expectedAddress, actualAddress);
 
-                var expected_value = expected_cycle.Value;
-                var actual_value = actual_cycle.Value;
-                _ = this.Check("Cycle value", expected_value, actual_value);
+                var expectedValue = expectedCycle.Value;
+                var actualValue = actualCycle.Value;
+                _ = this.Check("Cycle value", expectedValue, actualValue);
 
-                var expected_action = expected_cycle.Type;
-                var actual_action = actual_cycle.Type;
-                _ = this.Check("Cycle action", expected_action, actual_action);
+                var expectedAction = expectedCycle.Type;
+                var actualAction = actualCycle.Type;
+                _ = this.Check("Cycle action", expectedAction, actualAction);
             }
 
-            if (actual_idx < actual_cycles.Count)
+            if (actualIDX < actualCycles.Count)
             {
                 this.CycleCountMismatch = true;
                 return false; // less expected cycles than actual
@@ -194,7 +206,7 @@
                 throw new InvalidOperationException("Expected RAM cannot be null");
             }
 
-            var ram_problem = false;
+            var ramProblem = false;
             foreach (var entry in final.RAM)
             {
                 if (entry.Length != 2)
@@ -205,17 +217,17 @@
                 var address = (ushort)entry[0];
                 var value = (byte)entry[1];
 
-                var ram_good = this.Check("RAM", address, value, ram.Peek(address));
-                if (!ram_good && !ram_problem)
+                var ramGood = this.Check("RAM", address, value, ram.Peek(address));
+                if (!ramGood && !ramProblem)
                 {
-                    ram_problem = true;
+                    ramProblem = true;
                 }
             }
 
             return
                 pc_good && s_good
                 && a_good && x_good && y_good && p_good
-                && !ram_problem;
+                && !ramProblem;
         }
 
         private void Raise(string what, ushort expected, ushort actual) => this.Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");

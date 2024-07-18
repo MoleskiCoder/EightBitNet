@@ -1,6 +1,6 @@
 ﻿namespace M6502.HarteTest
 {
-    internal class ProcessorTestSuite(string location)
+    internal sealed class ProcessorTestSuite(string location)
     {
         public string Location { get; set; } = location;
 

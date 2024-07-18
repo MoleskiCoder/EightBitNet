@@ -7,15 +7,13 @@ namespace Z80.Test
     using System;
     using System.Diagnostics;
 
-    internal class TestHarness : IDisposable
+    internal class TestHarness(Configuration configuration) : IDisposable
     {
-        private readonly Stopwatch timer = new Stopwatch();
-        private readonly Board board;
+        private readonly Stopwatch timer = new();
+        private readonly Board board = new(configuration);
         private long totalCycles = 0;
 
         private bool disposed = false;
-
-        public TestHarness(Configuration configuration) => this.board = new Board(configuration);
 
         public void Dispose()
         {
