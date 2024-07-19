@@ -8,8 +8,11 @@
         {
             foreach (var filename in Directory.EnumerateFiles(this.Location, "*.json"))
             {
-                yield return new OpcodeTestSuite(filename);
+                var fileInformation = new FileInfo(filename);
+                if (fileInformation.Length > 0)
+                {
+                    yield return new OpcodeTestSuite(filename);
+                }
             }
         }
     }
-}
