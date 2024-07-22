@@ -80,8 +80,7 @@ namespace EightBit
                 this.Bus.Address.High++;
             }
 
-            this.Bus.Address.High = this.MemoryRead();
-            this.Bus.Address.Low = this.Intermediate.Low;
+            this.Bus.Address.Assign(this.Intermediate.Low, this.MemoryRead());
         }
 
         protected override void IndirectAddress()
