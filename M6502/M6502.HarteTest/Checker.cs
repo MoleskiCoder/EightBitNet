@@ -29,7 +29,7 @@
         public Checker(TestRunner runner)
         {
             this.Runner = runner;
-            this.Disassembler = new(this.Runner, this.Runner.CPU, this.Symbols);
+            this.Disassembler = new(this.Runner, (EightBit.M6502Core)this.Runner.CPU, this.Symbols);
         }
 
         public void Check(Test test)
@@ -200,6 +200,12 @@
             var x_good = this.Check("X", final.X, cpu.X);
             var y_good = this.Check("Y", final.Y, cpu.Y);
             var p_good = this.Check("P", final.P, cpu.P);
+
+            if (!p_good)
+            {
+                this.Messages.Add($"Expected flags: {EightBit.Disassembler.DumpFlags(final.P)}");
+                this.Messages.Add($"Actual flags  : {EightBit.Disassembler.DumpFlags(cpu.P)}");
+            }
 
             if (final.RAM == null)
             {

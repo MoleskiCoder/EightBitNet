@@ -7,10 +7,10 @@ namespace EightBit
     using System.Globalization;
     using System.Text;
 
-    public class Disassembler(Bus bus, M6502 processor, Files.Symbols.Parser symbols)
+    public class Disassembler(Bus bus, M6502Core processor, Files.Symbols.Parser symbols)
     {
         private readonly Bus bus = bus;
-        private readonly M6502 processor = processor;
+        private readonly M6502Core processor = processor;
         private readonly Files.Symbols.Parser symbols = symbols;
         private ushort address;
 
