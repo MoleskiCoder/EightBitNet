@@ -145,6 +145,43 @@ namespace EightBit
 
         #endregion
 
+        #region Bus/Memory Access
+
+        protected override void ModifyWrite(byte data)
+        {
+            // The read will have already taken place...
+            this.MemoryWrite();     // Modify cycle
+            this.MemoryWrite(data); // Write cycle
+        }
+
+        #endregion
+
+        #region Addressing modes
+
+        protected override void IndirectAddress()
+        {
+            this.AbsoluteAddress();
+            this.GetAddressPaged();
+        }
+
+        #region Address page fixup
+
+        protected override void Fixup()
+        {
+            this.MemoryRead();
+            this.Bus.Address.High = this.FixedPage;
+        }
+
+        protected override void FixupBranch(sbyte relative)
+        {
+            this.NoteFixedAddress(this.PC.Word + relative);
+            this.MaybeFixup();
+        }
+
+        #endregion
+
+        #endregion
+
         #region Instruction implementations
 
         #region Undocumented instructions

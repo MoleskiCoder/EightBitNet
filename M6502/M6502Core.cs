@@ -1,10 +1,10 @@
-﻿// <copyright file="M6502.cs" company="Adrian Conlon">
+﻿// <copyright file="M6502Core.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
 namespace EightBit
 {
-    public class M6502Core(Bus bus) : LittleEndianProcessor(bus)
+    public abstract class M6502Core(Bus bus) : LittleEndianProcessor(bus)
     {
         #region Instruction execution events
 
@@ -215,11 +215,11 @@ namespace EightBit
         private const byte RSTvector = 0xfc;  // RST vector
         private const byte NMIvector = 0xfa;  // NMI vector
 
-        enum InterruptSource { hardware, software };
+        protected enum InterruptSource { hardware, software };
 
-        enum InterruptType { reset, non_reset };
+        protected enum InterruptType { reset, non_reset };
 
-        private void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
+        protected virtual void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.non_reset)
         {
             if (type == InterruptType.reset)
             {
@@ -615,12 +615,7 @@ namespace EightBit
             base.BusWrite();
         }
 
-        protected void ModifyWrite(byte data)
-        {
-            // The read will have already taken place...
-            this.MemoryWrite();
-            this.MemoryWrite(data);
-        }
+        protected abstract void ModifyWrite(byte data);
 
         #endregion
 
@@ -659,19 +654,12 @@ namespace EightBit
 
         #region Address page fixup
 
-        private byte unfixedPage;
         private byte fixedPage;
-
-        public byte UnfixedPage
-        {
-            get => this.unfixedPage;
-            private set => this.unfixedPage = value;
-        }
 
         public byte FixedPage
         {
             get => this.fixedPage;
-            private set => this.fixedPage = value;
+            protected set => this.fixedPage = value;
         }
 
         protected void MaybeFixup()
@@ -682,12 +670,7 @@ namespace EightBit
             }
         }
 
-        protected void Fixup()
-        {
-            this.MemoryRead();
-            this.UnfixedPage = this.Bus.Address.High;
-            this.Bus.Address.High = this.FixedPage;
-        }
+        protected abstract void Fixup();
 
         protected void MaybeFixupRead()
         {
@@ -705,19 +688,19 @@ namespace EightBit
 
         #region Address resolution
 
-        private void NoteFixedAddress(int address)
+        protected void NoteFixedAddress(int address)
         {
             this.NoteFixedAddress((ushort)address);
         }
 
-        private void NoteFixedAddress(ushort address)
+        protected void NoteFixedAddress(ushort address)
         {
             this.Intermediate.Word = address;
             this.FixedPage = this.Intermediate.High;
             this.Bus.Address.Low = this.Intermediate.Low;
         }
 
-        private void GetAddressPaged()
+        protected void GetAddressPaged()
         {
             this.GetWordPaged();
             this.Bus.Address.Assign(this.Intermediate);
@@ -742,11 +725,7 @@ namespace EightBit
             this.GetAddressPaged();
         }
 
-        protected void IndirectAddress()
-        {
-            this.AbsoluteAddress();
-            this.GetAddressPaged();
-        }
+        protected abstract void IndirectAddress();
 
         protected void ZeroPageWithIndexAddress(byte index)
         {
@@ -855,11 +834,12 @@ namespace EightBit
             {
                 var relative = (sbyte)this.Bus.Data;
                 this.SwallowRead();
-                this.NoteFixedAddress(this.PC.Word + relative);
-                this.MaybeFixup();
+                this.FixupBranch(relative);
                 this.Jump(this.Bus.Address);
             }
         }
+
+        protected abstract void FixupBranch(sbyte relative);
 
         #endregion
 
