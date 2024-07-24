@@ -6,15 +6,6 @@ namespace EightBit
 {
     public abstract class M6502Core(Bus bus) : LittleEndianProcessor(bus)
     {
-        #region Instruction execution events
-
-        public event EventHandler<EventArgs>? ExecutingInstruction;
-        public event EventHandler<EventArgs>? ExecutedInstruction;
-        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
-
-        #endregion
-
         #region Pin controls
 
         #region NMI pin
@@ -403,6 +394,7 @@ namespace EightBit
 
                 case 0x40: this.SwallowRead(); this.RTI(); break;                                           // RTI (implied)
                 case 0x41: this.IndexedIndirectXRead(); this.EorR(); break;                                 // EOR (indexed indirect X)
+                case 0x44: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
                 case 0x45: this.ZeroPageRead(); this.EorR(); break;                                         // EOR (zero page)
                 case 0x46: this.ZeroPageRead(); this.ModifyWrite(this.LSR()); break;                        // LSR (zero page)
                 case 0x48: this.SwallowRead(); this.Push(this.A); break;                                    // PHA (implied)
@@ -414,6 +406,7 @@ namespace EightBit
 
                 case 0x50: this.BranchNot(this.Overflow); break;                                            // BVC (relative)
                 case 0x51: this.IndirectIndexedYRead(); this.EorR(); break;                                 // EOR (indirect indexed Y)
+                case 0x54: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
                 case 0x55: this.ZeroPageXRead(); this.EorR(); break;                                        // EOR (zero page, X)
                 case 0x56: this.ZeroPageXRead(); this.ModifyWrite(this.LSR()); break;                       // LSR (zero page, X)
                 case 0x58: this.SwallowRead(); this.ResetFlag(StatusBits.IF); break;                        // CLI (implied)
@@ -441,7 +434,8 @@ namespace EightBit
                 case 0x7d: this.AbsoluteXRead(); this.ADC(); break;                                         // ADC (absolute, X)
                 case 0x7e: this.AbsoluteXAddress(); this.FixupRead(); this.ModifyWrite(this.ROR()); break;	// ROR (absolute, X)
 
-                case 0x81: this.IndexedIndirectXAddress(); this.MemoryWrite(A); break;                      // STA (indexed indirect X)
+                case 0x81: this.IndexedIndirectXAddress(); this.MemoryWrite(this.A); break;                      // STA (indexed indirect X)
+                case 0x82: this.ImmediateRead(); break;                                                         // *NOP (immediate)
                 case 0x84: this.ZeroPageAddress(); this.MemoryWrite(this.Y); break;                         // STY (zero page)
                 case 0x85: this.ZeroPageAddress(); this.MemoryWrite(this.A); break;	                        // STA (zero page)
                 case 0x86: this.ZeroPageAddress(); this.MemoryWrite(this.X); break;	                        // STX (zero page)
@@ -488,6 +482,7 @@ namespace EightBit
 
                 case 0xc0: this.ImmediateRead(); this.CMP(this.Y); break;                                   // CPY (immediate)
                 case 0xc1: this.IndexedIndirectXRead(); this.CMP(this.A); break;                            // CMP (indexed indirect X)
+                case 0xc2: this.ImmediateRead(); break;                                                         // *NOP (immediate)
                 case 0xc4: this.ZeroPageRead(); this.CMP(this.Y); break;                                    // CPY (zero page)
                 case 0xc5: this.ZeroPageRead(); this.CMP(this.A); break;                                    // CMP (zero page)
                 case 0xc6: this.ZeroPageRead(); this.ModifyWrite(this.DEC()); break;                        // DEC (zero page)
@@ -500,6 +495,7 @@ namespace EightBit
 
                 case 0xd0: this.BranchNot(this.Zero); break;                                                // BNE (relative)
                 case 0xd1: this.IndirectIndexedYRead(); this.CMP(this.A); break;                            // CMP (indirect indexed Y)
+                case 0xd4: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
                 case 0xd5: this.ZeroPageXRead(); this.CMP(this.A); break;                                   // CMP (zero page, X)
                 case 0xd6: this.ZeroPageXRead(); this.ModifyWrite(this.DEC()); break;                       // DEC (zero page, X)
                 case 0xd8: this.SwallowRead(); this.ResetFlag(StatusBits.DF); break;                        // CLD (implied)
@@ -509,6 +505,7 @@ namespace EightBit
 
                 case 0xe0: this.ImmediateRead(); this.CMP(this.X); break;                                   // CPX (immediate)
                 case 0xe1: this.IndexedIndirectXRead(); this.SBC(); break;                                  // SBC (indexed indirect X)
+                case 0xe2: this.ImmediateRead(); break;                                                         // *NOP (immediate)
                 case 0xe4: this.ZeroPageRead(); this.CMP(this.X); break;                                    // CPX (zero page)
                 case 0xe5: this.ZeroPageRead(); this.SBC(); break;                                          // SBC (zero page)
                 case 0xe6: this.ZeroPageRead(); this.ModifyWrite(INC()); break;                             // INC (zero page)
@@ -521,6 +518,7 @@ namespace EightBit
 
                 case 0xf0: this.Branch(this.Zero); break;                                                   // BEQ (relative)
                 case 0xf1: this.IndirectIndexedYRead(); this.SBC(); break;                                  // SBC (indirect indexed Y)
+                case 0xf4: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
                 case 0xf5: this.ZeroPageXRead(); this.SBC(); break;                                         // SBC (zero page, X)
                 case 0xf6: this.ZeroPageXRead(); this.ModifyWrite(this.INC()); break;                       // INC (zero page, X)
                 case 0xf8: this.SwallowRead(); this.SetFlag(StatusBits.DF); break;                          // SED (implied)
@@ -532,42 +530,34 @@ namespace EightBit
             return cycles != this.Cycles;
         }
 
-        public override int Step()
+        public override void PoweredStep()
         {
-            this.ResetCycles();
-            this.OnExecutingInstruction();
-            if (this.Powered)
+            this.Tick();
+            if (this.SO.Lowered())
             {
-                this.Tick();
-                if (this.SO.Lowered())
-                {
-                    this.HandleSO();
-                }
-
-                if (this.RDY.Raised())
-                {
-                    this.FetchInstruction();
-                    if (this.RESET.Lowered())
-                    {
-                        this.HandleRESET();
-                    }
-                    else if (this.NMI.Lowered())
-                    {
-                        this.HandleNMI();
-                    }
-                    else if (this.INT.Lowered() && (this.InterruptMasked == 0))
-                    {
-                        this.HandleINT();
-                    }
-                    else
-                    {
-                        this.Execute();
-                    }
-                }
+                this.HandleSO();
             }
 
-            this.OnExecutedInstruction();
-            return this.Cycles;
+            if (this.RDY.Raised())
+            {
+                this.FetchInstruction();
+                if (this.RESET.Lowered())
+                {
+                    this.HandleRESET();
+                }
+                else if (this.NMI.Lowered())
+                {
+                    this.HandleNMI();
+                }
+                else if (this.INT.Lowered() && (this.InterruptMasked == 0))
+                {
+                    this.HandleINT();
+                }
+                else
+                {
+                    this.Execute();
+                }
+            }
         }
 
         private void FetchInstruction()

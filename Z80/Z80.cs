@@ -42,10 +42,6 @@ namespace EightBit
         private sbyte displacement = 0;
         private bool displaced = false;
 
-        public event EventHandler<EventArgs>? ExecutingInstruction;
-
-        public event EventHandler<EventArgs>? ExecutedInstruction;
-
         public event EventHandler<EventArgs>? RaisingNMI;
 
         public event EventHandler<EventArgs>? RaisedNMI;
@@ -340,63 +336,55 @@ namespace EightBit
             }
         }
 
-        public override int Step()
+        public override void PoweredStep()
         {
-            this.ResetCycles();
-            this.OnExecutingInstruction();
-            if (this.Powered)
+            this.displaced = this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
+            var handled = false;
+            if (this.RESET.Lowered())
             {
-                this.displaced = this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
-                var handled = false;
-                if (this.RESET.Lowered())
+                this.HandleRESET();
+                handled = true;
+            }
+            else if (this.NMI.Lowered())
+            {
+                this.HandleNMI();
+                handled = true;
+            }
+            else if (this.INT.Lowered())
+            {
+                this.RaiseINT();
+                this.RaiseHALT();
+                if (this.IFF1)
                 {
-                    this.HandleRESET();
+                    this.HandleINT();
                     handled = true;
-                }
-                else if (this.NMI.Lowered())
-                {
-                    this.HandleNMI();
-                    handled = true;
-                }
-                else if (this.INT.Lowered())
-                {
-                    this.RaiseINT();
-                    this.RaiseHALT();
-                    if (this.IFF1)
-                    {
-                        this.HandleINT();
-                        handled = true;
-                    }
-                }
-                else if (this.HALT.Lowered())
-                {
-                    // ** From the Z80 CPU User Manual
-                    // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
-                    // is received(either a nonmaskable or a maskable interrupt while the interrupt flip-flop is
-                    // enabled). The two interrupt lines are sampled with the rising clock edge during each T4
-                    // state as depicted in Figure 11.If a nonmaskable interrupt is received or a maskable interrupt
-                    // is received and the interrupt enable flip-flop is set, then the HALT state is exited on
-                    // the next rising clock edge.The following cycle is an interrupt acknowledge cycle corresponding
-                    // to the type of interrupt that was received.If both are received at this time, then
-                    // the nonmaskable interrupt is acknowledged because it is the highest priority.The purpose
-                    // of executing NOP instructions while in the HALT state is to keep the memory refresh signals
-                    // active.Each cycle in the HALT state is a normal M1(fetch) cycle except that the data
-                    // received from the memory is ignored and an NOP instruction is forced internally to the
-                    // CPU.The HALT acknowledge signal is active during this time indicating that the processor
-                    // is in the HALT state.
-                    _ = this.ReadInitialOpCode();
-                    this.Execute(0); // NOP
-                    handled = true;
-                }
-
-                if (!handled)
-                {
-                    this.Execute(this.FetchInitialOpCode());
                 }
             }
+            else if (this.HALT.Lowered())
+            {
+                // ** From the Z80 CPU User Manual
+                // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
+                // is received(either a nonmaskable or a maskable interrupt while the interrupt flip-flop is
+                // enabled). The two interrupt lines are sampled with the rising clock edge during each T4
+                // state as depicted in Figure 11.If a nonmaskable interrupt is received or a maskable interrupt
+                // is received and the interrupt enable flip-flop is set, then the HALT state is exited on
+                // the next rising clock edge.The following cycle is an interrupt acknowledge cycle corresponding
+                // to the type of interrupt that was received.If both are received at this time, then
+                // the nonmaskable interrupt is acknowledged because it is the highest priority.The purpose
+                // of executing NOP instructions while in the HALT state is to keep the memory refresh signals
+                // active.Each cycle in the HALT state is a normal M1(fetch) cycle except that the data
+                // received from the memory is ignored and an NOP instruction is forced internally to the
+                // CPU.The HALT acknowledge signal is active during this time indicating that the processor
+                // is in the HALT state.
+                _ = this.ReadInitialOpCode();
+                this.Execute(0); // NOP
+                handled = true;
+            }
 
-            this.OnExecutedInstruction();
-            return this.Cycles;
+            if (!handled)
+            {
+                this.Execute(this.FetchInitialOpCode());
+            }
         }
 
         protected override void OnRaisedPOWER()
@@ -422,10 +410,6 @@ namespace EightBit
 
             base.OnRaisedPOWER();
         }
-
-        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnRaisingNMI() => this.RaisingNMI?.Invoke(this, EventArgs.Empty);
 

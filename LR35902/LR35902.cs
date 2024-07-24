@@ -15,10 +15,6 @@ namespace EightBit.GameBoy
         public LR35902(Bus bus)
         : base(bus) => this.bus = bus;
 
-        public event EventHandler<EventArgs> ExecutingInstruction;
-
-        public event EventHandler<EventArgs> ExecutedInstruction;
-
         public int ClockCycles => this.Cycles * 4;
 
         public override Register16 AF
@@ -63,60 +59,49 @@ namespace EightBit.GameBoy
             System.Diagnostics.Debug.Assert(this.Cycles > 0, $"No timing associated with instruction (CB prefixed? {this.prefixCB}) 0x{this.OpCode:X2}");
         }
 
-        public override int Step()
+        public override void PoweredStep()
         {
-            this.OnExecutingInstruction();
             this.prefixCB = false;
-            this.ResetCycles();
-            if (this.Powered)
+
+            var interruptEnable = this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
+            var interruptFlags = this.bus.IO.Peek(IoRegisters.IF);
+
+            var masked = interruptEnable & interruptFlags;
+            if (masked != 0)
             {
-                var interruptEnable = this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
-                var interruptFlags = this.bus.IO.Peek(IoRegisters.IF);
-
-                var masked = interruptEnable & interruptFlags;
-                if (masked != 0)
+                if (this.IME)
                 {
-                    if (this.IME)
-                    {
-                        this.bus.IO.Poke(IoRegisters.IF, 0);
-                        this.LowerINT();
-                        var index = Chip.FindFirstSet(masked);
-                        this.Bus.Data = (byte)(0x38 + (index << 3));
-                    }
-                    else
-                    {
-                        this.RaiseHALT();
-                    }
-                }
-
-                if (this.RESET.Lowered())
-                {
-                    this.HandleRESET();
-                }
-                else if (this.INT.Lowered())
-                {
-                    this.HandleINT();
-                }
-                else if (this.HALT.Lowered())
-                {
-                    this.Execute(0);  // NOP
+                    this.bus.IO.Poke(IoRegisters.IF, 0);
+                    this.LowerINT();
+                    var index = Chip.FindFirstSet(masked);
+                    this.Bus.Data = (byte)(0x38 + (index << 3));
                 }
                 else
                 {
-                    this.Execute(this.FetchByte());
+                    this.RaiseHALT();
                 }
-
-                this.bus.IO.CheckTimers(this.ClockCycles);
-                this.bus.IO.TransferDma();
             }
 
-            this.OnExecutedInstruction();
-            return this.ClockCycles;
+            if (this.RESET.Lowered())
+            {
+                this.HandleRESET();
+            }
+            else if (this.INT.Lowered())
+            {
+                this.HandleINT();
+            }
+            else if (this.HALT.Lowered())
+            {
+                this.Execute(0);  // NOP
+            }
+            else
+            {
+                this.Execute(this.FetchByte());
+            }
+
+            this.bus.IO.CheckTimers(this.ClockCycles);
+            this.bus.IO.TransferDma();
         }
-
-        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
         protected override void HandleRESET()
         {

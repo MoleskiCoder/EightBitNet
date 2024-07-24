@@ -8,6 +8,15 @@ namespace EightBit
 
     public abstract class Processor(Bus memory) : ClockedChip
     {
+        #region Instruction execution events
+
+        public event EventHandler<EventArgs>? ExecutingInstruction;
+        public event EventHandler<EventArgs>? ExecutedInstruction;
+        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
+
+        #endregion
+
         private PinLevel resetLine;
         private PinLevel intLine;
 
@@ -49,7 +58,20 @@ namespace EightBit
 
         public static sbyte SignExtend(int b, int x) => SignExtend(b, (byte)x);
 
-        public abstract int Step();
+        public virtual int Step()
+        {
+            this.ResetCycles();
+            this.OnExecutingInstruction();
+            if (this.Powered)
+            {
+                this.PoweredStep();
+            }
+ 
+            this.OnExecutedInstruction();
+            return this.Cycles;
+        }
+
+        public abstract void PoweredStep();
 
         public abstract void Execute();
 
@@ -186,7 +208,7 @@ namespace EightBit
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected byte FetchByte()
+        protected virtual byte FetchByte()
         {
             this.Bus.Address.Assign(this.PC);
             this.PC.Word++;

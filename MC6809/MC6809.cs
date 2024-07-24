@@ -50,10 +50,6 @@ namespace EightBit
         {
         }
 
-        public event EventHandler<EventArgs> ExecutingInstruction;
-
-        public event EventHandler<EventArgs> ExecutedInstruction;
-
         public event EventHandler<EventArgs> RaisingNMI;
 
         public event EventHandler<EventArgs> RaisedNMI;
@@ -174,41 +170,33 @@ namespace EightBit
             this.RaiseHALT();
         }
 
-        public override int Step()
+        public override void PoweredStep()
         {
-            this.ResetCycles();
-            this.OnExecutingInstruction();
-            if (this.Powered)
+            this.prefix10 = this.prefix11 = false;
+            if (this.Halted)
             {
-                this.prefix10 = this.prefix11 = false;
-                if (this.Halted)
-                {
-                    this.HandleHALT();
-                }
-                else if (this.RESET.Lowered())
-                {
-                    this.HandleRESET();
-                }
-                else if (this.NMI.Lowered())
-                {
-                    this.HandleNMI();
-                }
-                else if (this.FIRQ.Lowered() && (this.FastInterruptMasked == 0))
-                {
-                    this.HandleFIRQ();
-                }
-                else if (this.INT.Lowered() && (this.InterruptMasked == 0))
-                {
-                    this.HandleINT();
-                }
-                else
-                {
-                    this.Execute(this.FetchByte());
-                }
+                this.HandleHALT();
             }
-
-            this.OnExecutedInstruction();
-            return this.Cycles;
+            else if (this.RESET.Lowered())
+            {
+                this.HandleRESET();
+            }
+            else if (this.NMI.Lowered())
+            {
+                this.HandleNMI();
+            }
+            else if (this.FIRQ.Lowered() && (this.FastInterruptMasked == 0))
+            {
+                this.HandleFIRQ();
+            }
+            else if (this.INT.Lowered() && (this.InterruptMasked == 0))
+            {
+                this.HandleINT();
+            }
+            else
+            {
+                this.Execute(this.FetchByte());
+            }
         }
 
         public override void Execute()
@@ -489,10 +477,6 @@ namespace EightBit
         private void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
 
         private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
-
-        private void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
-
-        private void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
         private void Push(Register16 stack, byte value) => this.MemoryWrite(--stack.Word, value);
 

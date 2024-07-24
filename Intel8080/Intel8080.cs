@@ -17,10 +17,6 @@ namespace EightBit
         public Intel8080(Bus bus, InputOutput ports)
         : base(bus) => this.ports = ports;
 
-        public event EventHandler<EventArgs> ExecutingInstruction;
-
-        public event EventHandler<EventArgs> ExecutedInstruction;
-
         public override Register16 AF
         {
             get
@@ -50,37 +46,25 @@ namespace EightBit
             this.Execute(x, y, z, p, q);
         }
 
-        public override int Step()
+        public override void PoweredStep()
         {
-            this.ResetCycles();
-            this.OnExecutingInstruction();
-            if (this.Powered)
+            if (this.RESET.Lowered())
             {
-                if (this.RESET.Lowered())
-                {
-                    this.HandleRESET();
-                }
-                else if (this.INT.Lowered())
-                {
-                    this.HandleINT();
-                }
-                else if (this.HALT.Lowered())
-                {
-                    this.Execute(0); // NOP
-                }
-                else
-                {
-                    this.Execute(this.FetchByte());
-                }
+                this.HandleRESET();
             }
-
-            this.OnExecutedInstruction();
-            return this.Cycles;
+            else if (this.INT.Lowered())
+            {
+                this.HandleINT();
+            }
+            else if (this.HALT.Lowered())
+            {
+                this.Execute(0); // NOP
+            }
+            else
+            {
+                this.Execute(this.FetchByte());
+            }
         }
-
-        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
 
         protected override void HandleRESET()
         {
