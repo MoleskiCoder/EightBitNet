@@ -6,8 +6,8 @@ namespace EightBit
 {
     public class W65C02(Bus bus) : M6502Core(bus)
     {
-        private bool _stopped = false;
-        private bool _waiting = false;
+        private bool _stopped;
+        private bool _waiting;
 
         private bool Stopped
         {
