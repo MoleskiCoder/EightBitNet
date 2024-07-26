@@ -52,14 +52,12 @@ namespace EightBit
 
                 case 0x42: this.Jam(); break;                                                                   // *JAM
                 case 0x43: this.IndexedIndirectXRead(); this.SRE(); break;                                      // *SRE (indexed indirect X)
-                //case 0x44: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
                 case 0x47: this.ZeroPageRead(); this.SRE(); break;                                              // *SRE (zero page)
                 case 0x4b: this.ImmediateRead(); this.ASR(); break;                                             // *ASR (immediate)
                 case 0x4f: this.AbsoluteRead(); this.SRE(); break;                                              // *SRE (absolute)
 
                 case 0x52: this.Jam(); break;                                                                   // *JAM
                 case 0x53: this.IndirectIndexedYAddress(); this.FixupRead(); this.SRE(); break;                 // *SRE (indirect indexed Y)
-                //case 0x54: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
                 case 0x57: this.ZeroPageXRead(); this.SRE(); break;                                             // *SRE (zero page, X)
                 case 0x5a: this.SwallowRead(); break;                                                           // *NOP (implied)
                 case 0x5b: this.AbsoluteYAddress(); this.FixupRead(); this.SRE(); break;                        // *SRE (absolute, Y)
@@ -83,7 +81,6 @@ namespace EightBit
                 case 0x7f: this.AbsoluteXAddress(); this.FixupRead(); this.RRA(); break;                        // *RRA (absolute, X)
 
                 case 0x80: this.ImmediateRead(); break;                                                         // *NOP (immediate)
-                //case 0x82: this.ImmediateRead(); break;                                                         // *NOP (immediate)
                 case 0x83: this.IndexedIndirectXAddress(); this.MemoryWrite((byte)(this.A & this.X)); break;    // *SAX (indexed indirect X)
                 case 0x87: this.ZeroPageAddress(); this.MemoryWrite((byte)(this.A & this.X)); break;	        // *SAX (zero page)
                 case 0x89: this.ImmediateRead(); break;	                                                        // *NOP (immediate)
@@ -109,7 +106,6 @@ namespace EightBit
                 case 0xbb: this.AbsoluteYAddress(); this.MaybeFixup(); this.LAS(); break;                       // *LAS (absolute, Y)
                 case 0xbf: this.AbsoluteYRead(); this.A = this.X = this.Through(); break;                       // *LAX (absolute, Y)
 
-                //case 0xc2: this.ImmediateRead(); break;                                                         // *NOP (immediate)
                 case 0xc3: this.IndexedIndirectXRead(); this.DCP(); break;                                      // *DCP (indexed indirect X)
                 case 0xc7: this.ZeroPageRead(); this.DCP(); break;                                              // *DCP (zero page)
                 case 0xcb: this.ImmediateRead(); this.AXS(); break;                                             // *AXS (immediate)
@@ -117,14 +113,12 @@ namespace EightBit
 
                 case 0xd2: this.Jam(); break;                                                                   // *JAM
                 case 0xd3: this.IndirectIndexedYAddress(); this.FixupRead(); this.DCP(); break;                 // *DCP (indirect indexed Y)
-                //case 0xd4: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
                 case 0xd7: this.ZeroPageXRead(); this.DCP(); break;                                             // *DCP (zero page, X)
                 case 0xda: this.SwallowRead(); break;                                                           // *NOP (implied)
                 case 0xdb: this.AbsoluteYAddress(); this.FixupRead(); this.DCP(); break;                        // *DCP (absolute, Y)
                 case 0xdc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
                 case 0xdf: this.AbsoluteXAddress(); this.FixupRead(); this.DCP(); break;                        // *DCP (absolute, X)
 
-                //case 0xe2: this.ImmediateRead(); break;                                                         // *NOP (immediate)
                 case 0xe3: this.IndexedIndirectXRead(); this.ISB(); break;                                      // *ISB (indexed indirect X)
                 case 0xe7: this.ZeroPageRead(); this.ISB(); break;                                              // *ISB (zero page)
                 case 0xeb: this.ImmediateRead(); this.SBC(); break;                                             // *SBC (immediate)
@@ -132,7 +126,6 @@ namespace EightBit
 
                 case 0xf2: this.Jam(); break;                                                                   // *JAM
                 case 0xf3: this.IndirectIndexedYAddress(); this.FixupRead(); this.ISB(); break;                 // *ISB (indirect indexed Y)
-                //case 0xf4: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
                 case 0xf7: this.ZeroPageXRead(); this.ISB(); break;                                             // *ISB (zero page, X)
                 case 0xfa: this.SwallowRead(); break;                                                           // *NOP (implied)
                 case 0xfb: this.AbsoluteYAddress(); this.FixupRead(); this.ISB(); break;                        // *ISB (absolute, Y)
