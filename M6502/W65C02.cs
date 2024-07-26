@@ -9,6 +9,18 @@ namespace EightBit
         private bool _stopped = false;
         private bool _waiting = false;
 
+        private bool Stopped
+        {
+            get => this._stopped; set => this._stopped = value;
+        }
+
+        private bool Waiting
+        {
+            get => this._waiting; set => this._waiting = value;
+        }
+
+        private bool Paused => this.Stopped || this.Waiting;
+
         #region Interrupts
 
         protected override void Interrupt(byte vector, InterruptSource source, InterruptType type)
@@ -121,14 +133,14 @@ namespace EightBit
 
                 case 0xc3: break;                           // null
                 case 0xc7: break;                           // SMB4 zp
-                case 0xcb: this.SwallowRead(); this._waiting = true; break;                           // WAI i
+                case 0xcb: this.SwallowRead(); this.Waiting = true; break;                           // WAI i
                 case 0xcf: break;                           // BBS4 r
 
                 case 0xd2: this.ZeroPageIndirectRead(); this.CMP(this.A); break;                           // CMP (zp)
                 case 0xd3: break;                           // null
                 case 0xd7: break;                           // SMB5 zp
                 case 0xda: this.SwallowRead(); this.Push(this.X); break;                                        // PHX s
-                case 0xdb: this.SwallowRead(); this._stopped = true; break;                           // STP i
+                case 0xdb: this.SwallowRead(); this.Stopped = true; break;                           // STP i
                 case 0xdc: break;                           // null
                 case 0xdf: break;                           // BBS5 r
 
@@ -147,6 +159,32 @@ namespace EightBit
             }
 
             return cycles != this.Cycles;
+        }
+
+        public override void PoweredStep()
+        {
+            if (!this.Paused)
+            {
+                base.PoweredStep();
+            }
+        }
+
+        protected override void OnLoweredRESET()
+        {
+            base.OnLoweredRESET();
+            this.Stopped = this.Waiting = false;
+        }
+
+        protected override void OnLoweredINT()
+        {
+            base.OnLoweredINT();
+            this.Waiting = false;
+        }
+
+        protected override void OnLoweredNMI()
+        {
+            base.OnLoweredNMI();
+            this.Waiting = false;
         }
 
         #endregion
