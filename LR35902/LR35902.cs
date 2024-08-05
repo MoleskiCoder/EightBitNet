@@ -66,7 +66,7 @@ namespace EightBit.GameBoy
             var interruptEnable = this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
             var interruptFlags = this.bus.IO.Peek(IoRegisters.IF);
 
-            var masked = interruptEnable & interruptFlags;
+            var masked = (byte)(interruptEnable & interruptFlags);
             if (masked != 0)
             {
                 if (this.IME)
