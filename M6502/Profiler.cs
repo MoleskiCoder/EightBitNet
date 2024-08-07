@@ -168,11 +168,8 @@
 
         private void Processor_RaisingSYNC(object? sender, EventArgs e)
         {
-            // Everything needs this
             this.executingAddress = this.processor.Bus.Address.Word;
-            this.executingInstruction = this.processor.Bus.Peek(this.executingAddress);
-
-            ++this.instructionCounts[this.processor.Bus.Data];
+            ++this.instructionCounts[this.executingInstruction = this.processor.Bus.Data];
         }
 
         private void Processor_ExecutedInstruction(object? sender, EventArgs e)
