@@ -394,7 +394,7 @@ namespace EightBit
 
                 case 0x40: this.SwallowRead(); this.RTI(); break;                                           // RTI (implied)
                 case 0x41: this.IndexedIndirectXRead(); this.EorR(); break;                                 // EOR (indexed indirect X)
-                case 0x44: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
+                case 0x44: this.ZeroPageRead(); break;                                                      // *NOP (zero page)
                 case 0x45: this.ZeroPageRead(); this.EorR(); break;                                         // EOR (zero page)
                 case 0x46: this.ZeroPageRead(); this.ModifyWrite(this.LSR()); break;                        // LSR (zero page)
                 case 0x48: this.SwallowRead(); this.Push(this.A); break;                                    // PHA (implied)
@@ -813,11 +813,11 @@ namespace EightBit
 
         #region Branching
 
-        private void BranchNot(int condition) => this.Branch(condition == 0);
+        protected void BranchNot(int condition) => this.Branch(condition == 0);
 
-        private void Branch(int condition) => this.Branch(condition != 0);
+        protected void Branch(int condition) => this.Branch(condition != 0);
 
-        private void Branch(bool condition)
+        protected void Branch(bool condition)
         {
             this.ImmediateRead();
             if (condition)
@@ -984,7 +984,7 @@ namespace EightBit
 
         protected void EorR() => this.A = this.Through(this.A ^ this.Bus.Data);
 
-        private void BIT()
+        protected void BIT()
         {
             var data = this.Bus.Data;
             this.SetFlag(StatusBits.VF, OverflowTest(data));
