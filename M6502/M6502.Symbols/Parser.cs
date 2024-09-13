@@ -59,7 +59,7 @@
                 {
                     if (symbol.Type != "lab")
                     {
-                        throw new ArgumentOutOfRangeException(nameof(symbol), "Not a label");
+                        throw new ArgumentOutOfRangeException(nameof(symbol), symbol, "Not a label");
                     }
                     this.Labels.Add(symbol);
                     this.AddAddress(symbol);
@@ -110,7 +110,7 @@
                 {
                     if (symbol.Type != "equ")
                     {
-                        throw new ArgumentOutOfRangeException(nameof(symbol), "Not an equate");
+                        throw new ArgumentOutOfRangeException(nameof(symbol), symbol, "Not an equate");
                     }
                     this.Equates.Add(symbol);
                     this.AddConstant(symbol);
@@ -256,7 +256,7 @@
 
                 public string MaybeGetQualifiedLabelByAddress(ushort absolute) => this.TryGetQualifiedLabelByAddress(absolute, out var label) ? label : string.Empty;
 
-                public bool TryGetQualifiedEquateyValue(ushort value, out string name)
+                public bool TryGetQualifiedEquateValue(ushort value, out string name)
                 {
                     var symbol = this.LookupEquateByValue(value);
                     name = PrefixNamespace(symbol);
@@ -451,7 +451,7 @@
                     var identifier = int.Parse(id);
                     if (section.ContainsKey(identifier))
                     {
-                        throw new InvalidOperationException("Invalid symbol file format (definition id has clashed)");
+                        throw new InvalidOperationException($"Invalid symbol file format (definition id ({identifier}) has clashed)");
                     }
 
                     if (this._information == null)
