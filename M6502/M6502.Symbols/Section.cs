@@ -96,7 +96,7 @@
                 protected List<int>? MaybeTakeMultiple(string key) => this._multiples.TryGetValue(key, out var value) ? value : null;
 
                 protected int TakeInteger(string key) => this.MaybeTakeInteger(key) ?? throw new InvalidOperationException($"Section is missing an integer entry named {key}");
-                protected long TakeLong(string key) => this.MaybeTakeLong(key) ?? throw new InvalidOperationException($"Section is missing an long integer entry named {key}");
+                protected long TakeLong(string key) => this.MaybeTakeLong(key) ?? throw new InvalidOperationException($"Section is missing a long integer entry named {key}");
                 protected string TakeString(string key) => this.MaybeTakeString(key) ?? throw new InvalidOperationException($"Section is missing a string entry named {key}");
                 protected List<int> TakeMultiple(string key) => this.MaybeTakeMultiple(key) ?? throw new InvalidOperationException($"Section is missing a multiple entry named {key}");
 
