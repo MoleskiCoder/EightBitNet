@@ -534,7 +534,7 @@ namespace EightBit
 
         private bool TryGetConstant(ushort value, out string name)
         {
-            return this.symbols.TryGetQualifiedEquateyValue(value, out name);
+            return this.symbols.TryGetQualifiedEquateValue(value, out name);
         }
 
         private string ConvertConstantByte(ushort address) => this.ConvertConstant(this.GetByte(address));
