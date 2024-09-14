@@ -23,6 +23,12 @@ namespace M6502.Test
             GC.SuppressFinalize(this);
         }
 
+        public long ElapsedMilliseconds => this.timer.ElapsedMilliseconds;
+
+        public float ElapsedSeconds => this.ElapsedMilliseconds / 1000.0f;
+
+        public float CyclesPerSecond => this.totalCycles / this.ElapsedSeconds;
+
         public void Run()
         {
             this.timer.Start();
@@ -48,9 +54,11 @@ namespace M6502.Test
             {
                 if (disposing)
                 {
-                    System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles}");
-                    System.Console.Out.WriteLine($"Processor time = {this.totalUserProcessorTime}");
-                    System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
+                    System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles:N0}");
+                    System.Console.Out.WriteLine($"Seconds = {this.ElapsedSeconds}");
+
+                    System.Console.Out.WriteLine($"{this.CyclesPerSecond / 1000000} MHz");
+                    System.Console.Out.WriteLine($"Processor time = {this.totalUserProcessorTime.TotalSeconds:g}");
                 }
 
                 this.disposed = true;
