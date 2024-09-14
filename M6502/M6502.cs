@@ -223,8 +223,28 @@ namespace EightBit
 
         private void StoreFixupEffect(byte data)
         {
-            var fixedAddress = (byte)(this.Bus.Address.High + 1);
-            this.MemoryWrite((byte)(data & fixedAddress));
+            ////var fixedAddress = (byte)(this.Bus.Address.High + 1);
+            //var fixedAddress = this.FixedPage + 1;
+            //var updated = (byte)(data & fixedAddress);
+            //if (this.Fixed)
+            //{
+            //    this.Bus.Address.High = updated;
+            //}
+
+            //this.MemoryWrite(updated);
+
+            byte updated;
+            if (this.Fixed)
+            {
+                updated = (byte)(data & this.FixedPage);
+                this.Bus.Address.High = updated;
+            }
+            else
+            {
+                updated = (byte)(data & this.UnfixedPage);
+                this.Bus.Address.High = updated;
+            }
+            this.MemoryWrite(updated);
         }
 
         private void SHA() => this.StoreFixupEffect((byte)(this.A & this.X));

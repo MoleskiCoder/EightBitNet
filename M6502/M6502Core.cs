@@ -646,11 +646,21 @@ namespace EightBit
 
         private byte fixedPage;
 
+        private byte unfixedPage;
+
         public byte FixedPage
         {
             get => this.fixedPage;
             protected set => this.fixedPage = value;
         }
+
+        public byte UnfixedPage
+        {
+            get => this.unfixedPage;
+            protected set => this.unfixedPage = value;
+        }
+
+        public bool Fixed => this.FixedPage != this.UnfixedPage;
 
         protected void MaybeFixup()
         {
@@ -685,6 +695,7 @@ namespace EightBit
 
         protected void NoteFixedAddress(ushort address)
         {
+            this.UnfixedPage = this.Bus.Address.High;
             this.Intermediate.Word = address;
             this.FixedPage = this.Intermediate.High;
             this.Bus.Address.Low = this.Intermediate.Low;
