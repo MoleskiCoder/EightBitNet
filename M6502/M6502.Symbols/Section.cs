@@ -95,10 +95,10 @@
                 protected string? MaybeTakeString(string key) => this._strings.TryGetValue(key, out var value) ? value : null;
                 protected List<int>? MaybeTakeMultiple(string key) => this._multiples.TryGetValue(key, out var value) ? value : null;
 
-                protected int TakeInteger(string key) => this.MaybeTakeInteger(key) ?? throw new InvalidOperationException($"Section is missing an integer entry named {key}");
-                protected long TakeLong(string key) => this.MaybeTakeLong(key) ?? throw new InvalidOperationException($"Section is missing a long integer entry named {key}");
-                protected string TakeString(string key) => this.MaybeTakeString(key) ?? throw new InvalidOperationException($"Section is missing a string entry named {key}");
-                protected List<int> TakeMultiple(string key) => this.MaybeTakeMultiple(key) ?? throw new InvalidOperationException($"Section is missing a multiple entry named {key}");
+                protected int TakeInteger(string key) => this.MaybeTakeInteger(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing integer entry in section");
+                protected long TakeLong(string key) => this.MaybeTakeLong(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing long integer entry in section");
+                protected string TakeString(string key) => this.MaybeTakeString(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing string entry in section");
+                protected List<int> TakeMultiple(string key) => this.MaybeTakeMultiple(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing multiple entry in section");
 
                 protected static string ExtractString(string value) => value.Trim('"');
                 protected static string ExtractEnumeration(string value) => value;
@@ -111,6 +111,7 @@
                 protected static int ExtractInteger(string value) => ExtractNumericValue<int>(value);
                 protected static long ExtractLong(string value) => ExtractNumericValue<long>(value);
                 protected static List<string> ExtractCompoundString(string value) => new(value.Split('+'));
+
                 protected static List<int> ExtractCompoundInteger(string value)
                 {
                     var elements = ExtractCompoundString(value);

@@ -57,10 +57,7 @@
 
                 public void AddLabel(Symbol symbol)
                 {
-                    if (symbol.Type != "lab")
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(symbol), symbol, "Not a label");
-                    }
+                    ArgumentOutOfRangeException.ThrowIfNotEqual("lab", symbol.Type, nameof(symbol));
                     this.Labels.Add(symbol);
                     this.AddAddress(symbol);
                 }
@@ -108,10 +105,7 @@
 
                 public void AddEquate(Symbol symbol)
                 {
-                    if (symbol.Type != "equ")
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(symbol), symbol, "Not an equate");
-                    }
+                    ArgumentOutOfRangeException.ThrowIfNotEqual("equ", symbol.Type, nameof(symbol));
                     this.Equates.Add(symbol);
                     this.AddConstant(symbol);
                 }
@@ -315,7 +309,7 @@
 
                     if (!this._parsed.TryGetValue(key, out var parsed))
                     {
-                        throw new InvalidOperationException($"Debugging section: '{key}' is unavailable");
+                        throw new ArgumentOutOfRangeException(nameof(key), key, "Debugging section is unavailable");
                     }
 
                     Debug.Assert(into.Count == 0);
@@ -409,11 +403,8 @@
 
                 private void ParseLine(string[] elements)
                 {
-                    Debug.Assert(elements != null);
-                    if (elements.Length != 2)
-                    {
-                        throw new InvalidOperationException("Invalid symbol file format (definition does not have section/values format)");
-                    }
+                    ArgumentNullException.ThrowIfNull(elements, nameof(elements));
+                    ArgumentOutOfRangeException.ThrowIfNotEqual(elements.Length, 2, nameof(elements));
 
                     var key = elements[0];
                     var parts = elements[1].Split(',');
