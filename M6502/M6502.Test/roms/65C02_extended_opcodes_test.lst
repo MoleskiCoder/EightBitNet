@@ -1,0 +1,3871 @@
+ca65 V2.19 - Git 2c4d4d3
+Main file   : 65C02_extended_opcodes_test.ca65
+Current file: 65C02_extended_opcodes_test.ca65
+
+000000r 1               ;
+000000r 1               ; 6 5 C 0 2   E X T E N D E D   O P C O D E S   T E S T
+000000r 1               ;
+000000r 1               ; Copyright (C) 2013-2017  Klaus Dormann
+000000r 1               ;
+000000r 1               ; This program is free software: you can redistribute it and/or modify
+000000r 1               ; it under the terms of the GNU General Public License as published by
+000000r 1               ; the Free Software Foundation, either version 3 of the License, or
+000000r 1               ; (at your option) any later version.
+000000r 1               ;
+000000r 1               ; This program is distributed in the hope that it will be useful,
+000000r 1               ; but WITHOUT ANY WARRANTY; without even the implied warranty of
+000000r 1               ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+000000r 1               ; GNU General Public License for more details.
+000000r 1               ;
+000000r 1               ; You should have received a copy of the GNU General Public License
+000000r 1               ; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+000000r 1               
+000000r 1               
+000000r 1               ; This program is designed to test all additional 65C02 opcodes, addressing
+000000r 1               ; modes and functionality not available in the NMOS version of the 6502.
+000000r 1               ; The 6502_functional_test is a prerequisite to this test.
+000000r 1               ; NMI, IRQ, STP & WAI are covered in the 6502_interrupt_test.
+000000r 1               ;
+000000r 1               ; version 04-dec-2017
+000000r 1               ; contact info at http://2m5.de or email K@2m5.de
+000000r 1               ;
+000000r 1               ; assembled with CA65, linked with LD65 (cc65.github.io):
+000000r 1               ;  ca65 -l 6502_functional_test.lst 6502_functional_test.ca65
+000000r 1               ;  ld65 6502_functional_test.o -o 6502_functional_test.bin \
+000000r 1               ;   -m 6502_functional_test.map -C example.cfg
+000000r 1               ; example linker config (example.cfg):
+000000r 1               ;  MEMORY {
+000000r 1               ;  RAM: start = $0000, size=$8000, type = rw, fill = yes, \
+000000r 1               ;   fillval = $FF, file = %O;
+000000r 1               ;  ROM: start = $8000, size=$7FFA, type = ro, fill = yes, \
+000000r 1               ;   fillval = $FF, file = %O;
+000000r 1               ;  ROM_VECTORS: start = $FFFA, size=6, type = ro, fill = yes, \
+000000r 1               ;   fillval = $FF, file = %O;
+000000r 1               ;  }
+000000r 1               ;  SEGMENTS {
+000000r 1               ;  ZEROPAGE: load=RAM, type=rw;
+000000r 1               ;  DATA: load=RAM, type=rw, offset=$0200;
+000000r 1               ;  CODE: load=RAM, type=rw, offset=$0400;
+000000r 1               ;  VECTORS: load=ROM_VECTORS, type=ro;
+000000r 1               ;  }
+000000r 1               ;
+000000r 1               ; No IO - should be run from a monitor with access to registers.
+000000r 1               ; To run load intel hex image with a load command, than alter PC to 400 hex
+000000r 1               ; (code_segment) and enter a go command.
+000000r 1               ; Loop on program counter determines error or successful completion of test.
+000000r 1               ; Check listing for relevant traps (jump/branch *).
+000000r 1               ; Please note that in early tests some instructions will have to be used before
+000000r 1               ; they are actually tested!
+000000r 1               ;
+000000r 1               ; RESET, NMI or IRQ should not occur and will be trapped if vectors are enabled.
+000000r 1               ; Tests documented behavior of the original 65C02 only!
+000000r 1               ; Decimal ops will only be tested with valid BCD operands and the V flag will
+000000r 1               ; be ignored as it is absolutely useless in decimal mode.
+000000r 1               ;
+000000r 1               ; Debugging hints:
+000000r 1               ;     Most of the code is written sequentially. if you hit a trap, check the
+000000r 1               ;   immediately preceeding code for the instruction to be tested. Results are
+000000r 1               ;   tested first, flags are checked second by pushing them onto the stack and
+000000r 1               ;   pulling them to the accumulator after the result was checked. The "real"
+000000r 1               ;   flags are no longer valid for the tested instruction at this time!
+000000r 1               ;     If the tested instruction was indexed, the relevant index (X or Y) must
+000000r 1               ;   also be checked. Opposed to the flags, X and Y registers are still valid.
+000000r 1               ;
+000000r 1               ; versions:
+000000r 1               ;   19-jul-2013  1st version distributed for testing
+000000r 1               ;   23-jul-2013  fixed BRA out of range due to larger trap macros
+000000r 1               ;                added RAM integrity check
+000000r 1               ;   16-aug-2013  added error report to standard output option
+000000r 1               ;   23-aug-2015  change revoked
+000000r 1               ;   24-aug-2015  all self modifying immediate opcodes now execute in data RAM
+000000r 1               ;   28-aug-2015  fixed decimal adc/sbc immediate only testing carry
+000000r 1               ;   09-feb-2017  fixed RMB/SMB tested when they shouldn't be tested
+000000r 1               ;   04-dec-2017  fixed BRK not tested for actually going through the IRQ vector
+000000r 1               ;                added option to skip the remainder of a failing test
+000000r 1               ;                in report.i65
+000000r 1               ;                added skip override to undefined opcode as NOP test
+000000r 1               
+000000r 1               
+000000r 1               ; C O N F I G U R A T I O N
+000000r 1               
+000000r 1               ;ROM_vectors writable (0=no, 1=yes)
+000000r 1               ;if ROM vectors can not be used interrupts will not be trapped
+000000r 1               ;as a consequence BRK can not be tested but will be emulated to test RTI
+000000r 1               ROM_vectors = 1
+000000r 1               
+000000r 1               ;load_data_direct (0=move from code segment, 1=load directly)
+000000r 1               ;loading directly is preferred but may not be supported by your platform
+000000r 1               ;0 produces only consecutive object code, 1 is not suitable for a binary image
+000000r 1               load_data_direct = 1
+000000r 1               
+000000r 1               ;I_flag behavior (0=force enabled, 1=force disabled, 2=prohibit change, 3=allow
+000000r 1               ;change) 2 requires extra code and is not recommended.
+000000r 1               I_flag = 3
+000000r 1               
+000000r 1               ;configure memory - try to stay away from memory used by the system
+000000r 1               ;zero_page memory start address, $4e (78) consecutive Bytes required
+000000r 1               ;                                add 2 if I_flag = 2
+000000r 1               zero_page = $a
+000000r 1               
+000000r 1               ;data_segment memory start address, $63 (99) consecutive Bytes required
+000000r 1               ; + 12 Bytes at data_segment + $f9 (JMP indirect page cross test)
+000000r 1               data_segment = $200
+000000r 1                   .if (data_segment & $ff) <> 0
+000000r 1                       .error "low byte of data_segment MUST be $00 !!"
+000000r 1                   .endif
+000000r 1               
+000000r 1               ;code_segment memory start address, 10kB of consecutive space required
+000000r 1               ;                                   add 1 kB if I_flag = 2
+000000r 1               code_segment = $400
+000000r 1               
+000000r 1               ;added WDC only opcodes WAI & STP (0=test as NOPs, >0=no test)
+000000r 1               wdc_op = 1
+000000r 1               
+000000r 1               ;added Rockwell & WDC opcodes BBR, BBS, RMB & SMB
+000000r 1               ;(0=test as NOPs, 1=full test, >1=no test)
+000000r 1               rkwl_wdc_op = 1
+000000r 1               
+000000r 1               ;skip testing all undefined opcodes override
+000000r 1               ;0=test as NOP, >0=skip
+000000r 1               skip_nop = 0
+000000r 1               
+000000r 1               ;report errors through I/O channel (0=use standard self trap loops, 1=include
+000000r 1               ;report.i65 as I/O channel, add 3 kB)
+000000r 1               report = 1
+000000r 1               rep_int = 0
+000000r 1               
+000000r 1               ;RAM integrity test option. Checks for undesired RAM writes.
+000000r 1               ;set lowest non RAM or RAM mirror address page (-1=disable, 0=64k, $40=16k)
+000000r 1               ;leave disabled if a monitor, OS or background interrupt is allowed to alter RAM
+000000r 1               ram_top = -1
+000000r 1               
+000000r 1               ; E N D   O F   C O N F I G U R A T I O N
+000000r 1               
+000000r 1               ;macros for error & success traps to allow user modification
+000000r 1               ;example:
+000000r 1               ;        .macro  trap
+000000r 1               ;        jsr my_error_handler
+000000r 1               ;        .endmacro
+000000r 1               ;        .macro  trap_eq
+000000r 1               ;        bne :+
+000000r 1               ;        trap           ;failed equal (zero)
+000000r 1               ;:
+000000r 1               ;        .endmacro
+000000r 1               ;
+000000r 1               ; my_error_handler should pop the calling address from the stack and report it.
+000000r 1               ; putting larger portions of code (more than 3 bytes) inside the trap macro
+000000r 1               ; may lead to branch range problems for some tests.
+000000r 1                   .if report = 0
+000000r 1                       .macro  trap
+000000r 1                       jmp *           ;failed anyway
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_eq
+000000r 1                       beq *           ;failed equal (zero)
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_ne
+000000r 1                       bne *           ;failed not equal (non zero)
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_cs
+000000r 1                       bcs *           ;failed carry set
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_cc
+000000r 1                       bcc *           ;failed carry clear
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_mi
+000000r 1                       bmi *           ;failed minus (bit 7 set)
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_pl
+000000r 1                       bpl *           ;failed plus (bit 7 clear)
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_vs
+000000r 1                       bvs *           ;failed overflow set
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_vc
+000000r 1                       bvc *           ;failed overflow clear
+000000r 1                       .endmacro
+000000r 1               ; please observe that during the test the stack gets invalidated
+000000r 1               ; therefore a RTS inside the success macro is not possible
+000000r 1                       .macro  success
+000000r 1                       jmp *           ;test passed, no errors
+000000r 1                       .endmacro
+000000r 1                   .endif
+000000r 1                   .if report = 1
+000000r 1                       .macro  trap
+000000r 1                       jsr report_error
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_eq
+000000r 1                       bne :+
+000000r 1                       trap           ;failed equal (zero)
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_ne
+000000r 1                       beq :+
+000000r 1                       trap            ;failed not equal (non zero)
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_cs
+000000r 1                       bcc :+
+000000r 1                       trap            ;failed carry set
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_cc
+000000r 1                       bcs :+
+000000r 1                       trap            ;failed carry clear
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_mi
+000000r 1                       bpl :+
+000000r 1                       trap            ;failed minus (bit 7 set)
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_pl
+000000r 1                       bmi :+
+000000r 1                       trap            ;failed plus (bit 7 clear)
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_vs
+000000r 1                       bvc :+
+000000r 1                       trap            ;failed overflow set
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1                       .macro  trap_vc
+000000r 1                       bvs :+
+000000r 1                       trap            ;failed overflow clear
+000000r 1               :
+000000r 1                       .endmacro
+000000r 1               ; please observe that during the test the stack gets invalidated
+000000r 1               ; therefore a RTS inside the success macro is not possible
+000000r 1                       .macro  success
+000000r 1                       jsr report_success
+000000r 1                       .endmacro
+000000r 1                   .endif
+000000r 1               
+000000r 1                   .define equ =
+000000r 1               
+000000r 1               carry   equ %00000001   ;flag bits in status
+000000r 1               zero    equ %00000010
+000000r 1               intdis  equ %00000100
+000000r 1               decmode equ %00001000
+000000r 1               break   equ %00010000
+000000r 1               reserv  equ %00100000
+000000r 1               overfl  equ %01000000
+000000r 1               minus   equ %10000000
+000000r 1               
+000000r 1               fc      equ carry
+000000r 1               fz      equ zero
+000000r 1               fzc     equ carry+zero
+000000r 1               fv      equ overfl
+000000r 1               fvz     equ overfl+zero
+000000r 1               fn      equ minus
+000000r 1               fnc     equ minus+carry
+000000r 1               fnz     equ minus+zero
+000000r 1               fnzc    equ minus+zero+carry
+000000r 1               fnv     equ minus+overfl
+000000r 1               
+000000r 1               fao     equ break+reserv    ;bits always on after PHP, BRK
+000000r 1               fai     equ fao+intdis      ;+ forced interrupt disable
+000000r 1               m8      equ $ff             ;8 bit mask
+000000r 1               m8i     equ $ff&~intdis     ;8 bit mask - interrupt disable
+000000r 1               
+000000r 1               ;macros to allow masking of status bits.
+000000r 1               ;masking of interrupt enable/disable on load and compare
+000000r 1               ;masking of always on bits after PHP or BRK (unused & break) on compare
+000000r 1                       .if I_flag = 0
+000000r 1                           .macro  load_flag   p1
+000000r 1                           lda #p1&m8i          ;force enable interrupts (mask I)
+000000r 1                           .endmacro
+000000r 1                           .macro  cmp_flag    p1
+000000r 1                           cmp #(p1|fao)&m8i   ;I_flag is always enabled + always on bits
+000000r 1                           .endmacro
+000000r 1                           .macro  eor_flag    p1
+000000r 1                           eor #(p1&m8i|fao)   ;mask I, invert expected flags + always on bits
+000000r 1                           .endmacro
+000000r 1                       .endif
+000000r 1                       .if I_flag = 1
+000000r 1                           .macro  load_flag   p1
+000000r 1                           lda #p1|intdis      ;force disable interrupts
+000000r 1                           .endmacro
+000000r 1                           .macro  cmp_flag    p1
+000000r 1                           cmp #(p1|fai)&m8    ;I_flag is always disabled + always on bits
+000000r 1                           .endmacro
+000000r 1                           .macro  eor_flag    p1
+000000r 1                           eor #(p1|fai)       ;invert expected flags + always on bits + I
+000000r 1                           .endmacro
+000000r 1                       .endif
+000000r 1                       .if I_flag = 2
+000000r 1                           .macro  load_flag   p1
+000000r 1                           lda #p1
+000000r 1                           ora flag_I_on       ;restore I-flag
+000000r 1                           and flag_I_off
+000000r 1                           .endmacro
+000000r 1                           .macro  cmp_flag    p1
+000000r 1                           eor flag_I_on       ;I_flag is never changed
+000000r 1                           cmp #(p1|fao)&m8i   ;expected flags + always on bits, mask I
+000000r 1                           .endmacro
+000000r 1                           .macro  eor_flag    p1
+000000r 1                           eor flag_I_on       ;I_flag is never changed
+000000r 1                           eor #(p1&m8i|fao)   ;mask I, invert expected flags + always on bits
+000000r 1                           .endmacro
+000000r 1                       .endif
+000000r 1                       .if I_flag = 3
+000000r 1                           .macro  load_flag   p1
+000000r 1                           lda #p1             ;allow test to change I-flag (no mask)
+000000r 1                           .endmacro
+000000r 1                           .macro  cmp_flag    p1
+000000r 1                           cmp #(p1|fao)&m8    ;expected flags + always on bits
+000000r 1                           .endmacro
+000000r 1                           .macro  eor_flag    p1
+000000r 1                           eor #p1|fao         ;invert expected flags + always on bits
+000000r 1                           .endmacro
+000000r 1                       .endif
+000000r 1               
+000000r 1               ;macros to set (register|memory|zeropage) & status
+000000r 1                           .macro      set_stat    p1          ;setting flags in the processor status register
+000000r 1                           load_flag p1
+000000r 1                           pha         ;use stack to load status
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_a       p1,p2       ;precharging accu & status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda #p1     ;precharge accu
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_x       p1,p2       ;precharging index & status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           ldx #p1     ;precharge index x
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_y       p1,p2       ;precharging index & status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           ldy #p1     ;precharge index y
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_ax      p1,p2       ;precharging indexed accu & immediate status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda p1,x    ;precharge accu
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_ay      p1,p2       ;precharging indexed accu & immediate status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda p1,y    ;precharge accu
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_z       p1,p2       ;precharging indexed zp & immediate status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda p1,x    ;load to zeropage
+000000r 1                           sta zpt
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_zx      p1,p2       ;precharging zp,x & immediate status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda p1,x    ;load to indexed zeropage
+000000r 1                           sta zpt,x
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_abs     p1,p2       ;precharging indexed memory & immediate status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda p1,x    ;load to memory
+000000r 1                           sta abst
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      set_absx    p1,p2       ;precharging abs,x & immediate status
+000000r 1                           load_flag p2
+000000r 1                           pha         ;use stack to load status
+000000r 1                           lda p1,x    ;load to indexed memory
+000000r 1                           sta abst,x
+000000r 1                           plp
+000000r 1                           .endmacro
+000000r 1               
+000000r 1               ;macros to test (register|memory|zeropage) & status & (mask)
+000000r 1                           .macro      tst_stat    p1          ;testing flags in the processor status register
+000000r 1                           php         ;save status
+000000r 1                           pla         ;use stack to retrieve status
+000000r 1                           pha
+000000r 1                           cmp_flag p1
+000000r 1                           trap_ne
+000000r 1                           plp         ;restore status
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_a       p1,p2        ;testing result in accu & flags
+000000r 1                           php         ;save flags
+000000r 1                           cmp #p1     ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           pha
+000000r 1                           cmp_flag p2
+000000r 1                           trap_ne
+000000r 1                           plp         ;restore status
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_as      p1,p2        ;testing result in accu & flags, save accu
+000000r 1                           pha
+000000r 1                           php         ;save flags
+000000r 1                           cmp #p1     ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           pha
+000000r 1                           cmp_flag p2
+000000r 1                           trap_ne
+000000r 1                           plp         ;restore status
+000000r 1                           pla
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_x       p1,p2       ;testing result in x index & flags
+000000r 1                           php         ;save flags
+000000r 1                           cpx #p1     ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           pha
+000000r 1                           cmp_flag p2
+000000r 1                           trap_ne
+000000r 1                           plp         ;restore status
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_y       p1,p2       ;testing result in y index & flags
+000000r 1                           php         ;save flags
+000000r 1                           cpy #p1     ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           pha
+000000r 1                           cmp_flag p2
+000000r 1                           trap_ne
+000000r 1                           plp         ;restore status
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_ax      p1,p2,p3    ;indexed testing result in accu & flags
+000000r 1                           php         ;save flags
+000000r 1                           cmp p1,x    ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           eor_flag p3
+000000r 1                           cmp p2,x    ;test flags
+000000r 1                           trap_ne     ;
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_ay      p1,p2,p3    ;indexed testing result in accu & flags
+000000r 1                           php         ;save flags
+000000r 1                           cmp p1,y    ;test result
+000000r 1                           trap_ne     ;
+000000r 1                           pla         ;load status
+000000r 1                           eor_flag p3
+000000r 1                           cmp p2,y    ;test flags
+000000r 1                           trap_ne
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_z       p1,p2,p3    ;indexed testing result in zp & flags
+000000r 1                           php         ;save flags
+000000r 1                           lda zpt
+000000r 1                           cmp p1,x    ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           eor_flag p3
+000000r 1                           cmp p2,x    ;test flags
+000000r 1                           trap_ne
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_zx      p1,p2,p3    ;testing result in zp,x & flags
+000000r 1                           php         ;save flags
+000000r 1                           lda zpt,x
+000000r 1                           cmp p1,x    ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           eor_flag p3
+000000r 1                           cmp p2,x    ;test flags
+000000r 1                           trap_ne
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_abs     p1,p2,p3    ;indexed testing result in memory & flags
+000000r 1                           php         ;save flags
+000000r 1                           lda abst
+000000r 1                           cmp p1,x    ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           eor_flag p3
+000000r 1                           cmp p2,x    ;test flags
+000000r 1                           trap_ne
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                           .macro      tst_absx    p1,p2,p3    ;testing result in abs,x & flags
+000000r 1                           php         ;save flags
+000000r 1                           lda abst,x
+000000r 1                           cmp p1,x    ;test result
+000000r 1                           trap_ne
+000000r 1                           pla         ;load status
+000000r 1                           eor_flag p3
+000000r 1                           cmp p2,x    ;test flags
+000000r 1                           trap_ne
+000000r 1                           .endmacro
+000000r 1               
+000000r 1               ; RAM integrity test
+000000r 1               ;   verifies that none of the previous tests has altered RAM outside of the
+000000r 1               ;   designated write areas.
+000000r 1               ;   uses zpt word as indirect pointer, zpt+2 word as checksum
+000000r 1                       .if ram_top > -1
+000000r 1                           .macro  check_ram
+000000r 1                           .local  ccs1, ccs2, ccs3, ccs4, ccs5
+000000r 1                           cld
+000000r 1                           lda #0
+000000r 1                           sta zpt         ;set low byte of indirect pointer
+000000r 1                           sta zpt+3       ;checksum high byte
+000000r 1                           ldx #11         ;reset modifiable RAM
+000000r 1               ccs1:       sta jxi_tab,x   ;JMP indirect page cross area
+000000r 1                           dex
+000000r 1                           bpl ccs1
+000000r 1                           clc
+000000r 1                           ldx #zp_bss-zero_page ;zeropage - write test area
+000000r 1               ccs3:       adc zero_page,x
+000000r 1                           bcc ccs2
+000000r 1                           inc zpt+3       ;carry to high byte
+000000r 1                           clc
+000000r 1               ccs2:       inx
+000000r 1                           bne ccs3
+000000r 1                           ldx #>abs1   ;set high byte of indirect pointer
+000000r 1                           stx zpt+1
+000000r 1                           ldy #<abs1   ;data after write & execute test area
+000000r 1               ccs5:       adc (zpt),y
+000000r 1                           bcc ccs4
+000000r 1                           inc zpt+3       ;carry to high byte
+000000r 1                           clc
+000000r 1               ccs4:       iny
+000000r 1                           bne ccs5
+000000r 1                           inx             ;advance RAM high address
+000000r 1                           stx zpt+1
+000000r 1                           cpx #ram_top
+000000r 1                           bne ccs5
+000000r 1                           sta zpt+2       ;checksum low is
+000000r 1                           cmp ram_chksm   ;checksum low expected
+000000r 1                           trap_ne         ;checksum mismatch
+000000r 1                           lda zpt+3       ;checksum high is
+000000r 1                           cmp ram_chksm+1 ;checksum high expected
+000000r 1                           trap_ne         ;checksum mismatch
+000000r 1                           .endmacro
+000000r 1                       .else
+000000r 1                           .macro  check_ram
+000000r 1                           ;RAM check disabled - RAM size not set
+000000r 1                           .endmacro
+000000r 1                       .endif
+000000r 1               
+000000r 1                           .macro  next_test   ;make sure, tests don't jump the fence
+000000r 1                           lda test_case   ;previous test
+000000r 1                           cmp #test_num
+000000r 1                           trap_ne         ;test is out of sequence
+000000r 1               test_num .set test_num + 1
+000000r 1                           lda #test_num   ;*** next tests' number
+000000r 1                           sta test_case
+000000r 1                           ;check_ram       ;uncomment to find altered RAM after each test
+000000r 1                           .endmacro
+000000r 1               
+000000r 1                       .ZEROPAGE
+000000r 1  00 00 00 00          .res zero_page, 0
+000004r 1  00 00 00 00  
+000008r 1  00 00        
+00000Ar 1                       .org zero_page
+00000A  1               
+00000A  1               ;break test interrupt save
+00000A  1  xx           irq_a:  .res  1               ;a register
+00000B  1  xx           irq_x:  .res  1               ;x register
+00000C  1                   .if I_flag = 2
+00000C  1               ;masking for I bit in status
+00000C  1               flag_I_on:  .res  1           ;or mask to load flags
+00000C  1               flag_I_off: .res  1           ;and mask to load flags
+00000C  1                   .endif
+00000C  1               zpt:                        ;5 bytes store/modify test area
+00000C  1               ;add/subtract operand generation and result/flag prediction
+00000C  1  xx           adfc:   .res    1               ;carry flag before op
+00000D  1  xx           ad1:    .res    1               ;operand 1 - accumulator
+00000E  1  xx           ad2:    .res    1               ;operand 2 - memory / immediate
+00000F  1  xx           adrl:   .res    1               ;expected result bits 0-7
+000010  1  xx           adrh:   .res    1               ;expected result bit 8 (carry)
+000011  1  xx           adrf:   .res    1               ;expected flags NV0000ZC (-V in decimal mode)
+000012  1  xx           sb2:    .res    1               ;operand 2 complemented for subtract
+000013  1               zp_bss:
+000013  1  C3 82 41 00  zp1:    .byte   $c3,$82,$41,0   ;test patterns for LDx BIT ROL ROR ASL LSR
+000017  1  7F           zp7f:   .byte   $7f             ;test pattern for compare
+000018  1               ;logical zeropage operands
+000018  1  00 1F 71 80  zpOR:   .byte   0,$1f,$71,$80   ;test pattern for OR
+00001C  1  0F FF 7F 80  zpAN:   .byte   $0f,$ff,$7f,$80 ;test pattern for AND
+000020  1  FF 0F 8F 8F  zpEO:   .byte   $ff,$0f,$8f,$8f ;test pattern for EOR
+000024  1               ;indirect addressing pointers
+000024  1  10 02        ind1:   .word   abs1            ;indirect pointer to pattern in absolute memory
+000026  1  11 02                .word   abs1+1
+000028  1  12 02                .word   abs1+2
+00002A  1  13 02                .word   abs1+3
+00002C  1  14 02                .word   abs7f
+00002E  1  18 01        inw1:   .word   abs1-$f8        ;indirect pointer for wrap-test pattern
+000030  1  05 02        indt:   .word   abst            ;indirect pointer to store area in absolute memory
+000032  1  06 02                .word   abst+1
+000034  1  07 02                .word   abst+2
+000036  1  08 02                .word   abst+3
+000038  1  0D 01        inwt:   .word   abst-$f8        ;indirect pointer for wrap-test store
+00003A  1  47 02        indAN:  .word   absAN           ;indirect pointer to AND pattern in absolute memory
+00003C  1  48 02                .word   absAN+1
+00003E  1  49 02                .word   absAN+2
+000040  1  4A 02                .word   absAN+3
+000042  1  4B 02        indEO:  .word   absEO           ;indirect pointer to EOR pattern in absolute memory
+000044  1  4C 02                .word   absEO+1
+000046  1  4D 02                .word   absEO+2
+000048  1  4E 02                .word   absEO+3
+00004A  1  43 02        indOR:  .word   absOR           ;indirect pointer to OR pattern in absolute memory
+00004C  1  44 02                .word   absOR+1
+00004E  1  45 02                .word   absOR+2
+000050  1  46 02                .word   absOR+3
+000052  1               ;add/subtract indirect pointers
+000052  1  05 02        adi2:   .word   ada2            ;indirect pointer to operand 2 in absolute memory
+000054  1  06 02        sbi2:   .word   sba2            ;indirect pointer to complemented operand 2 (SBC)
+000056  1  06 01        adiy2:  .word   ada2-$ff        ;with offset for indirect indexed
+000058  1  07 01        sbiy2:  .word   sba2-$ff
+00005A  1               zp_bss_end:
+00005A  1               
+00005A  1                       .DATA
+00005A  1                       .org data_segment
+000200  1  xx xx        pg_x:       .res  2             ;high JMP indirect address for page cross bug
+000202  1  xx           test_case:  .res  1             ;current test number
+000203  1  xx xx        ram_chksm:  .res  2             ;checksum for RAM integrity test
+000205  1               ;add/subtract operand copy - abs tests write area
+000205  1               abst:                           ;5 bytes store/modify test area
+000205  1  xx           ada2:       .res  1             ;operand 2
+000206  1  xx           sba2:       .res  1             ;operand 2 complemented for subtract
+000207  1  xx xx xx                 .res  3             ;fill remaining bytes
+00020A  1               data_bss:
+00020A  1                   .if load_data_direct = 1
+00020A  1  69 00        ex_adci:    adc #0              ;execute immediate opcodes
+00020C  1  60                       rts
+00020D  1  E9 00        ex_sbci:    sbc #0              ;execute immediate opcodes
+00020F  1  60                       rts
+000210  1                   .else
+000210  1               ex_adci:    .res  3
+000210  1               ex_sbci:    .res  3
+000210  1                   .endif
+000210  1  C3 82 41 00  abs1:   .byte  $c3,$82,$41,0   ;test patterns for LDx BIT ROL ROR ASL LSR
+000214  1  7F           abs7f:  .byte  $7f             ;test pattern for compare
+000215  1               ;loads
+000215  1  80 80 00 02  fLDx:   .byte  fn,fn,0,fz      ;expected flags for load
+000219  1               ;shifts
+000219  1               rASL:                          ;expected result ASL & ROL -carry
+000219  1  86 04 82 00  rROL:   .byte  $86,$04,$82,0   ; "
+00021D  1  87 05 83 01  rROLc:  .byte  $87,$05,$83,1   ;expected result ROL +carry
+000221  1               rLSR:                          ;expected result LSR & ROR -carry
+000221  1  61 41 20 00  rROR:   .byte  $61,$41,$20,0   ; "
+000225  1  E1 C1 A0 80  rRORc:  .byte  $e1,$c1,$a0,$80 ;expected result ROR +carry
+000229  1               fASL:                          ;expected flags for shifts
+000229  1  81 01 80 02  fROL:   .byte  fnc,fc,fn,fz    ;no carry in
+00022D  1  81 01 80 00  fROLc:  .byte  fnc,fc,fn,0     ;carry in
+000231  1               fLSR:
+000231  1  01 00 01 02  fROR:   .byte  fc,0,fc,fz      ;no carry in
+000235  1  81 80 81 80  fRORc:  .byte  fnc,fn,fnc,fn   ;carry in
+000239  1               ;increments (decrements)
+000239  1  7F 80 FF 00  rINC:   .byte  $7f,$80,$ff,0,1 ;expected result for INC/DEC
+00023D  1  01           
+00023E  1  00 80 80 02  fINC:   .byte  0,fn,fn,fz,0    ;expected flags for INC/DEC
+000242  1  00           
+000243  1               ;logical memory operand
+000243  1  00 1F 71 80  absOR:  .byte  0,$1f,$71,$80   ;test pattern for OR
+000247  1  0F FF 7F 80  absAN:  .byte  $0f,$ff,$7f,$80 ;test pattern for AND
+00024B  1  FF 0F 8F 8F  absEO:  .byte  $ff,$0f,$8f,$8f ;test pattern for EOR
+00024F  1               ;logical accu operand
+00024F  1  00 F1 1F 00  absORa: .byte  0,$f1,$1f,0     ;test pattern for OR
+000253  1  F0 FF FF FF  absANa: .byte  $f0,$ff,$ff,$ff ;test pattern for AND
+000257  1  FF F0 F0 0F  absEOa: .byte  $ff,$f0,$f0,$0f ;test pattern for EOR
+00025B  1               ;logical results
+00025B  1  00 FF 7F 80  absrlo: .byte  0,$ff,$7f,$80
+00025F  1  02 80 00 80  absflo: .byte  fz,fn,0,fn
+000263  1               data_bss_end:
+000263  1               ;define area for page crossing JMP (abs) & JMP (abs,x) test
+000263  1               jxi_tab equ data_segment + $100 - 7     ;JMP (jxi_tab,x) x=6
+000263  1               ji_tab  equ data_segment + $100 - 3     ;JMP (ji_tab+2)
+000263  1               jxp_tab equ data_segment + $100         ;JMP (jxp_tab-255) x=255
+000263  1               
+000263  1               
+000263  1                       .CODE
+000263  1                       .PC02
+000263  1                       .org code_segment
+000400  1  D8           start:  cld
+000401  1  A2 FF                ldx #$ff
+000403  1  9A                   txs
+000404  1  A9 00                lda #0          ;*** test 0 = initialize
+000406  1  8D 02 02             sta test_case
+000409  1               test_num .set 0
+000409  1               
+000409  1               ;stop interrupts before initializing BSS
+000409  1                   .if I_flag = 1
+000409  1                       sei
+000409  1                   .endif
+000409  1               
+000409  1               ;initialize I/O for report channel
+000409  1                   .if report = 1
+000409  1  20 02 32             jsr report_init
+00040C  1                   .endif
+00040C  1               
+00040C  1               ;initialize BSS segment
+00040C  1                   .if load_data_direct <> 1
+00040C  1                       ldx #zp_end-zp_init-1
+00040C  1               ld_zp:  lda zp_init,x
+00040C  1                       sta zp_bss,x
+00040C  1                       dex
+00040C  1                       bpl ld_zp
+00040C  1                       ldx #data_end-data_init-1
+00040C  1               ld_data:lda data_init,x
+00040C  1                       sta data_bss,x
+00040C  1                       dex
+00040C  1                       bpl ld_data
+00040C  1                     .if ROM_vectors = 1
+00040C  1                       ldx #5
+00040C  1               ld_vect:lda vec_init,x
+00040C  1                       sta vec_bss,x
+00040C  1                       dex
+00040C  1                       bpl ld_vect
+00040C  1                     .endif
+00040C  1                   .endif
+00040C  1               
+00040C  1               ;retain status of interrupt flag
+00040C  1                   .if I_flag = 2
+00040C  1                       php
+00040C  1                       pla
+00040C  1                       and #4          ;isolate flag
+00040C  1                       sta flag_I_on   ;or mask
+00040C  1                       eor #<(~4)      ;reverse
+00040C  1                       sta flag_I_off  ;and mask
+00040C  1                   .endif
+00040C  1               
+00040C  1               ;generate checksum for RAM integrity test
+00040C  1                   .if ram_top > -1
+00040C  1                       lda #0
+00040C  1                       sta zpt         ;set low byte of indirect pointer
+00040C  1                       sta ram_chksm+1 ;checksum high byte
+00040C  1                       ldx #11         ;reset modifiable RAM
+00040C  1               gcs1:   sta jxi_tab,x   ;JMP indirect page cross area
+00040C  1                       dex
+00040C  1                       bpl gcs1
+00040C  1                       clc
+00040C  1                       ldx #zp_bss-zero_page ;zeropage - write test area
+00040C  1               gcs3:   adc zero_page,x
+00040C  1                       bcc gcs2
+00040C  1                       inc ram_chksm+1 ;carry to high byte
+00040C  1                       clc
+00040C  1               gcs2:   inx
+00040C  1                       bne gcs3
+00040C  1                       ldx #>abs1   ;set high byte of indirect pointer
+00040C  1                       stx zpt+1
+00040C  1                       ldy #<abs1   ;data after write & execute test area
+00040C  1               gcs5:   adc (zpt),y
+00040C  1                       bcc gcs4
+00040C  1                       inc ram_chksm+1 ;carry to high byte
+00040C  1                       clc
+00040C  1               gcs4:   iny
+00040C  1                       bne gcs5
+00040C  1                       inx             ;advance RAM high address
+00040C  1                       stx zpt+1
+00040C  1                       cpx #ram_top
+00040C  1                       bne gcs5
+00040C  1                       sta ram_chksm   ;checksum complete
+00040C  1                   .endif
+00040C  1  AD 02 02 C9          next_test
+000410  1  00 F0 03 20  
+000414  1  11 32 A9 01  
+00041B  1               
+00041B  1               ;testing stack operations PHX PHY PLX PLY
+00041B  1  A9 99                lda #$99        ;protect a
+00041D  1  A2 FF                ldx #$ff        ;initialize stack
+00041F  1  9A                   txs
+000420  1  A2 55                ldx #$55
+000422  1  DA                   phx
+000423  1  A2 AA                ldx #$aa
+000425  1  DA                   phx
+000426  1  EC FE 01             cpx $1fe        ;on stack ?
+000429  1  F0 03 20 11          trap_ne
+00042D  1  32           
+00042E  1  BA                   tsx
+00042F  1  E0 FD                cpx #$fd        ;sp decremented?
+000431  1  F0 03 20 11          trap_ne
+000435  1  32           
+000436  1  7A                   ply
+000437  1  C0 AA                cpy #$aa        ;successful retreived from stack?
+000439  1  F0 03 20 11          trap_ne
+00043D  1  32           
+00043E  1  7A                   ply
+00043F  1  C0 55                cpy #$55
+000441  1  F0 03 20 11          trap_ne
+000445  1  32           
+000446  1  CC FF 01             cpy $1ff        ;remains on stack?
+000449  1  F0 03 20 11          trap_ne
+00044D  1  32           
+00044E  1  BA                   tsx
+00044F  1  E0 FF                cpx #$ff        ;sp incremented?
+000451  1  F0 03 20 11          trap_ne
+000455  1  32           
+000456  1               
+000456  1  A0 A5                ldy #$a5
+000458  1  5A                   phy
+000459  1  A0 5A                ldy #$5a
+00045B  1  5A                   phy
+00045C  1  CC FE 01             cpy $1fe        ;on stack ?
+00045F  1  F0 03 20 11          trap_ne
+000463  1  32           
+000464  1  BA                   tsx
+000465  1  E0 FD                cpx #$fd        ;sp decremented?
+000467  1  F0 03 20 11          trap_ne
+00046B  1  32           
+00046C  1  FA                   plx
+00046D  1  E0 5A                cpx #$5a        ;successful retreived from stack?
+00046F  1  F0 03 20 11          trap_ne
+000473  1  32           
+000474  1  FA                   plx
+000475  1  E0 A5                cpx #$a5
+000477  1  F0 03 20 11          trap_ne
+00047B  1  32           
+00047C  1  EC FF 01             cpx $1ff        ;remains on stack?
+00047F  1  F0 03 20 11          trap_ne
+000483  1  32           
+000484  1  BA                   tsx
+000485  1  E0 FF                cpx #$ff        ;sp incremented?
+000487  1  F0 03 20 11          trap_ne
+00048B  1  32           
+00048C  1  C9 99                cmp #$99        ;unchanged?
+00048E  1  F0 03 20 11          trap_ne
+000492  1  32           
+000493  1  AD 02 02 C9          next_test
+000497  1  01 F0 03 20  
+00049B  1  11 32 A9 02  
+0004A2  1               
+0004A2  1               ; test PHX does not alter flags or X but PLX does
+0004A2  1  A0 AA                ldy #$aa        ;protect y
+0004A4  1  A9 FF 48 A2          set_x 1,$ff     ;push
+0004A8  1  01 28        
+0004AA  1  DA                   phx
+0004AB  1  08 E0 01 F0          tst_x 1,$ff
+0004AF  1  03 20 11 32  
+0004B3  1  68 48 C9 FF  
+0004BD  1  A9 00 48 A2          set_x 0,0
+0004C1  1  00 28        
+0004C3  1  DA                   phx
+0004C4  1  08 E0 00 F0          tst_x 0,0
+0004C8  1  03 20 11 32  
+0004CC  1  68 48 C9 30  
+0004D6  1  A9 FF 48 A2          set_x $ff,$ff
+0004DA  1  FF 28        
+0004DC  1  DA                   phx
+0004DD  1  08 E0 FF F0          tst_x $ff,$ff
+0004E1  1  03 20 11 32  
+0004E5  1  68 48 C9 FF  
+0004EF  1  A9 00 48 A2          set_x 1,0
+0004F3  1  01 28        
+0004F5  1  DA                   phx
+0004F6  1  08 E0 01 F0          tst_x 1,0
+0004FA  1  03 20 11 32  
+0004FE  1  68 48 C9 30  
+000508  1  A9 FF 48 A2          set_x 0,$ff
+00050C  1  00 28        
+00050E  1  DA                   phx
+00050F  1  08 E0 00 F0          tst_x 0,$ff
+000513  1  03 20 11 32  
+000517  1  68 48 C9 FF  
+000521  1  A9 00 48 A2          set_x $ff,0
+000525  1  FF 28        
+000527  1  DA                   phx
+000528  1  08 E0 FF F0          tst_x $ff,0
+00052C  1  03 20 11 32  
+000530  1  68 48 C9 30  
+00053A  1  A9 FF 48 A2          set_x 0,$ff     ;pull
+00053E  1  00 28        
+000540  1  FA                   plx
+000541  1  08 E0 FF F0          tst_x $ff,$ff-zero
+000545  1  03 20 11 32  
+000549  1  68 48 C9 FD  
+000553  1  A9 00 48 A2          set_x $ff,0
+000557  1  FF 28        
+000559  1  FA                   plx
+00055A  1  08 E0 00 F0          tst_x 0,zero
+00055E  1  03 20 11 32  
+000562  1  68 48 C9 32  
+00056C  1  A9 FF 48 A2          set_x $fe,$ff
+000570  1  FE 28        
+000572  1  FA                   plx
+000573  1  08 E0 01 F0          tst_x 1,$ff-zero-minus
+000577  1  03 20 11 32  
+00057B  1  68 48 C9 7D  
+000585  1  A9 00 48 A2          set_x 0,0
+000589  1  00 28        
+00058B  1  FA                   plx
+00058C  1  08 E0 FF F0          tst_x $ff,minus
+000590  1  03 20 11 32  
+000594  1  68 48 C9 B0  
+00059E  1  A9 FF 48 A2          set_x $ff,$ff
+0005A2  1  FF 28        
+0005A4  1  FA                   plx
+0005A5  1  08 E0 00 F0          tst_x 0,$ff-minus
+0005A9  1  03 20 11 32  
+0005AD  1  68 48 C9 7F  
+0005B7  1  A9 00 48 A2          set_x $fe,0
+0005BB  1  FE 28        
+0005BD  1  FA                   plx
+0005BE  1  08 E0 01 F0          tst_x 1,0
+0005C2  1  03 20 11 32  
+0005C6  1  68 48 C9 30  
+0005D0  1  C0 AA                cpy #$aa        ;Y unchanged
+0005D2  1  F0 03 20 11          trap_ne
+0005D6  1  32           
+0005D7  1  AD 02 02 C9          next_test
+0005DB  1  02 F0 03 20  
+0005DF  1  11 32 A9 03  
+0005E6  1               
+0005E6  1               ; test PHY does not alter flags or Y but PLY does
+0005E6  1  A2 55                ldx #$55        ;x & a protected
+0005E8  1  A9 FF 48 A0          set_y 1,$ff     ;push
+0005EC  1  01 28        
+0005EE  1  5A                   phy
+0005EF  1  08 C0 01 F0          tst_y 1,$ff
+0005F3  1  03 20 11 32  
+0005F7  1  68 48 C9 FF  
+000601  1  A9 00 48 A0          set_y 0,0
+000605  1  00 28        
+000607  1  5A                   phy
+000608  1  08 C0 00 F0          tst_y 0,0
+00060C  1  03 20 11 32  
+000610  1  68 48 C9 30  
+00061A  1  A9 FF 48 A0          set_y $ff,$ff
+00061E  1  FF 28        
+000620  1  5A                   phy
+000621  1  08 C0 FF F0          tst_y $ff,$ff
+000625  1  03 20 11 32  
+000629  1  68 48 C9 FF  
+000633  1  A9 00 48 A0          set_y 1,0
+000637  1  01 28        
+000639  1  5A                   phy
+00063A  1  08 C0 01 F0          tst_y 1,0
+00063E  1  03 20 11 32  
+000642  1  68 48 C9 30  
+00064C  1  A9 FF 48 A0          set_y 0,$ff
+000650  1  00 28        
+000652  1  5A                   phy
+000653  1  08 C0 00 F0          tst_y 0,$ff
+000657  1  03 20 11 32  
+00065B  1  68 48 C9 FF  
+000665  1  A9 00 48 A0          set_y $ff,0
+000669  1  FF 28        
+00066B  1  5A                   phy
+00066C  1  08 C0 FF F0          tst_y $ff,0
+000670  1  03 20 11 32  
+000674  1  68 48 C9 30  
+00067E  1  A9 FF 48 A0          set_y 0,$ff     ;pull
+000682  1  00 28        
+000684  1  7A                   ply
+000685  1  08 C0 FF F0          tst_y $ff,$ff-zero
+000689  1  03 20 11 32  
+00068D  1  68 48 C9 FD  
+000697  1  A9 00 48 A0          set_y $ff,0
+00069B  1  FF 28        
+00069D  1  7A                   ply
+00069E  1  08 C0 00 F0          tst_y 0,zero
+0006A2  1  03 20 11 32  
+0006A6  1  68 48 C9 32  
+0006B0  1  A9 FF 48 A0          set_y $fe,$ff
+0006B4  1  FE 28        
+0006B6  1  7A                   ply
+0006B7  1  08 C0 01 F0          tst_y 1,$ff-zero-minus
+0006BB  1  03 20 11 32  
+0006BF  1  68 48 C9 7D  
+0006C9  1  A9 00 48 A0          set_y 0,0
+0006CD  1  00 28        
+0006CF  1  7A                   ply
+0006D0  1  08 C0 FF F0          tst_y $ff,minus
+0006D4  1  03 20 11 32  
+0006D8  1  68 48 C9 B0  
+0006E2  1  A9 FF 48 A0          set_y $ff,$ff
+0006E6  1  FF 28        
+0006E8  1  7A                   ply
+0006E9  1  08 C0 00 F0          tst_y 0,$ff-minus
+0006ED  1  03 20 11 32  
+0006F1  1  68 48 C9 7F  
+0006FB  1  A9 00 48 A0          set_y $fe,0
+0006FF  1  FE 28        
+000701  1  7A                   ply
+000702  1  08 C0 01 F0          tst_y 1,0
+000706  1  03 20 11 32  
+00070A  1  68 48 C9 30  
+000714  1  E0 55                cpx #$55        ;x unchanged?
+000716  1  F0 03 20 11          trap_ne
+00071A  1  32           
+00071B  1  AD 02 02 C9          next_test
+00071F  1  03 F0 03 20  
+000723  1  11 32 A9 04  
+00072A  1               
+00072A  1               ; PC modifying instructions (BRA, BBR, BBS, 1, 2, 3 byte NOPs, JMP(abs,x))
+00072A  1               ; testing unconditional branch BRA
+00072A  1               
+00072A  1  A2 81                ldx #$81        ;protect unused registers
+00072C  1  A0 7E                ldy #$7e
+00072E  1  A9 FF 48 A9          set_a 0,$ff
+000732  1  00 28        
+000734  1  80 03                bra br1         ;branch should always be taken
+000736  1  20 11 32             trap
+000739  1               br1:
+000739  1  08 C9 00 F0          tst_a 0,$ff
+00073D  1  03 20 11 32  
+000741  1  68 48 C9 FF  
+00074B  1  A9 00 48 A9          set_a $ff,0
+00074F  1  FF 28        
+000751  1  80 03                bra br2         ;branch should always be taken
+000753  1  20 11 32             trap
+000756  1               br2:
+000756  1  08 C9 FF F0          tst_a $ff,0
+00075A  1  03 20 11 32  
+00075E  1  68 48 C9 30  
+000768  1  E0 81                cpx #$81
+00076A  1  F0 03 20 11          trap_ne
+00076E  1  32           
+00076F  1  C0 7E                cpy #$7e
+000771  1  F0 03 20 11          trap_ne
+000775  1  32           
+000776  1  AD 02 02 C9          next_test
+00077A  1  04 F0 03 20  
+00077E  1  11 32 A9 05  
+000785  1               
+000785  1  A0 00                ldy #0          ;branch range test
+000787  1  80 76                bra bra0
+000789  1               
+000789  1  C0 01        bra1:   cpy #1
+00078B  1  F0 03 20 11          trap_ne         ;long range backward
+00078F  1  32           
+000790  1  C8                   iny
+000791  1  80 62                bra bra2
+000793  1               
+000793  1  C0 03        bra3:   cpy #3
+000795  1  F0 03 20 11          trap_ne         ;long range backward
+000799  1  32           
+00079A  1  C8                   iny
+00079B  1  80 4E                bra bra4
+00079D  1               
+00079D  1  C0 05        bra5:   cpy #5
+00079F  1  F0 03 20 11          trap_ne         ;long range backward
+0007A3  1  32           
+0007A4  1  C8                   iny
+0007A5  1  A0 00                ldy #0
+0007A7  1  80 04                bra brf0
+0007A9  1               
+0007A9  1  C8                   iny
+0007AA  1  C8                   iny
+0007AB  1  C8                   iny
+0007AC  1  C8                   iny
+0007AD  1  80 03        brf0:   bra brf1
+0007AF  1               
+0007AF  1  C8                   iny
+0007B0  1  C8                   iny
+0007B1  1  C8                   iny
+0007B2  1  C8           brf1:   iny
+0007B3  1  80 02                bra brf2
+0007B5  1               
+0007B5  1  C8                   iny
+0007B6  1  C8                   iny
+0007B7  1  C8           brf2:   iny
+0007B8  1  C8                   iny
+0007B9  1  80 01                bra brf3
+0007BB  1               
+0007BB  1  C8                   iny
+0007BC  1  C8           brf3:   iny
+0007BD  1  C8                   iny
+0007BE  1  C8                   iny
+0007BF  1  80 00                bra brf4
+0007C1  1               
+0007C1  1  C8           brf4:   iny
+0007C2  1  C8                   iny
+0007C3  1  C8                   iny
+0007C4  1  C8                   iny
+0007C5  1  C0 0A                cpy #10
+0007C7  1  F0 03 20 11          trap_ne     ;short range forward
+0007CB  1  32           
+0007CC  1  80 12                bra brb0
+0007CE  1               
+0007CE  1  88           brb4:   dey
+0007CF  1  88                   dey
+0007D0  1  88                   dey
+0007D1  1  88                   dey
+0007D2  1  80 0E                bra brb5
+0007D4  1               
+0007D4  1  88           brb3:   dey
+0007D5  1  88                   dey
+0007D6  1  88                   dey
+0007D7  1  80 F5                bra brb4
+0007D9  1               
+0007D9  1  88           brb2:   dey
+0007DA  1  88                   dey
+0007DB  1  80 F7                bra brb3
+0007DD  1               
+0007DD  1  88           brb1:   dey
+0007DE  1  80 F9                bra brb2
+0007E0  1               
+0007E0  1  80 FB        brb0:   bra brb1
+0007E2  1               
+0007E2  1  C0 00        brb5:   cpy #0
+0007E4  1  F0 03 20 11          trap_ne     ;short range backward
+0007E8  1  32           
+0007E9  1  80 1E                bra bra6
+0007EB  1               
+0007EB  1  C0 04        bra4:   cpy #4
+0007ED  1  F0 03 20 11          trap_ne     ;long range forward
+0007F1  1  32           
+0007F2  1  C8                   iny
+0007F3  1  80 A8                bra bra5
+0007F5  1               
+0007F5  1  C0 02        bra2:   cpy #2
+0007F7  1  F0 03 20 11          trap_ne     ;long range forward
+0007FB  1  32           
+0007FC  1  C8                   iny
+0007FD  1  80 94                bra bra3
+0007FF  1               
+0007FF  1  C0 00        bra0:   cpy #0
+000801  1  F0 03 20 11          trap_ne     ;long range forward
+000805  1  32           
+000806  1  C8                   iny
+000807  1  80 80                bra bra1
+000809  1               
+000809  1               bra6:
+000809  1  AD 02 02 C9          next_test
+00080D  1  05 F0 03 20  
+000811  1  11 32 A9 06  
+000818  1               
+000818  1                   .if rkwl_wdc_op = 1
+000818  1               ; testing BBR & BBS
+000818  1               
+000818  1                       .macro bbr n,b,r
+000818  1                           .if n = 0
+000818  1                               bbr0 b,r
+000818  1                           .elseif n = 1
+000818  1                               bbr1 b,r
+000818  1                           .elseif n = 2
+000818  1                               bbr2 b,r
+000818  1                           .elseif n = 3
+000818  1                               bbr3 b,r
+000818  1                           .elseif n = 4
+000818  1                               bbr4 b,r
+000818  1                           .elseif n = 5
+000818  1                               bbr5 b,r
+000818  1                           .elseif n = 6
+000818  1                               bbr6 b,r
+000818  1                           .elseif n = 7
+000818  1                               bbr7 b,r
+000818  1                           .else
+000818  1                               .error "syntax error in bbr"
+000818  1                           .endif
+000818  1                       .endmacro
+000818  1               
+000818  1                       .macro bbs n,b,r
+000818  1                           .if n = 0
+000818  1                               bbs0 b,r
+000818  1                           .elseif n = 1
+000818  1                               bbs1 b,r
+000818  1                           .elseif n = 2
+000818  1                               bbs2 b,r
+000818  1                           .elseif n = 3
+000818  1                               bbs3 b,r
+000818  1                           .elseif n = 4
+000818  1                               bbs4 b,r
+000818  1                           .elseif n = 5
+000818  1                               bbs5 b,r
+000818  1                           .elseif n = 6
+000818  1                               bbs6 b,r
+000818  1                           .elseif n = 7
+000818  1                               bbs7 b,r
+000818  1                           .else
+000818  1                               .error "syntax error in bbs"
+000818  1                           .endif
+000818  1                       .endmacro
+000818  1               
+000818  1                       .macro bbt bitnum
+000818  1                       .local fail1, ok1, fail2, ok2, fail3, ok3, fail4, ok4
+000818  1                       lda #(1<<bitnum)    ;testing 1 bit on
+000818  1                       sta zpt
+000818  1                       set_a $33,0     ;with flags off
+000818  1                       bbr bitnum,zpt,fail1
+000818  1                       bbs bitnum,zpt,ok1
+000818  1                       trap            ;bbs branch not taken
+000818  1               fail1:
+000818  1                       trap            ;bbr branch taken
+000818  1               ok1:
+000818  1                       tst_a $33,0
+000818  1                       set_a $cc,$ff   ;with flags on
+000818  1                       bbr bitnum,zpt,fail2
+000818  1                       bbs bitnum,zpt,ok2
+000818  1                       trap            ;bbs branch not taken
+000818  1               fail2:
+000818  1                       trap            ;bbr branch taken
+000818  1               ok2:
+000818  1                       tst_a $cc,$ff
+000818  1                       lda zpt
+000818  1                       cmp #(1<<bitnum)
+000818  1                       trap_ne         ;zp altered
+000818  1                       lda #$ff-(1<<bitnum) ;testing 1 bit off
+000818  1                       sta zpt
+000818  1                       set_a $33,0     ;with flags off
+000818  1                       bbs bitnum,zpt,fail3
+000818  1                       bbr bitnum,zpt,ok3
+000818  1                       trap            ;bbr branch not taken
+000818  1               fail3:
+000818  1                       trap            ;bbs branch taken
+000818  1               ok3:
+000818  1                       tst_a $33,0
+000818  1                       set_a $cc,$ff   ;with flags on
+000818  1                       bbs bitnum,zpt,fail4
+000818  1                       bbr bitnum,zpt,ok4
+000818  1                       trap            ;bbr branch not taken
+000818  1               fail4:
+000818  1                       trap            ;bbs branch taken
+000818  1               ok4:
+000818  1                       tst_a $cc,$ff
+000818  1                       lda zpt
+000818  1                       cmp #$ff-(1<<bitnum)
+000818  1                       trap_ne         ;zp altered
+000818  1                       .endmacro
+000818  1               
+000818  1  A2 11                ldx #$11        ;test bbr/bbs integrity
+00081A  1  A0 22                ldy #$22
+00081C  1  A9 01 85 0C          bbt 0
+000820  1  A9 00 48 A9  
+000824  1  33 28 0F 0C  
+0008C6  1  A9 02 85 0C          bbt 1
+0008CA  1  A9 00 48 A9  
+0008CE  1  33 28 1F 0C  
+000970  1  A9 04 85 0C          bbt 2
+000974  1  A9 00 48 A9  
+000978  1  33 28 2F 0C  
+000A1A  1  A9 08 85 0C          bbt 3
+000A1E  1  A9 00 48 A9  
+000A22  1  33 28 3F 0C  
+000AC4  1  A9 10 85 0C          bbt 4
+000AC8  1  A9 00 48 A9  
+000ACC  1  33 28 4F 0C  
+000B6E  1  A9 20 85 0C          bbt 5
+000B72  1  A9 00 48 A9  
+000B76  1  33 28 5F 0C  
+000C18  1  A9 40 85 0C          bbt 6
+000C1C  1  A9 00 48 A9  
+000C20  1  33 28 6F 0C  
+000CC2  1  A9 80 85 0C          bbt 7
+000CC6  1  A9 00 48 A9  
+000CCA  1  33 28 7F 0C  
+000D6C  1  E0 11                cpx #$11
+000D6E  1  F0 03 20 11          trap_ne         ;x overwritten
+000D72  1  32           
+000D73  1  C0 22                cpy #$22
+000D75  1  F0 03 20 11          trap_ne         ;y overwritten
+000D79  1  32           
+000D7A  1  AD 02 02 C9          next_test
+000D7E  1  06 F0 03 20  
+000D82  1  11 32 A9 07  
+000D89  1               
+000D89  1                       .macro bbrc bitnum
+000D89  1                       .local skip
+000D89  1                       bbr bitnum,zpt,skip
+000D89  1                       eor #(1<<bitnum)
+000D89  1               skip:
+000D89  1                       .endmacro
+000D89  1                       .macro bbsc bitnum
+000D89  1                       .local skip
+000D89  1                       bbs bitnum,zpt,skip
+000D89  1                       eor #(1<<bitnum)
+000D89  1               skip:
+000D89  1                       .endmacro
+000D89  1               
+000D89  1  A9 00                lda #0          ;combined bit test
+000D8B  1  85 0C                sta zpt
+000D8D  1  A9 00        bbcl:   lda #0
+000D8F  1  0F 0C 02 49          bbrc 0
+000D93  1  01           
+000D94  1  1F 0C 02 49          bbrc 1
+000D98  1  02           
+000D99  1  2F 0C 02 49          bbrc 2
+000D9D  1  04           
+000D9E  1  3F 0C 02 49          bbrc 3
+000DA2  1  08           
+000DA3  1  4F 0C 02 49          bbrc 4
+000DA7  1  10           
+000DA8  1  5F 0C 02 49          bbrc 5
+000DAC  1  20           
+000DAD  1  6F 0C 02 49          bbrc 6
+000DB1  1  40           
+000DB2  1  7F 0C 02 49          bbrc 7
+000DB6  1  80           
+000DB7  1  45 0C                eor zpt
+000DB9  1  F0 03 20 11          trap_ne         ;failed bbr bitnum in accu
+000DBD  1  32           
+000DBE  1  A9 FF                lda #$ff
+000DC0  1  8F 0C 02 49          bbsc 0
+000DC4  1  01           
+000DC5  1  9F 0C 02 49          bbsc 1
+000DC9  1  02           
+000DCA  1  AF 0C 02 49          bbsc 2
+000DCE  1  04           
+000DCF  1  BF 0C 02 49          bbsc 3
+000DD3  1  08           
+000DD4  1  CF 0C 02 49          bbsc 4
+000DD8  1  10           
+000DD9  1  DF 0C 02 49          bbsc 5
+000DDD  1  20           
+000DDE  1  EF 0C 02 49          bbsc 6
+000DE2  1  40           
+000DE3  1  FF 0C 02 49          bbsc 7
+000DE7  1  80           
+000DE8  1  45 0C                eor zpt
+000DEA  1  F0 03 20 11          trap_ne         ;failed bbs bitnum in accu
+000DEE  1  32           
+000DEF  1  E6 0C                inc zpt
+000DF1  1  D0 9A                bne bbcl
+000DF3  1  AD 02 02 C9          next_test
+000DF7  1  07 F0 03 20  
+000DFB  1  11 32 A9 08  
+000E02  1                   .endif
+000E02  1               
+000E02  1               ; testing NOP
+000E02  1               
+000E02  1                           .macro nop_test opcode, num_bytes
+000E02  1                           ldy #$42
+000E02  1                           ldx #4-num_bytes
+000E02  1                           .byte  opcode          ;test nop length
+000E02  1                       .if num_bytes = 1
+000E02  1                           dex
+000E02  1                           dex
+000E02  1                       .endif
+000E02  1                       .if num_bytes = 2
+000E02  1                           iny
+000E02  1                           dex
+000E02  1                       .endif
+000E02  1                       .if num_bytes = 3
+000E02  1                           iny
+000E02  1                           iny
+000E02  1                       .endif
+000E02  1                           dex
+000E02  1                           trap_ne                ;wrong number of bytes
+000E02  1                           set_a $ff-opcode,0
+000E02  1                           .byte  opcode          ;test nop integrity - flags off
+000E02  1                           nop
+000E02  1                           nop
+000E02  1                           tst_a $ff-opcode,0
+000E02  1                       .if $aa-opcode >= 0
+000E02  1                           set_a $aa-opcode,$ff
+000E02  1                       .else
+000E02  1                           set_a $ff+$aa-opcode,$ff
+000E02  1                       .endif
+000E02  1                           .byte  opcode          ;test nop integrity - flags on
+000E02  1                           nop
+000E02  1                           nop
+000E02  1                       .if $aa-opcode >= 0
+000E02  1                           tst_a $aa-opcode,$ff
+000E02  1                       .else
+000E02  1                           tst_a $ff+$aa-opcode,$ff
+000E02  1                       .endif
+000E02  1                           cpy #$42
+000E02  1                           trap_ne                ;y changed
+000E02  1                           cpx #0
+000E02  1                           trap_ne                ;x changed
+000E02  1                           .endmacro
+000E02  1               
+000E02  1                   .if skip_nop = 0
+000E02  1  A0 42 A2 02          nop_test $02,2
+000E06  1  02 C8 CA CA  
+000E0A  1  F0 03 20 11  
+000E53  1  A0 42 A2 02          nop_test $22,2
+000E57  1  22 C8 CA CA  
+000E5B  1  F0 03 20 11  
+000EA4  1  A0 42 A2 02          nop_test $42,2
+000EA8  1  42 C8 CA CA  
+000EAC  1  F0 03 20 11  
+000EF5  1  A0 42 A2 02          nop_test $62,2
+000EF9  1  62 C8 CA CA  
+000EFD  1  F0 03 20 11  
+000F46  1  A0 42 A2 02          nop_test $82,2
+000F4A  1  82 C8 CA CA  
+000F4E  1  F0 03 20 11  
+000F97  1  A0 42 A2 02          nop_test $c2,2
+000F9B  1  C2 C8 CA CA  
+000F9F  1  F0 03 20 11  
+000FE8  1  A0 42 A2 02          nop_test $e2,2
+000FEC  1  E2 C8 CA CA  
+000FF0  1  F0 03 20 11  
+001039  1  A0 42 A2 02          nop_test $44,2
+00103D  1  44 C8 CA CA  
+001041  1  F0 03 20 11  
+00108A  1  A0 42 A2 02          nop_test $54,2
+00108E  1  54 C8 CA CA  
+001092  1  F0 03 20 11  
+0010DB  1  A0 42 A2 02          nop_test $d4,2
+0010DF  1  D4 C8 CA CA  
+0010E3  1  F0 03 20 11  
+00112C  1  A0 42 A2 02          nop_test $f4,2
+001130  1  F4 C8 CA CA  
+001134  1  F0 03 20 11  
+00117D  1  A0 42 A2 01          nop_test $5c,3
+001181  1  5C C8 C8 CA  
+001185  1  F0 03 20 11  
+0011CE  1  A0 42 A2 01          nop_test $dc,3
+0011D2  1  DC C8 C8 CA  
+0011D6  1  F0 03 20 11  
+00121F  1  A0 42 A2 01          nop_test $fc,3
+001223  1  FC C8 C8 CA  
+001227  1  F0 03 20 11  
+001270  1  A0 42 A2 03          nop_test $03,1
+001274  1  03 CA CA CA  
+001278  1  F0 03 20 11  
+0012C1  1  A0 42 A2 03          nop_test $13,1
+0012C5  1  13 CA CA CA  
+0012C9  1  F0 03 20 11  
+001312  1  A0 42 A2 03          nop_test $23,1
+001316  1  23 CA CA CA  
+00131A  1  F0 03 20 11  
+001363  1  A0 42 A2 03          nop_test $33,1
+001367  1  33 CA CA CA  
+00136B  1  F0 03 20 11  
+0013B4  1  A0 42 A2 03          nop_test $43,1
+0013B8  1  43 CA CA CA  
+0013BC  1  F0 03 20 11  
+001405  1  A0 42 A2 03          nop_test $53,1
+001409  1  53 CA CA CA  
+00140D  1  F0 03 20 11  
+001456  1  A0 42 A2 03          nop_test $63,1
+00145A  1  63 CA CA CA  
+00145E  1  F0 03 20 11  
+0014A7  1  A0 42 A2 03          nop_test $73,1
+0014AB  1  73 CA CA CA  
+0014AF  1  F0 03 20 11  
+0014F8  1  A0 42 A2 03          nop_test $83,1
+0014FC  1  83 CA CA CA  
+001500  1  F0 03 20 11  
+001549  1  A0 42 A2 03          nop_test $93,1
+00154D  1  93 CA CA CA  
+001551  1  F0 03 20 11  
+00159A  1  A0 42 A2 03          nop_test $a3,1
+00159E  1  A3 CA CA CA  
+0015A2  1  F0 03 20 11  
+0015EB  1  A0 42 A2 03          nop_test $b3,1
+0015EF  1  B3 CA CA CA  
+0015F3  1  F0 03 20 11  
+00163C  1  A0 42 A2 03          nop_test $c3,1
+001640  1  C3 CA CA CA  
+001644  1  F0 03 20 11  
+00168D  1  A0 42 A2 03          nop_test $d3,1
+001691  1  D3 CA CA CA  
+001695  1  F0 03 20 11  
+0016DE  1  A0 42 A2 03          nop_test $e3,1
+0016E2  1  E3 CA CA CA  
+0016E6  1  F0 03 20 11  
+00172F  1  A0 42 A2 03          nop_test $f3,1
+001733  1  F3 CA CA CA  
+001737  1  F0 03 20 11  
+001780  1  A0 42 A2 03          nop_test $0b,1
+001784  1  0B CA CA CA  
+001788  1  F0 03 20 11  
+0017D1  1  A0 42 A2 03          nop_test $1b,1
+0017D5  1  1B CA CA CA  
+0017D9  1  F0 03 20 11  
+001822  1  A0 42 A2 03          nop_test $2b,1
+001826  1  2B CA CA CA  
+00182A  1  F0 03 20 11  
+001873  1  A0 42 A2 03          nop_test $3b,1
+001877  1  3B CA CA CA  
+00187B  1  F0 03 20 11  
+0018C4  1  A0 42 A2 03          nop_test $4b,1
+0018C8  1  4B CA CA CA  
+0018CC  1  F0 03 20 11  
+001915  1  A0 42 A2 03          nop_test $5b,1
+001919  1  5B CA CA CA  
+00191D  1  F0 03 20 11  
+001966  1  A0 42 A2 03          nop_test $6b,1
+00196A  1  6B CA CA CA  
+00196E  1  F0 03 20 11  
+0019B7  1  A0 42 A2 03          nop_test $7b,1
+0019BB  1  7B CA CA CA  
+0019BF  1  F0 03 20 11  
+001A08  1  A0 42 A2 03          nop_test $8b,1
+001A0C  1  8B CA CA CA  
+001A10  1  F0 03 20 11  
+001A59  1  A0 42 A2 03          nop_test $9b,1
+001A5D  1  9B CA CA CA  
+001A61  1  F0 03 20 11  
+001AAA  1  A0 42 A2 03          nop_test $ab,1
+001AAE  1  AB CA CA CA  
+001AB2  1  F0 03 20 11  
+001AFB  1  A0 42 A2 03          nop_test $bb,1
+001AFF  1  BB CA CA CA  
+001B03  1  F0 03 20 11  
+001B4C  1  A0 42 A2 03          nop_test $eb,1
+001B50  1  EB CA CA CA  
+001B54  1  F0 03 20 11  
+001B9D  1  A0 42 A2 03          nop_test $fb,1
+001BA1  1  FB CA CA CA  
+001BA5  1  F0 03 20 11  
+001BEE  1                   .if rkwl_wdc_op = 0      ;NOPs not available on Rockwell & WDC 65C02
+001BEE  1                       nop_test $07,1
+001BEE  1                       nop_test $17,1
+001BEE  1                       nop_test $27,1
+001BEE  1                       nop_test $37,1
+001BEE  1                       nop_test $47,1
+001BEE  1                       nop_test $57,1
+001BEE  1                       nop_test $67,1
+001BEE  1                       nop_test $77,1
+001BEE  1                       nop_test $87,1
+001BEE  1                       nop_test $97,1
+001BEE  1                       nop_test $a7,1
+001BEE  1                       nop_test $b7,1
+001BEE  1                       nop_test $c7,1
+001BEE  1                       nop_test $d7,1
+001BEE  1                       nop_test $e7,1
+001BEE  1                       nop_test $f7,1
+001BEE  1                       nop_test $0f,1
+001BEE  1                       nop_test $1f,1
+001BEE  1                       nop_test $2f,1
+001BEE  1                       nop_test $3f,1
+001BEE  1                       nop_test $4f,1
+001BEE  1                       nop_test $5f,1
+001BEE  1                       nop_test $6f,1
+001BEE  1                       nop_test $7f,1
+001BEE  1                       nop_test $8f,1
+001BEE  1                       nop_test $9f,1
+001BEE  1                       nop_test $af,1
+001BEE  1                       nop_test $bf,1
+001BEE  1                       nop_test $cf,1
+001BEE  1                       nop_test $df,1
+001BEE  1                       nop_test $ef,1
+001BEE  1                       nop_test $ff,1
+001BEE  1                   .endif
+001BEE  1                   .if  wdc_op = 0          ;NOPs not available on WDC 65C02 (WAI, STP)
+001BEE  1                       nop_test $cb,1
+001BEE  1                       nop_test $db,1
+001BEE  1                   .endif
+001BEE  1  AD 02 02 C9          next_test
+001BF2  1  08 F0 03 20  
+001BF6  1  11 32 A9 09  
+001BFD  1                   .endif
+001BFD  1               
+001BFD  1               ; jump indirect (test page cross bug is fixed)
+001BFD  1  A2 03                ldx #3          ;prepare table
+001BFF  1  BD 84 30     ji1:    lda ji_adr,x
+001C02  1  9D FD 02             sta ji_tab,x
+001C05  1  CA                   dex
+001C06  1  10 F7                bpl ji1
+001C08  1  A9 34                lda #>ji_px ;high address if page cross bug
+001C0A  1  8D 00 02             sta pg_x
+001C0D  1  A9 00 48 28          set_stat 0
+001C11  1  A9 49                lda #'I'
+001C13  1  A2 4E                ldx #'N'
+001C15  1  A0 44                ldy #'D'        ;N=0, V=0, Z=0, C=0
+001C17  1  6C FD 02             jmp (ji_tab)
+001C1A  1  EA                   nop
+001C1B  1  F0 03 20 11          trap_ne         ;runover protection
+001C1F  1  32           
+001C20  1               
+001C20  1  88                   dey
+001C21  1  88                   dey
+001C22  1  08           ji_ret: php             ;either SP or Y count will fail, if we do not hit
+001C23  1  88                   dey
+001C24  1  88                   dey
+001C25  1  88                   dey
+001C26  1  28                   plp
+001C27  1  D0 03 20 11          trap_eq         ;returned flags OK?
+001C2B  1  32           
+001C2C  1  30 03 20 11          trap_pl
+001C30  1  32           
+001C31  1  B0 03 20 11          trap_cc
+001C35  1  32           
+001C36  1  70 03 20 11          trap_vc
+001C3A  1  32           
+001C3B  1  C9 E3                cmp #('I'^$aa)  ;returned registers OK?
+001C3D  1  F0 03 20 11          trap_ne
+001C41  1  32           
+001C42  1  E0 4F                cpx #('N'+1)
+001C44  1  F0 03 20 11          trap_ne
+001C48  1  32           
+001C49  1  C0 3E                cpy #('D'-6)
+001C4B  1  F0 03 20 11          trap_ne
+001C4F  1  32           
+001C50  1  BA                   tsx             ;SP check
+001C51  1  E0 FF                cpx #$ff
+001C53  1  F0 03 20 11          trap_ne
+001C57  1  32           
+001C58  1  AD 02 02 C9          next_test
+001C5C  1  09 F0 03 20  
+001C60  1  11 32 A9 0A  
+001C67  1               
+001C67  1               ; jump indexed indirect
+001C67  1  A2 0B                ldx #11         ;prepare table
+001C69  1  BD D8 30     jxi1:   lda jxi_adr,x
+001C6C  1  9D F9 02             sta jxi_tab,x
+001C6F  1  CA                   dex
+001C70  1  10 F7                bpl jxi1
+001C72  1  A9 34                lda #>jxi_px ;high address if page cross bug
+001C74  1  8D 00 02             sta pg_x
+001C77  1  A9 00 48 28          set_stat 0
+001C7B  1  A9 58                lda #'X'
+001C7D  1  A2 04                ldx #4
+001C7F  1  A0 49                ldy #'I'        ;N=0, V=0, Z=0, C=0
+001C81  1  7C F9 02             jmp (jxi_tab,x)
+001C84  1  EA                   nop
+001C85  1  F0 03 20 11          trap_ne         ;runover protection
+001C89  1  32           
+001C8A  1               
+001C8A  1  88                   dey
+001C8B  1  88                   dey
+001C8C  1  08           jxi_ret:php             ;either SP or Y count will fail, if we do not hit
+001C8D  1  88                   dey
+001C8E  1  88                   dey
+001C8F  1  88                   dey
+001C90  1  28                   plp
+001C91  1  D0 03 20 11          trap_eq         ;returned flags OK?
+001C95  1  32           
+001C96  1  30 03 20 11          trap_pl
+001C9A  1  32           
+001C9B  1  B0 03 20 11          trap_cc
+001C9F  1  32           
+001CA0  1  70 03 20 11          trap_vc
+001CA4  1  32           
+001CA5  1  C9 F2                cmp #('X'^$aa)  ;returned registers OK?
+001CA7  1  F0 03 20 11          trap_ne
+001CAB  1  32           
+001CAC  1  E0 06                cpx #6
+001CAE  1  F0 03 20 11          trap_ne
+001CB2  1  32           
+001CB3  1  C0 43                cpy #('I'-6)
+001CB5  1  F0 03 20 11          trap_ne
+001CB9  1  32           
+001CBA  1  BA                   tsx             ;SP check
+001CBB  1  E0 FF                cpx #$ff
+001CBD  1  F0 03 20 11          trap_ne
+001CC1  1  32           
+001CC2  1               
+001CC2  1  A9 DE                lda #<jxp_ok ;test with index causing a page cross
+001CC4  1  8D 00 03             sta jxp_tab
+001CC7  1  A9 1C                lda #>jxp_ok
+001CC9  1  8D 01 03             sta jxp_tab+1
+001CCC  1  A9 DB                lda #<jxp_px
+001CCE  1  8D 00 02             sta pg_x
+001CD1  1  A9 1C                lda #>jxp_px
+001CD3  1  8D 01 02             sta pg_x+1
+001CD6  1  A2 FF                ldx #$ff
+001CD8  1  7C 01 02             jmp (jxp_tab-$ff,x)
+001CDB  1               
+001CDB  1               jxp_px:
+001CDB  1  20 11 32             trap            ;page cross by index to wrong page
+001CDE  1               
+001CDE  1               jxp_ok:
+001CDE  1  AD 02 02 C9          next_test
+001CE2  1  0A F0 03 20  
+001CE6  1  11 32 A9 0B  
+001CED  1               
+001CED  1                   .if ROM_vectors = 1
+001CED  1               ; test BRK clears decimal mode
+001CED  1  A9 00                load_flag 0     ;with interrupts enabled if allowed!
+001CEF  1  48                   pha
+001CF0  1  A9 42                lda #'B'
+001CF2  1  A2 52                ldx #'R'
+001CF4  1  A0 4B                ldy #'K'
+001CF6  1  28                   plp             ;N=0, V=0, Z=0, C=0
+001CF7  1  00                   brk
+001CF8  1  88                   dey             ;should not be executed
+001CF9  1               brk_ret0:               ;address of break return
+001CF9  1  08                   php             ;either SP or Y count will fail, if we do not hit
+001CFA  1  88                   dey
+001CFB  1  88                   dey
+001CFC  1  88                   dey
+001CFD  1  C9 E8                cmp #'B'^$aa    ;returned registers OK?
+001CFF  1                       ;the IRQ vector was never executed if A & X stay unmodified
+001CFF  1  F0 03 20 11          trap_ne
+001D03  1  32           
+001D04  1  E0 53                cpx #'R'+1
+001D06  1  F0 03 20 11          trap_ne
+001D0A  1  32           
+001D0B  1  C0 45                cpy #'K'-6
+001D0D  1  F0 03 20 11          trap_ne
+001D11  1  32           
+001D12  1  68                   pla             ;returned flags OK (unchanged)?
+001D13  1  C9 30                cmp_flag 0
+001D15  1  F0 03 20 11          trap_ne
+001D19  1  32           
+001D1A  1  BA                   tsx             ;sp?
+001D1B  1  E0 FF                cpx #$ff
+001D1D  1  F0 03 20 11          trap_ne
+001D21  1  32           
+001D22  1               ;pass 2
+001D22  1  A9 FF                load_flag $ff   ;with interrupts disabled if allowed!
+001D24  1  48                   pha
+001D25  1  A9 BD                lda #$ff-'B'
+001D27  1  A2 AD                ldx #$ff-'R'
+001D29  1  A0 B4                ldy #$ff-'K'
+001D2B  1  28                   plp             ;N=1, V=1, Z=1, C=1
+001D2C  1  00                   brk
+001D2D  1  88                   dey             ;should not be executed
+001D2E  1               brk_ret1:               ;address of break return
+001D2E  1  08                   php             ;either SP or Y count will fail, if we do not hit
+001D2F  1  88                   dey
+001D30  1  88                   dey
+001D31  1  88                   dey
+001D32  1  C9 17                cmp #($ff-'B')^$aa  ;returned registers OK?
+001D34  1                       ;the IRQ vector was never executed if A & X stay unmodified
+001D34  1  F0 03 20 11          trap_ne
+001D38  1  32           
+001D39  1  E0 AE                cpx #$ff-'R'+1
+001D3B  1  F0 03 20 11          trap_ne
+001D3F  1  32           
+001D40  1  C0 AE                cpy #$ff-'K'-6
+001D42  1  F0 03 20 11          trap_ne
+001D46  1  32           
+001D47  1  68                   pla             ;returned flags OK (unchanged)?
+001D48  1  C9 FF                cmp_flag $ff
+001D4A  1  F0 03 20 11          trap_ne
+001D4E  1  32           
+001D4F  1  BA                   tsx             ;sp?
+001D50  1  E0 FF                cpx #$ff
+001D52  1  F0 03 20 11          trap_ne
+001D56  1  32           
+001D57  1  AD 02 02 C9          next_test
+001D5B  1  0B F0 03 20  
+001D5F  1  11 32 A9 0C  
+001D66  1                   .endif
+001D66  1               
+001D66  1               ; testing accumulator increment/decrement INC A & DEC A
+001D66  1  A2 AC                ldx #$ac    ;protect x & y
+001D68  1  A0 DC                ldy #$dc
+001D6A  1  A9 FF 48 A9          set_a $fe,$ff
+001D6E  1  FE 28        
+001D70  1  1A                   inc a           ;ff
+001D71  1  48 08 C9 FF          tst_as $ff,$ff-zero
+001D75  1  F0 03 20 11  
+001D79  1  32 68 48 C9  
+001D85  1  1A                   inc a           ;00
+001D86  1  48 08 C9 00          tst_as 0,$ff-minus
+001D8A  1  F0 03 20 11  
+001D8E  1  32 68 48 C9  
+001D9A  1  1A                   inc a           ;01
+001D9B  1  48 08 C9 01          tst_as 1,$ff-minus-zero
+001D9F  1  F0 03 20 11  
+001DA3  1  32 68 48 C9  
+001DAF  1  3A                   dec a           ;00
+001DB0  1  48 08 C9 00          tst_as 0,$ff-minus
+001DB4  1  F0 03 20 11  
+001DB8  1  32 68 48 C9  
+001DC4  1  3A                   dec a           ;ff
+001DC5  1  48 08 C9 FF          tst_as $ff,$ff-zero
+001DC9  1  F0 03 20 11  
+001DCD  1  32 68 48 C9  
+001DD9  1  3A                   dec a           ;fe
+001DDA  1  A9 00 48 A9          set_a $fe,0
+001DDE  1  FE 28        
+001DE0  1  1A                   inc a           ;ff
+001DE1  1  48 08 C9 FF          tst_as $ff,minus
+001DE5  1  F0 03 20 11  
+001DE9  1  32 68 48 C9  
+001DF5  1  1A                   inc a           ;00
+001DF6  1  48 08 C9 00          tst_as 0,zero
+001DFA  1  F0 03 20 11  
+001DFE  1  32 68 48 C9  
+001E0A  1  1A                   inc a           ;01
+001E0B  1  48 08 C9 01          tst_as 1,0
+001E0F  1  F0 03 20 11  
+001E13  1  32 68 48 C9  
+001E1F  1  3A                   dec a           ;00
+001E20  1  48 08 C9 00          tst_as 0,zero
+001E24  1  F0 03 20 11  
+001E28  1  32 68 48 C9  
+001E34  1  3A                   dec a           ;ff
+001E35  1  48 08 C9 FF          tst_as $ff,minus
+001E39  1  F0 03 20 11  
+001E3D  1  32 68 48 C9  
+001E49  1  E0 AC                cpx #$ac
+001E4B  1  F0 03 20 11          trap_ne     ;x altered during test
+001E4F  1  32           
+001E50  1  C0 DC                cpy #$dc
+001E52  1  F0 03 20 11          trap_ne     ;y altered during test
+001E56  1  32           
+001E57  1  BA                   tsx
+001E58  1  E0 FF                cpx #$ff
+001E5A  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+001E5E  1  32           
+001E5F  1  AD 02 02 C9          next_test
+001E63  1  0C F0 03 20  
+001E67  1  11 32 A9 0D  
+001E6E  1               
+001E6E  1               ; testing load / store accumulator LDA / STA (zp)
+001E6E  1  A2 99                ldx #$99    ;protect x & y
+001E70  1  A0 66                ldy #$66
+001E72  1  A9 00 48 28          set_stat 0
+001E76  1  B2 24                lda (ind1)
+001E78  1  08                   php         ;test stores do not alter flags
+001E79  1  49 C3                eor #$c3
+001E7B  1  28                   plp
+001E7C  1  92 30                sta (indt)
+001E7E  1  08                   php         ;flags after load/store sequence
+001E7F  1  49 C3                eor #$c3
+001E81  1  C9 C3                cmp #$c3    ;test result
+001E83  1  F0 03 20 11          trap_ne
+001E87  1  32           
+001E88  1  68                   pla         ;load status
+001E89  1  49 30                eor_flag 0
+001E8B  1  CD 15 02             cmp fLDx    ;test flags
+001E8E  1  F0 03 20 11          trap_ne
+001E92  1  32           
+001E93  1  A9 00 48 28          set_stat 0
+001E97  1  B2 26                lda (ind1+2)
+001E99  1  08                   php         ;test stores do not alter flags
+001E9A  1  49 C3                eor #$c3
+001E9C  1  28                   plp
+001E9D  1  92 32                sta (indt+2)
+001E9F  1  08                   php         ;flags after load/store sequence
+001EA0  1  49 C3                eor #$c3
+001EA2  1  C9 82                cmp #$82    ;test result
+001EA4  1  F0 03 20 11          trap_ne
+001EA8  1  32           
+001EA9  1  68                   pla         ;load status
+001EAA  1  49 30                eor_flag 0
+001EAC  1  CD 16 02             cmp fLDx+1  ;test flags
+001EAF  1  F0 03 20 11          trap_ne
+001EB3  1  32           
+001EB4  1  A9 00 48 28          set_stat 0
+001EB8  1  B2 28                lda (ind1+4)
+001EBA  1  08                   php         ;test stores do not alter flags
+001EBB  1  49 C3                eor #$c3
+001EBD  1  28                   plp
+001EBE  1  92 34                sta (indt+4)
+001EC0  1  08                   php         ;flags after load/store sequence
+001EC1  1  49 C3                eor #$c3
+001EC3  1  C9 41                cmp #$41    ;test result
+001EC5  1  F0 03 20 11          trap_ne
+001EC9  1  32           
+001ECA  1  68                   pla         ;load status
+001ECB  1  49 30                eor_flag 0
+001ECD  1  CD 17 02             cmp fLDx+2  ;test flags
+001ED0  1  F0 03 20 11          trap_ne
+001ED4  1  32           
+001ED5  1  A9 00 48 28          set_stat 0
+001ED9  1  B2 2A                lda (ind1+6)
+001EDB  1  08                   php         ;test stores do not alter flags
+001EDC  1  49 C3                eor #$c3
+001EDE  1  28                   plp
+001EDF  1  92 36                sta (indt+6)
+001EE1  1  08                   php         ;flags after load/store sequence
+001EE2  1  49 C3                eor #$c3
+001EE4  1  C9 00                cmp #0      ;test result
+001EE6  1  F0 03 20 11          trap_ne
+001EEA  1  32           
+001EEB  1  68                   pla         ;load status
+001EEC  1  49 30                eor_flag 0
+001EEE  1  CD 18 02             cmp fLDx+3  ;test flags
+001EF1  1  F0 03 20 11          trap_ne
+001EF5  1  32           
+001EF6  1  E0 99                cpx #$99
+001EF8  1  F0 03 20 11          trap_ne     ;x altered during test
+001EFC  1  32           
+001EFD  1  C0 66                cpy #$66
+001EFF  1  F0 03 20 11          trap_ne     ;y altered during test
+001F03  1  32           
+001F04  1               
+001F04  1  A0 03                ldy #3      ;testing store result
+001F06  1  A2 00                ldx #0
+001F08  1  B9 05 02     tstai1: lda abst,y
+001F0B  1  49 C3                eor #$c3
+001F0D  1  D9 10 02             cmp abs1,y
+001F10  1  F0 03 20 11          trap_ne     ;store to indirect data
+001F14  1  32           
+001F15  1  8A                   txa
+001F16  1  99 05 02             sta abst,y  ;clear
+001F19  1  88                   dey
+001F1A  1  10 EC                bpl tstai1
+001F1C  1               
+001F1C  1  A2 99                ldx #$99    ;protect x & y
+001F1E  1  A0 66                ldy #$66
+001F20  1  A9 FF 48 28          set_stat $ff
+001F24  1  B2 24                lda (ind1)
+001F26  1  08                   php         ;test stores do not alter flags
+001F27  1  49 C3                eor #$c3
+001F29  1  28                   plp
+001F2A  1  92 30                sta (indt)
+001F2C  1  08                   php         ;flags after load/store sequence
+001F2D  1  49 C3                eor #$c3
+001F2F  1  C9 C3                cmp #$c3    ;test result
+001F31  1  F0 03 20 11          trap_ne
+001F35  1  32           
+001F36  1  68                   pla         ;load status
+001F37  1  49 7D                eor_flag <(~fnz) ;mask bits not altered
+001F39  1  CD 15 02             cmp fLDx    ;test flags
+001F3C  1  F0 03 20 11          trap_ne
+001F40  1  32           
+001F41  1  A9 FF 48 28          set_stat $ff
+001F45  1  B2 26                lda (ind1+2)
+001F47  1  08                   php         ;test stores do not alter flags
+001F48  1  49 C3                eor #$c3
+001F4A  1  28                   plp
+001F4B  1  92 32                sta (indt+2)
+001F4D  1  08                   php         ;flags after load/store sequence
+001F4E  1  49 C3                eor #$c3
+001F50  1  C9 82                cmp #$82    ;test result
+001F52  1  F0 03 20 11          trap_ne
+001F56  1  32           
+001F57  1  68                   pla         ;load status
+001F58  1  49 7D                eor_flag <(~fnz) ;mask bits not altered
+001F5A  1  CD 16 02             cmp fLDx+1  ;test flags
+001F5D  1  F0 03 20 11          trap_ne
+001F61  1  32           
+001F62  1  A9 FF 48 28          set_stat $ff
+001F66  1  B2 28                lda (ind1+4)
+001F68  1  08                   php         ;test stores do not alter flags
+001F69  1  49 C3                eor #$c3
+001F6B  1  28                   plp
+001F6C  1  92 34                sta (indt+4)
+001F6E  1  08                   php         ;flags after load/store sequence
+001F6F  1  49 C3                eor #$c3
+001F71  1  C9 41                cmp #$41    ;test result
+001F73  1  F0 03 20 11          trap_ne
+001F77  1  32           
+001F78  1  68                   pla         ;load status
+001F79  1  49 7D                eor_flag <(~fnz) ;mask bits not altered
+001F7B  1  CD 17 02             cmp fLDx+2  ;test flags
+001F7E  1  F0 03 20 11          trap_ne
+001F82  1  32           
+001F83  1  A9 FF 48 28          set_stat $ff
+001F87  1  B2 2A                lda (ind1+6)
+001F89  1  08                   php         ;test stores do not alter flags
+001F8A  1  49 C3                eor #$c3
+001F8C  1  28                   plp
+001F8D  1  92 36                sta (indt+6)
+001F8F  1  08                   php         ;flags after load/store sequence
+001F90  1  49 C3                eor #$c3
+001F92  1  C9 00                cmp #0      ;test result
+001F94  1  F0 03 20 11          trap_ne
+001F98  1  32           
+001F99  1  68                   pla         ;load status
+001F9A  1  49 7D                eor_flag <(~fnz) ;mask bits not altered
+001F9C  1  CD 18 02             cmp fLDx+3  ;test flags
+001F9F  1  F0 03 20 11          trap_ne
+001FA3  1  32           
+001FA4  1  E0 99                cpx #$99
+001FA6  1  F0 03 20 11          trap_ne     ;x altered during test
+001FAA  1  32           
+001FAB  1  C0 66                cpy #$66
+001FAD  1  F0 03 20 11          trap_ne     ;y altered during test
+001FB1  1  32           
+001FB2  1               
+001FB2  1  A0 03                ldy #3      ;testing store result
+001FB4  1  A2 00                ldx #0
+001FB6  1  B9 05 02     tstai2: lda abst,y
+001FB9  1  49 C3                eor #$c3
+001FBB  1  D9 10 02             cmp abs1,y
+001FBE  1  F0 03 20 11          trap_ne     ;store to indirect data
+001FC2  1  32           
+001FC3  1  8A                   txa
+001FC4  1  99 05 02             sta abst,y  ;clear
+001FC7  1  88                   dey
+001FC8  1  10 EC                bpl tstai2
+001FCA  1  BA                   tsx
+001FCB  1  E0 FF                cpx #$ff
+001FCD  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+001FD1  1  32           
+001FD2  1  AD 02 02 C9          next_test
+001FD6  1  0D F0 03 20  
+001FDA  1  11 32 A9 0E  
+001FE1  1               
+001FE1  1               ; testing STZ - zp / abs / zp,x / abs,x
+001FE1  1  A0 7B                ldy #123    ;protect y
+001FE3  1  A2 04                ldx #4      ;precharge test area
+001FE5  1  A9 07                lda #7
+001FE7  1  95 0C        tstz1:  sta zpt,x
+001FE9  1  0A                   asl a
+001FEA  1  CA                   dex
+001FEB  1  10 FA                bpl tstz1
+001FED  1  A2 04                ldx #4
+001FEF  1  A9 FF 48 A9          set_a $55,$ff
+001FF3  1  55 28        
+001FF5  1  64 0C                stz zpt
+001FF7  1  64 0D                stz zpt+1
+001FF9  1  64 0E                stz zpt+2
+001FFB  1  64 0F                stz zpt+3
+001FFD  1  64 10                stz zpt+4
+001FFF  1  08 C9 55 F0          tst_a $55,$ff
+002003  1  03 20 11 32  
+002007  1  68 48 C9 FF  
+002011  1  B5 0C        tstz2:  lda zpt,x   ;verify zeros stored
+002013  1  F0 03 20 11          trap_ne     ;non zero after STZ zp
+002017  1  32           
+002018  1  CA                   dex
+002019  1  10 F6                bpl tstz2
+00201B  1  A2 04                ldx #4      ;precharge test area
+00201D  1  A9 07                lda #7
+00201F  1  95 0C        tstz3:  sta zpt,x
+002021  1  0A                   asl a
+002022  1  CA                   dex
+002023  1  10 FA                bpl tstz3
+002025  1  A2 04                ldx #4
+002027  1  A9 00 48 A9          set_a $aa,0
+00202B  1  AA 28        
+00202D  1  64 0C                stz zpt
+00202F  1  64 0D                stz zpt+1
+002031  1  64 0E                stz zpt+2
+002033  1  64 0F                stz zpt+3
+002035  1  64 10                stz zpt+4
+002037  1  08 C9 AA F0          tst_a $aa,0
+00203B  1  03 20 11 32  
+00203F  1  68 48 C9 30  
+002049  1  B5 0C        tstz4:  lda zpt,x   ;verify zeros stored
+00204B  1  F0 03 20 11          trap_ne     ;non zero after STZ zp
+00204F  1  32           
+002050  1  CA                   dex
+002051  1  10 F6                bpl tstz4
+002053  1               
+002053  1  A2 04                ldx #4      ;precharge test area
+002055  1  A9 07                lda #7
+002057  1  9D 05 02     tstz5:  sta abst,x
+00205A  1  0A                   asl a
+00205B  1  CA                   dex
+00205C  1  10 F9                bpl tstz5
+00205E  1  A2 04                ldx #4
+002060  1  A9 FF 48 A9          set_a $55,$ff
+002064  1  55 28        
+002066  1  9C 05 02             stz abst
+002069  1  9C 06 02             stz abst+1
+00206C  1  9C 07 02             stz abst+2
+00206F  1  9C 08 02             stz abst+3
+002072  1  9C 09 02             stz abst+4
+002075  1  08 C9 55 F0          tst_a $55,$ff
+002079  1  03 20 11 32  
+00207D  1  68 48 C9 FF  
+002087  1  BD 05 02     tstz6:  lda abst,x   ;verify zeros stored
+00208A  1  F0 03 20 11          trap_ne     ;non zero after STZ abs
+00208E  1  32           
+00208F  1  CA                   dex
+002090  1  10 F5                bpl tstz6
+002092  1  A2 04                ldx #4      ;precharge test area
+002094  1  A9 07                lda #7
+002096  1  9D 05 02     tstz7:  sta abst,x
+002099  1  0A                   asl a
+00209A  1  CA                   dex
+00209B  1  10 F9                bpl tstz7
+00209D  1  A2 04                ldx #4
+00209F  1  A9 00 48 A9          set_a $aa,0
+0020A3  1  AA 28        
+0020A5  1  9C 05 02             stz abst
+0020A8  1  9C 06 02             stz abst+1
+0020AB  1  9C 07 02             stz abst+2
+0020AE  1  9C 08 02             stz abst+3
+0020B1  1  9C 09 02             stz abst+4
+0020B4  1  08 C9 AA F0          tst_a $aa,0
+0020B8  1  03 20 11 32  
+0020BC  1  68 48 C9 30  
+0020C6  1  BD 05 02     tstz8:  lda abst,x   ;verify zeros stored
+0020C9  1  F0 03 20 11          trap_ne     ;non zero after STZ abs
+0020CD  1  32           
+0020CE  1  CA                   dex
+0020CF  1  10 F5                bpl tstz8
+0020D1  1               
+0020D1  1  A2 04                ldx #4      ;precharge test area
+0020D3  1  A9 07                lda #7
+0020D5  1  95 0C        tstz11: sta zpt,x
+0020D7  1  0A                   asl a
+0020D8  1  CA                   dex
+0020D9  1  10 FA                bpl tstz11
+0020DB  1  A2 04                ldx #4
+0020DD  1               tstz15:
+0020DD  1  A9 FF 48 A9          set_a $55,$ff
+0020E1  1  55 28        
+0020E3  1  74 0C                stz zpt,x
+0020E5  1  08 C9 55 F0          tst_a $55,$ff
+0020E9  1  03 20 11 32  
+0020ED  1  68 48 C9 FF  
+0020F7  1  CA                   dex
+0020F8  1  10 E3                bpl tstz15
+0020FA  1  A2 04                ldx #4
+0020FC  1  B5 0C        tstz12: lda zpt,x   ;verify zeros stored
+0020FE  1  F0 03 20 11          trap_ne     ;non zero after STZ zp
+002102  1  32           
+002103  1  CA                   dex
+002104  1  10 F6                bpl tstz12
+002106  1  A2 04                ldx #4      ;precharge test area
+002108  1  A9 07                lda #7
+00210A  1  95 0C        tstz13: sta zpt,x
+00210C  1  0A                   asl a
+00210D  1  CA                   dex
+00210E  1  10 FA                bpl tstz13
+002110  1  A2 04                ldx #4
+002112  1               tstz16:
+002112  1  A9 00 48 A9          set_a $aa,0
+002116  1  AA 28        
+002118  1  74 0C                stz zpt,x
+00211A  1  08 C9 AA F0          tst_a $aa,0
+00211E  1  03 20 11 32  
+002122  1  68 48 C9 30  
+00212C  1  CA                   dex
+00212D  1  10 E3                bpl tstz16
+00212F  1  A2 04                ldx #4
+002131  1  B5 0C        tstz14: lda zpt,x   ;verify zeros stored
+002133  1  F0 03 20 11          trap_ne     ;non zero after STZ zp
+002137  1  32           
+002138  1  CA                   dex
+002139  1  10 F6                bpl tstz14
+00213B  1               
+00213B  1  A2 04                ldx #4      ;precharge test area
+00213D  1  A9 07                lda #7
+00213F  1  9D 05 02     tstz21: sta abst,x
+002142  1  0A                   asl a
+002143  1  CA                   dex
+002144  1  10 F9                bpl tstz21
+002146  1  A2 04                ldx #4
+002148  1               tstz25:
+002148  1  A9 FF 48 A9          set_a $55,$ff
+00214C  1  55 28        
+00214E  1  9E 05 02             stz abst,x
+002151  1  08 C9 55 F0          tst_a $55,$ff
+002155  1  03 20 11 32  
+002159  1  68 48 C9 FF  
+002163  1  CA                   dex
+002164  1  10 E2                bpl tstz25
+002166  1  A2 04                ldx #4
+002168  1  BD 05 02     tstz22: lda abst,x   ;verify zeros stored
+00216B  1  F0 03 20 11          trap_ne     ;non zero after STZ zp
+00216F  1  32           
+002170  1  CA                   dex
+002171  1  10 F5                bpl tstz22
+002173  1  A2 04                ldx #4      ;precharge test area
+002175  1  A9 07                lda #7
+002177  1  9D 05 02     tstz23: sta abst,x
+00217A  1  0A                   asl a
+00217B  1  CA                   dex
+00217C  1  10 F9                bpl tstz23
+00217E  1  A2 04                ldx #4
+002180  1               tstz26:
+002180  1  A9 00 48 A9          set_a $aa,0
+002184  1  AA 28        
+002186  1  9E 05 02             stz abst,x
+002189  1  08 C9 AA F0          tst_a $aa,0
+00218D  1  03 20 11 32  
+002191  1  68 48 C9 30  
+00219B  1  CA                   dex
+00219C  1  10 E2                bpl tstz26
+00219E  1  A2 04                ldx #4
+0021A0  1  BD 05 02     tstz24: lda abst,x   ;verify zeros stored
+0021A3  1  F0 03 20 11          trap_ne     ;non zero after STZ zp
+0021A7  1  32           
+0021A8  1  CA                   dex
+0021A9  1  10 F5                bpl tstz24
+0021AB  1               
+0021AB  1  C0 7B                cpy #123
+0021AD  1  F0 03 20 11          trap_ne     ;y altered during test
+0021B1  1  32           
+0021B2  1  BA                   tsx
+0021B3  1  E0 FF                cpx #$ff
+0021B5  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+0021B9  1  32           
+0021BA  1  AD 02 02 C9          next_test
+0021BE  1  0E F0 03 20  
+0021C2  1  11 32 A9 0F  
+0021C9  1               
+0021C9  1               ; testing BIT - zp,x / abs,x / #
+0021C9  1  A0 42                ldy #$42
+0021CB  1  A2 03                ldx #3
+0021CD  1  A9 00 48 A9          set_a $ff,0
+0021D1  1  FF 28        
+0021D3  1  34 13                bit zp1,x   ;00 - should set Z / clear  NV
+0021D5  1  08 C9 FF F0          tst_a $ff,fz
+0021D9  1  03 20 11 32  
+0021DD  1  68 48 C9 32  
+0021E7  1  CA                   dex
+0021E8  1  A9 00 48 A9          set_a 1,0
+0021EC  1  01 28        
+0021EE  1  34 13                bit zp1,x   ;41 - should set V (M6) / clear NZ
+0021F0  1  08 C9 01 F0          tst_a 1,fv
+0021F4  1  03 20 11 32  
+0021F8  1  68 48 C9 70  
+002202  1  CA                   dex
+002203  1  A9 00 48 A9          set_a 1,0
+002207  1  01 28        
+002209  1  34 13                bit zp1,x   ;82 - should set N (M7) & Z / clear V
+00220B  1  08 C9 01 F0          tst_a 1,fnz
+00220F  1  03 20 11 32  
+002213  1  68 48 C9 B2  
+00221D  1  CA                   dex
+00221E  1  A9 00 48 A9          set_a 1,0
+002222  1  01 28        
+002224  1  34 13                bit zp1,x   ;c3 - should set N (M7) & V (M6) / clear Z
+002226  1  08 C9 01 F0          tst_a 1,fnv
+00222A  1  03 20 11 32  
+00222E  1  68 48 C9 F0  
+002238  1               
+002238  1  A9 FF 48 A9          set_a 1,$ff
+00223C  1  01 28        
+00223E  1  34 13                bit zp1,x   ;c3 - should set N (M7) & V (M6) / clear Z
+002240  1  08 C9 01 F0          tst_a 1,~fz
+002244  1  03 20 11 32  
+002248  1  68 48 C9 FD  
+002252  1  E8                   inx
+002253  1  A9 FF 48 A9          set_a 1,$ff
+002257  1  01 28        
+002259  1  34 13                bit zp1,x   ;82 - should set N (M7) & Z / clear V
+00225B  1  08 C9 01 F0          tst_a 1,~fv
+00225F  1  03 20 11 32  
+002263  1  68 48 C9 BF  
+00226D  1  E8                   inx
+00226E  1  A9 FF 48 A9          set_a 1,$ff
+002272  1  01 28        
+002274  1  34 13                bit zp1,x   ;41 - should set V (M6) / clear NZ
+002276  1  08 C9 01 F0          tst_a 1,~fnz
+00227A  1  03 20 11 32  
+00227E  1  68 48 C9 7D  
+002288  1  E8                   inx
+002289  1  A9 FF 48 A9          set_a $ff,$ff
+00228D  1  FF 28        
+00228F  1  34 13                bit zp1,x   ;00 - should set Z / clear  NV
+002291  1  08 C9 FF F0          tst_a $ff,~fnv
+002295  1  03 20 11 32  
+002299  1  68 48 C9 3F  
+0022A3  1               
+0022A3  1  A9 00 48 A9          set_a $ff,0
+0022A7  1  FF 28        
+0022A9  1  3C 10 02             bit abs1,x  ;00 - should set Z / clear  NV
+0022AC  1  08 C9 FF F0          tst_a $ff,fz
+0022B0  1  03 20 11 32  
+0022B4  1  68 48 C9 32  
+0022BE  1  CA                   dex
+0022BF  1  A9 00 48 A9          set_a 1,0
+0022C3  1  01 28        
+0022C5  1  3C 10 02             bit abs1,x  ;41 - should set V (M6) / clear NZ
+0022C8  1  08 C9 01 F0          tst_a 1,fv
+0022CC  1  03 20 11 32  
+0022D0  1  68 48 C9 70  
+0022DA  1  CA                   dex
+0022DB  1  A9 00 48 A9          set_a 1,0
+0022DF  1  01 28        
+0022E1  1  3C 10 02             bit abs1,x  ;82 - should set N (M7) & Z / clear V
+0022E4  1  08 C9 01 F0          tst_a 1,fnz
+0022E8  1  03 20 11 32  
+0022EC  1  68 48 C9 B2  
+0022F6  1  CA                   dex
+0022F7  1  A9 00 48 A9          set_a 1,0
+0022FB  1  01 28        
+0022FD  1  3C 10 02             bit abs1,x  ;c3 - should set N (M7) & V (M6) / clear Z
+002300  1  08 C9 01 F0          tst_a 1,fnv
+002304  1  03 20 11 32  
+002308  1  68 48 C9 F0  
+002312  1               
+002312  1  A9 FF 48 A9          set_a 1,$ff
+002316  1  01 28        
+002318  1  3C 10 02             bit abs1,x  ;c3 - should set N (M7) & V (M6) / clear Z
+00231B  1  08 C9 01 F0          tst_a 1,~fz
+00231F  1  03 20 11 32  
+002323  1  68 48 C9 FD  
+00232D  1  E8                   inx
+00232E  1  A9 FF 48 A9          set_a 1,$ff
+002332  1  01 28        
+002334  1  3C 10 02             bit abs1,x  ;82 - should set N (M7) & Z / clear V
+002337  1  08 C9 01 F0          tst_a 1,~fv
+00233B  1  03 20 11 32  
+00233F  1  68 48 C9 BF  
+002349  1  E8                   inx
+00234A  1  A9 FF 48 A9          set_a 1,$ff
+00234E  1  01 28        
+002350  1  3C 10 02             bit abs1,x  ;41 - should set V (M6) / clear NZ
+002353  1  08 C9 01 F0          tst_a 1,~fnz
+002357  1  03 20 11 32  
+00235B  1  68 48 C9 7D  
+002365  1  E8                   inx
+002366  1  A9 FF 48 A9          set_a $ff,$ff
+00236A  1  FF 28        
+00236C  1  3C 10 02             bit abs1,x  ;00 - should set Z / clear  NV
+00236F  1  08 C9 FF F0          tst_a $ff,~fnv
+002373  1  03 20 11 32  
+002377  1  68 48 C9 3F  
+002381  1               
+002381  1  A9 00 48 A9          set_a $ff,0
+002385  1  FF 28        
+002387  1  89 00                bit #$00    ;00 - should set Z
+002389  1  08 C9 FF F0          tst_a $ff,fz
+00238D  1  03 20 11 32  
+002391  1  68 48 C9 32  
+00239B  1  CA                   dex
+00239C  1  A9 00 48 A9          set_a 1,0
+0023A0  1  01 28        
+0023A2  1  89 41                bit #$41    ;41 - should clear Z
+0023A4  1  08 C9 01 F0          tst_a 1,0
+0023A8  1  03 20 11 32  
+0023AC  1  68 48 C9 30  
+0023B6  1               ; *** DEBUG INFO ***
+0023B6  1               ; if it fails the previous test and your BIT # has set the V flag
+0023B6  1               ; see http://forum.6502.org/viewtopic.php?f=2&t=2241&p=27243#p27239
+0023B6  1               ; why it shouldn't alter N or V flags on a BIT #
+0023B6  1  CA                   dex
+0023B7  1  A9 00 48 A9          set_a 1,0
+0023BB  1  01 28        
+0023BD  1  89 82                bit #$82    ;82 - should set Z
+0023BF  1  08 C9 01 F0          tst_a 1,fz
+0023C3  1  03 20 11 32  
+0023C7  1  68 48 C9 32  
+0023D1  1  CA                   dex
+0023D2  1  A9 00 48 A9          set_a 1,0
+0023D6  1  01 28        
+0023D8  1  89 C3                bit #$c3    ;c3 - should clear Z
+0023DA  1  08 C9 01 F0          tst_a 1,0
+0023DE  1  03 20 11 32  
+0023E2  1  68 48 C9 30  
+0023EC  1               
+0023EC  1  A9 FF 48 A9          set_a 1,$ff
+0023F0  1  01 28        
+0023F2  1  89 C3                bit #$c3    ;c3 - clear Z
+0023F4  1  08 C9 01 F0          tst_a 1,~fz
+0023F8  1  03 20 11 32  
+0023FC  1  68 48 C9 FD  
+002406  1  E8                   inx
+002407  1  A9 FF 48 A9          set_a 1,$ff
+00240B  1  01 28        
+00240D  1  89 82                bit #$82    ;82 - should set Z
+00240F  1  08 C9 01 F0          tst_a 1,$ff
+002413  1  03 20 11 32  
+002417  1  68 48 C9 FF  
+002421  1  E8                   inx
+002422  1  A9 FF 48 A9          set_a 1,$ff
+002426  1  01 28        
+002428  1  89 41                bit #$41    ;41 - should clear Z
+00242A  1  08 C9 01 F0          tst_a 1,~fz
+00242E  1  03 20 11 32  
+002432  1  68 48 C9 FD  
+00243C  1  E8                   inx
+00243D  1  A9 FF 48 A9          set_a $ff,$ff
+002441  1  FF 28        
+002443  1  89 00                bit #$00   ;00 - should set Z
+002445  1  08 C9 FF F0          tst_a $ff,$ff
+002449  1  03 20 11 32  
+00244D  1  68 48 C9 FF  
+002457  1               
+002457  1  E0 03                cpx #3
+002459  1  F0 03 20 11          trap_ne     ;x altered during test
+00245D  1  32           
+00245E  1  C0 42                cpy #$42
+002460  1  F0 03 20 11          trap_ne     ;y altered during test
+002464  1  32           
+002465  1  BA                   tsx
+002466  1  E0 FF                cpx #$ff
+002468  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+00246C  1  32           
+00246D  1  AD 02 02 C9          next_test
+002471  1  0F F0 03 20  
+002475  1  11 32 A9 10  
+00247C  1               
+00247C  1               ; testing TRB, TSB - zp / abs
+00247C  1               
+00247C  1                       .macro trbt memory, flags
+00247C  1                       sty memory
+00247C  1                       load_flag flags
+00247C  1                       pha
+00247C  1                       lda zpt+1
+00247C  1                       plp
+00247C  1                       trb memory
+00247C  1                       php
+00247C  1                       cmp zpt+1
+00247C  1                       trap_ne     ;accu was changed
+00247C  1                       pla
+00247C  1                       pha
+00247C  1                       ora #fz     ;mask Z
+00247C  1                       cmp_flag flags|fz
+00247C  1                       trap_ne     ;flags changed except Z
+00247C  1                       pla
+00247C  1                       and #fz
+00247C  1                       cmp zpt+2
+00247C  1                       trap_ne     ;Z flag invalid
+00247C  1                       lda zpt+3
+00247C  1                       cmp zpt
+00247C  1                       trap_ne     ;altered bits in memory wrong
+00247C  1                       .endmacro
+00247C  1               
+00247C  1                       .macro tsbt memory, flags
+00247C  1                       sty memory
+00247C  1                       load_flag flags
+00247C  1                       pha
+00247C  1                       lda zpt+1
+00247C  1                       plp
+00247C  1                       tsb memory
+00247C  1                       php
+00247C  1                       cmp zpt+1
+00247C  1                       trap_ne     ;accu was changed
+00247C  1                       pla
+00247C  1                       pha
+00247C  1                       ora #fz     ;mask Z
+00247C  1                       cmp_flag flags|fz
+00247C  1                       trap_ne     ;flags changed except Z
+00247C  1                       pla
+00247C  1                       and #fz
+00247C  1                       cmp zpt+2
+00247C  1                       trap_ne     ;Z flag invalid
+00247C  1                       lda zpt+4
+00247C  1                       cmp zpt
+00247C  1                       trap_ne     ;altered bits in memory wrong
+00247C  1                       .endmacro
+00247C  1               
+00247C  1  A2 C0                ldx #$c0
+00247E  1  A0 00                ldy #0      ;op1 - memory save
+002480  1                       ;   zpt     ;op1 - memory modifiable
+002480  1  64 0D                stz zpt+1   ;op2 - accu
+002482  1                       ;   zpt+2   ;and flags
+002482  1                       ;   zpt+3   ;memory after reset
+002482  1                       ;   zpt+4   ;memory after set
+002482  1               
+002482  1  98           tbt1:   tya
+002483  1  25 0D                and zpt+1   ;set Z by anding the 2 operands
+002485  1  08                   php
+002486  1  68                   pla
+002487  1  29 02                and #fz     ;mask Z
+002489  1  85 0E                sta zpt+2
+00248B  1  98                   tya         ;reset op1 bits by op2
+00248C  1  49 FF                eor #$ff
+00248E  1  05 0D                ora zpt+1
+002490  1  49 FF                eor #$ff
+002492  1  85 0F                sta zpt+3
+002494  1  98                   tya         ;set op1 bits by op2
+002495  1  05 0D                ora zpt+1
+002497  1  85 10                sta zpt+4
+002499  1               
+002499  1  84 0C A9 FF          trbt zpt,$ff
+00249D  1  48 A5 0D 28  
+0024A1  1  14 0C 08 C5  
+0024C9  1  8C 05 02 A9          trbt abst,$ff
+0024CD  1  FF 48 A5 0D  
+0024D1  1  28 1C 05 02  
+0024FB  1  84 0C A9 00          trbt zpt,0
+0024FF  1  48 A5 0D 28  
+002503  1  14 0C 08 C5  
+00252B  1  8C 05 02 A9          trbt abst,0
+00252F  1  00 48 A5 0D  
+002533  1  28 1C 05 02  
+00255D  1  84 0C A9 FF          tsbt zpt,$ff
+002561  1  48 A5 0D 28  
+002565  1  04 0C 08 C5  
+00258D  1  8C 05 02 A9          tsbt abst,$ff
+002591  1  FF 48 A5 0D  
+002595  1  28 0C 05 02  
+0025BF  1  84 0C A9 00          tsbt zpt,0
+0025C3  1  48 A5 0D 28  
+0025C7  1  04 0C 08 C5  
+0025EF  1  8C 05 02 A9          tsbt abst,0
+0025F3  1  00 48 A5 0D  
+0025F7  1  28 0C 05 02  
+002621  1               
+002621  1  C8                   iny         ;iterate op1
+002622  1  D0 04                bne tbt3
+002624  1  E6 0D                inc zpt+1   ;iterate op2
+002626  1  F0 03                beq tbt2
+002628  1  4C 82 24     tbt3:   jmp tbt1
+00262B  1               tbt2:
+00262B  1  E0 C0                cpx #$c0
+00262D  1  F0 03 20 11          trap_ne     ;x altered during test
+002631  1  32           
+002632  1  BA                   tsx
+002633  1  E0 FF                cpx #$ff
+002635  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+002639  1  32           
+00263A  1  AD 02 02 C9          next_test
+00263E  1  10 F0 03 20  
+002642  1  11 32 A9 11  
+002649  1               
+002649  1                   .if rkwl_wdc_op = 1
+002649  1               ; testing RMB, SMB - zp
+002649  1               
+002649  1                       .macro rmb n,addr
+002649  1                           .if n = 0
+002649  1                               rmb0 addr
+002649  1                           .elseif n = 1
+002649  1                               rmb1 addr
+002649  1                           .elseif n = 2
+002649  1                               rmb2 addr
+002649  1                           .elseif n = 3
+002649  1                               rmb3 addr
+002649  1                           .elseif n = 4
+002649  1                               rmb4 addr
+002649  1                           .elseif n = 5
+002649  1                               rmb5 addr
+002649  1                           .elseif n = 6
+002649  1                               rmb6 addr
+002649  1                           .elseif n = 7
+002649  1                               rmb7 addr
+002649  1                           .else
+002649  1                               .error "syntax error in rmb"
+002649  1                           .endif
+002649  1                       .endmacro
+002649  1               
+002649  1                       .macro smb n,addr
+002649  1                           .if n = 0
+002649  1                               smb0 addr
+002649  1                           .elseif n = 1
+002649  1                               smb1 addr
+002649  1                           .elseif n = 2
+002649  1                               smb2 addr
+002649  1                           .elseif n = 3
+002649  1                               smb3 addr
+002649  1                           .elseif n = 4
+002649  1                               smb4 addr
+002649  1                           .elseif n = 5
+002649  1                               smb5 addr
+002649  1                           .elseif n = 6
+002649  1                               smb6 addr
+002649  1                           .elseif n = 7
+002649  1                               smb7 addr
+002649  1                           .else
+002649  1                               .error "syntax error in smb"
+002649  1                           .endif
+002649  1                       .endmacro
+002649  1               
+002649  1                       .macro rmbt bitnum
+002649  1                       lda #$ff
+002649  1                       sta zpt
+002649  1                       set_a $a5,0
+002649  1                       rmb bitnum,zpt
+002649  1                       tst_a $a5,0
+002649  1                       lda zpt
+002649  1                       cmp #$ff-(1<<bitnum)
+002649  1                       trap_ne     ;wrong bits set or cleared
+002649  1                       lda #1<<bitnum
+002649  1                       sta zpt
+002649  1                       set_a $5a,$ff
+002649  1                       rmb bitnum,zpt
+002649  1                       tst_a $5a,$ff
+002649  1                       lda zpt
+002649  1                       trap_ne     ;wrong bits set or cleared
+002649  1                       .endmacro
+002649  1                       .macro smbt bitnum
+002649  1                       lda #$ff-(1<<bitnum)
+002649  1                       sta zpt
+002649  1                       set_a $a5,0
+002649  1                       smb bitnum,zpt
+002649  1                       tst_a $a5,0
+002649  1                       lda zpt
+002649  1                       cmp #$ff
+002649  1                       trap_ne     ;wrong bits set or cleared
+002649  1                       lda #0
+002649  1                       sta zpt
+002649  1                       set_a $5a,$ff
+002649  1                       smb bitnum,zpt
+002649  1                       tst_a $5a,$ff
+002649  1                       lda zpt
+002649  1                       cmp #1<<bitnum
+002649  1                       trap_ne     ;wrong bits set or cleared
+002649  1                       .endmacro
+002649  1               
+002649  1  A2 BA                ldx #$ba    ;protect x & y
+00264B  1  A0 D0                ldy #$d0
+00264D  1  A9 FF 85 0C          rmbt 0
+002651  1  A9 00 48 A9  
+002655  1  A5 28 07 0C  
+002699  1  A9 FF 85 0C          rmbt 1
+00269D  1  A9 00 48 A9  
+0026A1  1  A5 28 17 0C  
+0026E5  1  A9 FF 85 0C          rmbt 2
+0026E9  1  A9 00 48 A9  
+0026ED  1  A5 28 27 0C  
+002731  1  A9 FF 85 0C          rmbt 3
+002735  1  A9 00 48 A9  
+002739  1  A5 28 37 0C  
+00277D  1  A9 FF 85 0C          rmbt 4
+002781  1  A9 00 48 A9  
+002785  1  A5 28 47 0C  
+0027C9  1  A9 FF 85 0C          rmbt 5
+0027CD  1  A9 00 48 A9  
+0027D1  1  A5 28 57 0C  
+002815  1  A9 FF 85 0C          rmbt 6
+002819  1  A9 00 48 A9  
+00281D  1  A5 28 67 0C  
+002861  1  A9 FF 85 0C          rmbt 7
+002865  1  A9 00 48 A9  
+002869  1  A5 28 77 0C  
+0028AD  1  A9 FE 85 0C          smbt 0
+0028B1  1  A9 00 48 A9  
+0028B5  1  A5 28 87 0C  
+0028FB  1  A9 FD 85 0C          smbt 1
+0028FF  1  A9 00 48 A9  
+002903  1  A5 28 97 0C  
+002949  1  A9 FB 85 0C          smbt 2
+00294D  1  A9 00 48 A9  
+002951  1  A5 28 A7 0C  
+002997  1  A9 F7 85 0C          smbt 3
+00299B  1  A9 00 48 A9  
+00299F  1  A5 28 B7 0C  
+0029E5  1  A9 EF 85 0C          smbt 4
+0029E9  1  A9 00 48 A9  
+0029ED  1  A5 28 C7 0C  
+002A33  1  A9 DF 85 0C          smbt 5
+002A37  1  A9 00 48 A9  
+002A3B  1  A5 28 D7 0C  
+002A81  1  A9 BF 85 0C          smbt 6
+002A85  1  A9 00 48 A9  
+002A89  1  A5 28 E7 0C  
+002ACF  1  A9 7F 85 0C          smbt 7
+002AD3  1  A9 00 48 A9  
+002AD7  1  A5 28 F7 0C  
+002B1D  1  E0 BA                cpx #$ba
+002B1F  1  F0 03 20 11          trap_ne     ;x altered during test
+002B23  1  32           
+002B24  1  C0 D0                cpy #$d0
+002B26  1  F0 03 20 11          trap_ne     ;y altered during test
+002B2A  1  32           
+002B2B  1  BA                   tsx
+002B2C  1  E0 FF                cpx #$ff
+002B2E  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+002B32  1  32           
+002B33  1  AD 02 02 C9          next_test
+002B37  1  11 F0 03 20  
+002B3B  1  11 32 A9 12  
+002B42  1                   .endif
+002B42  1               
+002B42  1               ; testing CMP - (zp)
+002B42  1  A2 DE                ldx #$de    ;protect x & y
+002B44  1  A0 AD                ldy #$ad
+002B46  1  A9 00 48 A9          set_a $80,0
+002B4A  1  80 28        
+002B4C  1  D2 2C                cmp (ind1+8)
+002B4E  1  08 C9 80 F0          tst_a $80,fc
+002B52  1  03 20 11 32  
+002B56  1  68 48 C9 31  
+002B60  1  A9 00 48 A9          set_a $7f,0
+002B64  1  7F 28        
+002B66  1  D2 2C                cmp (ind1+8)
+002B68  1  08 C9 7F F0          tst_a $7f,fzc
+002B6C  1  03 20 11 32  
+002B70  1  68 48 C9 33  
+002B7A  1  A9 00 48 A9          set_a $7e,0
+002B7E  1  7E 28        
+002B80  1  D2 2C                cmp (ind1+8)
+002B82  1  08 C9 7E F0          tst_a $7e,fn
+002B86  1  03 20 11 32  
+002B8A  1  68 48 C9 B0  
+002B94  1  A9 FF 48 A9          set_a $80,$ff
+002B98  1  80 28        
+002B9A  1  D2 2C                cmp (ind1+8)
+002B9C  1  08 C9 80 F0          tst_a $80,~fnz
+002BA0  1  03 20 11 32  
+002BA4  1  68 48 C9 7D  
+002BAE  1  A9 FF 48 A9          set_a $7f,$ff
+002BB2  1  7F 28        
+002BB4  1  D2 2C                cmp (ind1+8)
+002BB6  1  08 C9 7F F0          tst_a $7f,~fn
+002BBA  1  03 20 11 32  
+002BBE  1  68 48 C9 7F  
+002BC8  1  A9 FF 48 A9          set_a $7e,$ff
+002BCC  1  7E 28        
+002BCE  1  D2 2C                cmp (ind1+8)
+002BD0  1  08 C9 7E F0          tst_a $7e,~fzc
+002BD4  1  03 20 11 32  
+002BD8  1  68 48 C9 FC  
+002BE2  1  E0 DE                cpx #$de
+002BE4  1  F0 03 20 11          trap_ne     ;x altered during test
+002BE8  1  32           
+002BE9  1  C0 AD                cpy #$ad
+002BEB  1  F0 03 20 11          trap_ne     ;y altered during test
+002BEF  1  32           
+002BF0  1  BA                   tsx
+002BF1  1  E0 FF                cpx #$ff
+002BF3  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+002BF7  1  32           
+002BF8  1  AD 02 02 C9          next_test
+002BFC  1  12 F0 03 20  
+002C00  1  11 32 A9 13  
+002C07  1               
+002C07  1               ; testing logical instructions - AND EOR ORA (zp)
+002C07  1  A2 42                ldx #$42    ;protect x & y
+002C09  1               
+002C09  1  A0 00                ldy #0      ;AND
+002C0B  1  A5 3A                lda indAN   ;set indirect address
+002C0D  1  85 0C                sta zpt
+002C0F  1  A5 3B                lda indAN+1
+002C11  1  85 0D                sta zpt+1
+002C13  1               tand1:
+002C13  1  A9 00 48 B9          set_ay  absANa,0
+002C17  1  53 02 28     
+002C1A  1  32 0C                and (zpt)
+002C1C  1  08 D9 5B 02          tst_ay  absrlo,absflo,0
+002C20  1  F0 03 20 11  
+002C24  1  32 68 49 30  
+002C30  1  E6 0C                inc zpt
+002C32  1  C8                   iny
+002C33  1  C0 04                cpy #4
+002C35  1  D0 DC                bne tand1
+002C37  1  88                   dey
+002C38  1  C6 0C                dec zpt
+002C3A  1               tand2:
+002C3A  1  A9 FF 48 B9          set_ay  absANa,$ff
+002C3E  1  53 02 28     
+002C41  1  32 0C                and (zpt)
+002C43  1  08 D9 5B 02          tst_ay  absrlo,absflo,$ff-fnz
+002C47  1  F0 03 20 11  
+002C4B  1  32 68 49 7D  
+002C57  1  C6 0C                dec zpt
+002C59  1  88                   dey
+002C5A  1  10 DE                bpl tand2
+002C5C  1               
+002C5C  1  A0 00                ldy #0      ;EOR
+002C5E  1  A5 42                lda indEO   ;set indirect address
+002C60  1  85 0C                sta zpt
+002C62  1  A5 43                lda indEO+1
+002C64  1  85 0D                sta zpt+1
+002C66  1               teor1:
+002C66  1  A9 00 48 B9          set_ay  absEOa,0
+002C6A  1  57 02 28     
+002C6D  1  52 0C                eor (zpt)
+002C6F  1  08 D9 5B 02          tst_ay  absrlo,absflo,0
+002C73  1  F0 03 20 11  
+002C77  1  32 68 49 30  
+002C83  1  E6 0C                inc zpt
+002C85  1  C8                   iny
+002C86  1  C0 04                cpy #4
+002C88  1  D0 DC                bne teor1
+002C8A  1  88                   dey
+002C8B  1  C6 0C                dec zpt
+002C8D  1               teor2:
+002C8D  1  A9 FF 48 B9          set_ay  absEOa,$ff
+002C91  1  57 02 28     
+002C94  1  52 0C                eor (zpt)
+002C96  1  08 D9 5B 02          tst_ay  absrlo,absflo,$ff-fnz
+002C9A  1  F0 03 20 11  
+002C9E  1  32 68 49 7D  
+002CAA  1  C6 0C                dec zpt
+002CAC  1  88                   dey
+002CAD  1  10 DE                bpl teor2
+002CAF  1               
+002CAF  1  A0 00                ldy #0      ;ORA
+002CB1  1  A5 4A                lda indOR   ;set indirect address
+002CB3  1  85 0C                sta zpt
+002CB5  1  A5 4B                lda indOR+1
+002CB7  1  85 0D                sta zpt+1
+002CB9  1               tora1:
+002CB9  1  A9 00 48 B9          set_ay  absORa,0
+002CBD  1  4F 02 28     
+002CC0  1  12 0C                ora (zpt)
+002CC2  1  08 D9 5B 02          tst_ay  absrlo,absflo,0
+002CC6  1  F0 03 20 11  
+002CCA  1  32 68 49 30  
+002CD6  1  E6 0C                inc zpt
+002CD8  1  C8                   iny
+002CD9  1  C0 04                cpy #4
+002CDB  1  D0 DC                bne tora1
+002CDD  1  88                   dey
+002CDE  1  C6 0C                dec zpt
+002CE0  1               tora2:
+002CE0  1  A9 FF 48 B9          set_ay  absORa,$ff
+002CE4  1  4F 02 28     
+002CE7  1  12 0C                ora (zpt)
+002CE9  1  08 D9 5B 02          tst_ay  absrlo,absflo,$ff-fnz
+002CED  1  F0 03 20 11  
+002CF1  1  32 68 49 7D  
+002CFD  1  C6 0C                dec zpt
+002CFF  1  88                   dey
+002D00  1  10 DE                bpl tora2
+002D02  1               
+002D02  1  E0 42                cpx #$42
+002D04  1  F0 03 20 11          trap_ne     ;x altered during test
+002D08  1  32           
+002D09  1  BA                   tsx
+002D0A  1  E0 FF                cpx #$ff
+002D0C  1  F0 03 20 11          trap_ne     ;sp push/pop mismatch
+002D10  1  32           
+002D11  1  AD 02 02 C9          next_test
+002D15  1  13 F0 03 20  
+002D19  1  11 32 A9 14  
+002D20  1               
+002D20  1                   .if I_flag = 3
+002D20  1  58                   cli
+002D21  1                   .endif
+002D21  1               
+002D21  1               ; full binary add/subtract test - (zp) only
+002D21  1               ; iterates through all combinations of operands and carry input
+002D21  1               ; uses increments/decrements to predict result & result flags
+002D21  1  D8                   cld
+002D22  1  A2 0E                ldx #ad2        ;for indexed test
+002D24  1  A0 FF                ldy #$ff        ;max range
+002D26  1  A9 00                lda #0          ;start with adding zeroes & no carry
+002D28  1  85 0C                sta adfc        ;carry in - for diag
+002D2A  1  85 0D                sta ad1         ;operand 1 - accumulator
+002D2C  1  85 0E                sta ad2         ;operand 2 - memory or immediate
+002D2E  1  8D 05 02             sta ada2        ;non zp
+002D31  1  85 0F                sta adrl        ;expected result bits 0-7
+002D33  1  85 10                sta adrh        ;expected result bit 8 (carry out)
+002D35  1  A9 FF                lda #$ff        ;complemented operand 2 for subtract
+002D37  1  85 12                sta sb2
+002D39  1  8D 06 02             sta sba2        ;non zp
+002D3C  1  A9 02                lda #2          ;expected Z-flag
+002D3E  1  85 11                sta adrf
+002D40  1  18           tadd:   clc             ;test with carry clear
+002D41  1  20 3B 30             jsr chkadd
+002D44  1  E6 0C                inc adfc        ;now with carry
+002D46  1  E6 0F                inc adrl        ;result +1
+002D48  1  08                   php             ;save N & Z from low result
+002D49  1  08                   php
+002D4A  1  68                   pla             ;accu holds expected flags
+002D4B  1  29 82                and #$82        ;mask N & Z
+002D4D  1  28                   plp
+002D4E  1  D0 02                bne tadd1
+002D50  1  E6 10                inc adrh        ;result bit 8 - carry
+002D52  1  05 10        tadd1:  ora adrh        ;merge C to expected flags
+002D54  1  85 11                sta adrf        ;save expected flags except overflow
+002D56  1  38                   sec             ;test with carry set
+002D57  1  20 3B 30             jsr chkadd
+002D5A  1  C6 0C                dec adfc        ;same for operand +1 but no carry
+002D5C  1  E6 0D                inc ad1
+002D5E  1  D0 E0                bne tadd        ;iterate op1
+002D60  1  A9 00                lda #0          ;preset result to op2 when op1 = 0
+002D62  1  85 10                sta adrh
+002D64  1  EE 05 02             inc ada2
+002D67  1  E6 0E                inc ad2
+002D69  1  08                   php             ;save NZ as operand 2 becomes the new result
+002D6A  1  68                   pla
+002D6B  1  29 82                and #$82        ;mask N00000Z0
+002D6D  1  85 11                sta adrf        ;no need to check carry as we are adding to 0
+002D6F  1  C6 12                dec sb2         ;complement subtract operand 2
+002D71  1  CE 06 02             dec sba2
+002D74  1  A5 0E                lda ad2
+002D76  1  85 0F                sta adrl
+002D78  1  D0 C6                bne tadd        ;iterate op2
+002D7A  1               
+002D7A  1  E0 0E                cpx #ad2
+002D7C  1  F0 03 20 11          trap_ne         ;x altered during test
+002D80  1  32           
+002D81  1  C0 FF                cpy #$ff
+002D83  1  F0 03 20 11          trap_ne         ;y altered during test
+002D87  1  32           
+002D88  1  BA                   tsx
+002D89  1  E0 FF                cpx #$ff
+002D8B  1  F0 03 20 11          trap_ne         ;sp push/pop mismatch
+002D8F  1  32           
+002D90  1  AD 02 02 C9          next_test
+002D94  1  14 F0 03 20  
+002D98  1  11 32 A9 15  
+002D9F  1               
+002D9F  1               ; decimal add/subtract test
+002D9F  1               ; *** WARNING - tests documented behavior only! ***
+002D9F  1               ;   only valid BCD operands are tested, the V flag is ignored
+002D9F  1               ;   although V is declared as beeing valid on the 65C02 it has absolutely
+002D9F  1               ;   no use in BCD math. No sign = no overflow!
+002D9F  1               ; iterates through all valid combinations of operands and carry input
+002D9F  1               ; uses increments/decrements to predict result & carry flag
+002D9F  1  F8                   sed
+002DA0  1  A2 0E                ldx #ad2        ;for indexed test
+002DA2  1  A0 FF                ldy #$ff        ;max range
+002DA4  1  A9 99                lda #$99        ;start with adding 99 to 99 with carry
+002DA6  1  85 0D                sta ad1         ;operand 1 - accumulator
+002DA8  1  85 0E                sta ad2         ;operand 2 - memory or immediate
+002DAA  1  8D 05 02             sta ada2        ;non zp
+002DAD  1  85 0F                sta adrl        ;expected result bits 0-7
+002DAF  1  A9 01                lda #1          ;set carry in & out
+002DB1  1  85 0C                sta adfc        ;carry in - for diag
+002DB3  1  85 10                sta adrh        ;expected result bit 8 (carry out)
+002DB5  1  A9 81                lda #$81        ;set N & C (99 + 99 + C = 99 + C)
+002DB7  1  85 11                sta adrf
+002DB9  1  A9 00                lda #0          ;complemented operand 2 for subtract
+002DBB  1  85 12                sta sb2
+002DBD  1  8D 06 02             sta sba2        ;non zp
+002DC0  1  38           tdad:   sec             ;test with carry set
+002DC1  1  20 78 2E             jsr chkdad
+002DC4  1  C6 0C                dec adfc        ;now with carry clear
+002DC6  1  A5 0F                lda adrl        ;decimal adjust result
+002DC8  1  D0 08                bne tdad1       ;skip clear carry & preset result 99 (9A-1)
+002DCA  1  C6 10                dec adrh
+002DCC  1  A9 99                lda #$99
+002DCE  1  85 0F                sta adrl
+002DD0  1  D0 12                bne tdad3
+002DD2  1  29 0F        tdad1:  and #$f         ;lower nibble mask
+002DD4  1  D0 0C                bne tdad2       ;no decimal adjust needed
+002DD6  1  C6 0F                dec adrl        ;decimal adjust (?0-6)
+002DD8  1  C6 0F                dec adrl
+002DDA  1  C6 0F                dec adrl
+002DDC  1  C6 0F                dec adrl
+002DDE  1  C6 0F                dec adrl
+002DE0  1  C6 0F                dec adrl
+002DE2  1  C6 0F        tdad2:  dec adrl        ;result -1
+002DE4  1  08           tdad3:  php             ;save valid flags
+002DE5  1  68                   pla
+002DE6  1  29 82                and #$82        ;N-----Z-
+002DE8  1  05 10                ora adrh        ;N-----ZC
+002DEA  1  85 11                sta adrf
+002DEC  1  18                   clc             ;test with carry clear
+002DED  1  20 78 2E             jsr chkdad
+002DF0  1  E6 0C                inc adfc        ;same for operand -1 but with carry
+002DF2  1  A5 0D                lda ad1         ;decimal adjust operand 1
+002DF4  1  F0 15                beq tdad5       ;iterate operand 2
+002DF6  1  29 0F                and #$f         ;lower nibble mask
+002DF8  1  D0 0C                bne tdad4       ;skip decimal adjust
+002DFA  1  C6 0D                dec ad1         ;decimal adjust (?0-6)
+002DFC  1  C6 0D                dec ad1
+002DFE  1  C6 0D                dec ad1
+002E00  1  C6 0D                dec ad1
+002E02  1  C6 0D                dec ad1
+002E04  1  C6 0D                dec ad1
+002E06  1  C6 0D        tdad4:  dec ad1         ;operand 1 -1
+002E08  1  4C C0 2D             jmp tdad        ;iterate op1
+002E0B  1               
+002E0B  1  A9 99        tdad5:  lda #$99        ;precharge op1 max
+002E0D  1  85 0D                sta ad1
+002E0F  1  A5 0E                lda ad2         ;decimal adjust operand 2
+002E11  1  F0 39                beq tdad7       ;end of iteration
+002E13  1  29 0F                and #$f         ;lower nibble mask
+002E15  1  D0 18                bne tdad6       ;skip decimal adjust
+002E17  1  C6 0E                dec ad2         ;decimal adjust (?0-6)
+002E19  1  C6 0E                dec ad2
+002E1B  1  C6 0E                dec ad2
+002E1D  1  C6 0E                dec ad2
+002E1F  1  C6 0E                dec ad2
+002E21  1  C6 0E                dec ad2
+002E23  1  E6 12                inc sb2         ;complemented decimal adjust for subtract (?9+6)
+002E25  1  E6 12                inc sb2
+002E27  1  E6 12                inc sb2
+002E29  1  E6 12                inc sb2
+002E2B  1  E6 12                inc sb2
+002E2D  1  E6 12                inc sb2
+002E2F  1  C6 0E        tdad6:  dec ad2         ;operand 2 -1
+002E31  1  E6 12                inc sb2         ;complemented operand for subtract
+002E33  1  A5 12                lda sb2
+002E35  1  8D 06 02             sta sba2        ;copy as non zp operand
+002E38  1  A5 0E                lda ad2
+002E3A  1  8D 05 02             sta ada2        ;copy as non zp operand
+002E3D  1  85 0F                sta adrl        ;new result since op1+carry=00+carry +op2=op2
+002E3F  1  08                   php             ;save flags
+002E40  1  68                   pla
+002E41  1  29 82                and #$82        ;N-----Z-
+002E43  1  09 01                ora #1          ;N-----ZC
+002E45  1  85 11                sta adrf
+002E47  1  E6 10                inc adrh        ;result carry
+002E49  1  4C C0 2D             jmp tdad        ;iterate op2
+002E4C  1               
+002E4C  1  E0 0E        tdad7:  cpx #ad2
+002E4E  1  F0 03 20 11          trap_ne         ;x altered during test
+002E52  1  32           
+002E53  1  C0 FF                cpy #$ff
+002E55  1  F0 03 20 11          trap_ne         ;y altered during test
+002E59  1  32           
+002E5A  1  BA                   tsx
+002E5B  1  E0 FF                cpx #$ff
+002E5D  1  F0 03 20 11          trap_ne         ;sp push/pop mismatch
+002E61  1  32           
+002E62  1  D8                   cld
+002E63  1               
+002E63  1  AD 02 02             lda test_case
+002E66  1  C9 15                cmp #test_num
+002E68  1  F0 03 20 11          trap_ne         ;previous test is out of sequence
+002E6C  1  32           
+002E6D  1  A9 F0                lda #$f0        ;mark opcode testing complete
+002E6F  1  8D 02 02             sta test_case
+002E72  1               
+002E72  1               ; final RAM integrity test
+002E72  1               ;   verifies that none of the previous tests has altered RAM outside of the
+002E72  1               ;   designated write areas.
+002E72  1                       check_ram
+002E72  1               ; *** DEBUG INFO ***
+002E72  1               ; to debug checksum errors uncomment check_ram in the next_test macro to
+002E72  1               ; narrow down the responsible opcode.
+002E72  1               ; may give false errors when monitor, OS or other background activity is
+002E72  1               ; allowed during previous tests.
+002E72  1               
+002E72  1               
+002E72  1               ; S U C C E S S ************************************************
+002E72  1               ; -------------
+002E72  1  20 DA 32             success         ;if you get here everything went well
+002E75  1               ; -------------
+002E75  1               ; S U C C E S S ************************************************
+002E75  1  4C 00 04             jmp start       ;run again
+002E78  1               
+002E78  1               ; core subroutine of the decimal add/subtract test
+002E78  1               ; *** WARNING - tests documented behavior only! ***
+002E78  1               ;   only valid BCD operands are tested, V flag is ignored
+002E78  1               ; iterates through all valid combinations of operands and carry input
+002E78  1               ; uses increments/decrements to predict result & carry flag
+002E78  1               chkdad:
+002E78  1               ; decimal ADC / SBC zp
+002E78  1  08                   php             ;save carry for subtract
+002E79  1  A5 0D                lda ad1
+002E7B  1  65 0E                adc ad2         ;perform add
+002E7D  1  08                   php
+002E7E  1  C5 0F                cmp adrl        ;check result
+002E80  1  F0 03 20 11          trap_ne         ;bad result
+002E84  1  32           
+002E85  1  68                   pla             ;check flags
+002E86  1  29 83                and #$83        ;mask N-----ZC
+002E88  1  C5 11                cmp adrf
+002E8A  1  F0 03 20 11          trap_ne         ;bad flags
+002E8E  1  32           
+002E8F  1  28                   plp
+002E90  1  08                   php             ;save carry for next add
+002E91  1  A5 0D                lda ad1
+002E93  1  E5 12                sbc sb2         ;perform subtract
+002E95  1  08                   php
+002E96  1  C5 0F                cmp adrl        ;check result
+002E98  1  F0 03 20 11          trap_ne         ;bad result
+002E9C  1  32           
+002E9D  1  68                   pla             ;check flags
+002E9E  1  29 83                and #$83        ;mask N-----ZC
+002EA0  1  C5 11                cmp adrf
+002EA2  1  F0 03 20 11          trap_ne         ;bad flags
+002EA6  1  32           
+002EA7  1  28                   plp
+002EA8  1               ; decimal ADC / SBC abs
+002EA8  1  08                   php             ;save carry for subtract
+002EA9  1  A5 0D                lda ad1
+002EAB  1  6D 05 02             adc ada2        ;perform add
+002EAE  1  08                   php
+002EAF  1  C5 0F                cmp adrl        ;check result
+002EB1  1  F0 03 20 11          trap_ne         ;bad result
+002EB5  1  32           
+002EB6  1  68                   pla             ;check flags
+002EB7  1  29 83                and #$83        ;mask N-----ZC
+002EB9  1  C5 11                cmp adrf
+002EBB  1  F0 03 20 11          trap_ne         ;bad flags
+002EBF  1  32           
+002EC0  1  28                   plp
+002EC1  1  08                   php             ;save carry for next add
+002EC2  1  A5 0D                lda ad1
+002EC4  1  ED 06 02             sbc sba2        ;perform subtract
+002EC7  1  08                   php
+002EC8  1  C5 0F                cmp adrl        ;check result
+002ECA  1  F0 03 20 11          trap_ne         ;bad result
+002ECE  1  32           
+002ECF  1  68                   pla             ;check flags
+002ED0  1  29 83                and #$83        ;mask N-----ZC
+002ED2  1  C5 11                cmp adrf
+002ED4  1  F0 03 20 11          trap_ne         ;bad flags
+002ED8  1  32           
+002ED9  1  28                   plp
+002EDA  1               ; decimal ADC / SBC #
+002EDA  1  08                   php             ;save carry for subtract
+002EDB  1  A5 0E                lda ad2
+002EDD  1  8D 0B 02             sta ex_adci+1   ;set ADC # operand
+002EE0  1  A5 0D                lda ad1
+002EE2  1  20 0A 02             jsr ex_adci     ;execute ADC # in RAM
+002EE5  1  08                   php
+002EE6  1  C5 0F                cmp adrl        ;check result
+002EE8  1  F0 03 20 11          trap_ne         ;bad result
+002EEC  1  32           
+002EED  1  68                   pla             ;check flags
+002EEE  1  29 83                and #$83        ;mask N-----ZC
+002EF0  1  C5 11                cmp adrf
+002EF2  1  F0 03 20 11          trap_ne         ;bad flags
+002EF6  1  32           
+002EF7  1  28                   plp
+002EF8  1  08                   php             ;save carry for next add
+002EF9  1  A5 12                lda sb2
+002EFB  1  8D 0E 02             sta ex_sbci+1   ;set SBC # operand
+002EFE  1  A5 0D                lda ad1
+002F00  1  20 0D 02             jsr ex_sbci     ;execute SBC # in RAM
+002F03  1  08                   php
+002F04  1  C5 0F                cmp adrl        ;check result
+002F06  1  F0 03 20 11          trap_ne         ;bad result
+002F0A  1  32           
+002F0B  1  68                   pla             ;check flags
+002F0C  1  29 83                and #$83        ;mask N-----ZC
+002F0E  1  C5 11                cmp adrf
+002F10  1  F0 03 20 11          trap_ne         ;bad flags
+002F14  1  32           
+002F15  1  28                   plp
+002F16  1               ; decimal ADC / SBC zp,x
+002F16  1  08                   php             ;save carry for subtract
+002F17  1  A5 0D                lda ad1
+002F19  1  75 00                adc 0,x         ;perform add
+002F1B  1  08                   php
+002F1C  1  C5 0F                cmp adrl        ;check result
+002F1E  1  F0 03 20 11          trap_ne         ;bad result
+002F22  1  32           
+002F23  1  68                   pla             ;check flags
+002F24  1  29 83                and #$83        ;mask N-----ZC
+002F26  1  C5 11                cmp adrf
+002F28  1  F0 03 20 11          trap_ne         ;bad flags
+002F2C  1  32           
+002F2D  1  28                   plp
+002F2E  1  08                   php             ;save carry for next add
+002F2F  1  A5 0D                lda ad1
+002F31  1  F5 04                sbc sb2-ad2,x   ;perform subtract
+002F33  1  08                   php
+002F34  1  C5 0F                cmp adrl        ;check result
+002F36  1  F0 03 20 11          trap_ne         ;bad result
+002F3A  1  32           
+002F3B  1  68                   pla             ;check flags
+002F3C  1  29 83                and #$83        ;mask N-----ZC
+002F3E  1  C5 11                cmp adrf
+002F40  1  F0 03 20 11          trap_ne         ;bad flags
+002F44  1  32           
+002F45  1  28                   plp
+002F46  1               ; decimal ADC / SBC abs,x
+002F46  1  08                   php             ;save carry for subtract
+002F47  1  A5 0D                lda ad1
+002F49  1  7D F7 01             adc ada2-ad2,x  ;perform add
+002F4C  1  08                   php
+002F4D  1  C5 0F                cmp adrl        ;check result
+002F4F  1  F0 03 20 11          trap_ne         ;bad result
+002F53  1  32           
+002F54  1  68                   pla             ;check flags
+002F55  1  29 83                and #$83        ;mask N-----ZC
+002F57  1  C5 11                cmp adrf
+002F59  1  F0 03 20 11          trap_ne         ;bad flags
+002F5D  1  32           
+002F5E  1  28                   plp
+002F5F  1  08                   php             ;save carry for next add
+002F60  1  A5 0D                lda ad1
+002F62  1  FD F8 01             sbc sba2-ad2,x  ;perform subtract
+002F65  1  08                   php
+002F66  1  C5 0F                cmp adrl        ;check result
+002F68  1  F0 03 20 11          trap_ne         ;bad result
+002F6C  1  32           
+002F6D  1  68                   pla             ;check flags
+002F6E  1  29 83                and #$83        ;mask N-----ZC
+002F70  1  C5 11                cmp adrf
+002F72  1  F0 03 20 11          trap_ne         ;bad flags
+002F76  1  32           
+002F77  1  28                   plp
+002F78  1               ; decimal ADC / SBC abs,y
+002F78  1  08                   php             ;save carry for subtract
+002F79  1  A5 0D                lda ad1
+002F7B  1  79 06 01             adc ada2-$ff,y  ;perform add
+002F7E  1  08                   php
+002F7F  1  C5 0F                cmp adrl        ;check result
+002F81  1  F0 03 20 11          trap_ne         ;bad result
+002F85  1  32           
+002F86  1  68                   pla             ;check flags
+002F87  1  29 83                and #$83        ;mask N-----ZC
+002F89  1  C5 11                cmp adrf
+002F8B  1  F0 03 20 11          trap_ne         ;bad flags
+002F8F  1  32           
+002F90  1  28                   plp
+002F91  1  08                   php             ;save carry for next add
+002F92  1  A5 0D                lda ad1
+002F94  1  F9 07 01             sbc sba2-$ff,y  ;perform subtract
+002F97  1  08                   php
+002F98  1  C5 0F                cmp adrl        ;check result
+002F9A  1  F0 03 20 11          trap_ne         ;bad result
+002F9E  1  32           
+002F9F  1  68                   pla             ;check flags
+002FA0  1  29 83                and #$83        ;mask N-----ZC
+002FA2  1  C5 11                cmp adrf
+002FA4  1  F0 03 20 11          trap_ne         ;bad flags
+002FA8  1  32           
+002FA9  1  28                   plp
+002FAA  1               ; decimal ADC / SBC (zp,x)
+002FAA  1  08                   php             ;save carry for subtract
+002FAB  1  A5 0D                lda ad1
+002FAD  1  61 44                adc (<(adi2-ad2),x) ;perform add
+002FAF  1  08                   php
+002FB0  1  C5 0F                cmp adrl        ;check result
+002FB2  1  F0 03 20 11          trap_ne         ;bad result
+002FB6  1  32           
+002FB7  1  68                   pla             ;check flags
+002FB8  1  29 83                and #$83        ;mask N-----ZC
+002FBA  1  C5 11                cmp adrf
+002FBC  1  F0 03 20 11          trap_ne         ;bad flags
+002FC0  1  32           
+002FC1  1  28                   plp
+002FC2  1  08                   php             ;save carry for next add
+002FC3  1  A5 0D                lda ad1
+002FC5  1  E1 46                sbc (<(sbi2-ad2),x) ;perform subtract
+002FC7  1  08                   php
+002FC8  1  C5 0F                cmp adrl        ;check result
+002FCA  1  F0 03 20 11          trap_ne         ;bad result
+002FCE  1  32           
+002FCF  1  68                   pla             ;check flags
+002FD0  1  29 83                and #$83        ;mask N-----ZC
+002FD2  1  C5 11                cmp adrf
+002FD4  1  F0 03 20 11          trap_ne         ;bad flags
+002FD8  1  32           
+002FD9  1  28                   plp
+002FDA  1               ; decimal ADC / SBC (abs),y
+002FDA  1  08                   php             ;save carry for subtract
+002FDB  1  A5 0D                lda ad1
+002FDD  1  71 56                adc (adiy2),y   ;perform add
+002FDF  1  08                   php
+002FE0  1  C5 0F                cmp adrl        ;check result
+002FE2  1  F0 03 20 11          trap_ne         ;bad result
+002FE6  1  32           
+002FE7  1  68                   pla             ;check flags
+002FE8  1  29 83                and #$83        ;mask N-----ZC
+002FEA  1  C5 11                cmp adrf
+002FEC  1  F0 03 20 11          trap_ne         ;bad flags
+002FF0  1  32           
+002FF1  1  28                   plp
+002FF2  1  08                   php             ;save carry for next add
+002FF3  1  A5 0D                lda ad1
+002FF5  1  F1 58                sbc (sbiy2),y   ;perform subtract
+002FF7  1  08                   php
+002FF8  1  C5 0F                cmp adrl        ;check result
+002FFA  1  F0 03 20 11          trap_ne         ;bad result
+002FFE  1  32           
+002FFF  1  68                   pla             ;check flags
+003000  1  29 83                and #$83        ;mask N-----ZC
+003002  1  C5 11                cmp adrf
+003004  1  F0 03 20 11          trap_ne         ;bad flags
+003008  1  32           
+003009  1  28                   plp
+00300A  1               ; decimal ADC / SBC (zp)
+00300A  1  08                   php             ;save carry for subtract
+00300B  1  A5 0D                lda ad1
+00300D  1  72 52                adc (adi2)      ;perform add
+00300F  1  08                   php
+003010  1  C5 0F                cmp adrl        ;check result
+003012  1  F0 03 20 11          trap_ne         ;bad result
+003016  1  32           
+003017  1  68                   pla             ;check flags
+003018  1  29 83                and #$83        ;mask N-----ZC
+00301A  1  C5 11                cmp adrf
+00301C  1  F0 03 20 11          trap_ne         ;bad flags
+003020  1  32           
+003021  1  28                   plp
+003022  1  08                   php             ;save carry for next add
+003023  1  A5 0D                lda ad1
+003025  1  F2 54                sbc (sbi2)      ;perform subtract
+003027  1  08                   php
+003028  1  C5 0F                cmp adrl        ;check result
+00302A  1  F0 03 20 11          trap_ne         ;bad result
+00302E  1  32           
+00302F  1  68                   pla             ;check flags
+003030  1  29 83                and #$83        ;mask N-----ZC
+003032  1  C5 11                cmp adrf
+003034  1  F0 03 20 11          trap_ne         ;bad flags
+003038  1  32           
+003039  1  28                   plp
+00303A  1  60                   rts
+00303B  1               
+00303B  1               ; core subroutine of the full binary add/subtract test
+00303B  1               ; iterates through all combinations of operands and carry input
+00303B  1               ; uses increments/decrements to predict result & result flags
+00303B  1  A5 11        chkadd: lda adrf        ;add V-flag if overflow
+00303D  1  29 83                and #$83        ;keep N-----ZC / clear V
+00303F  1  48                   pha
+003040  1  A5 0D                lda ad1         ;test sign unequal between operands
+003042  1  45 0E                eor ad2
+003044  1  30 0A                bmi ckad1       ;no overflow possible - operands have different sign
+003046  1  A5 0D                lda ad1         ;test sign equal between operands and result
+003048  1  45 0F                eor adrl
+00304A  1  10 04                bpl ckad1       ;no overflow occured - operand and result have same sign
+00304C  1  68                   pla
+00304D  1  09 40                ora #$40        ;set V
+00304F  1  48                   pha
+003050  1  68           ckad1:  pla
+003051  1  85 11                sta adrf        ;save expected flags
+003053  1               ; binary ADC / SBC (zp)
+003053  1  08                   php             ;save carry for subtract
+003054  1  A5 0D                lda ad1
+003056  1  72 52                adc (adi2)      ;perform add
+003058  1  08                   php
+003059  1  C5 0F                cmp adrl        ;check result
+00305B  1  F0 03 20 11          trap_ne         ;bad result
+00305F  1  32           
+003060  1  68                   pla             ;check flags
+003061  1  29 C3                and #$c3        ;mask NV----ZC
+003063  1  C5 11                cmp adrf
+003065  1  F0 03 20 11          trap_ne         ;bad flags
+003069  1  32           
+00306A  1  28                   plp
+00306B  1  08                   php             ;save carry for next add
+00306C  1  A5 0D                lda ad1
+00306E  1  F2 54                sbc (sbi2)      ;perform subtract
+003070  1  08                   php
+003071  1  C5 0F                cmp adrl        ;check result
+003073  1  F0 03 20 11          trap_ne         ;bad result
+003077  1  32           
+003078  1  68                   pla             ;check flags
+003079  1  29 C3                and #$c3        ;mask NV----ZC
+00307B  1  C5 11                cmp adrf
+00307D  1  F0 03 20 11          trap_ne         ;bad flags
+003081  1  32           
+003082  1  28                   plp
+003083  1  60                   rts
+003084  1               
+003084  1               ; target for the jump indirect test
+003084  1  8A 30        ji_adr: .word test_ji
+003086  1  22 1C                .word ji_ret
+003088  1               
+003088  1  88                   dey
+003089  1  88                   dey
+00308A  1               test_ji:
+00308A  1  08                   php             ;either SP or Y count will fail, if we do not hit
+00308B  1  88                   dey
+00308C  1  88                   dey
+00308D  1  88                   dey
+00308E  1  28                   plp
+00308F  1  90 03 20 11          trap_cs         ;flags loaded?
+003093  1  32           
+003094  1  50 03 20 11          trap_vs
+003098  1  32           
+003099  1  10 03 20 11          trap_mi
+00309D  1  32           
+00309E  1  D0 03 20 11          trap_eq
+0030A2  1  32           
+0030A3  1  C9 49                cmp #'I'        ;registers loaded?
+0030A5  1  F0 03 20 11          trap_ne
+0030A9  1  32           
+0030AA  1  E0 4E                cpx #'N'
+0030AC  1  F0 03 20 11          trap_ne
+0030B0  1  32           
+0030B1  1  C0 41                cpy #('D'-3)
+0030B3  1  F0 03 20 11          trap_ne
+0030B7  1  32           
+0030B8  1  48                   pha             ;save a,x
+0030B9  1  8A                   txa
+0030BA  1  48                   pha
+0030BB  1  BA                   tsx
+0030BC  1  E0 FD                cpx #$fd        ;check SP
+0030BE  1  F0 03 20 11          trap_ne
+0030C2  1  32           
+0030C3  1  68                   pla             ;restore x
+0030C4  1  AA                   tax
+0030C5  1  A9 FF 48 28          set_stat $ff
+0030C9  1  68                   pla             ;restore a
+0030CA  1  E8                   inx             ;return registers with modifications
+0030CB  1  49 AA                eor #$aa        ;N=1, V=1, Z=0, C=1
+0030CD  1  6C FF 02             jmp (ji_tab+2)
+0030D0  1  EA                   nop
+0030D1  1  EA                   nop
+0030D2  1  20 11 32             trap            ;runover protection
+0030D5  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+0030D8  1               
+0030D8  1               ; target for the jump indirect test
+0030D8  1  37 31        jxi_adr:.word  trap_ind
+0030DA  1  37 31                .word  trap_ind
+0030DC  1  E6 30                .word  test_jxi    ;+4
+0030DE  1  8C 1C                .word  jxi_ret     ;+6
+0030E0  1  37 31                .word  trap_ind
+0030E2  1  37 31                .word  trap_ind
+0030E4  1               
+0030E4  1  88                   dey
+0030E5  1  88                   dey
+0030E6  1               test_jxi:
+0030E6  1  08                   php             ;either SP or Y count will fail, if we do not hit
+0030E7  1  88                   dey
+0030E8  1  88                   dey
+0030E9  1  88                   dey
+0030EA  1  28                   plp
+0030EB  1  90 03 20 11          trap_cs         ;flags loaded?
+0030EF  1  32           
+0030F0  1  50 03 20 11          trap_vs
+0030F4  1  32           
+0030F5  1  10 03 20 11          trap_mi
+0030F9  1  32           
+0030FA  1  D0 03 20 11          trap_eq
+0030FE  1  32           
+0030FF  1  C9 58                cmp #'X'        ;registers loaded?
+003101  1  F0 03 20 11          trap_ne
+003105  1  32           
+003106  1  E0 04                cpx #4
+003108  1  F0 03 20 11          trap_ne
+00310C  1  32           
+00310D  1  C0 46                cpy #('I'-3)
+00310F  1  F0 03 20 11          trap_ne
+003113  1  32           
+003114  1  48                   pha             ;save a,x
+003115  1  8A                   txa
+003116  1  48                   pha
+003117  1  BA                   tsx
+003118  1  E0 FD                cpx #$fd        ;check SP
+00311A  1  F0 03 20 11          trap_ne
+00311E  1  32           
+00311F  1  68                   pla             ;restore x
+003120  1  AA                   tax
+003121  1  A9 FF 48 28          set_stat $ff
+003125  1  68                   pla             ;restore a
+003126  1  E8                   inx             ;return registers with modifications
+003127  1  E8                   inx
+003128  1  49 AA                eor #$aa        ;N=1, V=1, Z=0, C=1
+00312A  1  7C F9 02             jmp (jxi_tab,x)
+00312D  1  EA                   nop
+00312E  1  EA                   nop
+00312F  1  20 11 32             trap            ;runover protection
+003132  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+003135  1               
+003135  1               ; JMP (abs,x) with bad x
+003135  1  EA                   nop
+003136  1  EA                   nop
+003137  1               trap_ind:
+003137  1  EA                   nop
+003138  1  EA                   nop
+003139  1  20 11 32             trap            ;near miss indexed indirect jump
+00313C  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+00313F  1               
+00313F  1               ;trap in case of unexpected IRQ, NMI, BRK, RESET
+00313F  1               nmi_trap:
+00313F  1  20 11 32             trap            ;check stack for conditions at NMI
+003142  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+003145  1               res_trap:
+003145  1  20 11 32             trap            ;unexpected RESET
+003148  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+00314B  1               
+00314B  1  88                   dey
+00314C  1  88                   dey
+00314D  1               irq_trap:               ;BRK test or unextpected BRK or IRQ
+00314D  1  08                   php             ;either SP or Y count will fail, if we do not hit
+00314E  1  88                   dey
+00314F  1  88                   dey
+003150  1  88                   dey
+003151  1                       ;next traps could be caused by unexpected BRK or IRQ
+003151  1                       ;check stack for BREAK and originating location
+003151  1                       ;possible jump/branch into weeds (uninitialized space)
+003151  1  C9 BD                cmp #$ff-'B'    ;BRK pass 2 registers loaded?
+003153  1  F0 5A                beq break2
+003155  1  C9 42                cmp #'B'        ;BRK pass 1 registers loaded?
+003157  1  F0 03 20 11          trap_ne
+00315B  1  32           
+00315C  1  E0 52                cpx #'R'
+00315E  1  F0 03 20 11          trap_ne
+003162  1  32           
+003163  1  C0 48                cpy #'K'-3
+003165  1  F0 03 20 11          trap_ne
+003169  1  32           
+00316A  1  85 0A                sta irq_a       ;save registers during break test
+00316C  1  86 0B                stx irq_x
+00316E  1  BA                   tsx             ;test break on stack
+00316F  1  BD 02 01             lda $102,x
+003172  1  C9 30                cmp_flag 0      ;break test should have B=1 & unused=1 on stack
+003174  1  F0 03 20 11          trap_ne         ;possible no break flag on stack
+003178  1  32           
+003179  1  68                   pla
+00317A  1  C9 34                cmp_flag intdis ;should have added interrupt disable
+00317C  1  F0 03 20 11          trap_ne
+003180  1  32           
+003181  1  BA                   tsx
+003182  1  E0 FC                cpx #$fc        ;sp -3? (return addr, flags)
+003184  1  F0 03 20 11          trap_ne
+003188  1  32           
+003189  1  AD FF 01             lda $1ff        ;propper return on stack
+00318C  1  C9 1C                cmp #>brk_ret0
+00318E  1  F0 03 20 11          trap_ne
+003192  1  32           
+003193  1  AD FE 01             lda $1fe
+003196  1  C9 F9                cmp #<brk_ret0
+003198  1  F0 03 20 11          trap_ne
+00319C  1  32           
+00319D  1  A9 FF                load_flag $ff
+00319F  1  48                   pha
+0031A0  1  A6 0B                ldx irq_x
+0031A2  1  E8                   inx             ;return registers with modifications
+0031A3  1  A5 0A                lda irq_a
+0031A5  1  49 AA                eor #$aa
+0031A7  1  28                   plp             ;N=1, V=1, Z=1, C=1 but original flags should be restored
+0031A8  1  40                   rti
+0031A9  1  20 11 32             trap            ;runover protection
+0031AC  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+0031AF  1               
+0031AF  1               break2:                 ;BRK pass 2
+0031AF  1  E0 AD                cpx #$ff-'R'
+0031B1  1  F0 03 20 11          trap_ne
+0031B5  1  32           
+0031B6  1  C0 B1                cpy #$ff-'K'-3
+0031B8  1  F0 03 20 11          trap_ne
+0031BC  1  32           
+0031BD  1  85 0A                sta irq_a       ;save registers during break test
+0031BF  1  86 0B                stx irq_x
+0031C1  1  BA                   tsx             ;test break on stack
+0031C2  1  BD 02 01             lda $102,x
+0031C5  1  C9 FF                cmp_flag $ff    ;break test should have B=1
+0031C7  1  F0 03 20 11          trap_ne         ;possibly no break flag on stack
+0031CB  1  32           
+0031CC  1  68                   pla
+0031CD  1  C9 F7                cmp_flag $ff-decmode ;actual passed flags should have decmode cleared
+0031CF  1  F0 03 20 11          trap_ne
+0031D3  1  32           
+0031D4  1  BA                   tsx
+0031D5  1  E0 FC                cpx #$fc        ;sp -3? (return addr, flags)
+0031D7  1  F0 03 20 11          trap_ne
+0031DB  1  32           
+0031DC  1  AD FF 01             lda $1ff        ;propper return on stack
+0031DF  1  C9 1D                cmp #>brk_ret1
+0031E1  1  F0 03 20 11          trap_ne
+0031E5  1  32           
+0031E6  1  AD FE 01             lda $1fe
+0031E9  1  C9 2E                cmp #<brk_ret1
+0031EB  1  F0 03 20 11          trap_ne
+0031EF  1  32           
+0031F0  1  A9 04                load_flag intdis
+0031F2  1  48                   pha
+0031F3  1  A6 0B                ldx irq_x
+0031F5  1  E8                   inx             ;return registers with modifications
+0031F6  1  A5 0A                lda irq_a
+0031F8  1  49 AA                eor #$aa
+0031FA  1  28                   plp             ;N=0, V=0, Z=0, C=0 but original flags should be restored
+0031FB  1  40                   rti
+0031FC  1  20 11 32             trap            ;runover protection
+0031FF  1  4C 00 04             jmp start       ;catastrophic error - cannot continue
+003202  1               
+003202  1                   .if report = 1
+003202  1                       .include "report.i65"
+003202  2               ;**** report 6502 funtional test errors to standard I/O ****
+003202  2               ;
+003202  2               ;this include file is part of the 6502 functional tests
+003202  2               ;it is used when you configure report = 1 in the tests
+003202  2               ;
+003202  2               ;to adopt the standard output vectors of your test environment
+003202  2               ;you must modify the rchar and rget subroutines in this include
+003202  2               ;
+003202  2               ;I/O hardware may have to be initialized in report_init
+003202  2               
+003202  2               ;print message macro - \1 = message location
+003202  2               	.macro rprt msg_loc
+003202  2               	.local loop
+003202  2                       ldx #0
+003202  2                       lda msg_loc
+003202  2               loop:
+003202  2                       jsr rchar
+003202  2                       inx
+003202  2                       lda msg_loc,x
+003202  2                       bne loop
+003202  2                       .endmacro
+003202  2               
+003202  2               ;initialize I/O as required (example: configure & enable ACIA)
+003202  2               report_init:
+003202  2                       ;nothing to initialize
+003202  2  A2 00 AD 1F          rprt rmsg_start
+003206  2  33 20 1B 33  
+00320A  2  E8 BD 1F 33  
+003210  2  60                   rts
+003211  2               
+003211  2               ;show stack (with saved registers), zeropage and absolute memory workspace
+003211  2               ;after an error was trapped in the test program
+003211  2               report_error:
+003211  2               ;save registers
+003211  2  08                   php
+003212  2  48                   pha
+003213  2  8A                   txa
+003214  2  48                   pha
+003215  2  98                   tya
+003216  2  48                   pha
+003217  2  D8                   cld
+003218  2               ;show stack with index to registers at error
+003218  2  A2 00 AD 33          rprt rmsg_stack
+00321C  2  33 20 1B 33  
+003220  2  E8 BD 33 33  
+003226  2  BA                   tsx
+003227  2  E8                   inx
+003228  2  A9 01                lda #1      ;address high
+00322A  2  20 07 33             jsr rhex
+00322D  2  8A                   txa         ;address low
+00322E  2  20 07 33             jsr rhex
+003231  2  20 03 33     rstack:  jsr rspace
+003234  2  BD 00 01             lda $100,x  ;stack data
+003237  2  20 07 33             jsr rhex
+00323A  2  E8                   inx
+00323B  2  D0 F4                bne rstack
+00323D  2  20 FA 32             jsr rcrlf   ;new line
+003240  2               ;show zero page workspace
+003240  2  A9 00                lda #0
+003242  2  20 07 33             jsr rhex
+003245  2  A9 0C                lda #zpt
+003247  2  AA                   tax
+003248  2  20 07 33             jsr rhex
+00324B  2  20 03 33     rzp:     jsr rspace
+00324E  2  B5 00                lda 0,x
+003250  2  20 07 33             jsr rhex
+003253  2  E8                   inx
+003254  2  E0 13                cpx #zp_bss
+003256  2  D0 F3                bne rzp
+003258  2  20 FA 32             jsr rcrlf
+00325B  2               ;show absolute workspace
+00325B  2  A9 02                lda #>data_segment
+00325D  2  20 07 33             jsr rhex
+003260  2  A9 00                lda #<data_segment
+003262  2  20 07 33             jsr rhex
+003265  2  A2 00                ldx #0
+003267  2  20 03 33     rabs:    jsr rspace
+00326A  2  BD 00 02             lda data_segment,x
+00326D  2  20 07 33             jsr rhex
+003270  2  E8                   inx
+003271  2  E0 0A                cpx #(data_bss-data_segment)
+003273  2  D0 F2                bne rabs
+003275  2               ;ask to continue
+003275  2  A2 00 AD 4F          rprt rmsg_cont
+003279  2  33 20 1B 33  
+00327D  2  E8 BD 4F 33  
+003283  2  20 F0 32     rerr1:   jsr rget
+003286  2  C9 53                cmp #'S'
+003288  2  F0 0B                beq rskip
+00328A  2  C9 43                cmp #'C'
+00328C  2  D0 F5                bne rerr1
+00328E  2               ;restore registers
+00328E  2  68                   pla
+00328F  2  A8                   tay
+003290  2  68                   pla
+003291  2  AA                   tax
+003292  2  68                   pla
+003293  2  28                   plp
+003294  2  60                   rts
+003295  2               ;skip the current test
+003295  2  A9 F0        rskip:   lda #$f0            ;already end of tests?
+003297  2  CD 02 02             cmp test_case
+00329A  2  F0 E7                beq rerr1           ;skip is not available
+00329C  2  A2 FF                ldx #$ff            ;clear stack
+00329E  2  9A                   txs
+00329F  2  EE 02 02             inc test_case       ;next test
+0032A2  2  A9 00                lda #<start      ;find begin of test
+0032A4  2  85 0C                sta zpt
+0032A6  2  A9 04                lda #>start
+0032A8  2  85 0D                sta zpt+1
+0032AA  2  A0 04        rskipl1: ldy #4              ;search pattern
+0032AC  2  B1 0C        rskipl2: lda (zpt),y         ;next byte
+0032AE  2  D9 D5 32             cmp rmark,y
+0032B1  2  D0 0A                bne rskipnx         ;no match
+0032B3  2  88                   dey
+0032B4  2  30 0F                bmi rskipf          ;found pattern
+0032B6  2  C0 01                cpy #1              ;skip immediate value
+0032B8  2  D0 F2                bne rskipl2
+0032BA  2  88                   dey
+0032BB  2  F0 EF                beq rskipl2
+0032BD  2               
+0032BD  2  E6 0C        rskipnx: inc zpt             ;next RAM location
+0032BF  2  D0 E9                bne rskipl1
+0032C1  2  E6 0D                inc zpt+1
+0032C3  2  D0 E5                bne rskipl1
+0032C5  2               
+0032C5  2  A0 01        rskipf:  ldy #1              ;pattern found - check test number
+0032C7  2  B1 0C                lda (zpt),y         ;test number
+0032C9  2  C9 F0                cmp #$f0            ;end of last test?
+0032CB  2  F0 05                beq rskipe          ;ask to rerun all
+0032CD  2  CD 02 02             cmp test_case       ;is next test?
+0032D0  2  D0 EB                bne rskipnx         ;continue searching
+0032D2  2  6C 0C 00     rskipe:  jmp (zpt)           ;start next test or rerun at end of tests
+0032D5  2               
+0032D5  2  A9 00        rmark:   lda #0              ;begin of test search pattern
+0032D7  2  8D 02 02             sta test_case
+0032DA  2               
+0032DA  2               ;show test has ended, ask to repeat
+0032DA  2               report_success:
+0032DA  2                   .if rep_int = 1
+0032DA  2                       rprt rmsg_priority
+0032DA  2                       lda data_segment    ;show interrupt sequence
+0032DA  2                       jsr rhex
+0032DA  2                       jsr rspace
+0032DA  2                       lda data_segment+1
+0032DA  2                       jsr rhex
+0032DA  2                       jsr rspace
+0032DA  2                       lda data_segment+2
+0032DA  2                       jsr rhex
+0032DA  2                   .endif
+0032DA  2  A2 00 AD 81          rprt rmsg_success
+0032DE  2  33 20 1B 33  
+0032E2  2  E8 BD 81 33  
+0032E8  2  20 F0 32     rsuc1:   jsr rget
+0032EB  2  C9 52                cmp #'R'
+0032ED  2  D0 F9                bne rsuc1
+0032EF  2  60                   rts
+0032F0  2               
+0032F0  2               ;input subroutine
+0032F0  2               ;get a character from standard input
+0032F0  2               ;adjust according to the needs in your test environment
+0032F0  2               rget:                ;get character in A
+0032F0  2               ;rget1
+0032F0  2               ;        lda $bff1   ;wait RDRF
+0032F0  2               ;        and #8
+0032F0  2               ;        beq rget1
+0032F0  2               ;not a real ACIA - so RDRF is not checked
+0032F0  2               ;        lda $bff0   ;read acia rx reg
+0032F0  2  AD 04 F0             lda $f004   ;Kowalski simulator default
+0032F3  2               ;the load can be replaced by a call to a kernal routine
+0032F3  2               ;        jsr $ffcf   ;example: CHRIN for a C64
+0032F3  2  C9 61                cmp #'a'    ;lower case
+0032F5  2  90 02                bcc rget1
+0032F7  2  29 5F                and #$5f    ;convert to upper case
+0032F9  2  60           rget1:   rts
+0032FA  2               
+0032FA  2               ;output subroutines
+0032FA  2  A9 0A        rcrlf:   lda #10
+0032FC  2  20 1B 33             jsr rchar
+0032FF  2  A9 0D                lda #13
+003301  2  D0 18                bne rchar
+003303  2               
+003303  2  A9 20        rspace:  lda #' '
+003305  2  D0 14                bne rchar
+003307  2               
+003307  2  48           rhex:    pha         ;report hex byte in A
+003308  2  4A                   lsr a       ;high nibble first
+003309  2  4A                   lsr a
+00330A  2  4A                   lsr a
+00330B  2  4A                   lsr a
+00330C  2  20 12 33             jsr rnib
+00330F  2  68                   pla         ;now low nibble
+003310  2  29 0F                and #$f
+003312  2               
+003312  2  18           rnib:    clc         ;report nibble in A
+003313  2  69 30                adc #'0'    ;make printable 0-9
+003315  2  C9 3A                cmp #'9'+1
+003317  2  90 02                bcc rchar
+003319  2  69 06                adc #6      ;make printable A-F
+00331B  2               
+00331B  2               ;send a character to standard output
+00331B  2               ;adjust according to the needs in your test environment
+00331B  2               ;register X needs to be preserved!
+00331B  2               rchar:               ;report character in A
+00331B  2               ;        pha         ;wait TDRF
+00331B  2               ;rchar1  lda $bff1
+00331B  2               ;        and #$10
+00331B  2               ;        beq rchar1
+00331B  2               ;        pla
+00331B  2               ;not a real ACIA - so TDRF is not checked
+00331B  2               ;        sta $bff0   ;write acia tx reg
+00331B  2  8D 01 F0             sta $f001   ;Kowalski simulator default
+00331E  2               ;the store can be replaced by a call to a kernal routine
+00331E  2               ;        jsr $ffd2   ;example: CHROUT for a C64
+00331E  2  60                   rts
+00331F  2               
+00331F  2               rmsg_start:
+00331F  2  0A 0D 53 74  	.literal 10,13,"Started testing",10,13,0
+003323  2  61 72 74 65  
+003327  2  64 20 74 65  
+003333  2               rmsg_stack:
+003333  2  0A 0D 72 65          .literal 10,13,"regs Y  X  A  PS PCLPCH",10,13,0
+003337  2  67 73 20 59  
+00333B  2  20 20 58 20  
+00334F  2               rmsg_cont:
+00334F  2  0A 0D 70 72          .literal 10,13,"press C to continue or S to skip current test",10,13,0
+003353  2  65 73 73 20  
+003357  2  43 20 74 6F  
+003381  2               rmsg_success:
+003381  2  0A 0D 41 6C          .literal 10,13,"All tests completed, press R to repeat",10,13,0
+003385  2  6C 20 74 65  
+003389  2  73 74 73 20  
+0033AC  2                   .if rep_int = 1
+0033AC  2               rmsg_priority:
+0033AC  2                       .literal 10,13,"interrupt sequence (NMI IRQ BRK) ",10,13,0
+0033AC  2                   .endif
+0033AC  2               
+0033AC  2               
+0033AC  1                   .endif
+0033AC  1               
+0033AC  1               ;copy of data to initialize BSS segment
+0033AC  1                   .if load_data_direct <> 1
+0033AC  1               zp_init:
+0033AC  1               zp1_:   .byte  $c3,$82,$41,0   ;test patterns for LDx BIT ROL ROR ASL LSR
+0033AC  1               zp7f_:  .byte  $7f             ;test pattern for compare
+0033AC  1               ;logical zeropage operands
+0033AC  1               zpOR_:  .byte  0,$1f,$71,$80   ;test pattern for OR
+0033AC  1               zpAN_:  .byte  $0f,$ff,$7f,$80 ;test pattern for AND
+0033AC  1               zpEO_:  .byte  $ff,$0f,$8f,$8f ;test pattern for EOR
+0033AC  1               ;indirect addressing pointers
+0033AC  1               ind1_:  .word  abs1            ;indirect pointer to pattern in absolute memory
+0033AC  1                       .word  abs1+1
+0033AC  1                       .word  abs1+2
+0033AC  1                       .word  abs1+3
+0033AC  1                       .word  abs7f
+0033AC  1               inw1_:  .word  abs1-$f8        ;indirect pointer for wrap-test pattern
+0033AC  1               indt_:  .word  abst            ;indirect pointer to store area in absolute memory
+0033AC  1                       .word  abst+1
+0033AC  1                       .word  abst+2
+0033AC  1                       .word  abst+3
+0033AC  1               inwt_:  .word  abst-$f8        ;indirect pointer for wrap-test store
+0033AC  1               indAN_: .word  absAN           ;indirect pointer to AND pattern in absolute memory
+0033AC  1                       .word  absAN+1
+0033AC  1                       .word  absAN+2
+0033AC  1                       .word  absAN+3
+0033AC  1               indEO_: .word  absEO           ;indirect pointer to EOR pattern in absolute memory
+0033AC  1                       .word  absEO+1
+0033AC  1                       .word  absEO+2
+0033AC  1                       .word  absEO+3
+0033AC  1               indOR_: .word  absOR           ;indirect pointer to OR pattern in absolute memory
+0033AC  1                       .word  absOR+1
+0033AC  1                       .word  absOR+2
+0033AC  1                       .word  absOR+3
+0033AC  1               ;add/subtract indirect pointers
+0033AC  1               adi2_:  .word  ada2            ;indirect pointer to operand 2 in absolute memory
+0033AC  1               sbi2_:  .word  sba2            ;indirect pointer to complemented operand 2 (SBC)
+0033AC  1               adiy2_: .word  ada2-$ff        ;with offset for indirect indexed
+0033AC  1               sbiy2_: .word  sba2-$ff
+0033AC  1               zp_end:
+0033AC  1                   .if (zp_end - zp_init) <> (zp_bss_end - zp_bss)
+0033AC  1                       ;force assembler error if size is different
+0033AC  1                       .error "mismatch between bss and zeropage data"
+0033AC  1                   .endif
+0033AC  1               data_init:
+0033AC  1               ex_adc_:adc #0                 ;execute immediate opcodes
+0033AC  1                       rts
+0033AC  1               ex_sbc_:sbc #0                 ;execute immediate opcodes
+0033AC  1                       rts
+0033AC  1               abs1_:  .byte  $c3,$82,$41,0   ;test patterns for LDx BIT ROL ROR ASL LSR
+0033AC  1               abs7f_: .byte  $7f             ;test pattern for compare
+0033AC  1               ;loads
+0033AC  1               fLDx_:  .byte  fn,fn,0,fz      ;expected flags for load
+0033AC  1               ;shifts
+0033AC  1               rASL_:                         ;expected result ASL & ROL -carry
+0033AC  1               rROL_:  .byte  $86,$04,$82,0   ; "
+0033AC  1               rROLc_: .byte  $87,$05,$83,1   ;expected result ROL +carry
+0033AC  1               rLSR_:                         ;expected result LSR & ROR -carry
+0033AC  1               rROR_:  .byte  $61,$41,$20,0   ; "
+0033AC  1               rRORc_: .byte  $e1,$c1,$a0,$80 ;expected result ROR +carry
+0033AC  1               fASL_:                         ;expected flags for shifts
+0033AC  1               fROL_:  .byte  fnc,fc,fn,fz    ;no carry in
+0033AC  1               fROLc_: .byte  fnc,fc,fn,0     ;carry in
+0033AC  1               fLSR_:
+0033AC  1               fROR_:  .byte  fc,0,fc,fz      ;no carry in
+0033AC  1               fRORc_: .byte  fnc,fn,fnc,fn   ;carry in
+0033AC  1               ;increments (decrements)
+0033AC  1               rINC_:  .byte  $7f,$80,$ff,0,1 ;expected result for INC/DEC
+0033AC  1               fINC_:  .byte  0,fn,fn,fz,0    ;expected flags for INC/DEC
+0033AC  1               ;logical memory operand
+0033AC  1               absOR_: .byte  0,$1f,$71,$80   ;test pattern for OR
+0033AC  1               absAN_: .byte  $0f,$ff,$7f,$80 ;test pattern for AND
+0033AC  1               absEO_: .byte  $ff,$0f,$8f,$8f ;test pattern for EOR
+0033AC  1               ;logical accu operand
+0033AC  1               absORa_:.byte  0,$f1,$1f,0     ;test pattern for OR
+0033AC  1               absANa_:.byte  $f0,$ff,$ff,$ff ;test pattern for AND
+0033AC  1               absEOa_:.byte  $ff,$f0,$f0,$0f ;test pattern for EOR
+0033AC  1               ;logical results
+0033AC  1               absrlo_:.byte  0,$ff,$7f,$80
+0033AC  1               absflo_:.byte  fz,fn,0,fn
+0033AC  1               data_end:
+0033AC  1                   .if (data_end - data_init) <> (data_bss_end - data_bss)
+0033AC  1                       ;force assembler error if size is different
+0033AC  1                       .error "mismatch between bss and data"
+0033AC  1                   .endif
+0033AC  1               
+0033AC  1               vec_init:
+0033AC  1                       .word   nmi_trap
+0033AC  1                       .word   res_trap
+0033AC  1                       .word   irq_trap
+0033AC  1               vec_bss equ $fffa
+0033AC  1                   .endif                   ;end of RAM init data
+0033AC  1               
+0033AC  1               ; code at end of image due to the need to add blank space as required
+0033AC  1                   .if ($ff & (ji_ret - * - 2)) < ($ff & (jxi_ret - * - 2))
+0033AC  1               ; JMP (abs) when $xxff and $xx00 are from same page
+0033AC  1  xx xx xx xx          .res  <(ji_ret - * - 2)
+0033B0  1  xx xx xx xx  
+0033B4  1  xx xx xx xx  
+003420  1  EA                   nop
+003421  1  EA                   nop
+003422  1  EA           ji_px:  nop             ;low address byte matched with ji_ret
+003423  1  EA                   nop
+003424  1  20 11 32             trap            ;jmp indirect page cross bug
+003427  1               
+003427  1               ; JMP (abs,x) when $xxff and $xx00 are from same page
+003427  1  xx xx xx xx          .res  <(jxi_ret - * - 2)
+00342B  1  xx xx xx xx  
+00342F  1  xx xx xx xx  
+00348A  1  EA                   nop
+00348B  1  EA                   nop
+00348C  1  EA           jxi_px: nop             ;low address byte matched with jxi_ret
+00348D  1  EA                   nop
+00348E  1  20 11 32             trap            ;jmp indexed indirect page cross bug
+003491  1                   .else
+003491  1               ; JMP (abs,x) when $xxff and $xx00 are from same page
+003491  1                       .res  <(jxi_ret - * - 2)
+003491  1                       nop
+003491  1                       nop
+003491  1               jxi_px: nop             ;low address byte matched with jxi_ret
+003491  1                       nop
+003491  1                       trap            ;jmp indexed indirect page cross bug
+003491  1               
+003491  1               ; JMP (abs) when $xxff and $xx00 are from same page
+003491  1                       .res  <(ji_ret - * - 2)
+003491  1                       nop
+003491  1                       nop
+003491  1               ji_px:  nop             ;low address byte matched with ji_ret
+003491  1                       nop
+003491  1                       trap            ;jmp indirect page cross bug
+003491  1                   .endif
+003491  1               
+003491  1                   .if (load_data_direct = 1) & (ROM_vectors = 1)
+003491  1                       .segment "VECTORS"
+003491  1  3F 31                .word   nmi_trap
+003493  1  45 31                .word   res_trap
+003495  1  4D 31                .word   irq_trap
+003497  1                   .endif
+003497  1               
