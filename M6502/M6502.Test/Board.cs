@@ -7,6 +7,7 @@ namespace M6502.Test
     using System.Diagnostics;
     using System.Globalization;
     using System.Text;
+    using System.Threading.Tasks;
     using EightBit;
 
     internal class Board : Bus
@@ -61,6 +62,12 @@ namespace M6502.Test
 
         public override void Initialize()
         {
+            Task? symbolsParserTask = null;
+            if (this.configuration.Profile || this.configuration.DebugMode)
+            {
+                symbolsParserTask = this.symbols.ParseAsync(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/" + this.configuration.Symbols);
+            }
+
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
             this.ram.Load(programPath, loadAddress.Word);
@@ -80,11 +87,6 @@ namespace M6502.Test
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
             this.WrittenByte += this.Bus_WrittenByte;
 
-            if (this.configuration.Profile || this.configuration.DebugMode)
-            {
-                this.symbols.Parse(string.IsNullOrEmpty(this.configuration.Symbols) ? string.Empty : this.configuration.RomDirectory + "/" + this.configuration.Symbols);
-            }
-
             if (this.configuration.Profile)
             {
                 this.profiler.StartingOutput += this.Profiler_StartingOutput;
@@ -102,6 +104,8 @@ namespace M6502.Test
 
             this.Poke(0x00, 0x4c);
             this.CPU.PokeWord(0x01, this.configuration.StartAddress);
+
+            symbolsParserTask?.Wait();
         }
 
         public override MemoryMapping Mapping(ushort absolute) => this.mapping;

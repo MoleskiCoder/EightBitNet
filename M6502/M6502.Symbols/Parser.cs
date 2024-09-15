@@ -7,6 +7,7 @@
             using System;
             using System.Collections.Frozen;
             using System.Diagnostics;
+            using System.Threading.Tasks;
 
             public sealed class Parser
             {
@@ -329,7 +330,7 @@
 
                 #region Parser driver
 
-                public void Parse(string? path)
+                public async Task ParseAsync(string? path)
                 {
                     if (this.Parsed)
                     {
@@ -342,24 +343,19 @@
                     }
 
                     using var reader = new StreamReader(path);
-                    while (!reader.EndOfStream)
-                    {
-                        var line = reader.ReadLine();
-                        if (line == null)
-                        {
-                            break;
-                        }
+                    await this.ParseAsync(reader);
+                }
 
-                        this.ParseLine(line.Split(' ', '\t'));
-                    }
+                private async Task ParseAsync(StreamReader reader)
+                {
+                    await this.ParseLinesAsync(reader);
 
                     this.FreezeParsedData();
 
                     // Intermediate data no longer needed
                     // Only "frozen" parsed data is needed.
-#if DEBUG
                     this._parsed_intermediate.Clear();
-#endif
+
                     this.ExtractFiles();
                     this.ExtractLines();
                     this.ExtractModules();
@@ -370,15 +366,27 @@
                     this.ExtractTypes();
 
                     // Frozen parsed data is no longer needed
-#if DEBUG
                     this._parsed = null;
-#endif
 
                     // We are now mostly parsed
                     this.Parsed = true;
 
                     // Oh, except for marking addressable scopes
                     this.BuildAddressableScopes();
+                }
+
+                private async Task ParseLinesAsync(StreamReader reader)
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = await reader.ReadLineAsync();
+                        if (line == null)
+                        {
+                            break;
+                        }
+
+                        this.ParseLine(line.Split(' ', '\t'));
+                    }
                 }
 
                 private void FreezeParsedData()
