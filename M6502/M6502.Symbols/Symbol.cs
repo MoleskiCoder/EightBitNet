@@ -32,24 +32,6 @@
 
                 [SectionEnumeration("type")]
                 public string Type => this.TakeString("type");
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    if (this.Type is "lab")
-                    {
-                        this._container?.AddLabel(this);
-
-                    }
-                    else if (this.Type is "equ")
-                    {
-                        this._container?.AddEquate(this);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"Unknown symbol type: {this.Type}");
-                    }
-                }
             }
         }
     }

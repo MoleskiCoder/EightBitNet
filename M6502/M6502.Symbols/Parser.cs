@@ -33,12 +33,8 @@
                 public List<Type> Types { get; } = [];
 
                 // Symbol sub-types
-                public List<Symbol> Labels { get; } = [];
-                public List<Symbol> Equates { get; } = [];
-
-                // Value lookup structures
-                public Dictionary<int, List<Symbol>> Addresses { get; } = [];
-                public Dictionary<int, List<Symbol>> Constants { get; } = [];
+                public IEnumerable<Symbol> Labels => this.SelectSymbolsByType("lab");
+                public IEnumerable<Symbol> Equates => this.SelectSymbolsByType("equ");
 
                 // Scope clarification
                 public List<Scope> AddressableScopes { get; } = [];
@@ -54,33 +50,15 @@
 
                 private static IEnumerable<T> SelectIdMatching<T>(int id, IEnumerable<T> items) where T : IdentifiableSection => from item in items where item.ID == id select item;
 
+                private IEnumerable<Symbol> SelectSymbolsByType(string type) => from symbol in this.Symbols where symbol.Type == type select symbol;
+
                 #region Label lookup
 
-                public void AddLabel(Symbol symbol)
-                {
-                    ArgumentOutOfRangeException.ThrowIfNotEqual("lab", symbol.Type, nameof(symbol));
-                    this.Labels.Add(symbol);
-                    this.AddAddress(symbol);
-                }
-
-                private void AddAddress(Symbol symbol)
-                {
-                    var value = symbol.Value;
-                    if (this.Addresses.TryGetValue(value, out var symbols))
-                    {
-                        symbols.Add(symbol);
-                    }
-                    else
-                    {
-                        this.Addresses.Add(value, [symbol]);
-                    }
-                }
-
-                private List<Symbol> LookupLabelsByAddress(int address) => this.Addresses.TryGetValue(address, out var symbols) ? symbols : [];
+                private IEnumerable<Symbol> LookupLabelsByAddress(int address) => from label in this.Labels where label.Value == address select label;
 
                 public Symbol? LookupLabelByAddress(int address)
                 {
-                    var labels = this.LookupLabelsByAddress(address);
+                    var labels = this.LookupLabelsByAddress(address).ToList();
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
@@ -104,31 +82,11 @@
 
                 #region Constant lookup
 
-                public void AddEquate(Symbol symbol)
-                {
-                    ArgumentOutOfRangeException.ThrowIfNotEqual("equ", symbol.Type, nameof(symbol));
-                    this.Equates.Add(symbol);
-                    this.AddConstant(symbol);
-                }
-
-                private void AddConstant(Symbol symbol)
-                {
-                    var value = symbol.Value;
-                    if (this.Constants.TryGetValue(value, out var symbols))
-                    {
-                        symbols.Add(symbol);
-                    }
-                    else
-                    {
-                        this.Constants.Add(value, [symbol]);
-                    }
-                }
-
-                private List<Symbol> LookupEquatesByValue(int constant) => this.Constants.TryGetValue(constant, out var symbols) ? symbols : [];
+                private IEnumerable<Symbol> LookupEquatesByValue(int constant) => from equate in this.Equates where equate.Value == constant select equate;
 
                 public Symbol? LookupEquateByValue(int constant)
                 {
-                    var equates = this.LookupEquatesByValue(constant);
+                    var equates = this.LookupEquatesByValue(constant).ToList();
                     return equates.Count > 0 ? equates[0] : null;
                 }
 
