@@ -13,7 +13,7 @@
                 #region Variables, properties etc.
 
                 // Section -> Unique ID list of dictionary entries
-                private Dictionary<string, List<Dictionary<string, string>>>? _parsed;
+                private readonly Dictionary<string, List<Dictionary<string, string>>> _parsed = [];
 
                 private Version? _version;
                 private Information? _information;
@@ -375,7 +375,12 @@
 
                 private void Extract<T>(string key, ref List<T>? into) where T : IdentifiableSection
                 {
-                    Debug.Assert(this._parsed != null);
+                    if (this._parsed.Count == 0)
+                    {
+                        into = [];
+                        return;
+                    }
+
                     if (!this._parsed.TryGetValue(key, out var parsed))
                     {
                         throw new ArgumentOutOfRangeException(nameof(key), key, "Debugging section is unavailable");
@@ -413,7 +418,6 @@
 
                 private async Task ParseAsync(StreamReader reader)
                 {
-                    this._parsed = [];
                     while (!reader.EndOfStream)
                     {
                         var line = await reader.ReadLineAsync();
@@ -452,7 +456,6 @@
 
                 private void Parse(string key, string[] parts)
                 {
-                    Debug.Assert(this._parsed != null);
                     if (!this._parsed.TryGetValue(key, out var section))
                     {
                         this._parsed[key] = [];
