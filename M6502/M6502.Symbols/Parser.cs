@@ -5,7 +5,6 @@
         namespace Symbols
         {
             using System;
-            using System.Collections.Frozen;
             using System.Diagnostics;
             using System.Threading.Tasks;
 
@@ -17,8 +16,7 @@
 
                 // Section -> Unique ID list of dictionary entries
                 // Being sorted allows us to verify IDs as they arrive
-                private readonly Dictionary<string, SortedDictionary<int, FrozenDictionary<string, string>>> _parsed_intermediate = [];
-                private FrozenDictionary<string, FrozenDictionary<int, FrozenDictionary<string, string>>>? _parsed;
+                private readonly Dictionary<string, SortedDictionary<int, Dictionary<string, string>>> _parsed = [];
 
                 private Version? _version;
                 private Information? _information;
@@ -308,12 +306,6 @@
                 {
                     await this.ParseLinesAsync(reader);
 
-                    this.FreezeParsedData();
-
-                    // Intermediate data no longer needed
-                    // Only "frozen" parsed data is needed.
-                    this._parsed_intermediate.Clear();
-
                     this.ExtractFiles();
                     this.ExtractLines();
                     this.ExtractModules();
@@ -323,8 +315,8 @@
                     this.ExtractSymbols();
                     this.ExtractTypes();
 
-                    // Frozen parsed data is no longer needed
-                    this._parsed = null;
+                    // Parsed dictionary is no longer needed
+                    this._parsed.Clear();
 
                     // We are now mostly parsed
                     this.Parsed = true;
@@ -345,16 +337,6 @@
 
                         this.ParseLine(line.Split(' ', '\t'));
                     }
-                }
-
-                private void FreezeParsedData()
-                {
-                    var intermediateSections = new Dictionary<string, FrozenDictionary<int, FrozenDictionary<string, string>>>(this._parsed_intermediate.Count);
-                    foreach (var (name, entries) in this._parsed_intermediate)
-                    {
-                        intermediateSections.Add(name, FrozenDictionary.ToFrozenDictionary(entries));
-                    }
-                    this._parsed = FrozenDictionary.ToFrozenDictionary(intermediateSections);
                 }
 
                 private void BuildAddressableScopes()
@@ -393,10 +375,10 @@
 
                 private void Parse(string key, string[] parts)
                 {
-                    if (!this._parsed_intermediate.TryGetValue(key, out var section))
+                    if (!this._parsed.TryGetValue(key, out var section))
                     {
-                        this._parsed_intermediate[key] = [];
-                        section = this._parsed_intermediate[key];
+                        this._parsed[key] = [];
+                        section = this._parsed[key];
                     }
 
                     var dictionary = BuildDictionary(parts);
@@ -406,10 +388,6 @@
                     }
 
                     var identifier = int.Parse(id);
-                    if (section.ContainsKey(identifier))
-                    {
-                        throw new InvalidOperationException($"Invalid symbol file format (definition id ({identifier}) has clashed)");
-                    }
 
                     if (this._information == null)
                     {
@@ -422,10 +400,13 @@
                         throw new InvalidOperationException($"Invalid symbol file format (No count information available for {section})");
                     }
 
-                    section.Add(identifier, dictionary);
+                    if (!section.TryAdd(identifier, dictionary))
+                    {
+                        throw new InvalidOperationException($"Invalid symbol file format (definition id ({identifier}) has clashed)");
+                    }
                 }
 
-                private static FrozenDictionary<string, string> BuildDictionary(string[] parts)
+                private static Dictionary<string, string> BuildDictionary(string[] parts)
                 {
                     var dictionary = new Dictionary<string, string>(parts.Length);
                     foreach (var part in parts)
@@ -441,7 +422,7 @@
                         dictionary[key] = value;
                     }
 
-                    return FrozenDictionary.ToFrozenDictionary(dictionary);
+                    return dictionary;
                 }
 #endregion
             }
