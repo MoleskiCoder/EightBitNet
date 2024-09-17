@@ -12,29 +12,146 @@
             {
                 #region Variables, properties etc.
 
-                public bool Parsed { get; private set; }
-
                 // Section -> Unique ID list of dictionary entries
-                private readonly Dictionary<string, List<Dictionary<string, string>>> _parsed = [];
+                private Dictionary<string, List<Dictionary<string, string>>>? _parsed;
 
                 private Version? _version;
                 private Information? _information;
 
-                public List<File> Files { get; } = [];
-                public List<Line> Lines { get; } = [];
-                public List<Module> Modules { get; } = [];
-                public List<Segment> Segments { get; } = [];
-                public List<Span> Spans { get; } = [];
-                public List<Scope> Scopes { get; } = [];
-                public List<Symbol> Symbols { get; } = [];
-                public List<Type> Types { get; } = [];
+                private List<File>? _files;
+                private List<Line>? _lines;
+                private List<Module>? _modules;
+                private List<Segment>? _segments;
+                private List<Span>? _spans;
+                private List<Scope>? _scopes;
+                private List<Symbol>? _symbols;
+                private List<Type>? _types;
+
+                public ref List<File>? Files
+                {
+                    get
+                    {
+                        if (_files == null)
+                        {
+                            this.ExtractFiles();
+                        }
+
+                        return ref this._files;
+                    }
+                }
+
+                public ref List<Line>? Lines
+                {
+                    get
+                    {
+                        if (_lines == null)
+                        {
+                            this.ExtractLines();
+                        }
+
+                        return ref this._lines;
+                    }
+                }
+
+                public ref List<Module>? Modules
+                {
+                    get
+                    {
+                        if (_modules == null)
+                        {
+                            this.ExtractModules();
+                        }
+
+                        return ref this._modules;
+                    }
+                }
+
+                public ref List<Segment>? Segments
+                {
+                    get
+                    {
+                        if (_segments == null)
+                        {
+                            this.ExtractSegments();
+                        }
+
+                        return ref this._segments;
+                    }
+                }
+
+                public ref List<Span>? Spans
+                {
+                    get
+                    {
+                        if (_spans == null)
+                        {
+                            this.ExtractSpans();
+                        }
+
+                        return ref this._spans;
+                    }
+                }
+
+                public ref List<Scope>? Scopes
+                {
+                    get
+                    {
+                        if (_scopes == null)
+                        {
+                            this.ExtractScopes();
+                        }
+
+                        return ref this._scopes;
+                    }
+                }
+
+                public ref List<Symbol>? Symbols
+                {
+                    get
+                    {
+                        if (_symbols == null)
+                        {
+                            this.ExtractSymbols();
+                        }
+
+                        return ref this._symbols;
+                    }
+                }
+
+                public ref List<Type>? Types
+                {
+                    get
+                    {
+                        if (_types == null)
+                        {
+                            this.ExtractTypes();
+                        }
+
+                        return ref this._types;
+                    }
+                }
 
                 // Symbol sub-types
                 public IEnumerable<Symbol> Labels => this.SelectSymbolsByType("lab");
                 public IEnumerable<Symbol> Equates => this.SelectSymbolsByType("equ");
 
                 // Scope clarification
-                public List<Scope> AddressableScopes { get; } = [];
+                private List<Scope>? _addressableScopes;
+
+                public List<Scope> AddressableScopes
+                {
+                    get
+                    {
+                        if (_addressableScopes == null)
+                        {
+                            var scopes = from scope in this.Scopes where scope.Symbol != null select scope;
+                            this._addressableScopes = [];
+                            this._addressableScopes.AddRange(scopes);
+                        }
+
+                        return this._addressableScopes;
+                    }
+                }
 
                 // Scope cache for precomputed ranges
                 private readonly int?[] _scopeAddressCache = new int?[0x10000];
@@ -43,9 +160,9 @@
 
                 #region Lookups
 
-                private static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T> items) where T : NamedSection => from item in items where item.Name == name select item;
+                private static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T>? items) where T : NamedSection => from item in items where item.Name == name select item;
 
-                private static IEnumerable<T> SelectIdMatching<T>(int id, IEnumerable<T> items) where T : IdentifiableSection => from item in items where item.ID == id select item;
+                private static IEnumerable<T> SelectIdMatching<T>(int id, IEnumerable<T>? items) where T : IdentifiableSection => from item in items where item.ID == id select item;
 
                 private IEnumerable<Symbol> SelectSymbolsByType(string type) => from symbol in this.Symbols where symbol.Type == type select symbol;
 
@@ -240,36 +357,31 @@
 
                 #region Section extractors
 
-                private void ExtractFiles() => this.Extract<File>("file", this.Files);
+                private void ExtractFiles() => this.Extract<File>("file", ref this._files);
 
-                private void ExtractLines() => this.Extract<Line>("line", this.Lines);
+                private void ExtractLines() => this.Extract<Line>("line", ref this._lines);
 
-                private void ExtractModules() => this.Extract<Module>("mod", this.Modules);
+                private void ExtractModules() => this.Extract<Module>("mod", ref this._modules);
 
-                private void ExtractSegments() => this.Extract<Segment>("seg", this.Segments);
+                private void ExtractSegments() => this.Extract<Segment>("seg", ref this._segments);
 
-                private void ExtractSpans() => this.Extract<Span>("span", this.Spans);
+                private void ExtractSpans() => this.Extract<Span>("span", ref this._spans);
 
-                private void ExtractScopes() => this.Extract<Scope>("scope", this.Scopes);
+                private void ExtractScopes() => this.Extract<Scope>("scope", ref this._scopes);
 
-                private void ExtractSymbols() => this.Extract<Symbol>("sym", this.Symbols);
+                private void ExtractSymbols() => this.Extract<Symbol>("sym", ref this._symbols);
 
-                private void ExtractTypes() => this.Extract<Type>("type", this.Types);
+                private void ExtractTypes() => this.Extract<Type>("type", ref this._types);
 
-                private void Extract<T>(string key, List<T> into) where T : IdentifiableSection
+                private void Extract<T>(string key, ref List<T>? into) where T : IdentifiableSection
                 {
-                    if (this._parsed == null)
-                    {
-                        throw new InvalidOperationException("Parsed dictionary has not been frozen");
-                    }
-
+                    Debug.Assert(this._parsed != null);
                     if (!this._parsed.TryGetValue(key, out var parsed))
                     {
                         throw new ArgumentOutOfRangeException(nameof(key), key, "Debugging section is unavailable");
                     }
 
-                    Debug.Assert(into.Count == 0);
-                    into.Capacity = parsed.Count;
+                    into = new List<T>(parsed.Count);
                     for (var id = 0; id < parsed.Count; ++id)
                     {
                         Debug.Assert(into.Count == id);
@@ -290,11 +402,6 @@
 
                 public async Task ParseAsync(string? path)
                 {
-                    if (this.Parsed)
-                    {
-                        throw new InvalidOperationException("A file has already been parsed.");
-                    }
-
                     if (string.IsNullOrEmpty(path))
                     {
                         return;
@@ -306,29 +413,7 @@
 
                 private async Task ParseAsync(StreamReader reader)
                 {
-                    await this.ParseLinesAsync(reader);
-
-                    this.ExtractFiles();
-                    this.ExtractLines();
-                    this.ExtractModules();
-                    this.ExtractSegments();
-                    this.ExtractSpans();
-                    this.ExtractScopes();
-                    this.ExtractSymbols();
-                    this.ExtractTypes();
-
-                    // Parsed dictionary is no longer needed
-                    this._parsed.Clear();
-
-                    // We are now mostly parsed
-                    this.Parsed = true;
-
-                    // Oh, except for marking addressable scopes
-                    this.BuildAddressableScopes();
-                }
-
-                private async Task ParseLinesAsync(StreamReader reader)
-                {
+                    this._parsed = [];
                     while (!reader.EndOfStream)
                     {
                         var line = await reader.ReadLineAsync();
@@ -339,16 +424,6 @@
 
                         this.ParseLine(line.Split(' ', '\t'));
                     }
-                }
-
-                private void BuildAddressableScopes()
-                {
-                    if (!this.Parsed)
-                    {
-                        throw new InvalidOperationException("Fully parsed scopes are unavailable");
-                    }
-                    var scopes = from scope in this.Scopes where scope.Symbol != null select scope;
-                    this.AddressableScopes.AddRange(scopes);
                 }
 
                 private void ParseLine(string[] elements)
@@ -377,6 +452,7 @@
 
                 private void Parse(string key, string[] parts)
                 {
+                    Debug.Assert(this._parsed != null);
                     if (!this._parsed.TryGetValue(key, out var section))
                     {
                         this._parsed[key] = [];
