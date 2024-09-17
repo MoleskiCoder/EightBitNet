@@ -25,13 +25,19 @@
                 public List<Line> References => this.TakeLineReferences("ref"); // Guess
 
                 [SectionProperty("val", hexadecimal: true)]
-                public int Value => this.TakeInteger("val");
+                public int Value { get; private set; }
 
                 [SectionReference("seg")]
                 public Symbols.Segment Segment => this.TakeSegmentReference();
 
                 [SectionEnumeration("type")]
                 public string Type => this.TakeString("type");
+
+                public override void Parse(IDictionary<string, string> entries)
+                {
+                    base.Parse(entries);
+                    this.Value = this.TakeInteger("val");
+                }
             }
         }
     }

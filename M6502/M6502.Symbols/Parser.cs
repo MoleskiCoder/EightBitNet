@@ -15,8 +15,7 @@
                 public bool Parsed { get; private set; }
 
                 // Section -> Unique ID list of dictionary entries
-                // Being sorted allows us to verify IDs as they arrive
-                private readonly Dictionary<string, SortedDictionary<int, Dictionary<string, string>>> _parsed = [];
+                private readonly Dictionary<string, List<Dictionary<string, string>>> _parsed = [];
 
                 private Version? _version;
                 private Information? _information;
@@ -271,14 +270,17 @@
 
                     Debug.Assert(into.Count == 0);
                     into.Capacity = parsed.Count;
-                    foreach (var (id, information) in parsed)
+                    for (var id = 0; id < parsed.Count; ++id)
                     {
                         Debug.Assert(into.Count == id);
                         var entry = (T?)Activator.CreateInstance(typeof(T), this);
                         Debug.Assert(entry != null);
+                        var information = parsed[id];
                         entry.Parse(information);
                         into.Add(entry);
                     }
+                    Debug.Assert(into.Count == parsed.Count);
+
                     this.VerifyInformationCount(key, into.Count);
                 }
 
@@ -400,10 +402,7 @@
                         throw new InvalidOperationException($"Invalid symbol file format (No count information available for {section})");
                     }
 
-                    if (!section.TryAdd(identifier, dictionary))
-                    {
-                        throw new InvalidOperationException($"Invalid symbol file format (definition id ({identifier}) has clashed)");
-                    }
+                    section.Add(dictionary);
                 }
 
                 private static Dictionary<string, string> BuildDictionary(string[] parts)

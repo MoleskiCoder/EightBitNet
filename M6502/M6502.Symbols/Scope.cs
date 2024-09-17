@@ -16,7 +16,7 @@
                 public string? Type => this.MaybeTakeString("type");
 
                 [SectionProperty("size")]
-                public int Size => this.TakeInteger("size");
+                public int Size { get; private set; }
 
                 [SectionReference("parent")]
                 public Scope? Parent => this.MaybeTakeParentReference();
@@ -40,6 +40,12 @@
 
                 [SectionReferences("span")]
                 public List<Span> Spans => this.TakeSpanReferences();
+
+                public override void Parse(IDictionary<string, string> entries)
+                {
+                    base.Parse(entries);
+                    this.Size = this.TakeInteger("size");
+                }
             }
         }
     }
