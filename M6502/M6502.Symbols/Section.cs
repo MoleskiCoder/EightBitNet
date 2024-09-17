@@ -110,12 +110,12 @@
                 protected static long ExtractHexLong(string value) => ExtractHexValue<long>(value);
                 protected static int ExtractInteger(string value) => ExtractNumericValue<int>(value);
                 protected static long ExtractLong(string value) => ExtractNumericValue<long>(value);
-                protected static List<string> ExtractCompoundString(string value) => new(value.Split('+'));
+                protected static string[] ExtractCompoundString(string value) => value.Split('+');
 
                 protected static List<int> ExtractCompoundInteger(string value)
                 {
                     var elements = ExtractCompoundString(value);
-                    var returned = new List<int>(elements.Count);
+                    var returned = new List<int>(elements.Length);
                     foreach (var element in elements)
                     {
                         returned.Add(ExtractInteger(element));
