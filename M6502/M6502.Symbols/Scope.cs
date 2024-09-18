@@ -7,7 +7,7 @@
             //scope id = 0, name = "", mod = 0, size = 1137, span = 355 + 354
             //scope id = 1, name = "stack", mod = 0, type = scope, size = 7, parent = 0, span = 15
             //scope id = 7, name = "print_box_break_vertical", mod = 0, type = scope, size = 6, parent = 0, sym = 33, span = 72
-            public class Scope(Parser container) : NamedSection(container)
+            public sealed class Scope(Parser container) : NamedSection(container)
             {
                 [SectionReference("mod")]
                 public Symbols.Module Module => this.TakeModuleReference();

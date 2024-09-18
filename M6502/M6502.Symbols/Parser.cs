@@ -31,7 +31,7 @@
                 {
                     get
                     {
-                        if (_files == null)
+                        if (this._files == null)
                         {
                             this.ExtractFiles();
                         }
@@ -44,7 +44,7 @@
                 {
                     get
                     {
-                        if (_lines == null)
+                        if (this._lines == null)
                         {
                             this.ExtractLines();
                         }
@@ -57,7 +57,7 @@
                 {
                     get
                     {
-                        if (_modules == null)
+                        if (this._modules == null)
                         {
                             this.ExtractModules();
                         }
@@ -70,7 +70,7 @@
                 {
                     get
                     {
-                        if (_segments == null)
+                        if (this._segments == null)
                         {
                             this.ExtractSegments();
                         }
@@ -83,7 +83,7 @@
                 {
                     get
                     {
-                        if (_spans == null)
+                        if (this._spans == null)
                         {
                             this.ExtractSpans();
                         }
@@ -96,7 +96,7 @@
                 {
                     get
                     {
-                        if (_scopes == null)
+                        if (this._scopes == null)
                         {
                             this.ExtractScopes();
                         }
@@ -109,7 +109,7 @@
                 {
                     get
                     {
-                        if (_symbols == null)
+                        if (this._symbols == null)
                         {
                             this.ExtractSymbols();
                         }
@@ -122,7 +122,7 @@
                 {
                     get
                     {
-                        if (_types == null)
+                        if (this._types == null)
                         {
                             this.ExtractTypes();
                         }
@@ -440,11 +440,20 @@
 
                     if (key is "version")
                     {
+                        if (this._version != null)
+                        {
+                            throw new InvalidOperationException("Verson object has already been parsed");
+                        }
                         this._version = new(this);
                         this._version.Parse(BuildDictionary(parts));
+                        this.VerifyVersion();
                     }
                     else if (key is "info")
                     {
+                        if (this._information != null)
+                        {
+                            throw new InvalidOperationException("Information object has already been parsed");
+                        }
                         this._information = new(this);
                         this._information.Parse(BuildDictionary(parts));
                     }
@@ -502,7 +511,24 @@
 
                     return dictionary;
                 }
-#endregion
+
+                private void VerifyVersion()
+                {
+                    if (this._version == null)
+                    {
+                        throw new InvalidOperationException("Version has not yet been parsed");
+                    }
+
+                    var major = this._version?.Major;
+                    var minor = this._version?.Minor;
+                    var valid = major == 2 && minor == 0;
+                    if (!valid)
+                    {
+                        throw new InvalidOperationException($"Unknown symbol file version: {major}.{minor}");
+                    }
+                }
+
+                #endregion
             }
         }
     }

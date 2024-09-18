@@ -5,7 +5,7 @@
         namespace Symbols
         {
             [AttributeUsage(AttributeTargets.Property)]
-            internal class SectionReferenceAttribute(string key) : SectionPropertyAttribute(key, type: typeof(int))
+            internal sealed class SectionReferenceAttribute(string key) : SectionPropertyAttribute(key, type: typeof(int))
             {
             }
         }

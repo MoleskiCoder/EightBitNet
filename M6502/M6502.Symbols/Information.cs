@@ -5,7 +5,7 @@
         namespace Symbols
         {
             //info csym = 0, file = 3, lib = 0, line = 380, mod = 1, scope = 12, seg = 8, span = 356, sym = 61, type = 3
-            public class Information : Section
+            public sealed class Information : Section
             {
                 public Information(Parser container)
                 : base(container)

@@ -7,7 +7,7 @@
             using System.Collections.Generic;
 
             // sym id = 16, name = "solve", addrsize = absolute, size = 274, scope = 0, def = 94,ref=144+17+351,val=0xF314,seg=6,type=lab
-            public class Symbol(Parser container) : NamedSection(container)
+            public sealed class Symbol(Parser container) : NamedSection(container)
             {
                 [SectionEnumeration("addrsize")]
                 public string AddressSize => this.TakeString("addrsize");

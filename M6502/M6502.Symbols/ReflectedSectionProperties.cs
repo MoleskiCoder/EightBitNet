@@ -15,6 +15,7 @@
                 public HashSet<string> HexIntegerKeys { get; } = [];
                 public HashSet<string> LongKeys { get; } = [];
                 public HashSet<string> HexLongKeys { get; } = [];
+                public HashSet<string> DateTimeKeys { get; } = [];
                 public HashSet<string> MultipleKeys { get; } = [];
 
                 public ReflectedSectionProperties(System.Type type)
@@ -83,6 +84,12 @@
                     Debug.Assert(added, $"<{key}> already has an entry");
                 }
 
+                public void AddDateTimeKey(string key)
+                {
+                    var added = this.DateTimeKeys.Add(key);
+                    Debug.Assert(added, $"<{key}> already has an entry");
+                }
+
                 private void ProcessSectionPropertyAttribute(System.Type originalType, SectionPropertyAttribute attribute)
                 {
                     var key = attribute.Key;
@@ -134,6 +141,10 @@
                         {
                             this.AddLongKey(key);
                         }
+                    }
+                    else if (type == typeof(DateTime) || type == typeof(Nullable<DateTime>))
+                    {
+                        this.AddDateTimeKey(key);
                     }
                     else
                     {

@@ -5,7 +5,7 @@
         namespace Symbols
         {
             //span id = 351, seg = 7, start = 0, size = 2, type = 2
-            public class Span(Parser container) : IdentifiableSection(container)
+            public sealed class Span(Parser container) : IdentifiableSection(container)
             {
                 [SectionReference("seg")]
                 public Symbols.Segment Segment => this.TakeSegmentReference();

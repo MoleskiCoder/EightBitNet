@@ -12,12 +12,14 @@
             public class Section
             {
                 protected static readonly Dictionary<System.Type, ReflectedSectionProperties> _sectionPropertiesCache = [];
+                protected static readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
                 protected readonly Parser _container;
 
                 protected readonly Dictionary<string, string> _strings = [];
                 protected readonly Dictionary<string, int> _integers = [];
                 protected readonly Dictionary<string, long> _longs = [];
+                protected readonly Dictionary<string, DateTime> _dateTimes = [];
                 protected readonly Dictionary<string, List<int>> _multiples = [];
 
                 protected ReflectedSectionProperties SectionProperties
@@ -80,6 +82,10 @@
                     {
                         this._longs.Add(key, ExtractHexLong(value));
                     }
+                    else if (this.SectionProperties.DateTimeKeys.Contains(key))
+                    {
+                        this._dateTimes.Add(key, ExtractDateTime(value));
+                    }
                     else if (this.SectionProperties.MultipleKeys.Contains(key))
                     {
                         this._multiples.Add(key, ExtractCompoundInteger(value));
@@ -92,11 +98,13 @@
 
                 protected int? MaybeTakeInteger(string key) => this._integers.TryGetValue(key, out var value) ? value : null;
                 protected long? MaybeTakeLong(string key) => this._longs.TryGetValue(key, out var value) ? value : null;
+                protected DateTime? MaybeTakeDateTime(string key) => this._dateTimes.TryGetValue(key, out var value) ? value : null;
                 protected string? MaybeTakeString(string key) => this._strings.TryGetValue(key, out var value) ? value : null;
                 protected List<int>? MaybeTakeMultiple(string key) => this._multiples.TryGetValue(key, out var value) ? value : null;
 
                 protected int TakeInteger(string key) => this.MaybeTakeInteger(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing integer entry in section");
                 protected long TakeLong(string key) => this.MaybeTakeLong(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing long integer entry in section");
+                protected DateTime TakeDateTime(string key) => this.MaybeTakeDateTime(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing DateTime entry in section");
                 protected string TakeString(string key) => this.MaybeTakeString(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing string entry in section");
                 protected List<int> TakeMultiple(string key) => this.MaybeTakeMultiple(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing multiple entry in section");
 
@@ -110,6 +118,7 @@
                 protected static long ExtractHexLong(string value) => ExtractHexValue<long>(value);
                 protected static int ExtractInteger(string value) => ExtractNumericValue<int>(value);
                 protected static long ExtractLong(string value) => ExtractNumericValue<long>(value);
+                protected static DateTime ExtractDateTime(string value) => _unixEpoch.AddSeconds(ExtractHexLong(value));
                 protected static string[] ExtractCompoundString(string value) => value.Split('+');
 
                 protected static List<int> ExtractCompoundInteger(string value)
