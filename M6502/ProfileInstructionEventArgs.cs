@@ -1,6 +1,6 @@
 ﻿namespace EightBit
 {
-    public class ProfileInstructionEventArgs(byte instruction, long cycles, long count) : EventArgs
+    public sealed class ProfileInstructionEventArgs(byte instruction, long cycles, long count) : EventArgs
     {
         public byte Instruction { get; } = instruction;
 
