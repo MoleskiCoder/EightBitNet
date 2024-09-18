@@ -4,12 +4,8 @@
 
 namespace EightBit
 {
-    public class IntelOpCodeDecoded
+    public sealed class IntelOpCodeDecoded
     {
-        public IntelOpCodeDecoded()
-        {
-        }
-
         public IntelOpCodeDecoded(byte opCode)
         {
             this.X = (opCode & 0b11000000) >> 6;    // 0 - 3

@@ -11,10 +11,6 @@ namespace EightBit
         private readonly byte[] input = new byte[0x100];
         private readonly byte[] output = new byte[0x100];
 
-        public InputOutput()
-        {
-        }
-
         public event EventHandler<PortEventArgs>? ReadingPort;
 
         public event EventHandler<PortEventArgs>? ReadPort;

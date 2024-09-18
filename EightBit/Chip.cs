@@ -6,10 +6,6 @@ namespace EightBit
 {
     public class Chip : Device
     {
-        protected Chip()
-        {
-        }
-
         public static byte Bit(int which) => (byte)(1 << which);
 
         public static byte Bit(byte which) => Bit((int)which);

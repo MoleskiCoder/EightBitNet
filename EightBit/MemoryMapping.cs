@@ -4,7 +4,7 @@
 
 namespace EightBit
 {
-    public class MemoryMapping(Memory memory, ushort begin, ushort mask, AccessLevel access)
+    public sealed class MemoryMapping(Memory memory, ushort begin, ushort mask, AccessLevel access)
     {
         public MemoryMapping(Memory memory, ushort begin, Mask mask, AccessLevel access)
         : this(memory, begin, (ushort)mask, access)

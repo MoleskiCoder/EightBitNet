@@ -7,14 +7,9 @@ namespace EightBit
     using System;
     using System.IO;
 
-    public class Rom(int size) : Memory
+    public class Rom(int size = 0) : Memory
     {
         private byte[] bytes = new byte[size];
-
-        public Rom()
-        : this(0)
-        {
-        }
 
         public override int Size => this.bytes.Length;
 

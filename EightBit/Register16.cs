@@ -7,7 +7,7 @@ namespace EightBit
     using System.Diagnostics;
 
     [DebuggerDisplay("Word = {Word}")]
-    public class Register16
+    public sealed class Register16
     {
         private byte low;
         private byte high;

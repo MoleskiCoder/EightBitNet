@@ -10,10 +10,6 @@ namespace EightBit
     {
         private PinLevel powerLine;
 
-        protected Device()
-        {
-        }
-
         public event EventHandler<EventArgs>? RaisingPOWER;
 
         public event EventHandler<EventArgs>? RaisedPOWER;
