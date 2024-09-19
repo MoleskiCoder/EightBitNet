@@ -9,7 +9,7 @@
             public class IdentifiableSection : Section
             {
                 [SectionProperty("id")]
-                public int ID { get; private set; }
+                public int ID { get; protected set; }
 
                 protected IdentifiableSection(Parser container)
                 : base(container)
@@ -76,12 +76,6 @@
                 #endregion
 
                 #endregion
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.ID = this.TakeInteger("id");
-                }
             }
         }
     }

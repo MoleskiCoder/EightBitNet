@@ -13,7 +13,7 @@
                 public Symbols.Module Module => this.TakeModuleReference();
 
                 [SectionProperty("type")]
-                public string? Type => this.MaybeTakeString("type");
+                public string? Type { get; private set; }
 
                 [SectionProperty("size")]
                 public int Size { get; private set; }
@@ -40,12 +40,6 @@
 
                 [SectionReferences("span")]
                 public List<Span> Spans => this.TakeSpanReferences();
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.Size = this.TakeInteger("size");
-                }
             }
         }
     }

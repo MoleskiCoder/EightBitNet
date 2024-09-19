@@ -8,10 +8,10 @@
             public sealed class File(Parser container) : NamedSection(container)
             {
                 [SectionProperty("size")]
-                public int Size => this.TakeInteger("size");
+                public int Size { get; private set; }
 
                 [SectionProperty("mtime")]
-                public DateTime ModificationTime => this.TakeDateTime("mtime");
+                public DateTime ModificationTime { get; private set; }
 
                 [SectionReference("mod")]
                 public Symbols.Module Module => this.TakeModuleReference();

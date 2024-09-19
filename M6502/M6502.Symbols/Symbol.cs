@@ -10,10 +10,10 @@
             public sealed class Symbol(Parser container) : NamedSection(container)
             {
                 [SectionEnumeration("addrsize")]
-                public string AddressSize => this.TakeString("addrsize");
+                public string? AddressSize { get; private set; }
 
                 [SectionProperty("size")]
-                public int? Size => this.MaybeTakeInteger("size");
+                public int? Size { get; private set; }
 
                 [SectionReference("scope")]
                 public Symbols.Scope Scope => this.TakeScopeReference();
@@ -31,13 +31,7 @@
                 public Symbols.Segment Segment => this.TakeSegmentReference();
 
                 [SectionEnumeration("type")]
-                public string Type => this.TakeString("type");
-
-                public override void Parse(IDictionary<string, string> entries)
-                {
-                    base.Parse(entries);
-                    this.Value = this.TakeInteger("val");
-                }
+                public string? Type { get; private set; }
             }
         }
     }

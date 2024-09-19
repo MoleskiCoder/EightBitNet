@@ -11,10 +11,10 @@
                 public Symbols.Segment Segment => this.TakeSegmentReference();
 
                 [SectionProperty("start")]
-                public int Start => this.TakeInteger("start");
+                public int Start { get; private set; }
 
                 [SectionProperty("size")]
-                public int Size => this.TakeInteger("size");
+                public int Size { get; private set; }
 
                 [SectionReference("type")]
                 public Symbols.Type Type => this.TakeTypeReference();

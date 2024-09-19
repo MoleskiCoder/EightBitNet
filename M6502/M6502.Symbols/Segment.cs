@@ -8,22 +8,22 @@
             public sealed class Segment(Parser container) : NamedSection(container)
             {
                 [SectionProperty("start", hexadecimal: true)]
-                public int Start => this.TakeInteger("start");
+                public int Start { get; private set; }
 
                 [SectionProperty("size", hexadecimal: true)]
-                public int Size => this.TakeInteger("size");
+                public int Size { get; private set; }
 
                 [SectionEnumeration("addrsize")]
-                public string AddressSize => this.TakeString("addrsize");
+                public string? AddressSize { get; private set; }
 
                 [SectionEnumeration("type")]
-                public string Type => this.TakeString("type");
+                public string? Type { get; private set; }
 
                 [SectionProperty("oname")]
-                public string OName => this.TakeString("oname");
+                public string? OName { get; private set; }
 
                 [SectionProperty("ooffs")]
-                public int? OOFFS => this.MaybeTakeInteger("ooffs");  // ?? Offsets, perhaps?
+                public int? OOFFS { get; private set; }
             }
         }
     }

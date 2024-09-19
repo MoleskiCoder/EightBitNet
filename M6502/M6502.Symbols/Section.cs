@@ -8,6 +8,7 @@
             using System.Diagnostics;
             using System.Globalization;
             using System.Numerics;
+            using System.Reflection;
 
             public class Section
             {
@@ -16,10 +17,7 @@
 
                 protected readonly Parser _container;
 
-                protected readonly Dictionary<string, string> _strings = [];
                 protected readonly Dictionary<string, int> _integers = [];
-                protected readonly Dictionary<string, long> _longs = [];
-                protected readonly Dictionary<string, DateTime> _dateTimes = [];
                 protected readonly Dictionary<string, List<int>> _multiples = [];
 
                 protected ReflectedSectionProperties SectionProperties
@@ -33,6 +31,7 @@
                         return properties;
                     }
                 }
+
                 protected Section(Parser container) => this._container = container;
 
                 protected void ProcessAttributesOfProperties()
@@ -45,6 +44,12 @@
                     }
                 }
 
+                public object? GetValue(string key) => this.SectionProperties.GetValue(this, key);
+
+                public T? MaybeGetValue<T>(string key) => this.SectionProperties.MaybeGetValue<T>(this, key);
+
+                public T GetValueT<T>(string key) => this.SectionProperties.GetValueT<T>(this, key);
+
                 public virtual void Parse(IDictionary<string, string> entries)
                 {
                     this.ProcessAttributesOfProperties();
@@ -54,41 +59,83 @@
                     }
                 }
 
-                private void Parse(KeyValuePair<string, string> entry)
+                private void Parse(KeyValuePair<string, string> entry) => this.Parse(entry.Key, entry.Value);
+
+                private void Parse(string key, string value)
                 {
-                    var key = entry.Key;
-                    var value = entry.Value;
-                    if (this.SectionProperties.StringKeys.Contains(key))
+                    var sectionProperties = this.SectionProperties;
+                    var propertyName = sectionProperties.GetPropertyNameFromEntryName(key);
+                    var propertyAvailable = sectionProperties.Properties.TryGetValue(propertyName, out var property);
+                    if (!propertyAvailable)
                     {
-                        this._strings.Add(key, ExtractString(value));
+                        throw new InvalidOperationException($"Unable to locate property name {propertyName} using reflection");
                     }
-                    else if (this.SectionProperties.EnumerationKeys.Contains(key))
+                    Debug.Assert(property != null);
+                    this.Parse(property, key, value);
+                }
+
+                private void Parse(PropertyInfo property, string key, string value)
+                {
+                    if (property.CanWrite)
                     {
-                        this._strings.Add(key, ExtractEnumeration(value));
+                        this.ParseValueProperty(property, key, value);                    }
+                    else
+                    {
+                        this.ParseReferenceProperty(key, value);
                     }
-                    else if (this.SectionProperties.IntegerKeys.Contains(key))
+                }
+
+                private void ParseReferenceProperty(string key, string value)
+                {
+                    var sectionProperties = this.SectionProperties;
+                    if (sectionProperties.IntegerKeys.Contains(key))
                     {
                         this._integers.Add(key, ExtractInteger(value));
                     }
-                    else if (this.SectionProperties.HexIntegerKeys.Contains(key))
-                    {
-                        this._integers.Add(key, ExtractHexInteger(value));
-                    }
-                    else if (this.SectionProperties.LongKeys.Contains(key))
-                    {
-                        this._longs.Add(key, ExtractLong(value));
-                    }
-                    else if (this.SectionProperties.HexLongKeys.Contains(key))
-                    {
-                        this._longs.Add(key, ExtractHexLong(value));
-                    }
-                    else if (this.SectionProperties.DateTimeKeys.Contains(key))
-                    {
-                        this._dateTimes.Add(key, ExtractDateTime(value));
-                    }
-                    else if (this.SectionProperties.MultipleKeys.Contains(key))
+                    else if (sectionProperties.MultipleKeys.Contains(key))
                     {
                         this._multiples.Add(key, ExtractCompoundInteger(value));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Doesn't appear to be a valid reference type: {key}");
+                    }
+                }
+
+                private void ParseValueProperty(PropertyInfo property, string key, string value)
+                {
+                    var sectionProperties = this.SectionProperties;
+                    if (sectionProperties.StringKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractString(value));
+                    }
+                    else if (sectionProperties.EnumerationKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractEnumeration(value));
+                    }
+                    else if (sectionProperties.IntegerKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractInteger(value));
+                    }
+                    else if (sectionProperties.HexIntegerKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractHexInteger(value));
+                    }
+                    else if (sectionProperties.LongKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractLong(value));
+                    }
+                    else if (sectionProperties.HexLongKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractHexLong(value));
+                    }
+                    else if (sectionProperties.DateTimeKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractDateTime(value));
+                    }
+                    else if (sectionProperties.MultipleKeys.Contains(key))
+                    {
+                        property?.SetValue(this, ExtractCompoundInteger(value));
                     }
                     else
                     {
@@ -97,16 +144,9 @@
                 }
 
                 protected int? MaybeTakeInteger(string key) => this._integers.TryGetValue(key, out var value) ? value : null;
-                protected long? MaybeTakeLong(string key) => this._longs.TryGetValue(key, out var value) ? value : null;
-                protected DateTime? MaybeTakeDateTime(string key) => this._dateTimes.TryGetValue(key, out var value) ? value : null;
-                protected string? MaybeTakeString(string key) => this._strings.TryGetValue(key, out var value) ? value : null;
                 protected List<int>? MaybeTakeMultiple(string key) => this._multiples.TryGetValue(key, out var value) ? value : null;
 
                 protected int TakeInteger(string key) => this.MaybeTakeInteger(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing integer entry in section");
-                protected long TakeLong(string key) => this.MaybeTakeLong(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing long integer entry in section");
-                protected DateTime TakeDateTime(string key) => this.MaybeTakeDateTime(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing DateTime entry in section");
-                protected string TakeString(string key) => this.MaybeTakeString(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing string entry in section");
-                protected List<int> TakeMultiple(string key) => this.MaybeTakeMultiple(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing multiple entry in section");
 
                 protected static string ExtractString(string value) => value.Trim('"');
                 protected static string ExtractEnumeration(string value) => value;

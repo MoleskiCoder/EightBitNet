@@ -11,13 +11,13 @@
                 public Symbols.File File => this.TakeFileReference();
 
                 [SectionProperty("line")]
-                public int LineNumber => this.TakeInteger("line");
+                public int LineNumber { get; private set; }
 
                 [SectionReference("type")]
                 public Symbols.Type Type => this.TakeTypeReference();
 
                 [SectionProperty("count")]
-                public int? Count => this.MaybeTakeInteger("count");
+                public int? Count { get; private set; }
 
                 [SectionReferences("span")]
                 public List<Span> Spans => this.TakeSpanReferences();

@@ -9,6 +9,9 @@
 
             public sealed class ReflectedSectionProperties
             {
+                private readonly Dictionary<string, string> _entriesToProperties = [];
+                private readonly Dictionary<string, string> _propertiesToEntries = [];
+
                 public HashSet<string> StringKeys { get; } = [];
                 public HashSet<string> EnumerationKeys { get; } = [];
                 public HashSet<string> IntegerKeys { get; } = [];
@@ -18,6 +21,8 @@
                 public HashSet<string> DateTimeKeys { get; } = [];
                 public HashSet<string> MultipleKeys { get; } = [];
 
+                public Dictionary<string, PropertyInfo> Properties { get; } = [];
+
                 public ReflectedSectionProperties(System.Type type)
                 {
                     foreach (var property in type.GetProperties())
@@ -26,20 +31,66 @@
                     }
                 }
 
+                public string GetPropertyNameFromEntryName(string name)
+                {
+                    var found = this._entriesToProperties.TryGetValue(name, out var propertyName);
+                    if (!found)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(name), name, "Missing property mapping");
+                    }
+                    Debug.Assert(propertyName != null);
+                    return propertyName;
+                }
+
+                public string GetEntryNameFromPropertyName(string name)
+                {
+                    var found = this._propertiesToEntries.TryGetValue(name, out var entryName);
+                    if (!found)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(name), name, "Missing entry mapping");
+                    }
+                    Debug.Assert(entryName != null);
+                    return entryName;
+                }
+
+                public object? GetValue(object? obj, string key)
+                {
+                    var propertyName = this.GetPropertyNameFromEntryName(key);
+                    var propertyAvailable = this.Properties.TryGetValue(propertyName, out var property);
+                    Debug.Assert(propertyAvailable);
+
+                    Debug.Assert(property != null);
+                    var readable = property?.CanRead;
+                    Debug.Assert(readable != null);
+                    Debug.Assert(readable.Value);
+
+                    return property?.GetValue(obj);
+                }
+
+                public T? MaybeGetValue<T>(object? obj, string key) => (T?)this.GetValue(obj, key);
+
+                public T GetValueT<T>(object? obj, string key)
+                {
+                    var possible = this.MaybeGetValue<T>(obj, key);
+                    return possible != null ? possible : throw new ArgumentOutOfRangeException(nameof(key), key, "Property read issue");
+                }
+
                 private void ProcessPropertyAttributes(PropertyInfo property)
                 {
                     var attributes = property.GetCustomAttributes(typeof(SectionPropertyAttribute), true);
                     if (attributes.Length > 0)
                     {
                         Debug.Assert(attributes.Length == 1, "Too many section property attributes");
-                        this.ProcessSectionPropertyAttribute(property.PropertyType, attributes[0]);
+                        var succeeded = this.Properties.TryAdd(property.Name, property);
+                        Debug.Assert(succeeded, $"Unable to add property lookup {property.Name}");
+                        this.ProcessSectionPropertyAttribute(property.PropertyType, property.Name, attributes[0]);
                     }
                 }
 
-                private void ProcessSectionPropertyAttribute(System.Type? type, object attribute)
+                private void ProcessSectionPropertyAttribute(System.Type? type, string name, object attribute)
                 {
                     ArgumentNullException.ThrowIfNull(type, nameof(type));
-                    this.ProcessSectionPropertyAttribute(type, (SectionPropertyAttribute)attribute);
+                    this.ProcessSectionPropertyAttribute(type, name, (SectionPropertyAttribute)attribute);
                 }
 
                 public void AddStringKey(string key)
@@ -90,9 +141,19 @@
                     Debug.Assert(added, $"<{key}> already has an entry");
                 }
 
-                private void ProcessSectionPropertyAttribute(System.Type originalType, SectionPropertyAttribute attribute)
+                private void ProcessSectionPropertyAttribute(System.Type originalType, string name, SectionPropertyAttribute attribute)
                 {
                     var key = attribute.Key;
+
+                    if (!_entriesToProperties.TryAdd(key, name))
+                    {
+                        throw new InvalidOperationException($"Entry {key} from attribute has already been added");
+                    }
+
+                    if (!_propertiesToEntries.TryAdd(name, key))
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(name), name, "Property has already been added");
+                    }
 
                     var multiples = attribute.Many;
                     if (multiples)

@@ -336,20 +336,13 @@
 
                 #region Metadata lookup
 
-                private int InformationCount(string key)
+                private void VerifyInformationCount(string key, int actual)
                 {
-                    if (this._information == null)
+                    Debug.Assert(this._information != null);
+                    var expected = this._information?.Count(key);
+                    if (expected != actual)
                     {
-                        throw new InvalidOperationException("Information section has not been initialised");
-                    }
-                    return this._information.Count(key);
-                }
-
-                private void VerifyInformationCount(string key, int extracted)
-                {
-                    if (extracted != this.InformationCount(key))
-                    {
-                        throw new InvalidOperationException($"Invalid symbol file format (Information/{key} section count mismatch)");
+                        throw new InvalidOperationException($"information count mismatch for {key}.  Expected {expected}, actual {actual}");
                     }
                 }
 
@@ -472,24 +465,6 @@
                     }
 
                     var dictionary = BuildDictionary(parts);
-                    if (!dictionary.TryGetValue("id", out var id))
-                    {
-                        throw new InvalidOperationException("Invalid symbol file format (definition does not have id)");
-                    }
-
-                    var identifier = int.Parse(id);
-
-                    if (this._information == null)
-                    {
-                        throw new InvalidOperationException("Invalid symbol file format (info section has not been parsed)");
-                    }
-
-                    var count = this._information.Count(key);
-                    if ((identifier + 1) > count)
-                    {
-                        throw new InvalidOperationException($"Invalid symbol file format (No count information available for {section})");
-                    }
-
                     section.Add(dictionary);
                 }
 
