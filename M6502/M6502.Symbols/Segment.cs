@@ -5,6 +5,7 @@
         namespace Symbols
         {
             // seg	id=1,name="RODATA",start=0x00F471,size=0x0000,addrsize=absolute,type=ro,oname="sudoku.65b",ooffs=1137
+            [Section("seg", "Segments")]
             public sealed class Segment(Parser container) : NamedSection(container)
             {
                 [SectionProperty("start", hexadecimal: true)]

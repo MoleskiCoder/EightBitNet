@@ -4,7 +4,8 @@
     {
         namespace Symbols
         {
-            using System.Collections.Generic;
+            using System.Collections;
+            using System.Diagnostics;
 
             public class IdentifiableSection : Section
             {
@@ -15,67 +16,80 @@
                 : base(container)
                 {}
 
-                #region Foreign key constraints
-
-                #region Generic FK access
-
-                protected static T TakeReference<T>(int key, List<T>? from) where T : IdentifiableSection
+                private bool MaybeExtractFromParsed(string key, out string value)
                 {
-                    ArgumentNullException.ThrowIfNull(from);
-                    var identifiable = from[key];
-                    ArgumentOutOfRangeException.ThrowIfNotEqual(identifiable.ID, key, nameof(key));
-                    return identifiable;
-                }
-
-                protected T TakeReference<T>(string key, List<T>? from) where T : IdentifiableSection => TakeReference(this.TakeInteger(key), from);
-
-                protected T? MaybeTakeReference<T>(string key, List<T>? from) where T : IdentifiableSection
-                {
-                    var id = this.MaybeTakeInteger(key);
-                    return id == null ? null : TakeReference(id.Value, from);
-                }
-
-                protected List<T> TakeReferences<T>(string key, List<T>? from) where T : IdentifiableSection
-                {
-                    ArgumentNullException.ThrowIfNull(from);
-                    var ids = this.MaybeTakeMultiple(key);
-                    if (ids != null)
+                    Debug.Assert(this._parsed != null);
+                    var found = this._parsed.TryGetValue(key, out var extracted);
+                    if (found)
                     {
-                        var returned = new List<T>(ids.Count);
-                        foreach (var id in ids)
-                        {
-                            returned.Add(from[id]);
-                        }
-                        return returned;
+                        Debug.Assert(extracted != null);
+                        value = extracted;
                     }
-                    return [];
+                    else
+                    {
+                        value = string.Empty;
+                    }
+                    return found;
                 }
 
-                #endregion
+                private bool MaybeExtractIntegerFromParsed(string key, out int value)
+                {
+                    var available = this.MaybeExtractFromParsed(key, out var extracted);
+                    if (!available)
+                    {
+                        value = 0;
+                        return false;
+                    }
+                    value = ExtractInteger(extracted);
+                    return available;
+                }
 
-                #region Specific FK access
+                private void SetProperty(string name, object obj)
+                {
+                    var type = this.GetType();
+                    var property = type.GetProperty(name);
+                    Debug.Assert(property != null);
+                    property.SetValue(this, obj);
+                }
 
-                protected Module TakeModuleReference(string key = "mod") => this.TakeReference<Module>(key, this._container?.Modules);
+                public void ExtractReferences()
+                {
+                    var sectionProperties = this.SectionProperties;
+                    foreach (var (entryName, connection) in sectionProperties.ReferenceAttributes)
+                    {
+                        var hasID = this.MaybeExtractIntegerFromParsed(entryName, out var id);
+                        if (!hasID)
+                        {
+                            continue;
+                        }
 
-                protected File TakeFileReference(string key = "file") => this.TakeReference<File>(key, this._container?.Files);
+                        var (name, type, attribute) = connection;
 
-                protected Type TakeTypeReference(string key = "type") => this.TakeReference<Type>(key, this._container?.Types);
+                        // The reference container in the parent class
+                        var referenceSectionProperties = GetSectionProperties(type);
+                        var referenceClassAttribute = referenceSectionProperties.ClassAttribute;
+                        Debug.Assert(referenceClassAttribute != null);
+                        var referencingContainer = referenceClassAttribute.Referencing;
 
-                protected Segment TakeSegmentReference(string key = "seg") => this.TakeReference<Segment>(key, this._container?.Segments);
+                        // Get the parent container field
+                        var containerType = this._container.GetType();
+                        Debug.Assert(referencingContainer != null);
+                        var containerField = containerType.GetField(referencingContainer);
+                        Debug.Assert(containerField != null);
+                        var fieldValue = containerField.GetValue(this._container);
+                        var fieldList = fieldValue as IList;
 
-                protected Scope TakeScopeReference(string key = "scope") => this.TakeReference<Scope>(key, this._container?.Scopes);
+                        // The reference ID
 
-                protected Scope? MaybeTakeParentReference(string key = "parent") => this.MaybeTakeReference<Scope>(key, this._container?.Scopes);
+                        // Now get the referenced object from the parent container field (via ID as an index)
+                        Debug.Assert(fieldList != null);
+                        var referencingObject = fieldList[id];
 
-                protected Symbol? MaybeTakeSymbolReference(string key = "sym") => this.MaybeTakeReference<Symbol>(key, this._container?.Symbols);
-
-                protected List<Span> TakeSpanReferences(string key = "span") => this.TakeReferences<Span>(key, this._container?.Spans);
-
-                protected List<Line> TakeLineReferences(string key) => this.TakeReferences<Line>(key, this._container?.Lines);
-
-                #endregion
-
-                #endregion
+                        // Now set our reference field
+                        Debug.Assert(referencingObject != null);
+                        this.SetProperty(name, referencingObject);
+                    }
+                }
             }
         }
     }

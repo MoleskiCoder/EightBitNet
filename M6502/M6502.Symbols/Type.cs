@@ -5,6 +5,7 @@
         namespace Symbols
         {
             // type id = 0, val = "800920"
+            [Section("type", "Types")]
             public sealed class Type(Parser container) : IdentifiableSection(container)
             {
                 [SectionProperty("val")]

@@ -17,19 +17,20 @@
 
                 protected readonly Parser _container;
 
-                protected readonly Dictionary<string, int> _integers = [];
-                protected readonly Dictionary<string, List<int>> _multiples = [];
+                // Needed to evaluate references on a second pass
+                protected readonly Dictionary<string, int> _references = [];
+                protected readonly Dictionary<string, List<int>> _multipleReferences = [];
 
-                protected ReflectedSectionProperties SectionProperties
+                protected Dictionary<string, string>? _parsed;
+
+                protected ReflectedSectionProperties SectionProperties => GetSectionProperties(this.GetType());
+
+                protected static ReflectedSectionProperties GetSectionProperties(System.Type type)
                 {
-                    get
-                    {
-                        var type = this.GetType();
-                        var obtained = _sectionPropertiesCache.TryGetValue(type, out var properties);
-                        Debug.Assert(obtained, $"Section properties for {type.Name} have not been built");
-                        Debug.Assert(properties != null);
-                        return properties;
-                    }
+                    var obtained = _sectionPropertiesCache.TryGetValue(type, out var properties);
+                    Debug.Assert(obtained, $"Section properties for {type.Name} have not been built");
+                    Debug.Assert(properties != null);
+                    return properties;
                 }
 
                 protected Section(Parser container) => this._container = container;
@@ -44,14 +45,12 @@
                     }
                 }
 
-                public object? GetValue(string key) => this.SectionProperties.GetValue(this, key);
-
-                public T? MaybeGetValue<T>(string key) => this.SectionProperties.MaybeGetValue<T>(this, key);
-
                 public T GetValueT<T>(string key) => this.SectionProperties.GetValueT<T>(this, key);
 
-                public virtual void Parse(IDictionary<string, string> entries)
+                public virtual void Parse(Dictionary<string, string> entries)
                 {
+                    this._parsed = entries;
+                    this._container.SectionEntries.Add(this);
                     this.ProcessAttributesOfProperties();
                     foreach (var entry in entries)
                     {
@@ -63,9 +62,8 @@
 
                 private void Parse(string key, string value)
                 {
-                    var sectionProperties = this.SectionProperties;
-                    var propertyName = sectionProperties.GetPropertyNameFromEntryName(key);
-                    var propertyAvailable = sectionProperties.Properties.TryGetValue(propertyName, out var property);
+                    var propertyName = this.SectionProperties.GetPropertyNameFromEntryName(key);
+                    var propertyAvailable = this.SectionProperties.Properties.TryGetValue(propertyName, out var property);
                     if (!propertyAvailable)
                     {
                         throw new InvalidOperationException($"Unable to locate property name {propertyName} using reflection");
@@ -76,64 +74,56 @@
 
                 private void Parse(PropertyInfo property, string key, string value)
                 {
-                    if (property.CanWrite)
-                    {
-                        this.ParseValueProperty(property, key, value);                    }
-                    else
-                    {
-                        this.ParseReferenceProperty(key, value);
-                    }
-                }
+                    var reference = this.SectionProperties.ReferenceAttributes.ContainsKey(key);
+                    var references = this.SectionProperties.ReferencesAttributes.ContainsKey(key);
+                    var lazy = reference || references;
 
-                private void ParseReferenceProperty(string key, string value)
-                {
-                    var sectionProperties = this.SectionProperties;
-                    if (sectionProperties.IntegerKeys.Contains(key))
+                    if (lazy)
                     {
-                        this._integers.Add(key, ExtractInteger(value));
+                        if (reference)
+                        {
+                            this._references[key] = ExtractInteger(value);
+                        }
+                        else if (references)
+                        {
+                            this._multipleReferences[key] = ExtractCompoundInteger(value);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Getting here should be impossible!  Lazy, but not a reference");
+                        }
+                        return;
                     }
-                    else if (sectionProperties.MultipleKeys.Contains(key))
-                    {
-                        this._multiples.Add(key, ExtractCompoundInteger(value));
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException($"Doesn't appear to be a valid reference type: {key}");
-                    }
-                }
 
-                private void ParseValueProperty(PropertyInfo property, string key, string value)
-                {
-                    var sectionProperties = this.SectionProperties;
-                    if (sectionProperties.StringKeys.Contains(key))
+                    if (this.SectionProperties.StringKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractString(value));
                     }
-                    else if (sectionProperties.EnumerationKeys.Contains(key))
+                    else if (this.SectionProperties.EnumerationKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractEnumeration(value));
                     }
-                    else if (sectionProperties.IntegerKeys.Contains(key))
+                    else if (this.SectionProperties.IntegerKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractInteger(value));
                     }
-                    else if (sectionProperties.HexIntegerKeys.Contains(key))
+                    else if (this.SectionProperties.HexIntegerKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractHexInteger(value));
                     }
-                    else if (sectionProperties.LongKeys.Contains(key))
+                    else if (this.SectionProperties.LongKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractLong(value));
                     }
-                    else if (sectionProperties.HexLongKeys.Contains(key))
+                    else if (this.SectionProperties.HexLongKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractHexLong(value));
                     }
-                    else if (sectionProperties.DateTimeKeys.Contains(key))
+                    else if (this.SectionProperties.DateTimeKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractDateTime(value));
                     }
-                    else if (sectionProperties.MultipleKeys.Contains(key))
+                    else if (this.SectionProperties.MultipleKeys.Contains(key))
                     {
                         property?.SetValue(this, ExtractCompoundInteger(value));
                     }
@@ -142,11 +132,6 @@
                         throw new InvalidOperationException($"Section: {key} has not been categorised");
                     }
                 }
-
-                protected int? MaybeTakeInteger(string key) => this._integers.TryGetValue(key, out var value) ? value : null;
-                protected List<int>? MaybeTakeMultiple(string key) => this._multiples.TryGetValue(key, out var value) ? value : null;
-
-                protected int TakeInteger(string key) => this.MaybeTakeInteger(key) ?? throw new ArgumentOutOfRangeException(nameof(key), key, "Missing integer entry in section");
 
                 protected static string ExtractString(string value) => value.Trim('"');
                 protected static string ExtractEnumeration(string value) => value;

@@ -5,6 +5,7 @@
         namespace Symbols
         {
             //info csym = 0, file = 3, lib = 0, line = 380, mod = 1, scope = 12, seg = 8, span = 356, sym = 61, type = 3
+            [Section("info")]
             public sealed class Information(Parser container) : Section(container)
             {
                 [SectionProperty("csym")]

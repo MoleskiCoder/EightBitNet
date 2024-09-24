@@ -10,7 +10,6 @@
             public sealed class ReflectedSectionProperties
             {
                 private readonly Dictionary<string, string> _entriesToProperties = [];
-                private readonly Dictionary<string, string> _propertiesToEntries = [];
 
                 public HashSet<string> StringKeys { get; } = [];
                 public HashSet<string> EnumerationKeys { get; } = [];
@@ -23,8 +22,23 @@
 
                 public Dictionary<string, PropertyInfo> Properties { get; } = [];
 
+                internal SectionAttribute? ClassAttribute { get; }
+
+                internal Dictionary<string, Tuple<string, System.Type, SectionPropertyAttribute>> Attributes { get; } = [];
+
+                internal Dictionary<string, Tuple<string, System.Type, SectionReferenceAttribute>> ReferenceAttributes { get; } = [];
+
+                internal Dictionary<string, Tuple<string, System.Type, SectionReferencesAttribute>> ReferencesAttributes { get; } = [];
+
                 public ReflectedSectionProperties(System.Type type)
                 {
+                    var sectionAttributes = type.GetCustomAttributes(typeof(SectionAttribute), true);
+                    Debug.Assert(sectionAttributes != null, "No section attributes available");
+                    Debug.Assert(sectionAttributes.Length == 1, "Must be a single section attribute available");
+                    var sectionAttribute = sectionAttributes[0];
+                    Debug.Assert(sectionAttribute != null, "Section attribute cannot be null");
+                    this.ClassAttribute = (SectionAttribute)sectionAttribute;
+
                     foreach (var property in type.GetProperties())
                     {
                         this.ProcessPropertyAttributes(property);
@@ -42,29 +56,27 @@
                     return propertyName;
                 }
 
-                public string GetEntryNameFromPropertyName(string name)
-                {
-                    var found = this._propertiesToEntries.TryGetValue(name, out var entryName);
-                    if (!found)
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(name), name, "Missing entry mapping");
-                    }
-                    Debug.Assert(entryName != null);
-                    return entryName;
-                }
-
-                public object? GetValue(object? obj, string key)
+                private PropertyInfo GetPropertyFromEntryName(string key)
                 {
                     var propertyName = this.GetPropertyNameFromEntryName(key);
                     var propertyAvailable = this.Properties.TryGetValue(propertyName, out var property);
                     Debug.Assert(propertyAvailable);
-
                     Debug.Assert(property != null);
-                    var readable = property?.CanRead;
-                    Debug.Assert(readable != null);
-                    Debug.Assert(readable.Value);
+                    return property;
+                }
 
-                    return property?.GetValue(obj);
+                public object? GetValue(object? obj, string key)
+                {
+                    var property = this.GetPropertyFromEntryName(key);
+                    Debug.Assert(property.CanRead);
+                    return property.GetValue(obj);
+                }
+
+                public void SetValue(object? obj, string key, object? value)
+                {
+                    var property = this.GetPropertyFromEntryName(key);
+                    Debug.Assert(property.CanWrite);
+                    property.SetValue(obj, value); ;
                 }
 
                 public T? MaybeGetValue<T>(object? obj, string key) => (T?)this.GetValue(obj, key);
@@ -150,9 +162,17 @@
                         throw new InvalidOperationException($"Entry {key} from attribute has already been added");
                     }
 
-                    if (!_propertiesToEntries.TryAdd(name, key))
+                    this.Attributes.Add(key, new Tuple<string, System.Type, SectionPropertyAttribute>(name, originalType, attribute));
+                    Debug.Assert(this.Attributes.Count == this.Properties.Count);
+
+                    if (attribute is SectionReferenceAttribute referenceAttribute)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(name), name, "Property has already been added");
+                        var success = this.ReferenceAttributes.TryAdd(key, new Tuple<string, System.Type, SectionReferenceAttribute>(name, originalType, referenceAttribute));
+                        Debug.Assert(success);
+                    } else if (attribute is SectionReferencesAttribute referencesAttribute)
+                    {
+                        var success = this.ReferencesAttributes.TryAdd(key, new Tuple<string, System.Type, SectionReferencesAttribute>(name, originalType, referencesAttribute));
+                        Debug.Assert(success);
                     }
 
                     var multiples = attribute.Many;

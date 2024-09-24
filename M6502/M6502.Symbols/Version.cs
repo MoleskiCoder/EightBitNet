@@ -5,6 +5,7 @@
         namespace Symbols
         {
             //version major = 2, minor = 0
+            [Section("version")]
             public sealed class Version(Parser container) : Section(container)
             {
                 [SectionProperty("major")]

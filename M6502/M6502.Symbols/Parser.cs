@@ -13,123 +13,29 @@
                 #region Variables, properties etc.
 
                 // Section -> Unique ID list of dictionary entries
-                private readonly Dictionary<string, List<Dictionary<string, string>>> _parsed = [];
 
                 private Version? _version;
                 private Information? _information;
 
-                private List<File>? _files;
-                private List<Line>? _lines;
-                private List<Module>? _modules;
-                private List<Segment>? _segments;
-                private List<Span>? _spans;
-                private List<Scope>? _scopes;
-                private List<Symbol>? _symbols;
-                private List<Type>? _types;
+                public Dictionary<string, List<Dictionary<string, string>>> Parsed { get; } = [];
 
-                public ref List<File>? Files
-                {
-                    get
-                    {
-                        if (this._files == null)
-                        {
-                            this.ExtractFiles();
-                        }
+                public List<Section> SectionEntries { get; } = [];
 
-                        return ref this._files;
-                    }
-                }
+                public List<File> Files = [];
 
-                public ref List<Line>? Lines
-                {
-                    get
-                    {
-                        if (this._lines == null)
-                        {
-                            this.ExtractLines();
-                        }
+                public List<Line> Lines = [];
 
-                        return ref this._lines;
-                    }
-                }
+                public List<Module> Modules = [];
 
-                public ref List<Module>? Modules
-                {
-                    get
-                    {
-                        if (this._modules == null)
-                        {
-                            this.ExtractModules();
-                        }
+                public List<Segment> Segments = [];
 
-                        return ref this._modules;
-                    }
-                }
+                public List<Span> Spans = [];
 
-                public ref List<Segment>? Segments
-                {
-                    get
-                    {
-                        if (this._segments == null)
-                        {
-                            this.ExtractSegments();
-                        }
+                public List<Scope> Scopes = [];
 
-                        return ref this._segments;
-                    }
-                }
+                public List<Symbol> Symbols = [];
 
-                public ref List<Span>? Spans
-                {
-                    get
-                    {
-                        if (this._spans == null)
-                        {
-                            this.ExtractSpans();
-                        }
-
-                        return ref this._spans;
-                    }
-                }
-
-                public ref List<Scope>? Scopes
-                {
-                    get
-                    {
-                        if (this._scopes == null)
-                        {
-                            this.ExtractScopes();
-                        }
-
-                        return ref this._scopes;
-                    }
-                }
-
-                public ref List<Symbol>? Symbols
-                {
-                    get
-                    {
-                        if (this._symbols == null)
-                        {
-                            this.ExtractSymbols();
-                        }
-
-                        return ref this._symbols;
-                    }
-                }
-
-                public ref List<Type>? Types
-                {
-                    get
-                    {
-                        if (this._types == null)
-                        {
-                            this.ExtractTypes();
-                        }
-
-                        return ref this._types;
-                    }
-                }
+                public List<Type> Types = [];
 
                 // Symbol sub-types
                 public IEnumerable<Symbol> Labels => this.SelectSymbolsByType("lab");
@@ -160,8 +66,6 @@
 
                 #region Lookups
 
-                private static IEnumerable<T> SelectNameMatching<T>(string name, IEnumerable<T>? items) where T : NamedSection => from item in items where item.Name == name select item;
-
                 private static IEnumerable<T> SelectIdMatching<T>(int id, IEnumerable<T>? items) where T : IdentifiableSection => from item in items where item.ID == id select item;
 
                 private IEnumerable<Symbol> SelectSymbolsByType(string type) => from symbol in this.Symbols where symbol.Type == type select symbol;
@@ -173,14 +77,6 @@
                 public Symbol? LookupLabelByAddress(int address)
                 {
                     var labels = this.LookupLabelsByAddress(address).ToList();
-                    return labels.Count > 0 ? labels[0] : null;
-                }
-
-                private IEnumerable<Symbol> LookupLabelsByName(string name) => SelectNameMatching(name, this.Labels);
-
-                public Symbol? LookupLabelByName(string name)
-                {
-                    var labels = this.LookupLabelsByName(name).ToList();
                     return labels.Count > 0 ? labels[0] : null;
                 }
 
@@ -263,8 +159,9 @@
 
                 #region Scope evaluation
 
-                private static List<Scope> EvaluateScope(Scope start)
+                private static List<Scope> EvaluateScope(Scope? start)
                 {
+                    Debug.Assert(start != null);
                     var returned = new List<Scope>();
                     for (var current = start; current.Parent != null; current = current.Parent)
                     {
@@ -334,7 +231,57 @@
 
                 #endregion
 
-                #region Metadata lookup
+                #region Section extractors
+
+                private void ExtractSections()
+                {
+                    this.ExtractFiles();
+                    this.ExtractLines();
+                    this.ExtractModules();
+                    this.ExtractSegments();
+                    this.ExtractSpans();
+                    this.ExtractScopes();
+                    this.ExtractSymbols();
+                    this.ExtractTypes();
+                }
+
+                private void ExtractFiles() => this.Extract<File>("file", this.Files);
+
+                private void ExtractLines() => this.Extract<Line>("line", this.Lines);
+
+                private void ExtractModules() => this.Extract<Module>("mod", this.Modules);
+
+                private void ExtractSegments() => this.Extract<Segment>("seg", this.Segments);
+
+                private void ExtractSpans() => this.Extract<Span>("span", this.Spans);
+
+                private void ExtractScopes() => this.Extract<Scope>("scope", this.Scopes);
+
+                private void ExtractSymbols() => this.Extract<Symbol>("sym", this.Symbols);
+
+                private void ExtractTypes() => this.Extract<Type>("type", this.Types);
+
+                private void Extract<T>(string key, List<T> into) where T : IdentifiableSection
+                {
+                    if (!this.Parsed.TryGetValue(key, out var parsed))
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(key), key, "Debugging section is unavailable");
+                    }
+
+                    into.Capacity = parsed.Count;
+                    for (var id = 0; id < parsed.Count; ++id)
+                    {
+                        Debug.Assert(into.Count == id);
+                        var entry = (T?)Activator.CreateInstance(typeof(T), this);
+                        Debug.Assert(entry != null);
+                        var information = parsed[id];
+                        entry.Parse(information);
+                        into.Add(entry);
+                    }
+                    Debug.Assert(into.Count == parsed.Count);
+
+                    this.VerifyInformationCount(key, into.Count);
+                }
 
                 private void VerifyInformationCount(string key, int actual)
                 {
@@ -348,50 +295,15 @@
 
                 #endregion
 
-                #region Section extractors
+                #region Reference extractors
 
-                private void ExtractFiles() => this.Extract<File>("file", ref this._files);
-
-                private void ExtractLines() => this.Extract<Line>("line", ref this._lines);
-
-                private void ExtractModules() => this.Extract<Module>("mod", ref this._modules);
-
-                private void ExtractSegments() => this.Extract<Segment>("seg", ref this._segments);
-
-                private void ExtractSpans() => this.Extract<Span>("span", ref this._spans);
-
-                private void ExtractScopes() => this.Extract<Scope>("scope", ref this._scopes);
-
-                private void ExtractSymbols() => this.Extract<Symbol>("sym", ref this._symbols);
-
-                private void ExtractTypes() => this.Extract<Type>("type", ref this._types);
-
-                private void Extract<T>(string key, ref List<T>? into) where T : IdentifiableSection
+                private void ExtractReferences()
                 {
-                    if (this._parsed.Count == 0)
+                    foreach (var entry in this.SectionEntries)
                     {
-                        into = [];
-                        return;
+                        var identifiableEntry = entry as IdentifiableSection;
+                        identifiableEntry?.ExtractReferences();
                     }
-
-                    if (!this._parsed.TryGetValue(key, out var parsed))
-                    {
-                        throw new ArgumentOutOfRangeException(nameof(key), key, "Debugging section is unavailable");
-                    }
-
-                    into = new List<T>(parsed.Count);
-                    for (var id = 0; id < parsed.Count; ++id)
-                    {
-                        Debug.Assert(into.Count == id);
-                        var entry = (T?)Activator.CreateInstance(typeof(T), this);
-                        Debug.Assert(entry != null);
-                        var information = parsed[id];
-                        entry.Parse(information);
-                        into.Add(entry);
-                    }
-                    Debug.Assert(into.Count == parsed.Count);
-
-                    this.VerifyInformationCount(key, into.Count);
                 }
 
                 #endregion
@@ -407,6 +319,9 @@
 
                     using var reader = new StreamReader(path);
                     await this.ParseAsync(reader);
+
+                    this.ExtractSections();
+                    this.ExtractReferences();
                 }
 
                 private async Task ParseAsync(StreamReader reader)
@@ -458,10 +373,10 @@
 
                 private void Parse(string key, string[] parts)
                 {
-                    if (!this._parsed.TryGetValue(key, out var section))
+                    if (!this.Parsed.TryGetValue(key, out var section))
                     {
-                        this._parsed[key] = [];
-                        section = this._parsed[key];
+                        this.Parsed[key] = [];
+                        section = this.Parsed[key];
                     }
 
                     var dictionary = BuildDictionary(parts);
