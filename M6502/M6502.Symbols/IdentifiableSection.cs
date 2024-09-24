@@ -4,6 +4,7 @@
     {
         namespace Symbols
         {
+            using System;
             using System.Collections;
             using System.Diagnostics;
 
@@ -54,41 +55,40 @@
 
                 public void ExtractReferences()
                 {
-                    var sectionProperties = this.SectionProperties;
-                    foreach (var (entryName, connection) in sectionProperties.ReferenceAttributes)
+                    foreach (var (entryName, connection) in this.SectionProperties.ReferenceAttributes)
                     {
                         var hasID = this.MaybeExtractIntegerFromParsed(entryName, out var id);
-                        if (!hasID)
+                        if (hasID)
                         {
-                            continue;
+                            var (name, type, _) = connection;
+                            this.ExtractReference(id, name, type);
                         }
-
-                        var (name, type, attribute) = connection;
-
-                        // The reference container in the parent class
-                        var referenceSectionProperties = GetSectionProperties(type);
-                        var referenceClassAttribute = referenceSectionProperties.ClassAttribute;
-                        Debug.Assert(referenceClassAttribute != null);
-                        var referencingContainer = referenceClassAttribute.Referencing;
-
-                        // Get the parent container field
-                        var containerType = this._container.GetType();
-                        Debug.Assert(referencingContainer != null);
-                        var containerField = containerType.GetField(referencingContainer);
-                        Debug.Assert(containerField != null);
-                        var fieldValue = containerField.GetValue(this._container);
-                        var fieldList = fieldValue as IList;
-
-                        // The reference ID
-
-                        // Now get the referenced object from the parent container field (via ID as an index)
-                        Debug.Assert(fieldList != null);
-                        var referencingObject = fieldList[id];
-
-                        // Now set our reference field
-                        Debug.Assert(referencingObject != null);
-                        this.SetProperty(name, referencingObject);
                     }
+                }
+
+                private void ExtractReference(int id, string name, System.Type type)
+                {
+                    // The reference container in the parent class
+                    var referenceSectionProperties = GetSectionProperties(type);
+                    var referenceClassAttribute = referenceSectionProperties.ClassAttribute;
+                    Debug.Assert(referenceClassAttribute != null);
+                    var referencingContainer = referenceClassAttribute.Referencing;
+
+                    // Get the parent container field
+                    var containerType = this._container.GetType();
+                    Debug.Assert(referencingContainer != null);
+                    var containerField = containerType.GetField(referencingContainer);
+                    Debug.Assert(containerField != null);
+                    var fieldValue = containerField.GetValue(this._container);
+                    var fieldList = fieldValue as IList;
+
+                    // Now get the referenced object from the parent container field (via ID as an index)
+                    Debug.Assert(fieldList != null);
+                    var referencingObject = fieldList[id];
+
+                    // Now set our reference field
+                    Debug.Assert(referencingObject != null);
+                    this.SetProperty(name, referencingObject);
                 }
             }
         }
