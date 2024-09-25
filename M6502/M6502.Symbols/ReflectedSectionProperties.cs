@@ -22,7 +22,7 @@
 
                 public Dictionary<string, PropertyInfo> Properties { get; } = [];
 
-                internal SectionAttribute? ClassAttribute { get; }
+                internal SectionAttribute? ClassAttribute { get; private set; }
 
                 internal Dictionary<string, Tuple<string, System.Type, SectionPropertyAttribute>> Attributes { get; } = [];
 
@@ -30,7 +30,11 @@
 
                 internal Dictionary<string, Tuple<string, System.Type, SectionReferencesAttribute>> ReferencesAttributes { get; } = [];
 
-                public ReflectedSectionProperties(System.Type type)
+                //public ReflectedSectionProperties()
+                //{
+                //}
+
+                public void Build(System.Type type)
                 {
                     var sectionAttributes = type.GetCustomAttributes(typeof(SectionAttribute), true);
                     Debug.Assert(sectionAttributes != null, "No section attributes available");
@@ -93,8 +97,7 @@
                     if (attributes.Length > 0)
                     {
                         Debug.Assert(attributes.Length == 1, "Too many section property attributes");
-                        var succeeded = this.Properties.TryAdd(property.Name, property);
-                        Debug.Assert(succeeded, $"Unable to add property lookup {property.Name}");
+                        this.Properties.Add(property.Name, property);
                         this.ProcessSectionPropertyAttribute(property.PropertyType, property.Name, attributes[0]);
                     }
                 }
@@ -157,22 +160,17 @@
                 {
                     var key = attribute.Key;
 
-                    if (!_entriesToProperties.TryAdd(key, name))
-                    {
-                        throw new InvalidOperationException($"Entry {key} from attribute has already been added");
-                    }
+                    this._entriesToProperties.Add(key, name);
 
                     this.Attributes.Add(key, new Tuple<string, System.Type, SectionPropertyAttribute>(name, originalType, attribute));
                     Debug.Assert(this.Attributes.Count == this.Properties.Count);
 
                     if (attribute is SectionReferenceAttribute referenceAttribute)
                     {
-                        var success = this.ReferenceAttributes.TryAdd(key, new Tuple<string, System.Type, SectionReferenceAttribute>(name, originalType, referenceAttribute));
-                        Debug.Assert(success);
+                        this.ReferenceAttributes.Add(key, new Tuple<string, System.Type, SectionReferenceAttribute>(name, originalType, referenceAttribute));
                     } else if (attribute is SectionReferencesAttribute referencesAttribute)
                     {
-                        var success = this.ReferencesAttributes.TryAdd(key, new Tuple<string, System.Type, SectionReferencesAttribute>(name, originalType, referencesAttribute));
-                        Debug.Assert(success);
+                        this.ReferencesAttributes.Add(key, new Tuple<string, System.Type, SectionReferencesAttribute>(name, originalType, referencesAttribute));
                     }
 
                     var multiples = attribute.Many;

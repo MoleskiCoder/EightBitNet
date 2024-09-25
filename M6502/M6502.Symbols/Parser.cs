@@ -375,12 +375,9 @@
                 {
                     if (!this.Parsed.TryGetValue(key, out var section))
                     {
-                        this.Parsed[key] = [];
-                        section = this.Parsed[key];
+                        this.Parsed.Add(key, section = []);
                     }
-
-                    var dictionary = BuildDictionary(parts);
-                    section.Add(dictionary);
+                    section.Add(BuildDictionary(parts));
                 }
 
                 private static Dictionary<string, string> BuildDictionary(string[] parts)
@@ -396,7 +393,7 @@
 
                         var key = definition[0];
                         var value = definition[1];
-                        dictionary[key] = value;
+                        dictionary.Add(key, value);
                     }
 
                     return dictionary;

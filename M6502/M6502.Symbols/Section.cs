@@ -38,10 +38,11 @@
                 protected void ProcessAttributesOfProperties()
                 {
                     var type = this.GetType();
+                    var entry = new ReflectedSectionProperties();
                     Debug.Assert(_sectionPropertiesCache != null);
-                    if (!_sectionPropertiesCache.ContainsKey(type))
+                    if (_sectionPropertiesCache.TryAdd(type, entry))
                     {
-                        _sectionPropertiesCache.Add(type, new ReflectedSectionProperties(type));
+                        entry.Build(type);
                     }
                 }
 
@@ -82,15 +83,15 @@
                     {
                         if (reference)
                         {
-                            this._references[key] = ExtractInteger(value);
+                            this._references.Add(key, ExtractInteger(value));
                         }
                         else if (references)
                         {
-                            this._multipleReferences[key] = ExtractCompoundInteger(value);
+                            this._multipleReferences.Add(key, ExtractCompoundInteger(value));
                         }
                         else
                         {
-                            throw new InvalidOperationException("Getting here should be impossible!  Lazy, but not a reference");
+                            throw new InvalidOperationException($"Getting here should be impossible!  Key {key} is lazy, but not a reference");
                         }
                         return;
                     }
