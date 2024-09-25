@@ -37,27 +37,13 @@
 
                 public List<Type> Types = [];
 
+
                 // Symbol sub-types
                 public IEnumerable<Symbol> Labels => this.SelectSymbolsByType("lab");
                 public IEnumerable<Symbol> Equates => this.SelectSymbolsByType("equ");
 
                 // Scope clarification
-                private List<Scope>? _addressableScopes;
-
-                public List<Scope> AddressableScopes
-                {
-                    get
-                    {
-                        if (_addressableScopes == null)
-                        {
-                            var scopes = from scope in this.Scopes where scope.Symbol != null select scope;
-                            this._addressableScopes = [];
-                            this._addressableScopes.AddRange(scopes);
-                        }
-
-                        return this._addressableScopes;
-                    }
-                }
+                public List<Scope> AddressableScopes = [];
 
                 // Scope cache for precomputed ranges
                 private readonly int?[] _scopeAddressCache = new int?[0x10000];
@@ -295,8 +281,6 @@
 
                 #endregion
 
-                #region Reference extractors
-
                 private void ExtractReferences()
                 {
                     foreach (var entry in this.SectionEntries)
@@ -306,7 +290,11 @@
                     }
                 }
 
-                #endregion
+                private void BuildAddressableScopes()
+                {
+                    var scopes = from scope in this.Scopes where scope.Symbol != null select scope;
+                    this.AddressableScopes.AddRange(scopes);
+                }
 
                 #region Parser driver
 
@@ -322,6 +310,7 @@
 
                     this.ExtractSections();
                     this.ExtractReferences();
+                    this.BuildAddressableScopes();
                 }
 
                 private async Task ParseAsync(StreamReader reader)
