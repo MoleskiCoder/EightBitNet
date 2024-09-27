@@ -54,10 +54,7 @@ namespace EightBit
 
         private static byte[] ParseDataRecord(string line, byte count)
         {
-            if (string.IsNullOrEmpty(line))
-            {
-                throw new ArgumentNullException(nameof(line));
-            }
+            ArgumentNullException.ThrowIfNullOrEmpty(line);
 
             var requiredLength = 9 + 2 + (count * 2);
             if (line.Length != requiredLength)
@@ -78,10 +75,7 @@ namespace EightBit
 
         private Tuple<ushort, byte[]>? Parse(string line)
         {
-            if (string.IsNullOrEmpty(line))
-            {
-                throw new ArgumentNullException(nameof(line));
-            }
+            ArgumentNullException.ThrowIfNullOrEmpty(line);
 
             var colon = line[..1];
             if (colon != ":")
