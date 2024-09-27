@@ -9,9 +9,11 @@ namespace Z80.Test
 
     internal class TestHarness(Configuration configuration) : IDisposable
     {
+        private readonly Process process = Process.GetCurrentProcess();
         private readonly Stopwatch timer = new();
         private readonly Board board = new(configuration);
         private long totalCycles = 0;
+        private TimeSpan totalUserProcessorTime;
 
         private bool disposed = false;
 
@@ -20,21 +22,29 @@ namespace Z80.Test
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
+        public long ElapsedMilliseconds => this.timer.ElapsedMilliseconds;
+
+        public float ElapsedSeconds => this.ElapsedMilliseconds / 1000.0f;
+
+        public float CyclesPerSecond => this.totalCycles / this.ElapsedSeconds;
 
         public void Run()
         {
+            this.timer.Start();
+            var startingUsage = this.process.UserProcessorTime;
+
             this.board.Initialize();
             this.board.RaisePOWER();
 
             var cpu = this.board.CPU;
-
-            this.timer.Start();
             while (cpu.Powered)
             {
                 this.totalCycles += cpu.Step();
             }
 
+            var finishingUsage = this.process.UserProcessorTime;
             this.timer.Stop();
+            this.totalUserProcessorTime = finishingUsage - startingUsage;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -43,8 +53,13 @@ namespace Z80.Test
             {
                 if (disposing)
                 {
-                    System.Console.Out.WriteLine($"\n\nGuest cycles = {this.totalCycles}");
-                    System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
+                    System.Console.Out.WriteLine();
+
+                    System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles:N0}");
+                    System.Console.Out.WriteLine($"Seconds = {this.ElapsedSeconds}");
+
+                    System.Console.Out.WriteLine($"{this.CyclesPerSecond / 1000000} MHz");
+                    System.Console.Out.WriteLine($"Processor time = {this.totalUserProcessorTime.TotalSeconds:g}");
                 }
 
                 this.disposed = true;
