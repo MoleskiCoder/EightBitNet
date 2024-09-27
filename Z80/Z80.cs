@@ -1424,7 +1424,11 @@ namespace EightBit
                                     this.XHTL(this.HL2());
                                     break;
                                 case 5: // EX DE,HL
-                                    (this.DE.Word, this.HL.Word) = (this.HL.Word, this.DE.Word);
+                                    {
+                                        this.Intermediate.Assign(this.DE);
+                                        this.DE.Assign(this.HL);
+                                        this.HL.Assign(this.Intermediate);
+                                    }
                                     break;
                                 case 6: // DI
                                     this.DisableInterrupts();
