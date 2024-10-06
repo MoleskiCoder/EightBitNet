@@ -19,10 +19,7 @@ namespace Fuse
 
         public bool TryParse(Lines lines)
         {
-            if (lines == null)
-            {
-                throw new ArgumentNullException(nameof(lines));
-            }
+            ArgumentNullException.ThrowIfNull(lines);
 
             while (!lines.EndOfFile && string.IsNullOrEmpty(this.Description))
             {

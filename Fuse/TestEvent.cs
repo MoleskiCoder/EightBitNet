@@ -37,10 +37,7 @@ namespace Fuse
 
         public bool TryParse(Lines lines)
         {
-            if (lines == null)
-            {
-                throw new ArgumentNullException(nameof(lines));
-            }
+            ArgumentNullException.ThrowIfNull(lines);
 
             var returned = this.TryParseLine(lines.ReadLine());
             if (!returned)

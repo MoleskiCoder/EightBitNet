@@ -17,21 +17,14 @@ namespace Fuse
 
         public void Parse(string line)
         {
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                throw new ArgumentNullException(nameof(line));
-            }
-
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(line);
             var tokens = line.Split(new char[] { ' ', '\t' });
             this.Parse(tokens);
         }
 
         public void Parse(string[] tokens)
         {
-            if (tokens == null)
-            {
-                throw new ArgumentNullException(nameof(tokens));
-            }
+            ArgumentNullException.ThrowIfNull(tokens);
 
             this.Address = Convert.ToUInt16(tokens[0], 16);
 

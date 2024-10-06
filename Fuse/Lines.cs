@@ -5,6 +5,7 @@ namespace Fuse
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
 
     public class Lines
@@ -24,6 +25,7 @@ namespace Fuse
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
+                    Debug.Assert(line != null);
                     var ignored = line.StartsWith(";", StringComparison.OrdinalIgnoreCase);
                     if (!ignored)
                     {
