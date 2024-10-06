@@ -54,6 +54,8 @@ namespace M6502.Test
             {
                 if (disposing)
                 {
+                    System.Console.Out.WriteLine();
+
                     System.Console.Out.WriteLine($"Guest cycles = {this.totalCycles:N0}");
                     System.Console.Out.WriteLine($"Seconds = {this.ElapsedSeconds}");
 
