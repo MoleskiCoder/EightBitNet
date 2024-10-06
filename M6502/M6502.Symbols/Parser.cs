@@ -12,11 +12,10 @@
             {
                 #region Variables, properties etc.
 
-                // Section -> Unique ID list of dictionary entries
-
                 private Version? _version;
                 private Information? _information;
 
+                // Section -> Unique ID list of dictionary entries
                 public Dictionary<string, List<Dictionary<string, string>>> Parsed { get; } = [];
 
                 public List<Section> SectionEntries { get; } = [];
@@ -253,20 +252,35 @@
                     {
                         throw new ArgumentOutOfRangeException(nameof(key), key, "Debugging section is unavailable");
                     }
+                    this.ExtractIdentifiableSection(key, into, parsed);
+                }
 
+                private void ExtractIdentifiableSection<T>(string key, List<T> into, List<Dictionary<string, string>> parsed) where T : IdentifiableSection
+                {
                     into.Capacity = parsed.Count;
                     for (var id = 0; id < parsed.Count; ++id)
                     {
-                        Debug.Assert(into.Count == id);
-                        var entry = (T?)Activator.CreateInstance(typeof(T), this);
-                        Debug.Assert(entry != null);
-                        var information = parsed[id];
-                        entry.Parse(information);
-                        into.Add(entry);
+                        this.ExtractIdentifiableEntry(id, parsed, into);
                     }
                     Debug.Assert(into.Count == parsed.Count);
-
                     this.VerifyInformationCount(key, into.Count);
+                }
+
+                private void ExtractIdentifiableEntry<T>(int id, List<Dictionary<string, string>> parsed, List<T> into) where T : IdentifiableSection
+                {
+                    Debug.Assert(into.Count == id);
+                    var information = parsed[id];
+                    var entry = this.ExtractEntry<T>(information);
+                    Debug.Assert(into.Capacity > id);
+                    into.Add(entry);
+                }
+
+                private T ExtractEntry<T>(Dictionary<string, string> information) where T : Section
+                {
+                    var entry = (T?)Activator.CreateInstance(typeof(T), this);
+                    Debug.Assert(entry != null);
+                    entry.Parse(information);
+                    return entry;
                 }
 
                 private void VerifyInformationCount(string key, int actual)
@@ -310,6 +324,9 @@
 
                     this.ExtractSections();
                     this.ExtractReferences();
+
+                    this.Parsed.Clear();
+
                     this.BuildAddressableScopes();
                 }
 

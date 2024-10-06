@@ -78,7 +78,7 @@
                         var hasID = this.MaybeExtractIntegerFromParsed(entryName, out var id);
                         if (hasID)
                         {
-                            var (name, type, _) = connection;
+                            var (name, type) = connection;
                             this.ExtractReferenceProperty(id, name, type);
                         }
                     }
@@ -117,7 +117,7 @@
                         var hasIDs = this.MaybeExtractCompoundInteger(entryName, out var ids);
                         if (hasIDs)
                         {
-                            var (name, type, _) = connection;
+                            var (name, type) = connection;
                             this.ExtractReferencesProperty(ids, name, type);
                         }
                     }

@@ -24,15 +24,9 @@
 
                 internal SectionAttribute? ClassAttribute { get; private set; }
 
-                internal Dictionary<string, Tuple<string, System.Type, SectionPropertyAttribute>> Attributes { get; } = [];
+                internal Dictionary<string, Tuple<string, System.Type>> ReferenceAttributes { get; } = [];
 
-                internal Dictionary<string, Tuple<string, System.Type, SectionReferenceAttribute>> ReferenceAttributes { get; } = [];
-
-                internal Dictionary<string, Tuple<string, System.Type, SectionReferencesAttribute>> ReferencesAttributes { get; } = [];
-
-                //public ReflectedSectionProperties()
-                //{
-                //}
+                internal Dictionary<string, Tuple<string, System.Type>> ReferencesAttributes { get; } = [];
 
                 public void Build(System.Type type)
                 {
@@ -159,18 +153,14 @@
                 private void ProcessSectionPropertyAttribute(System.Type originalType, string name, SectionPropertyAttribute attribute)
                 {
                     var key = attribute.Key;
-
                     this._entriesToProperties.Add(key, name);
 
-                    this.Attributes.Add(key, new Tuple<string, System.Type, SectionPropertyAttribute>(name, originalType, attribute));
-                    Debug.Assert(this.Attributes.Count == this.Properties.Count);
-
-                    if (attribute is SectionReferenceAttribute referenceAttribute)
+                    if (attribute is SectionReferenceAttribute)
                     {
-                        this.ReferenceAttributes.Add(key, new Tuple<string, System.Type, SectionReferenceAttribute>(name, originalType, referenceAttribute));
+                        this.ReferenceAttributes.Add(key, new Tuple<string, System.Type>(name, originalType));
                     } else if (attribute is SectionReferencesAttribute referencesAttribute)
                     {
-                        this.ReferencesAttributes.Add(key, new Tuple<string, System.Type, SectionReferencesAttribute>(name, originalType, referencesAttribute));
+                        this.ReferencesAttributes.Add(key, new Tuple<string, System.Type>(name, originalType));
                     }
 
                     var multiples = attribute.Many;
