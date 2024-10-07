@@ -1,17 +1,11 @@
-﻿namespace EightBit
+﻿namespace EightBit.Files.Symbols
 {
-    namespace Files
+    public class NamedSection : IdentifiableSection
     {
-        namespace Symbols
-        {
-            public class NamedSection : IdentifiableSection
-            {
-                [SectionProperty("name")]
-                public string? Name { get; protected set; }
+        [SectionProperty("name")]
+        public string? Name { get; protected set; }
 
-                protected NamedSection(Parser container)
-                : base(container) { }
-            }
-        }
+        protected NamedSection(Parser container)
+        : base(container) { }
     }
 }

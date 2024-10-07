@@ -1,13 +1,7 @@
-﻿namespace EightBit
+﻿namespace EightBit.Files.Symbols
 {
-    namespace Files
+    [AttributeUsage(AttributeTargets.Property)]
+    internal sealed class SectionReferencesAttribute(string key) : SectionPropertyAttribute(key, many: true)
     {
-        namespace Symbols
-        {
-            [AttributeUsage(AttributeTargets.Property)]
-            internal sealed class SectionReferencesAttribute(string key) : SectionPropertyAttribute(key, many: true)
-            {
-            }
-        }
     }
 }
