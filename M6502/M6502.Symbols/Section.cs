@@ -55,11 +55,10 @@
                     this.ProcessAttributesOfProperties();
                     foreach (var entry in entries)
                     {
-                        this.Parse(entry);
+                        var (key, value) = entry;
+                        this.Parse(key, value);
                     }
                 }
-
-                private void Parse(KeyValuePair<string, string> entry) => this.Parse(entry.Key, entry.Value);
 
                 private void Parse(string key, string value)
                 {
