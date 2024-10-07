@@ -122,7 +122,7 @@ namespace EightBit
 
         protected void LoadHexFile(string path)
         {
-            using var file = new IntelHexFile(path);
+            var file = new IntelHexFile(path);
             foreach (var (address, content) in file.Parse())
             {
                 var mapped = this.Mapping(address);

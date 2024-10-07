@@ -8,24 +8,18 @@ namespace EightBit
     using System.Collections.Generic;
     using System.IO;
 
-    public class IntelHexFile(string path) : IDisposable
+    public class IntelHexFile(string path)
     {
-        private readonly StreamReader reader = File.OpenText(path);
+        private readonly string _path = path;
         private bool eof;
-        private bool disposed = false;
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
 
         public IEnumerable<Tuple<ushort, byte[]>> Parse()
         {
             this.eof = false;
-            while (!this.reader.EndOfStream && !this.eof)
+            using var reader = File.OpenText(this._path);
+            while (!reader.EndOfStream && !this.eof)
             {
-                var line = this.reader.ReadLine() ?? throw new InvalidOperationException("Early EOF detected");
+                var line = reader.ReadLine() ?? throw new InvalidOperationException("Early EOF detected");
                 var parsed = this.Parse(line);
                 if (parsed != null)
                 {
@@ -36,19 +30,6 @@ namespace EightBit
             if (!this.eof)
             {
                 throw new InvalidOperationException("File is missing an EOF record");
-            }
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.disposed)
-            {
-                if (disposing)
-                {
-                    this.reader.Dispose();
-                }
-
-                this.disposed = true;
             }
         }
 
