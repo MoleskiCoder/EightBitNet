@@ -154,7 +154,7 @@
             if (attribute is SectionReferenceAttribute)
             {
                 this.ReferenceAttributes.Add(key, new Tuple<string, System.Type>(name, originalType));
-            } else if (attribute is SectionReferencesAttribute referencesAttribute)
+            } else if (attribute is SectionReferencesAttribute)
             {
                 this.ReferencesAttributes.Add(key, new Tuple<string, System.Type>(name, originalType));
             }

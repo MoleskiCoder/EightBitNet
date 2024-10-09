@@ -27,7 +27,7 @@ namespace M6502.Test
         private bool keyHandled;
         private bool keyAvailable;
 
-        private bool inputting = false;
+        private bool inputting;
 
         public Board(Configuration configuration)
         {

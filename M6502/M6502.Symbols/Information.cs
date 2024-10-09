@@ -4,34 +4,34 @@
     [M6502.Symbols.Section("info")]
     public sealed class Information(Parser container) : Section(container)
     {
-        [M6502.Symbols.SectionProperty("csym")]
+        [SectionProperty("csym")]
         public int CSymbol { get; private set; }
 
-        [M6502.Symbols.SectionProperty("file")]
+        [SectionProperty("file")]
         public int File { get; private set; }
 
-        [M6502.Symbols.SectionProperty("lib")]
+        [SectionProperty("lib")]
         public int Library { get; private set; }
 
-        [M6502.Symbols.SectionProperty("line")]
+        [SectionProperty("line")]
         public int Line { get; private set; }
 
-        [M6502.Symbols.SectionProperty("mod")]
+        [SectionProperty("mod")]
         public int Module { get; private set; }
 
-        [M6502.Symbols.SectionProperty("scope")]
+        [SectionProperty("scope")]
         public int Scope { get; private set; }
 
-        [M6502.Symbols.SectionProperty("seg")]
+        [SectionProperty("seg")]
         public int Segment { get; private set; }
 
-        [M6502.Symbols.SectionProperty("span")]
+        [SectionProperty("span")]
         public int Span { get; private set; }
 
-        [M6502.Symbols.SectionProperty("sym")]
+        [SectionProperty("sym")]
         public int Symbol { get; private set; }
 
-        [M6502.Symbols.SectionProperty("type")]
+        [SectionProperty("type")]
         public int Type { get; private set; }
 
         public int Count(string key) => this.GetValueT<int>(key);

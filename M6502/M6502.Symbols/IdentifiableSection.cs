@@ -12,43 +12,25 @@
         : base(container)
         { }
 
-        private bool MaybeExtractFromParsed(string key, out string value)
+        private bool MaybeExtractFromParsed(string key, out string? value)
         {
             Debug.Assert(this._parsed != null);
             var found = this._parsed.TryGetValue(key, out var extracted);
-            if (found)
-            {
-                Debug.Assert(extracted != null);
-                value = extracted;
-            }
-            else
-            {
-                value = string.Empty;
-            }
+            value = extracted;
             return found;
         }
 
         private bool MaybeExtractIntegerFromParsed(string key, out int value)
         {
             var available = this.MaybeExtractFromParsed(key, out var extracted);
-            if (!available)
-            {
-                value = 0;
-                return false;
-            }
-            value = ExtractInteger(extracted);
+            value = extracted == null ? 0 : ExtractInteger(extracted);
             return available;
         }
 
         protected bool MaybeExtractCompoundInteger(string key, out List<int> value)
         {
             var available = this.MaybeExtractFromParsed(key, out var extracted);
-            if (!available)
-            {
-                value = [];
-                return false;
-            }
-            value = ExtractCompoundInteger(extracted);
+            value = extracted == null ? [] : ExtractCompoundInteger(extracted);
             return available;
         }
 

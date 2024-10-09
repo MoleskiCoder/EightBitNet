@@ -7,20 +7,13 @@ namespace Z80.Test
     using System;
     using System.Diagnostics;
 
-    internal class TestHarness(Configuration configuration) : IDisposable
+    internal class TestHarness(Configuration configuration)
     {
         private readonly Stopwatch timer = new();
         private readonly Board board = new(configuration);
         private long totalCycles;
         private TimeSpan totalUserProcessorTime;
 
-        private bool disposed;
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
         public long ElapsedMilliseconds => timer.ElapsedMilliseconds;
 
         public float ElapsedSeconds => ElapsedMilliseconds / 1000.0f;
@@ -47,25 +40,14 @@ namespace Z80.Test
                 timer.Stop();
                 totalUserProcessorTime = finishingUsage - startingUsage;
             }
-        }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    System.Console.Out.WriteLine();
+            System.Console.Out.WriteLine();
 
-                    System.Console.Out.WriteLine($"Guest cycles = {totalCycles:N0}");
-                    System.Console.Out.WriteLine($"Seconds = {ElapsedSeconds}");
+            System.Console.Out.WriteLine($"Guest cycles = {totalCycles:N0}");
+            System.Console.Out.WriteLine($"Seconds = {ElapsedSeconds}");
 
-                    System.Console.Out.WriteLine($"{CyclesPerSecond / 1000000} MHz");
-                    System.Console.Out.WriteLine($"Processor time = {totalUserProcessorTime.TotalSeconds:g}");
-                }
-
-                disposed = true;
-            }
+            System.Console.Out.WriteLine($"{CyclesPerSecond / 1000000} MHz");
+            System.Console.Out.WriteLine($"Processor time = {totalUserProcessorTime.TotalSeconds:g}");
         }
     }
 }

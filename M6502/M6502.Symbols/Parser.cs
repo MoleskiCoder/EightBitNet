@@ -282,7 +282,7 @@
         private void VerifyInformationCount(string key, int actual)
         {
             Debug.Assert(this._information != null);
-            var expected = this._information?.Count(key);
+            var expected = this._information.Count(key);
             if (expected != actual)
             {
                 throw new InvalidOperationException($"information count mismatch for {key}.  Expected {expected}, actual {actual}");
@@ -316,7 +316,7 @@
             }
 
             using var reader = new StreamReader(path);
-            await this.ParseAsync(reader);
+            await this.ParseAsync(reader).ConfigureAwait(false);
 
             this.ExtractSections();
             this.ExtractReferences();
@@ -330,7 +330,7 @@
         {
             while (!reader.EndOfStream)
             {
-                var line = await reader.ReadLineAsync();
+                var line = await reader.ReadLineAsync().ConfigureAwait(false);
                 if (line == null)
                 {
                     break;
@@ -408,8 +408,8 @@
                 throw new InvalidOperationException("Version has not yet been parsed");
             }
 
-            var major = this._version?.Major;
-            var minor = this._version?.Minor;
+            var major = this._version.Major;
+            var minor = this._version.Minor;
             var valid = major == 2 && minor == 0;
             if (!valid)
             {
