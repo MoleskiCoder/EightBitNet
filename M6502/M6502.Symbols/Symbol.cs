@@ -1,4 +1,4 @@
-﻿namespace EightBit.Files.Symbols
+﻿namespace M6502.Symbols
 {
     using System.Collections.Generic;
 
@@ -13,7 +13,7 @@
         public int? Size { get; private set; }
 
         [SectionReference("scope")]
-        public Symbols.Scope? Scope { get; private set; }
+        public Scope? Scope { get; private set; }
 
         [SectionReferences("def")]
         public List<Line>? Definitions { get; private set; }

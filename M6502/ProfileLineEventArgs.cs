@@ -1,4 +1,4 @@
-﻿namespace EightBit
+﻿namespace M6502
 {
     public sealed class ProfileLineEventArgs(ushort address, string source, long cycles, long count, Dictionary<int, long> cycleDistributions) : CycleCountedEventArgs(cycles, count)
     {

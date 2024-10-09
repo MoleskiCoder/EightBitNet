@@ -2,8 +2,10 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace M6502
 {
+    using EightBit;
+
     [Flags]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1028:Enum Storage should be Int32", Justification = "Must be castable to byte")]
     public enum StatusBits : byte

@@ -1,4 +1,4 @@
-﻿namespace EightBit
+﻿namespace M6502
 {
     public sealed class ProfileEventArgs(string output) : EventArgs
     {

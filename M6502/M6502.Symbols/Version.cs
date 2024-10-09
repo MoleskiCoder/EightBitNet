@@ -1,4 +1,4 @@
-﻿namespace EightBit.Files.Symbols
+﻿namespace M6502.Symbols
 {
     //version major = 2, minor = 0
     [Section("version")]

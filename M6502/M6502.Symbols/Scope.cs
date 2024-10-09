@@ -1,4 +1,4 @@
-﻿namespace EightBit.Files.Symbols
+﻿namespace M6502.Symbols
 {
     //scope id = 0, name = "", mod = 0, size = 1137, span = 355 + 354
     //scope id = 1, name = "stack", mod = 0, type = scope, size = 7, parent = 0, span = 15
@@ -7,7 +7,7 @@
     public sealed class Scope(Parser container) : NamedSection(container)
     {
         [SectionReference("mod")]
-        public Symbols.Module? Module { get; private set; }
+        public Module? Module { get; private set; }
 
         [SectionProperty("type")]
         public string? Type { get; private set; }

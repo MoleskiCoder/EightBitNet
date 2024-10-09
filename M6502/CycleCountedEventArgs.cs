@@ -1,4 +1,4 @@
-﻿namespace EightBit
+﻿namespace M6502
 {
     public class CycleCountedEventArgs(long cycles, long count) : EventArgs
     {

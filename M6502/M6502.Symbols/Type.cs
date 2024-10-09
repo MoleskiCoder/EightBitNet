@@ -1,4 +1,4 @@
-﻿namespace EightBit.Files.Symbols
+﻿namespace M6502.Symbols
 {
     // type id = 0, val = "800920"
     [Section("type", "Types")]

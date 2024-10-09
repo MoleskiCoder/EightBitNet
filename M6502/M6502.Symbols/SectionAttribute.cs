@@ -1,4 +1,4 @@
-﻿namespace EightBit.Files.Symbols
+﻿namespace M6502.Symbols
 {
     [AttributeUsage(AttributeTargets.Class)]
     internal class SectionAttribute(string key, string? referencing = null) : Attribute

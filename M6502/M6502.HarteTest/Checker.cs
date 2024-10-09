@@ -6,9 +6,9 @@
     {
         private TestRunner Runner { get; }
 
-        private EightBit.Files.Symbols.Parser Symbols { get; } = new();
+        private Symbols.Parser Symbols { get; } = new();
 
-        private EightBit.Disassembler Disassembler { get; }
+        private Disassembler Disassembler { get; }
 
         private bool CycleCountMismatch { get; set; }
 
@@ -29,7 +29,7 @@
         public Checker(TestRunner runner)
         {
             this.Runner = runner;
-            this.Disassembler = new(this.Runner, (EightBit.M6502Core)this.Runner.CPU, this.Symbols);
+            this.Disassembler = new(this.Runner, (M6502.Core)this.Runner.CPU, this.Symbols);
         }
 
         public void Check(Test test)
@@ -203,8 +203,8 @@
 
             if (!p_good)
             {
-                this.Messages.Add($"Expected flags: {EightBit.Disassembler.DumpFlags(final.P)}");
-                this.Messages.Add($"Actual flags  : {EightBit.Disassembler.DumpFlags(cpu.P)}");
+                this.Messages.Add($"Expected flags: {Disassembler.DumpFlags(final.P)}");
+                this.Messages.Add($"Actual flags  : {Disassembler.DumpFlags(cpu.P)}");
             }
 
             if (final.RAM == null)

@@ -9,12 +9,13 @@ namespace M6502.Test
     using System.Text;
     using System.Threading.Tasks;
     using EightBit;
+    using M6502;
 
     internal class Board : Bus
     {
         private readonly Configuration configuration;
         private readonly Ram ram = new(0x10000);
-        private readonly EightBit.Files.Symbols.Parser symbols = new();
+        private readonly Symbols.Parser symbols = new();
         private readonly Disassembler disassembler;
         private readonly Profiler profiler;
         private readonly MemoryMapping mapping;
@@ -37,7 +38,7 @@ namespace M6502.Test
             this.profiler = new(this.CPU, this.disassembler, this.symbols, this.configuration.Profile);
         }
 
-        public M6502 CPU { get; }
+        public MOS6502 CPU { get; }
 
         public override void RaisePOWER()
         {
