@@ -23,10 +23,10 @@ namespace EightBit
 
         private RefreshRegister _refresh = new(0x7f);
 
-        private bool _prefixCB = false;
-        private bool _prefixDD = false;
-        private bool _prefixED = false;
-        private bool _prefixFD = false;
+        private bool _prefixCB;
+        private bool _prefixDD;
+        private bool _prefixED;
+        private bool _prefixFD;
 
         private PinLevel _nmiLine = PinLevel.Low;
         private PinLevel _m1Line = PinLevel.Low;
@@ -36,11 +36,11 @@ namespace EightBit
         private PinLevel _rdLine = PinLevel.Low;
         private PinLevel _wrLine = PinLevel.Low;
 
-        private int _accumulatorFlagsSet = 0;
+        private int _accumulatorFlagsSet;
 
-        private int _registerSet = 0;
-        private sbyte _displacement = 0;
-        private bool _displaced = false;
+        private int _registerSet;
+        private sbyte _displacement;
+        private bool _displaced;
 
         public event EventHandler<EventArgs>? RaisingNMI;
 
@@ -100,11 +100,11 @@ namespace EightBit
 
         public byte IV { get; set; } = 0xff;
 
-        public int IM { get; set; } = 0;
+        public int IM { get; set; }
 
-        public bool IFF1 { get; set; } = false;
+        public bool IFF1 { get; set; }
 
-        public bool IFF2 { get; set; } = false;
+        public bool IFF2 { get; set; }
 
         public override Register16 AF => _accumulatorFlags[_accumulatorFlagsSet];
 

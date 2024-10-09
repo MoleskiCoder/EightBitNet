@@ -8,10 +8,10 @@ namespace EightBit
 
     public class Disassembler(Bus bus)
     {
-        private bool _prefixCB = false;
-        private bool _prefixDD = false;
-        private bool _prefixED = false;
-        private bool _prefixFD = false;
+        private bool _prefixCB;
+        private bool _prefixDD;
+        private bool _prefixED;
+        private bool _prefixFD;
 
         public Bus Bus { get; } = bus;
 
@@ -155,7 +155,7 @@ namespace EightBit
             if (outputFormatSpecification)
             {
                 output += '\t';
-                output += string.Format(specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
+                output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
             }
 
             return output;

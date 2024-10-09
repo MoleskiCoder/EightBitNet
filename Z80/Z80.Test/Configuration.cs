@@ -6,13 +6,13 @@ namespace Z80.Test
 {
     using EightBit;
 
-    internal class Configuration
+    internal sealed class Configuration
     {
         public Configuration()
         {
         }
 
-        public bool DebugMode { get; set; } = false;
+        public bool DebugMode { get; set; }
 
         public Register16 LoadAddress { get; } = new(0x100);
 
