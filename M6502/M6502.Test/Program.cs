@@ -11,7 +11,7 @@ namespace M6502.Test
             var configuration = new Configuration();
 
 #if DEBUG
-            configuration.DebugMode = true;
+            configuration.DebugMode;
 #endif
             using (var harness = new TestHarness(configuration))
             {

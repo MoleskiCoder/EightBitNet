@@ -8,9 +8,9 @@ namespace M6502.Test
 
     internal class Configuration
     {
-        public bool DebugMode { get; set; } = false;
+        public bool DebugMode { get; set; }
 
-        public bool Profile { get; set; } = true;
+        public bool Profile { get; set; }
 
         // Sudoku
         public string Program { get; } = "sudoku.65b";
@@ -19,8 +19,8 @@ namespace M6502.Test
         public Register16 OutputAddress { get; } = new Register16(0xe001);
         public Register16 LoadAddress { get; } = new Register16(0xf000);
         public Register16 StartAddress { get; } = new Register16(0xf000);
-        public bool AllowKeyRead { get; } = false;
-        public bool BreakOnKeyRead { get; } = false;
+        public bool AllowKeyRead { get; }
+        public bool BreakOnKeyRead { get; }
 
         // Klaus
         //public string Program { get; } = "6502_functional_test.bin";
