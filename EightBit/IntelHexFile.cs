@@ -4,10 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-
     public class IntelHexFile(string path)
     {
         private readonly string _path = path;

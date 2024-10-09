@@ -8,10 +8,10 @@ namespace EightBit
 
     public class Disassembler(Bus bus)
     {
-        private bool prefixCB = false;
-        private bool prefixDD = false;
-        private bool prefixED = false;
-        private bool prefixFD = false;
+        private bool _prefixCB = false;
+        private bool _prefixDD = false;
+        private bool _prefixED = false;
+        private bool _prefixFD = false;
 
         public Bus Bus { get; } = bus;
 
@@ -71,8 +71,8 @@ namespace EightBit
         public string Disassemble(Z80 cpu)
         {
             ArgumentNullException.ThrowIfNull(cpu);
-            this.prefixCB = this.prefixDD = this.prefixED = this.prefixFD = false;
-            return this.Disassemble(cpu, cpu.PC.Word);
+            _prefixCB = _prefixDD = _prefixED = _prefixFD = false;
+            return Disassemble(cpu, cpu.PC.Word);
         }
 
         private static string CC(int flag) => flag switch
@@ -85,7 +85,7 @@ namespace EightBit
             5 => "PE",
             6 => "P",
             7 => "M",
-            _ => throw new System.ArgumentOutOfRangeException(nameof(flag)),
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
         private static string ALU(int which) => which switch
@@ -98,12 +98,12 @@ namespace EightBit
             5 => "XOR",
             6 => "OR",
             7 => "CP",
-            _ => throw new System.ArgumentOutOfRangeException(nameof(which)),
+            _ => throw new ArgumentOutOfRangeException(nameof(which)),
         };
 
         private string Disassemble(Z80 cpu, ushort pc)
         {
-            var opCode = this.Bus.Peek(pc);
+            var opCode = Bus.Peek(pc);
 
             var decoded = cpu.GetDecodedOpCode(opCode);
 
@@ -114,37 +114,37 @@ namespace EightBit
             var p = decoded.P;
             var q = decoded.Q;
 
-            var immediate = this.Bus.Peek((ushort)(pc + 1));
+            var immediate = Bus.Peek((ushort)(pc + 1));
             var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
             var displacement = (sbyte)immediate;
             var relative = pc + displacement + 2;
-            var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));
+            var indexedImmediate = Bus.Peek((ushort)(pc + 1));
 
             var dumpCount = 0;
 
             var output = $"{opCode:x2}";
 
             var specification = string.Empty;
-            if (this.prefixCB)
+            if (_prefixCB)
             {
-                output += this.DisassembleCB(ref specification, x, y, z);
+                output += DisassembleCB(ref specification, x, y, z);
             }
-            else if (this.prefixED)
+            else if (_prefixED)
             {
-                output += this.DisassembleED(ref specification, ref dumpCount, x, y, z, p, q);
+                output += DisassembleED(ref specification, ref dumpCount, x, y, z, p, q);
             }
             else
             {
-                output += this.DisassembleOther(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
+                output += DisassembleOther(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
             }
 
             for (var i = 0; i < dumpCount; ++i)
             {
-                output += $"{this.Bus.Peek((ushort)(pc + i + 1)):x2}";
+                output += $"{Bus.Peek((ushort)(pc + i + 1)):x2}";
             }
 
-            var outputFormatSpecification = !this.prefixDD;
-            if (this.prefixDD)
+            var outputFormatSpecification = !_prefixDD;
+            if (_prefixDD)
             {
                 if (opCode != 0xdd)
                 {
@@ -170,40 +170,40 @@ namespace EightBit
                     switch (y)
                     {
                         case 0:
-                            specification = $"RLC {this.R(z)}";
+                            specification = $"RLC {R(z)}";
                             break;
                         case 1:
-                            specification = $"RRC {this.R(z)}";
+                            specification = $"RRC {R(z)}";
                             break;
                         case 2:
-                            specification = $"RL {this.R(z)}";
+                            specification = $"RL {R(z)}";
                             break;
                         case 3:
-                            specification = $"RR {this.R(z)}";
+                            specification = $"RR {R(z)}";
                             break;
                         case 4:
-                            specification = $"SLA {this.R(z)}";
+                            specification = $"SLA {R(z)}";
                             break;
                         case 5:
-                            specification = $"SRA {this.R(z)}";
+                            specification = $"SRA {R(z)}";
                             break;
                         case 6:
-                            specification = $"SWAP {this.R(z)}";
+                            specification = $"SWAP {R(z)}";
                             break;
                         case 7:
-                            specification = $"SRL {this.R(z)}";
+                            specification = $"SRL {R(z)}";
                             break;
                     }
 
                     break;
                 case 1: // BIT y, r[z]
-                    specification = $"BIT {y},{this.R(z)}";
+                    specification = $"BIT {y},{R(z)}";
                     break;
                 case 2: // RES y, r[z]
-                    specification = $"RES {y},{this.R(z)}";
+                    specification = $"RES {y},{R(z)}";
                     break;
                 case 3: // SET y, r[z]
-                    specification = $"SET {y},{this.R(z)}";
+                    specification = $"SET {y},{R(z)}";
                     break;
             }
 
@@ -223,21 +223,21 @@ namespace EightBit
                     switch (z)
                     {
                         case 0:
-                            specification = $"IN {this.R(y)}, (C)";
+                            specification = $"IN {R(y)}, (C)";
                             break;
 
                         case 1:
-                            specification = $"OUT (C), {this.R(y)}";
+                            specification = $"OUT (C), {R(y)}";
                             break;
 
                         case 2:
                             switch (q)
                             {
                                 case 0: // SBC HL,rp
-                                    specification = $"SBC HL,{this.RP(p)}";
+                                    specification = $"SBC HL,{RP(p)}";
                                     break;
                                 case 1: // ADC HL,rp
-                                    specification = $"ADC HL,{this.RP(p)}";
+                                    specification = $"ADC HL,{RP(p)}";
                                     break;
                             }
 
@@ -246,10 +246,10 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD (nn),rp
-                                    specification = "LD ({1:X4}H)," + this.RP(p);
+                                    specification = "LD ({1:X4}H)," + RP(p);
                                     break;
                                 case 1: // LD rp,(nn)
-                                    specification = "LD " + this.RP(p) + ",(%2$04XH)";
+                                    specification = "LD " + RP(p) + ",(%2$04XH)";
                                     break;
                             }
 
@@ -435,11 +435,11 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    specification = "LD " + this.RP(p) + ",{1:X4}H";
+                                    specification = "LD " + RP(p) + ",{1:X4}H";
                                     dumpCount += 2;
                                     break;
                                 case 1: // ADD HL,rp
-                                    specification = $"ADD HL,{this.RP(p)}";
+                                    specification = $"ADD HL,{RP(p)}";
                                     break;
                             }
 
@@ -494,23 +494,23 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    specification = $"INC {this.RP(p)}";
+                                    specification = $"INC {RP(p)}";
                                     break;
                                 case 1: // DEC rp
-                                    specification = $"DEC {this.RP(p)}";
+                                    specification = $"DEC {RP(p)}";
                                     break;
                             }
 
                             break;
                         case 4: // 8-bit INC
-                            specification = $"INC {this.R(y)}";
+                            specification = $"INC {R(y)}";
                             break;
                         case 5: // 8-bit DEC
-                            specification = $"DEC {this.R(y)}";
+                            specification = $"DEC {R(y)}";
                             break;
                         case 6: // 8-bit load immediate
-                            specification = $"LD {this.R(y)}";
-                            if (y == 6 && (this.prefixDD || this.prefixFD))
+                            specification = $"LD {R(y)}";
+                            if (y == 6 && (_prefixDD || _prefixFD))
                             {
                                 specification += ",{4:X2}H";
                                 dumpCount++;
@@ -556,10 +556,10 @@ namespace EightBit
 
                     break;
                 case 1: // 8-bit loading
-                    specification = z == 6 && y == 6 ? "HALT" : $"LD {this.R(y)},{this.R(z)}";
+                    specification = z == 6 && y == 6 ? "HALT" : $"LD {R(y)},{R(z)}";
                     break;
                 case 2: // Operate on accumulator and register/memory location
-                    specification = $"{ALU(y)} A,{this.R(z)}";
+                    specification = $"{ALU(y)} A,{R(z)}";
                     break;
                 case 3:
                     switch (z)
@@ -571,7 +571,7 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    specification = $"POP {this.RP2(p)}";
+                                    specification = $"POP {RP2(p)}";
                                     break;
                                 case 1:
                                     switch (p)
@@ -606,8 +606,8 @@ namespace EightBit
                                     dumpCount += 2;
                                     break;
                                 case 1: // CB prefix
-                                    this.prefixCB = true;
-                                    output += this.Disassemble(cpu, ++pc);
+                                    _prefixCB = true;
+                                    output += Disassemble(cpu, ++pc);
                                     break;
                                 case 2: // OUT (n),A
                                     specification = "OUT ({0:X2}H),A";
@@ -640,7 +640,7 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
-                                    specification = $"PUSH {this.RP2(p)}";
+                                    specification = $"PUSH {RP2(p)}";
                                     break;
                                 case 1:
                                     switch (p)
@@ -650,16 +650,16 @@ namespace EightBit
                                             dumpCount += 2;
                                             break;
                                         case 1: // DD prefix
-                                            this.prefixDD = true;
-                                            output += this.Disassemble(cpu, ++pc);
+                                            _prefixDD = true;
+                                            output += Disassemble(cpu, ++pc);
                                             break;
                                         case 2: // ED prefix
-                                            this.prefixED = true;
-                                            output += this.Disassemble(cpu, ++pc);
+                                            _prefixED = true;
+                                            output += Disassemble(cpu, ++pc);
                                             break;
                                         case 3: // FD prefix
-                                            this.prefixFD = true;
-                                            output += this.Disassemble(cpu, ++pc);
+                                            _prefixFD = true;
+                                            output += Disassemble(cpu, ++pc);
                                             break;
                                     }
 
@@ -691,12 +691,12 @@ namespace EightBit
                 case 1:
                     return "DE";
                 case 2:
-                    if (this.prefixDD)
+                    if (_prefixDD)
                     {
                         return "IX";
                     }
 
-                    if (this.prefixFD)
+                    if (_prefixFD)
                     {
                         return "IY";
                     }
@@ -706,7 +706,7 @@ namespace EightBit
                     return "SP";
             }
 
-            throw new System.ArgumentOutOfRangeException(nameof(rp));
+            throw new ArgumentOutOfRangeException(nameof(rp));
         }
 
         private string RP2(int rp)
@@ -718,12 +718,12 @@ namespace EightBit
                 case 1:
                     return "DE";
                 case 2:
-                    if (this.prefixDD)
+                    if (_prefixDD)
                     {
                         return "IX";
                     }
 
-                    if (this.prefixFD)
+                    if (_prefixFD)
                     {
                         return "IY";
                     }
@@ -733,7 +733,7 @@ namespace EightBit
                     return "AF";
             }
 
-            throw new System.ArgumentOutOfRangeException(nameof(rp));
+            throw new ArgumentOutOfRangeException(nameof(rp));
         }
 
         private string R(int r)
@@ -749,38 +749,38 @@ namespace EightBit
                 case 3:
                     return "E";
                 case 4:
-                    if (this.prefixDD)
+                    if (_prefixDD)
                     {
                         return "IXH";
                     }
 
-                    if (this.prefixFD)
+                    if (_prefixFD)
                     {
                         return "IYH";
                     }
 
                     return "H";
                 case 5:
-                    if (this.prefixDD)
+                    if (_prefixDD)
                     {
                         return "IXL";
                     }
 
-                    if (this.prefixFD)
+                    if (_prefixFD)
                     {
                         return "IYL";
                     }
 
                     return "L";
                 case 6:
-                    if (this.prefixDD || this.prefixFD)
+                    if (_prefixDD || _prefixFD)
                     {
-                        if (this.prefixDD)
+                        if (_prefixDD)
                         {
                             return "IX+{4}";
                         }
 
-                        if (this.prefixFD)
+                        if (_prefixFD)
                         {
                             return "IY+{4}";
                         }
@@ -795,7 +795,7 @@ namespace EightBit
                     return "A";
             }
 
-            throw new System.ArgumentOutOfRangeException(nameof(r));
+            throw new ArgumentOutOfRangeException(nameof(r));
         }
     }
 }

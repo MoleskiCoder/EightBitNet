@@ -4,9 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-    using System.IO;
-
     public class Rom(int size = 0) : Memory
     {
         private byte[] _bytes = new byte[size];

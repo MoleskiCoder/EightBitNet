@@ -1,6 +1,5 @@
 ﻿namespace M6502.Symbols
 {
-    using System;
     using System.Collections;
     using System.Diagnostics;
 

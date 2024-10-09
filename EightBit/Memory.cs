@@ -4,9 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-    using System.IO;
-
     public abstract class Memory
     {
         public abstract int Size

@@ -4,7 +4,7 @@
 
 namespace EightBit
 {
-    public struct RefreshRegister(byte value) : System.IEquatable<RefreshRegister>
+    public struct RefreshRegister(byte value) : IEquatable<RefreshRegister>
     {
         private readonly byte high = (byte)(value & (byte)Bits.Bit7);
         private byte variable = (byte)(value & (byte)Mask.Seven);
