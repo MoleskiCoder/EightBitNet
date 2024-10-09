@@ -8,7 +8,7 @@ namespace EightBit
 
     public abstract class Bus : IMapper
     {
-        private byte data;
+        private byte _data;
 
         public event EventHandler<EventArgs>? WritingByte;
 
@@ -18,71 +18,71 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? ReadByte;
 
-        public ref byte Data => ref this.data;
+        public ref byte Data => ref _data;
 
         public Register16 Address { get; } = new();
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
-        public byte Peek() => this.Reference();
+        public byte Peek() => Reference();
 
-        public byte Peek(ushort absolute) => this.Reference(absolute);
+        public byte Peek(ushort absolute) => Reference(absolute);
 
-        public byte Peek(Register16 absolute) => this.Peek(absolute.Word);
+        public byte Peek(Register16 absolute) => Peek(absolute.Word);
 
-        public void Poke(byte value) => this.Reference() = value;
+        public void Poke(byte value) => Reference() = value;
 
-        public void Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
+        public void Poke(ushort absolute, byte value) => Reference(absolute) = value;
 
-        public void Poke(Register16 absolute, byte value) => this.Poke(absolute.Word, value);
+        public void Poke(Register16 absolute, byte value) => Poke(absolute.Word, value);
 
         public byte Read()
         {
-            this.OnReadingByte();
-            var returned = this.Data = this.Reference();
-            this.OnReadByte();
+            OnReadingByte();
+            var returned = Data = Reference();
+            OnReadByte();
             return returned;
         }
 
         public byte Read(ushort absolute)
         {
-            this.Address.Word = absolute;
-            return this.Read();
+            Address.Word = absolute;
+            return Read();
         }
 
-        public byte Read(Register16 absolute) => this.Read(absolute.Low, absolute.High);
+        public byte Read(Register16 absolute) => Read(absolute.Low, absolute.High);
 
         public byte Read(byte low, byte high)
         {
-            this.Address.Assign(low, high);
-            return this.Read();
+            Address.Assign(low, high);
+            return Read();
         }
 
         public void Write()
         {
-            this.OnWritingByte();
-            this.Reference() = this.Data;
-            this.OnWrittenByte();
+            OnWritingByte();
+            Reference() = Data;
+            OnWrittenByte();
         }
 
         public void Write(byte value)
         {
-            this.Data = value;
-            this.Write();
+            Data = value;
+            Write();
         }
 
         public void Write(ushort absolute, byte value)
         {
-            this.Address.Word = absolute;
-            this.Write(value);
+            Address.Word = absolute;
+            Write(value);
         }
 
-        public void Write(Register16 absolute, byte value) => this.Write(absolute.Low, absolute.High, value);
+        public void Write(Register16 absolute, byte value) => Write(absolute.Low, absolute.High, value);
 
         public void Write(byte low, byte high, byte value)
         {
-            this.Address.Assign(low, high);
-            this.Write(value);
+            Address.Assign(low, high);
+            Write(value);
         }
 
         public virtual void RaisePOWER()
@@ -95,37 +95,37 @@ namespace EightBit
 
         public abstract void Initialize();
 
-        protected virtual void OnWritingByte() => this.WritingByte?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnWritingByte() => WritingByte?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnWrittenByte() => this.WrittenByte?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnWrittenByte() => WrittenByte?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnReadingByte() => this.ReadingByte?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnReadingByte() => ReadingByte?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnReadByte() => this.ReadByte?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnReadByte() => ReadByte?.Invoke(this, EventArgs.Empty);
 
         protected ref byte Reference(ushort absolute)
         {
-            var mapped = this.Mapping(absolute);
+            var mapped = Mapping(absolute);
             var offset = (ushort)mapped.Offset(absolute);
             if (mapped.Access == AccessLevel.ReadOnly)
             {
-                this.Data = mapped.Memory.Peek(offset);
-                return ref this.data;
+                Data = mapped.Memory.Peek(offset);
+                return ref _data;
             }
 
             return ref mapped.Memory.Reference(offset);
         }
 
-        protected ref byte Reference(Register16 absolute) => ref this.Reference(absolute.Word);
+        protected ref byte Reference(Register16 absolute) => ref Reference(absolute.Word);
 
-        protected ref byte Reference() => ref this.Reference(this.Address);
+        protected ref byte Reference() => ref Reference(Address);
 
         protected void LoadHexFile(string path)
         {
             var file = new IntelHexFile(path);
             foreach (var (address, content) in file.Parse())
             {
-                var mapped = this.Mapping(address);
+                var mapped = Mapping(address);
                 var offset = address - mapped.Begin;
                 mapped.Memory.Load(content, offset);
             }

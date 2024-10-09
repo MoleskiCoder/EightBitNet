@@ -21,7 +21,7 @@ namespace EightBit
 
         public int Offset(ushort absolute)
         {
-            return (absolute - this.Begin) & this.Mask;
+            return (absolute - Begin) & Mask;
         }
     }
 }

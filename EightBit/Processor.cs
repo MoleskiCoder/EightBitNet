@@ -12,13 +12,13 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? ExecutingInstruction;
         public event EventHandler<EventArgs>? ExecutedInstruction;
-        protected virtual void OnExecutedInstruction() => this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnExecutingInstruction() => this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnExecutedInstruction() => ExecutedInstruction?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnExecutingInstruction() => ExecutingInstruction?.Invoke(this, EventArgs.Empty);
 
         #endregion
 
-        private PinLevel resetLine;
-        private PinLevel intLine;
+        private PinLevel _resetLine;
+        private PinLevel _intLine;
 
         public event EventHandler<EventArgs>? RaisingRESET;
 
@@ -36,9 +36,9 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? LoweredINT;
 
-        public ref PinLevel RESET => ref this.resetLine;
+        public ref PinLevel RESET => ref _resetLine;
 
-        public ref PinLevel INT => ref this.intLine;
+        public ref PinLevel INT => ref _intLine;
 
         public Bus Bus { get; } = memory;
 
@@ -60,15 +60,15 @@ namespace EightBit
 
         public virtual int Step()
         {
-            this.ResetCycles();
-            this.OnExecutingInstruction();
-            if (this.Powered)
+            ResetCycles();
+            OnExecutingInstruction();
+            if (Powered)
             {
-                this.PoweredStep();
+                PoweredStep();
             }
  
-            this.OnExecutedInstruction();
-            return this.Cycles;
+            OnExecutedInstruction();
+            return Cycles;
         }
 
         public abstract void PoweredStep();
@@ -78,9 +78,9 @@ namespace EightBit
         public int Run(int limit)
         {
             var current = 0;
-            while (this.Powered && (current < limit))
+            while (Powered && (current < limit))
             {
-                current += this.Step();
+                current += Step();
             }
 
             return current;
@@ -88,131 +88,131 @@ namespace EightBit
 
         public void Execute(byte value)
         {
-            this.OpCode = value;
-            this.Execute();
+            OpCode = value;
+            Execute();
         }
 
         public abstract Register16 PeekWord(ushort address);
 
         public abstract void PokeWord(ushort address, Register16 value);
 
-        public void PokeWord(ushort address, ushort value) => this.PokeWord(address, new Register16(value));
+        public void PokeWord(ushort address, ushort value) => PokeWord(address, new Register16(value));
 
         public virtual void RaiseRESET()
         {
-            if (this.RESET.Lowered())
+            if (RESET.Lowered())
             {
-                this.OnRaisingRESET();
-                this.RESET.Raise();
-                this.OnRaisedRESET();
+                OnRaisingRESET();
+                RESET.Raise();
+                OnRaisedRESET();
             }
         }
 
         public virtual void LowerRESET()
         {
-            if (this.RESET.Raised())
+            if (RESET.Raised())
             {
-                this.OnLoweringRESET();
-                this.RESET.Lower();
-                this.OnLoweredRESET();
+                OnLoweringRESET();
+                RESET.Lower();
+                OnLoweredRESET();
             }
         }
 
         public virtual void RaiseINT()
         {
-            if (this.INT.Lowered())
+            if (INT.Lowered())
             {
-                this.OnRaisingINT();
-                this.INT.Raise();
-                this.OnRaisedINT();
+                OnRaisingINT();
+                INT.Raise();
+                OnRaisedINT();
             }
         }
 
         public virtual void LowerINT()
         {
-            if (this.INT.Raised())
+            if (INT.Raised())
             {
-                this.OnLoweringINT();
-                this.INT.Lower();
-                this.OnLoweredINT();
+                OnLoweringINT();
+                INT.Lower();
+                OnLoweredINT();
             }
         }
 
-        protected virtual void OnRaisingRESET() => this.RaisingRESET?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisingRESET() => RaisingRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnRaisedRESET() => this.RaisedRESET?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedRESET() => RaisedRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringRESET() => this.LoweringRESET?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringRESET() => LoweringRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweredRESET() => this.LoweredRESET?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredRESET() => LoweredRESET?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnRaisingINT() => this.RaisingINT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisingINT() => RaisingINT?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnRaisedINT() => this.RaisedINT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedINT() => RaisedINT?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringINT() => this.LoweringINT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringINT() => LoweringINT?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweredINT() => this.LoweredINT?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredINT() => LoweredINT?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void HandleRESET() => this.RaiseRESET();
+        protected virtual void HandleRESET() => RaiseRESET();
 
-        protected virtual void HandleINT() => this.RaiseINT();
+        protected virtual void HandleINT() => RaiseINT();
 
         protected void MemoryWrite(byte low, byte high)
         {
-            this.Bus.Address.Assign(low, high);
-            this.MemoryWrite();
+            Bus.Address.Assign(low, high);
+            MemoryWrite();
         }
 
         protected void MemoryWrite(byte low, byte high, byte data)
         {
-            this.Bus.Address.Assign(low, high);
-            this.MemoryWrite(data);
+            Bus.Address.Assign(low, high);
+            MemoryWrite(data);
         }
 
         protected void MemoryWrite(ushort address, byte data)
         {
-            this.Bus.Address.Word = address;
-            this.MemoryWrite(data);
+            Bus.Address.Word = address;
+            MemoryWrite(data);
         }
 
-        protected void MemoryWrite(Register16 address, byte data) => this.MemoryWrite(address.Low, address.High, data);
+        protected void MemoryWrite(Register16 address, byte data) => MemoryWrite(address.Low, address.High, data);
 
-        protected void MemoryWrite(Register16 address) => this.MemoryWrite(address.Low, address.High);
+        protected void MemoryWrite(Register16 address) => MemoryWrite(address.Low, address.High);
 
         protected void MemoryWrite(byte data)
         {
-            this.Bus.Data = data;
-            this.MemoryWrite();
+            Bus.Data = data;
+            MemoryWrite();
         }
 
-        protected virtual void MemoryWrite() => this.BusWrite();
+        protected virtual void MemoryWrite() => BusWrite();
 
-        protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
+        protected virtual void BusWrite() => Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
         protected byte MemoryRead(byte low, byte high)
         {
-            this.Bus.Address.Assign(low, high);
-            return this.MemoryRead();
+            Bus.Address.Assign(low, high);
+            return MemoryRead();
         }
 
         protected byte MemoryRead(ushort address)
         {
-            this.Bus.Address.Word = address;
-            return this.MemoryRead();
+            Bus.Address.Word = address;
+            return MemoryRead();
         }
 
-        protected byte MemoryRead(Register16 address) => this.MemoryRead(address.Low, address.High);
+        protected byte MemoryRead(Register16 address) => MemoryRead(address.Low, address.High);
 
-        protected virtual byte MemoryRead() => this.BusRead();
+        protected virtual byte MemoryRead() => BusRead();
 
-        protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
+        protected virtual byte BusRead() => Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
         protected virtual byte FetchByte()
         {
-            this.Bus.Address.Assign(this.PC);
-            this.PC.Word++;
-            return this.MemoryRead();
+            Bus.Address.Assign(PC);
+            PC.Word++;
+            return MemoryRead();
         }
 
         protected abstract Register16 GetWord();
@@ -223,34 +223,34 @@ namespace EightBit
 
         protected Register16 GetWordPaged(Register16 address)
         {
-            return this.GetWordPaged(address.High, address.Low);
+            return GetWordPaged(address.High, address.Low);
         }
 
         protected Register16 GetWordPaged(byte page, byte offset)
         {
-            this.Bus.Address.Assign(offset, page);
-        	return this.GetWordPaged();
+            Bus.Address.Assign(offset, page);
+        	return GetWordPaged();
         }
 
         protected abstract void SetWordPaged(Register16 value);
 
         protected void SetWordPaged(Register16 address, Register16 value)
         {
-            this.SetWordPaged(address.High, address.Low, value);
+            SetWordPaged(address.High, address.Low, value);
         }
 
         protected void SetWordPaged(byte page, byte offset, Register16 value)
         {
-            this.Bus.Address.Assign(offset, page);
-            this.SetWordPaged(value);
+            Bus.Address.Assign(offset, page);
+            SetWordPaged(value);
         }
 
         protected abstract Register16 FetchWord();
 
         protected void FetchWordAddress()
         {
-            this.FetchWord();
-            this.Bus.Address.Assign(this.Intermediate);
+            FetchWord();
+            Bus.Address.Assign(Intermediate);
         }
 
         protected abstract void Push(byte value);
@@ -263,47 +263,47 @@ namespace EightBit
 
         protected Register16 GetWord(ushort address)
         {
-            this.Bus.Address.Word = address;
-            return this.GetWord();
+            Bus.Address.Word = address;
+            return GetWord();
         }
 
         protected Register16 GetWord(Register16 address)
         {
-            this.Bus.Address.Assign(address);
-            return this.GetWord();
+            Bus.Address.Assign(address);
+            return GetWord();
         }
 
         protected void SetWord(ushort address, Register16 value)
         {
-            this.Bus.Address.Word = address;
-            this.SetWord(value);
+            Bus.Address.Word = address;
+            SetWord(value);
         }
 
         protected void SetWord(Register16 address, Register16 value)
         {
-            this.Bus.Address.Assign(address);
-            this.SetWord(value);
+            Bus.Address.Assign(address);
+            SetWord(value);
         }
 
-        protected void Jump(ushort destination) => this.PC.Word = destination;
+        protected void Jump(ushort destination) => PC.Word = destination;
 
         protected void Jump(Register16 destination)
         {
-            this.PC.Assign(destination);
+            PC.Assign(destination);
         }
 
         protected void Call(ushort destination)
         {
-            this.Intermediate.Word = destination;
-            this.Call(this.Intermediate);
+            Intermediate.Word = destination;
+            Call(Intermediate);
         }
 
         protected virtual void Call(Register16 destination)
         {
-            this.PushWord(this.PC);
-            this.Jump(destination);
+            PushWord(PC);
+            Jump(destination);
         }
 
-        protected virtual void Return() => this.Jump(this.PopWord());
+        protected virtual void Return() => Jump(PopWord());
     }
 }

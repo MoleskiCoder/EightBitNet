@@ -8,7 +8,7 @@ namespace EightBit
 
     public class Device
     {
-        private PinLevel powerLine;
+        private PinLevel _powerLine;
 
         public event EventHandler<EventArgs>? RaisingPOWER;
 
@@ -18,36 +18,36 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? LoweredPOWER;
 
-        public bool Powered => this.POWER.Raised();
+        public bool Powered => POWER.Raised();
 
-        public ref PinLevel POWER => ref this.powerLine;
+        public ref PinLevel POWER => ref _powerLine;
 
         public virtual void RaisePOWER()
         {
-            if (this.POWER.Lowered())
+            if (POWER.Lowered())
             {
-                this.OnRaisingPOWER();
-                this.POWER.Raise();
-                this.OnRaisedPOWER();
+                OnRaisingPOWER();
+                POWER.Raise();
+                OnRaisedPOWER();
             }
         }
 
         public virtual void LowerPOWER()
         {
-            if (this.POWER.Raised())
+            if (POWER.Raised())
             {
-                this.OnLoweringPOWER();
-                this.POWER.Lower();
-                this.OnLoweredPOWER();
+                OnLoweringPOWER();
+                POWER.Lower();
+                OnLoweredPOWER();
             }
         }
 
-        protected virtual void OnRaisingPOWER() => this.RaisingPOWER?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisingPOWER() => RaisingPOWER?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnRaisedPOWER() => this.RaisedPOWER?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnRaisedPOWER() => RaisedPOWER?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweringPOWER() => this.LoweringPOWER?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweringPOWER() => LoweringPOWER?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void OnLoweredPOWER() => this.LoweredPOWER?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnLoweredPOWER() => LoweredPOWER?.Invoke(this, EventArgs.Empty);
     }
 }

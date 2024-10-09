@@ -9,9 +9,9 @@ namespace EightBit
 
     public class Rom(int size = 0) : Memory
     {
-        private byte[] bytes = new byte[size];
+        private byte[] _bytes = new byte[size];
 
-        public override int Size => this.bytes.Length;
+        public override int Size => _bytes.Length;
 
         public static int Load(Stream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
@@ -52,40 +52,40 @@ namespace EightBit
 
         public override int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
-            var maximumSize = this.Size - writeOffset;
-            return Load(file, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
+            var maximumSize = Size - writeOffset;
+            return Load(file, ref Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(string path, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
-            var maximumSize = this.Size - writeOffset;
-            return Load(path, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
+            var maximumSize = Size - writeOffset;
+            return Load(path, ref Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
             if (limit < 0)
             {
-                limit = Math.Min(from.Length, this.Size - readOffset);
+                limit = Math.Min(from.Length, Size - readOffset);
             }
 
             var extent = limit + writeOffset;
-            if (this.Size < extent)
+            if (Size < extent)
             {
                 var updated = new byte[extent];
-                Array.Copy(this.Bytes(), updated, this.Size);
-                this.Bytes() = updated;
+                Array.Copy(Bytes(), updated, Size);
+                Bytes() = updated;
             }
 
-            Array.Copy(from, readOffset, this.Bytes(), writeOffset, limit);
+            Array.Copy(from, readOffset, Bytes(), writeOffset, limit);
 
             return limit;
         }
 
-        public override byte Peek(ushort address) => this.Bytes()[address];
+        public override byte Peek(ushort address) => Bytes()[address];
 
-        protected ref byte[] Bytes() => ref this.bytes;
+        protected ref byte[] Bytes() => ref _bytes;
 
-        protected override void Poke(ushort address, byte value) => this.Bytes()[address] = value;
+        protected override void Poke(ushort address, byte value) => Bytes()[address] = value;
     }
 }

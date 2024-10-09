@@ -11,23 +11,23 @@ namespace EightBit
     public class IntelHexFile(string path)
     {
         private readonly string _path = path;
-        private bool eof;
+        private bool _eof;
 
         public IEnumerable<Tuple<ushort, byte[]>> Parse()
         {
-            this.eof = false;
-            using var reader = File.OpenText(this._path);
-            while (!reader.EndOfStream && !this.eof)
+            _eof = false;
+            using var reader = File.OpenText(_path);
+            while (!reader.EndOfStream && !_eof)
             {
                 var line = reader.ReadLine() ?? throw new InvalidOperationException("Early EOF detected");
-                var parsed = this.Parse(line);
+                var parsed = Parse(line);
                 if (parsed != null)
                 {
                     yield return parsed;
                 }
             }
 
-            if (!this.eof)
+            if (!_eof)
             {
                 throw new InvalidOperationException("File is missing an EOF record");
             }
@@ -77,7 +77,7 @@ namespace EightBit
                     return new Tuple<ushort, byte[]>(address, ParseDataRecord(line, count));
 
                 case 0x01:
-                    this.eof = true;
+                    _eof = true;
                     return null;
 
                 default:

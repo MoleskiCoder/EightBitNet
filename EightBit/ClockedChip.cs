@@ -20,18 +20,18 @@ namespace EightBit
         {
             for (var i = 0; i < extra; ++i)
             {
-                this.Tick();
+                Tick();
             }
         }
 
         public void Tick()
         {
-            ++this.Cycles;
-            this.OnTicked();
+            ++Cycles;
+            OnTicked();
         }
 
-        protected virtual void OnTicked() => this.Ticked?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnTicked() => Ticked?.Invoke(this, EventArgs.Empty);
 
-        protected void ResetCycles() => this.Cycles = 0;
+        protected void ResetCycles() => Cycles = 0;
     }
 }
