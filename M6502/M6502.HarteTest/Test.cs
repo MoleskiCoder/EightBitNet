@@ -12,12 +12,12 @@
 
         public IEnumerable<Cycle> AvailableCycles()
         {
-            if (this.Cycles == null)
+            if (Cycles == null)
             {
                 throw new InvalidOperationException("Cycles have not been initialised");
             }
 
-            foreach (var cycle in this.Cycles)
+            foreach (var cycle in Cycles)
             {
                 yield return new Cycle(cycle);
             }

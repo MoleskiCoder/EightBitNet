@@ -28,13 +28,21 @@ namespace EightBit
 
         public byte Peek(ushort absolute) => Reference(absolute);
 
-        public byte Peek(Register16 absolute) => Peek(absolute.Word);
+        public byte Peek(Register16 absolute)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            return Peek(absolute.Word);
+        }
 
         public void Poke(byte value) => Reference() = value;
 
         public void Poke(ushort absolute, byte value) => Reference(absolute) = value;
 
-        public void Poke(Register16 absolute, byte value) => Poke(absolute.Word, value);
+        public void Poke(Register16 absolute, byte value)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            Poke(absolute.Word, value);
+        }
 
         public byte Read()
         {
@@ -50,7 +58,11 @@ namespace EightBit
             return Read();
         }
 
-        public byte Read(Register16 absolute) => Read(absolute.Low, absolute.High);
+        public byte Read(Register16 absolute)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            return Read(absolute.Low, absolute.High);
+        }
 
         public byte Read(byte low, byte high)
         {
@@ -77,7 +89,11 @@ namespace EightBit
             Write(value);
         }
 
-        public void Write(Register16 absolute, byte value) => Write(absolute.Low, absolute.High, value);
+        public void Write(Register16 absolute, byte value)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            Write(absolute.Low, absolute.High, value);
+        }
 
         public void Write(byte low, byte high, byte value)
         {
@@ -116,7 +132,11 @@ namespace EightBit
             return ref mapped.Memory.Reference(offset);
         }
 
-        protected ref byte Reference(Register16 absolute) => ref Reference(absolute.Word);
+        protected ref byte Reference(Register16 absolute)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            return ref Reference(absolute.Word);
+        }
 
         protected ref byte Reference() => ref Reference(Address);
 

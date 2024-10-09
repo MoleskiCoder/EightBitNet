@@ -10,30 +10,30 @@
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         };
-        private bool disposed;
+        private bool _disposed;
 
         public string Path { get; set; } = path;
 
-        private readonly FileStream stream = File.Open(path, FileMode.Open);
+        private readonly FileStream _stream = File.Open(path, FileMode.Open);
 
-        public IAsyncEnumerable<Test?> TestsAsync => JsonSerializer.DeserializeAsyncEnumerable<Test>(this.stream, SerializerOptions);
+        public IAsyncEnumerable<Test?> TestsAsync => JsonSerializer.DeserializeAsyncEnumerable<Test>(_stream, SerializerOptions);
 
         private void Dispose(bool disposing)
         {
-            if (!this.disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
-                    this.stream.Dispose();
+                    _stream.Dispose();
                 }
 
-                this.disposed = true;
+                _disposed = true;
             }
         }
 
         public void Dispose()
         {
-            this.Dispose(disposing: true);
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

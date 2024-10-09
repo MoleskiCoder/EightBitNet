@@ -176,9 +176,17 @@ namespace EightBit
             MemoryWrite(data);
         }
 
-        protected void MemoryWrite(Register16 address, byte data) => MemoryWrite(address.Low, address.High, data);
+        protected void MemoryWrite(Register16 address, byte data)
+        {
+            ArgumentNullException.ThrowIfNull(address);
+            MemoryWrite(address.Low, address.High, data);
+        }
 
-        protected void MemoryWrite(Register16 address) => MemoryWrite(address.Low, address.High);
+        protected void MemoryWrite(Register16 address)
+        {
+            ArgumentNullException.ThrowIfNull(address);
+            MemoryWrite(address.Low, address.High);
+        }
 
         protected void MemoryWrite(byte data)
         {
@@ -202,7 +210,11 @@ namespace EightBit
             return MemoryRead();
         }
 
-        protected byte MemoryRead(Register16 address) => MemoryRead(address.Low, address.High);
+        protected byte MemoryRead(Register16 address)
+        {
+            ArgumentNullException.ThrowIfNull(address);
+            return MemoryRead(address.Low, address.High);
+        }
 
         protected virtual byte MemoryRead() => BusRead();
 
@@ -223,6 +235,7 @@ namespace EightBit
 
         protected Register16 GetWordPaged(Register16 address)
         {
+            ArgumentNullException.ThrowIfNull(address);
             return GetWordPaged(address.High, address.Low);
         }
 
@@ -236,6 +249,7 @@ namespace EightBit
 
         protected void SetWordPaged(Register16 address, Register16 value)
         {
+            ArgumentNullException.ThrowIfNull(address);
             SetWordPaged(address.High, address.Low, value);
         }
 

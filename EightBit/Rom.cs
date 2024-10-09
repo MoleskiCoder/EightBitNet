@@ -12,6 +12,9 @@ namespace EightBit
 
         public static int Load(Stream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
+            ArgumentNullException.ThrowIfNull(file);
+            ArgumentNullException.ThrowIfNull(output);
+
             var size = (int)file.Length;
 
             if ((maximumSize > 0) && ((size - readOffset) > maximumSize))
@@ -61,6 +64,8 @@ namespace EightBit
 
         public override int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
+            ArgumentNullException.ThrowIfNull(from);
+
             if (limit < 0)
             {
                 limit = Math.Min(from.Length, Size - readOffset);

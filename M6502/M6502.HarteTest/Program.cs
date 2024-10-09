@@ -4,13 +4,12 @@
 
 namespace M6502.HarteTest
 {
-    using System.IO;
-
     public static class Program
     {
         public static async Task Main(string[] _)
         {
             var directory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\6502\v1";
+            //var directory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\wdc65c02\v1";
 
             await ProcessTestSuiteAsync(directory);
         }

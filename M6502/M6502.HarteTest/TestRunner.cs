@@ -6,14 +6,15 @@
     {
         public Ram RAM { get; } = new(0x10000);
 
-        public M6502 CPU { get; }
+        public MOS6502 CPU { get; }
+        //public WDC65C02 CPU { get; }
 
-        private readonly MemoryMapping mapping;
+        private readonly MemoryMapping _mapping;
 
         public TestRunner()
         {
-            this.CPU = new(this);
-            this.mapping = new(this.RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            CPU = new(this);
+            _mapping = new(RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }
 
         public override void Initialize()
@@ -22,21 +23,21 @@
 
         public override void LowerPOWER()
         {
-            this.CPU.LowerPOWER();
+            CPU.LowerPOWER();
             base.LowerPOWER();
         }
 
-        public override MemoryMapping Mapping(ushort _) => this.mapping;
+        public override MemoryMapping Mapping(ushort _) => _mapping;
 
         public override void RaisePOWER()
         {
             base.RaisePOWER();
-            this.CPU.RaisePOWER();
-            this.CPU.RaiseRESET();
-            this.CPU.RaiseINT();
-            this.CPU.RaiseNMI();
-            this.CPU.RaiseSO();
-            this.CPU.RaiseRDY();
+            CPU.RaisePOWER();
+            CPU.RaiseRESET();
+            CPU.RaiseINT();
+            CPU.RaiseNMI();
+            CPU.RaiseSO();
+            CPU.RaiseRDY();
         }
     }
 }
