@@ -4,24 +4,13 @@
 
 namespace EightBit
 {
-    using System;
     using System.Diagnostics;
 
-    internal class TestHarness : IDisposable
+    internal sealed class TestHarness(Configuration configuration)
     {
-        private readonly Stopwatch timer = new Stopwatch();
-        private readonly Board board;
-        private long totalCycles = 0;
-
-        private bool disposed = false;
-
-        public TestHarness(Configuration configuration) => this.board = new Board(configuration);
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        private readonly Stopwatch timer = new();
+        private readonly Board board = new(configuration);
+        private long totalCycles;
 
         public void Run()
         {
@@ -37,20 +26,9 @@ namespace EightBit
             }
 
             this.timer.Stop();
-        }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.disposed)
-            {
-                if (disposing)
-                {
-                    System.Console.Out.WriteLine($"\n\nGuest cycles = {this.totalCycles}");
-                    System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
-                }
-
-                this.disposed = true;
-            }
+            System.Console.Out.WriteLine($"\n\nGuest cycles = {this.totalCycles}");
+            System.Console.Out.WriteLine($"Seconds = {this.timer.ElapsedMilliseconds / 1000.0}");
         }
     }
 }

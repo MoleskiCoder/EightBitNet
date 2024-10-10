@@ -14,10 +14,8 @@ namespace Intel8080.Test
             configuration.DebugMode = true;
 #endif
 
-            using (var harness = new TestHarness(configuration))
-            {
-                harness.Run();
-            }
+            var harness = new TestHarness(configuration);
+            harness.Run();
         }
     }
 }
