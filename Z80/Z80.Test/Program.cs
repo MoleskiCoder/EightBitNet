@@ -4,6 +4,8 @@
 
 namespace Z80.Test
 {
+    using EightBit;
+
     public static class Program
     {
         public static void Main(string[] args)
@@ -14,10 +16,9 @@ namespace Z80.Test
             configuration.DebugMode = true;
 #endif
 
-            using (var harness = new TestHarness(configuration))
-            {
-                harness.Run();
-            }
+            var board = new Board(configuration);
+            var harness = new TestHarness<Board, Z80>(board, board.CPU);
+            harness.Run();
         }
     }
 }

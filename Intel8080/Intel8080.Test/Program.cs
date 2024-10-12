@@ -14,7 +14,8 @@ namespace Intel8080.Test
             configuration.DebugMode = true;
 #endif
 
-            var harness = new TestHarness(configuration);
+            var board = new Board(configuration);
+            var harness = new EightBit.TestHarness<Board, Intel8080>(board, board.CPU);
             harness.Run();
         }
     }

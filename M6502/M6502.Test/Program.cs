@@ -13,7 +13,8 @@ namespace M6502.Test
 #if DEBUG
             configuration.DebugMode = false;
 #endif
-            var harness = new TestHarness(configuration);
+            var board = new Board(configuration);
+            var harness = new EightBit.TestHarness<Board, M6502.Core>(board, board.CPU);
             harness.Run();
         }
     }
