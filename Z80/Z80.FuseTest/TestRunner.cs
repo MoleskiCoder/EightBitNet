@@ -2,12 +2,13 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Fuse
+namespace Z80.FuseTest
 {
-    using System;
+    using Fuse;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
-    public enum Register
+    internal enum Register
     {
         AF,
         BC,
@@ -24,18 +25,18 @@ namespace Fuse
         MEMPTR,
     }
 
-    public class TestRunner : EightBit.Bus
+    internal class TestRunner : EightBit.Bus
     {
         private readonly Test<RegisterState> test;
         private readonly Result<RegisterState> result;
-        private readonly TestEvents expectedEvents = new TestEvents();
-        private readonly TestEvents actualEvents = new TestEvents();
-        private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
-        private readonly EightBit.InputOutput ports = new EightBit.InputOutput();
-        private readonly EightBit.Z80 cpu;
-        private readonly EightBit.Disassembler disassembler;
+        private readonly TestEvents expectedEvents = new();
+        private readonly TestEvents actualEvents = new();
+        private readonly EightBit.Ram ram = new(0x10000);
+        private readonly EightBit.InputOutput ports = new();
+        private readonly Z80.Z80 cpu;
+        private readonly Disassembler disassembler;
 
-        private int totalCycles = 0;
+        private int totalCycles;
 
         public TestRunner(Test<RegisterState> test, Result<RegisterState> result)
         {
@@ -47,18 +48,19 @@ namespace Fuse
             foreach (var e in result.Events.Container)
             {
                 // Ignore contention events
-                if (!e.Specifier.EndsWith("C", System.StringComparison.Ordinal))
+                Debug.Assert(e.Specifier is not null);
+                if (!e.Specifier.EndsWith('C'))
                 {
                     this.expectedEvents.Add(e);
                 }
             }
         }
 
-        public bool Failed { get; private set; } = false;
+        public bool Failed { get; private set; }
 
-        public bool Unimplemented { get; private set; } = false;
+        public bool Unimplemented { get; private set; }
 
-        public override EightBit.MemoryMapping Mapping(ushort address) => new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
+        public override EightBit.MemoryMapping Mapping(ushort address) => new(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
 
         public void Run()
         {
@@ -67,13 +69,13 @@ namespace Fuse
             var allowedCycles = this.test.RegisterState.TStates;
             try
             {
-                this.cpu.Run(allowedCycles);
+                _ = this.cpu.Run(allowedCycles);
                 this.Check();
             }
-            catch (System.InvalidOperationException error)
+            catch (InvalidOperationException error)
             {
                 this.Unimplemented = true;
-                System.Console.Error.WriteLine($"**** Error: {error.Message}");
+                Console.Error.WriteLine($"**** Error: {error.Message}");
             }
         }
 
@@ -116,14 +118,14 @@ namespace Fuse
         private static void DumpDifference(string description, byte expected, byte actual)
         {
             var output = $"**** {description}, Expected: {expected:x2}, Got {actual:x2}";
-            System.Console.Error.WriteLine(output);
+            Console.Error.WriteLine(output);
         }
 
-        private void Ports_WrittenPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PW", this.Address.Word, this.Data));
+        private void Ports_WrittenPort(object? sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PW", this.Address.Word, this.Data));
 
-        private void Ports_ReadPort(object sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PR", this.Address.Word, this.Data));
+        private void Ports_ReadPort(object? sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PR", this.Address.Word, this.Data));
 
-        private void Cpu_ExecutedInstruction(object sender, System.EventArgs e) => this.totalCycles += this.cpu.Cycles;
+        private void Cpu_ExecutedInstruction(object? sender, EventArgs e) => this.totalCycles += this.cpu.Cycles;
 
         private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
         {
@@ -243,7 +245,7 @@ namespace Fuse
             if (!success)
             {
                 this.Failed = true;
-                System.Console.Error.WriteLine($"**** Failed test (Register): {this.test.Description}");
+                Console.Error.WriteLine($"**** Failed test (Register): {this.test.Description}");
 
                 if (!af)
                 {
@@ -258,8 +260,8 @@ namespace Fuse
                     var gotF = this.cpu.F;
                     if (expectedF != gotF)
                     {
-                        var output = $"**** F, Expected: {EightBit.Disassembler.AsFlags(expectedF)}, Got: {EightBit.Disassembler.AsFlags(gotF)}";
-                        System.Console.Error.WriteLine(output);
+                        var output = $"**** F, Expected: {Disassembler.AsFlags(expectedF)}, Got: {Disassembler.AsFlags(gotF)}";
+                        Console.Error.WriteLine(output);
                     }
                 }
 
@@ -335,8 +337,8 @@ namespace Fuse
                     var gotF = this.cpu.F;
                     if (expectedF != gotF)
                     {
-                        var output = $"**** F', Expected: {EightBit.Disassembler.AsFlags(expectedF)}, Got: {EightBit.Disassembler.AsFlags(gotF)}";
-                        System.Console.Error.WriteLine(output);
+                        var output = $"**** F', Expected: {Disassembler.AsFlags(expectedF)}, Got: {Disassembler.AsFlags(gotF)}";
+                        Console.Error.WriteLine(output);
                     }
                 }
 
@@ -364,36 +366,36 @@ namespace Fuse
                 if (!iv)
                 {
                     var output = $"**** IV, Expected: {expectedState.I:X2}, Got: {this.cpu.IV:X2}";
-                    System.Console.Error.WriteLine(output);
+                    Console.Error.WriteLine(output);
                 }
 
                 if (!refresh)
                 {
                     var output = $"**** R, Expected: {expectedState.R:X2}, Got: {this.cpu.REFRESH.ToByte():X2}";
-                    System.Console.Error.WriteLine(output);
+                    Console.Error.WriteLine(output);
                 }
 
                 if (!iff1)
                 {
                     var output = $"**** IFF1, Expected: {expectedState.IFF1}, Got: {this.cpu.IFF1}";
-                    System.Console.Error.WriteLine(output);
+                    Console.Error.WriteLine(output);
                 }
 
                 if (!iff2)
                 {
                     var output = $"**** IFF2, Expected: {expectedState.IFF2}, Got: {this.cpu.IFF2}";
-                    System.Console.Error.WriteLine(output);
+                    Console.Error.WriteLine(output);
                 }
 
                 if (!im)
                 {
                     var output = $"**** IM, Expected: {expectedState.IM}, Got: {this.cpu.IM}";
-                    System.Console.Error.WriteLine(output);
+                    Console.Error.WriteLine(output);
                 }
 
                 this.cpu.PC.Word = this.test.RegisterState.Registers[(int)Register.PC].Word;
                 var disassembled = this.disassembler.Disassemble(this.cpu);
-                System.Console.Error.WriteLine(disassembled);
+                Console.Error.WriteLine(disassembled);
             }
         }
 
@@ -403,7 +405,7 @@ namespace Fuse
             var actuals = this.actualEvents.Container;
 
             var eventFailure = expectations.Count != actuals.Count;
-            for (var i = 0; !eventFailure && (i < expectations.Count); ++i)
+            for (var i = 0; !eventFailure && i < expectations.Count; ++i)
             {
                 var expectation = expectations[i];
                 var actual = actuals[i];
@@ -431,13 +433,13 @@ namespace Fuse
 
         private void DumpExpectedEvents()
         {
-            System.Console.Error.WriteLine("++++ Dumping expected events:");
+            Console.Error.WriteLine("++++ Dumping expected events:");
             DumpEvents(this.expectedEvents.Container);
         }
 
         private void DumpActualEvents()
         {
-            System.Console.Error.WriteLine("++++ Dumping actual events:");
+            Console.Error.WriteLine("++++ Dumping actual events:");
             DumpEvents(this.actualEvents.Container);
         }
 
@@ -452,7 +454,7 @@ namespace Fuse
         private static void DumpEvent(TestEvent e)
         {
             var output = $" Event issue {e}";
-            System.Console.Error.WriteLine(output);
+            Console.Error.WriteLine(output);
         }
 
         private void CheckMemory()
@@ -471,10 +473,10 @@ namespace Fuse
                         if (first)
                         {
                             first = false;
-                            System.Console.Error.WriteLine($"**** Failed test (Memory): {this.test.Description}");
+                            Console.Error.WriteLine($"**** Failed test (Memory): {this.test.Description}");
                         }
 
-                        System.Console.Error.WriteLine($"**** Difference: Address: {address:x4} Expected: {expected:x2} Actual: {actual:x2}");
+                        Console.Error.WriteLine($"**** Difference: Address: {address:x4} Expected: {expected:x2} Actual: {actual:x2}");
                     }
 
                     ++address;

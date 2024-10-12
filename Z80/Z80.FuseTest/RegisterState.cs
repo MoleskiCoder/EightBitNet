@@ -1,25 +1,27 @@
 ﻿// <copyright file="RegisterState.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Fuse
+
+namespace Z80.FuseTest
 {
-    using System;
+    using Fuse;
     using System.Globalization;
 
-    public class RegisterState : AbstractRegisterState, IRegisterState
+    internal class RegisterState : AbstractRegisterState, IRegisterState
     {
         public int I { get; private set; } = -1;
 
         public int R { get; private set; } = -1;
 
-        public bool IFF1 { get; private set; } = false;
+        public bool IFF1 { get; private set; }
 
-        public bool IFF2 { get; private set; } = false;
+        public bool IFF2 { get; private set; }
 
         public int IM { get; private set; } = -1;
 
         protected override void ParseInternalState(string[] tokens)
         {
+            ArgumentNullException.ThrowIfNull(tokens);
             this.I = Convert.ToInt32(tokens[0], 16);
             this.R = Convert.ToInt32(tokens[1], 16);
             this.IFF1 = Convert.ToInt32(tokens[2], CultureInfo.InvariantCulture) == 1;

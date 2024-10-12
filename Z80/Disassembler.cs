@@ -2,9 +2,11 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+
+namespace Z80
 {
-    using System;
+    using EightBit;
+    using System.Globalization;
 
     public class Disassembler(Bus bus)
     {
@@ -71,8 +73,8 @@ namespace EightBit
         public string Disassemble(Z80 cpu)
         {
             ArgumentNullException.ThrowIfNull(cpu);
-            _prefixCB = _prefixDD = _prefixED = _prefixFD = false;
-            return Disassemble(cpu, cpu.PC.Word);
+            this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
+            return this.Disassemble(cpu, cpu.PC.Word);
         }
 
         private static string CC(int flag) => flag switch
@@ -103,7 +105,7 @@ namespace EightBit
 
         private string Disassemble(Z80 cpu, ushort pc)
         {
-            var opCode = Bus.Peek(pc);
+            var opCode = this.Bus.Peek(pc);
 
             var decoded = cpu.GetDecodedOpCode(opCode);
 
@@ -114,37 +116,37 @@ namespace EightBit
             var p = decoded.P;
             var q = decoded.Q;
 
-            var immediate = Bus.Peek((ushort)(pc + 1));
+            var immediate = this.Bus.Peek((ushort)(pc + 1));
             var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
             var displacement = (sbyte)immediate;
             var relative = pc + displacement + 2;
-            var indexedImmediate = Bus.Peek((ushort)(pc + 1));
+            var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));
 
             var dumpCount = 0;
 
             var output = $"{opCode:x2}";
 
             var specification = string.Empty;
-            if (_prefixCB)
+            if (this._prefixCB)
             {
-                output += DisassembleCB(ref specification, x, y, z);
+                output += this.DisassembleCB(ref specification, x, y, z);
             }
-            else if (_prefixED)
+            else if (this._prefixED)
             {
-                output += DisassembleED(ref specification, ref dumpCount, x, y, z, p, q);
+                output += this.DisassembleED(ref specification, ref dumpCount, x, y, z, p, q);
             }
             else
             {
-                output += DisassembleOther(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
+                output += this.DisassembleOther(cpu, pc, ref specification, ref dumpCount, x, y, z, p, q);
             }
 
             for (var i = 0; i < dumpCount; ++i)
             {
-                output += $"{Bus.Peek((ushort)(pc + i + 1)):x2}";
+                output += $"{this.Bus.Peek((ushort)(pc + i + 1)):x2}";
             }
 
-            var outputFormatSpecification = !_prefixDD;
-            if (_prefixDD)
+            var outputFormatSpecification = !this._prefixDD;
+            if (this._prefixDD)
             {
                 if (opCode != 0xdd)
                 {
@@ -170,40 +172,44 @@ namespace EightBit
                     switch (y)
                     {
                         case 0:
-                            specification = $"RLC {R(z)}";
+                            specification = $"RLC {this.R(z)}";
                             break;
                         case 1:
-                            specification = $"RRC {R(z)}";
+                            specification = $"RRC {this.R(z)}";
                             break;
                         case 2:
-                            specification = $"RL {R(z)}";
+                            specification = $"RL {this.R(z)}";
                             break;
                         case 3:
-                            specification = $"RR {R(z)}";
+                            specification = $"RR {this.R(z)}";
                             break;
                         case 4:
-                            specification = $"SLA {R(z)}";
+                            specification = $"SLA {this.R(z)}";
                             break;
                         case 5:
-                            specification = $"SRA {R(z)}";
+                            specification = $"SRA {this.R(z)}";
                             break;
                         case 6:
-                            specification = $"SWAP {R(z)}";
+                            specification = $"SWAP {this.R(z)}";
                             break;
                         case 7:
-                            specification = $"SRL {R(z)}";
+                            specification = $"SRL {this.R(z)}";
+                            break;
+                        default:
                             break;
                     }
 
                     break;
                 case 1: // BIT y, r[z]
-                    specification = $"BIT {y},{R(z)}";
+                    specification = $"BIT {y},{this.R(z)}";
                     break;
                 case 2: // RES y, r[z]
-                    specification = $"RES {y},{R(z)}";
+                    specification = $"RES {y},{this.R(z)}";
                     break;
                 case 3: // SET y, r[z]
-                    specification = $"SET {y},{R(z)}";
+                    specification = $"SET {y},{this.R(z)}";
+                    break;
+                default:
                     break;
             }
 
@@ -223,21 +229,23 @@ namespace EightBit
                     switch (z)
                     {
                         case 0:
-                            specification = $"IN {R(y)}, (C)";
+                            specification = $"IN {this.R(y)}, (C)";
                             break;
 
                         case 1:
-                            specification = $"OUT (C), {R(y)}";
+                            specification = $"OUT (C), {this.R(y)}";
                             break;
 
                         case 2:
                             switch (q)
                             {
                                 case 0: // SBC HL,rp
-                                    specification = $"SBC HL,{RP(p)}";
+                                    specification = $"SBC HL,{this.RP(p)}";
                                     break;
                                 case 1: // ADC HL,rp
-                                    specification = $"ADC HL,{RP(p)}";
+                                    specification = $"ADC HL,{this.RP(p)}";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -246,10 +254,12 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD (nn),rp
-                                    specification = "LD ({1:X4}H)," + RP(p);
+                                    specification = "LD ({1:X4}H)," + this.RP(p);
                                     break;
                                 case 1: // LD rp,(nn)
-                                    specification = "LD " + RP(p) + ",(%2$04XH)";
+                                    specification = "LD " + this.RP(p) + ",(%2$04XH)";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -282,6 +292,8 @@ namespace EightBit
                                 case 7:
                                     specification = "IM 2";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -310,8 +322,12 @@ namespace EightBit
                                 case 7:
                                     specification = "NOP";
                                     break;
+                                default:
+                                    break;
                             }
 
+                            break;
+                        default:
                             break;
                     }
 
@@ -334,6 +350,8 @@ namespace EightBit
                                 case 7: // LDDR
                                     specification = "LDDR";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -351,6 +369,8 @@ namespace EightBit
                                     break;
                                 case 7: // CPDR
                                     specification = "CPDR";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -370,6 +390,8 @@ namespace EightBit
                                 case 7: // INDR
                                     specification = "INDR";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -388,11 +410,17 @@ namespace EightBit
                                 case 7: // OTDR
                                     specification = "OTDR";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
+                        default:
+                            break;
                     }
 
+                    break;
+                default:
                     break;
             }
 
@@ -435,11 +463,13 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    specification = "LD " + RP(p) + ",{1:X4}H";
+                                    specification = "LD " + this.RP(p) + ",{1:X4}H";
                                     dumpCount += 2;
                                     break;
                                 case 1: // ADD HL,rp
-                                    specification = $"ADD HL,{RP(p)}";
+                                    specification = $"ADD HL,{this.RP(p)}";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -464,6 +494,8 @@ namespace EightBit
                                             specification = "LD ({1:X4}H),A";
                                             dumpCount += 2;
                                             break;
+                                        default:
+                                            break;
                                     }
 
                                     break;
@@ -484,8 +516,12 @@ namespace EightBit
                                             specification = "LD A,({1:X4}H)";
                                             dumpCount += 2;
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -494,23 +530,25 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    specification = $"INC {RP(p)}";
+                                    specification = $"INC {this.RP(p)}";
                                     break;
                                 case 1: // DEC rp
-                                    specification = $"DEC {RP(p)}";
+                                    specification = $"DEC {this.RP(p)}";
+                                    break;
+                                default:
                                     break;
                             }
 
                             break;
                         case 4: // 8-bit INC
-                            specification = $"INC {R(y)}";
+                            specification = $"INC {this.R(y)}";
                             break;
                         case 5: // 8-bit DEC
-                            specification = $"DEC {R(y)}";
+                            specification = $"DEC {this.R(y)}";
                             break;
                         case 6: // 8-bit load immediate
-                            specification = $"LD {R(y)}";
-                            if (y == 6 && (_prefixDD || _prefixFD))
+                            specification = $"LD {this.R(y)}";
+                            if (y == 6 && (this._prefixDD || this._prefixFD))
                             {
                                 specification += ",{4:X2}H";
                                 dumpCount++;
@@ -549,17 +587,21 @@ namespace EightBit
                                 case 7:
                                     specification = "CCF";
                                     break;
+                                default:
+                                    break;
                             }
 
+                            break;
+                        default:
                             break;
                     }
 
                     break;
                 case 1: // 8-bit loading
-                    specification = z == 6 && y == 6 ? "HALT" : $"LD {R(y)},{R(z)}";
+                    specification = z == 6 && y == 6 ? "HALT" : $"LD {this.R(y)},{this.R(z)}";
                     break;
                 case 2: // Operate on accumulator and register/memory location
-                    specification = $"{ALU(y)} A,{R(z)}";
+                    specification = $"{ALU(y)} A,{this.R(z)}";
                     break;
                 case 3:
                     switch (z)
@@ -571,7 +613,7 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    specification = $"POP {RP2(p)}";
+                                    specification = $"POP {this.RP2(p)}";
                                     break;
                                 case 1:
                                     switch (p)
@@ -588,8 +630,12 @@ namespace EightBit
                                         case 3: // LD SP,HL
                                             specification = "LD SP,HL";
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -606,8 +652,8 @@ namespace EightBit
                                     dumpCount += 2;
                                     break;
                                 case 1: // CB prefix
-                                    _prefixCB = true;
-                                    output += Disassemble(cpu, ++pc);
+                                    this._prefixCB = true;
+                                    output += this.Disassemble(cpu, ++pc);
                                     break;
                                 case 2: // OUT (n),A
                                     specification = "OUT ({0:X2}H),A";
@@ -629,6 +675,8 @@ namespace EightBit
                                 case 7: // EI
                                     specification = "EI";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -640,7 +688,7 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
-                                    specification = $"PUSH {RP2(p)}";
+                                    specification = $"PUSH {this.RP2(p)}";
                                     break;
                                 case 1:
                                     switch (p)
@@ -650,19 +698,23 @@ namespace EightBit
                                             dumpCount += 2;
                                             break;
                                         case 1: // DD prefix
-                                            _prefixDD = true;
-                                            output += Disassemble(cpu, ++pc);
+                                            this._prefixDD = true;
+                                            output += this.Disassemble(cpu, ++pc);
                                             break;
                                         case 2: // ED prefix
-                                            _prefixED = true;
-                                            output += Disassemble(cpu, ++pc);
+                                            this._prefixED = true;
+                                            output += this.Disassemble(cpu, ++pc);
                                             break;
                                         case 3: // FD prefix
-                                            _prefixFD = true;
-                                            output += Disassemble(cpu, ++pc);
+                                            this._prefixFD = true;
+                                            output += this.Disassemble(cpu, ++pc);
+                                            break;
+                                        default:
                                             break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -674,8 +726,12 @@ namespace EightBit
                         case 7: // Restart: RST y * 8
                             specification = $"RST {y * 8:X2}";
                             break;
+                        default:
+                            break;
                     }
 
+                    break;
+                default:
                     break;
             }
 
@@ -691,12 +747,12 @@ namespace EightBit
                 case 1:
                     return "DE";
                 case 2:
-                    if (_prefixDD)
+                    if (this._prefixDD)
                     {
                         return "IX";
                     }
 
-                    if (_prefixFD)
+                    if (this._prefixFD)
                     {
                         return "IY";
                     }
@@ -704,6 +760,8 @@ namespace EightBit
                     return "HL";
                 case 3:
                     return "SP";
+                default:
+                    break;
             }
 
             throw new ArgumentOutOfRangeException(nameof(rp));
@@ -718,12 +776,12 @@ namespace EightBit
                 case 1:
                     return "DE";
                 case 2:
-                    if (_prefixDD)
+                    if (this._prefixDD)
                     {
                         return "IX";
                     }
 
-                    if (_prefixFD)
+                    if (this._prefixFD)
                     {
                         return "IY";
                     }
@@ -731,6 +789,8 @@ namespace EightBit
                     return "HL";
                 case 3:
                     return "AF";
+                default:
+                    break;
             }
 
             throw new ArgumentOutOfRangeException(nameof(rp));
@@ -749,38 +809,38 @@ namespace EightBit
                 case 3:
                     return "E";
                 case 4:
-                    if (_prefixDD)
+                    if (this._prefixDD)
                     {
                         return "IXH";
                     }
 
-                    if (_prefixFD)
+                    if (this._prefixFD)
                     {
                         return "IYH";
                     }
 
                     return "H";
                 case 5:
-                    if (_prefixDD)
+                    if (this._prefixDD)
                     {
                         return "IXL";
                     }
 
-                    if (_prefixFD)
+                    if (this._prefixFD)
                     {
                         return "IYL";
                     }
 
                     return "L";
                 case 6:
-                    if (_prefixDD || _prefixFD)
+                    if (this._prefixDD || this._prefixFD)
                     {
-                        if (_prefixDD)
+                        if (this._prefixDD)
                         {
                             return "IX+{4}";
                         }
 
-                        if (_prefixFD)
+                        if (this._prefixFD)
                         {
                             return "IY+{4}";
                         }
@@ -793,6 +853,8 @@ namespace EightBit
                     break;
                 case 7:
                     return "A";
+                default:
+                    break;
             }
 
             throw new ArgumentOutOfRangeException(nameof(r));

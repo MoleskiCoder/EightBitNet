@@ -6,7 +6,7 @@ namespace Z80.Test
 {
     using EightBit;
 
-    public static class Program
+    internal static class Program
     {
         public static void Main(string[] args)
         {

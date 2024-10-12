@@ -2,7 +2,7 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace Z80
 {
     public enum RegisterIndex
     {

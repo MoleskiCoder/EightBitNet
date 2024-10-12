@@ -2,9 +2,9 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace Z80
 {
-    using System;
+    using EightBit;
 
     public class Z80(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
@@ -106,25 +106,25 @@ namespace EightBit
 
         public bool IFF2 { get; set; }
 
-        public override Register16 AF => _accumulatorFlags[_accumulatorFlagsSet];
+        public override Register16 AF => this._accumulatorFlags[this._accumulatorFlagsSet];
 
-        public override Register16 BC => _registers[_registerSet, (int)RegisterIndex.IndexBC];
+        public override Register16 BC => this._registers[this._registerSet, (int)RegisterIndex.IndexBC];
 
-        public override Register16 DE => _registers[_registerSet, (int)RegisterIndex.IndexDE];
+        public override Register16 DE => this._registers[this._registerSet, (int)RegisterIndex.IndexDE];
 
-        public override Register16 HL => _registers[_registerSet, (int)RegisterIndex.IndexHL];
+        public override Register16 HL => this._registers[this._registerSet, (int)RegisterIndex.IndexHL];
 
         public Register16 IX { get; } = new(0xffff);
 
-        public byte IXH { get => IX.High; set => IX.High = value; }
+        public byte IXH { get => this.IX.High; set => this.IX.High = value; }
 
-        public byte IXL { get => IX.Low; set => IX.Low = value; }
+        public byte IXL { get => this.IX.Low; set => this.IX.Low = value; }
 
         public Register16 IY { get; } = new(0xffff);
 
-        public byte IYH { get => IY.High; set => IY.High = value; }
+        public byte IYH { get => this.IY.High; set => this.IY.High = value; }
 
-        public byte IYL { get => IY.Low; set => IY.Low = value; }
+        public byte IYL { get => this.IY.Low; set => this.IY.Low = value; }
 
         // ** From the Z80 CPU User Manual
         // Memory Refresh(R) Register.The Z80 CPU contains a memory _refresh counter,
@@ -137,183 +137,190 @@ namespace EightBit
         // can load the R register for testing purposes, but this register is normally not used by the
         // programmer. During _refresh, the contents of the I Register are placed on the upper eight
         // bits of the address bus.
-        public ref RefreshRegister REFRESH => ref _refresh;
+        public ref RefreshRegister REFRESH => ref this._refresh;
 
-        public ref PinLevel NMI => ref _nmiLine;
+        public ref PinLevel NMI => ref this._nmiLine;
 
-        public ref PinLevel M1 => ref _m1Line;
+        public ref PinLevel M1 => ref this._m1Line;
 
         // ** From the Z80 CPU User Manual
         // RFSH.Refresh(output, active Low). RFSH, together with MREQ, indicates that the lower
         // seven bits of the system’s address bus can be used as a _refresh address to the system’s
         // dynamic memories.
-        public ref PinLevel RFSH => ref _rfshLine;
+        public ref PinLevel RFSH => ref this._rfshLine;
 
-        public ref PinLevel MREQ => ref _mreqLine;
+        public ref PinLevel MREQ => ref this._mreqLine;
 
-        public ref PinLevel IORQ => ref _iorqLine;
+        public ref PinLevel IORQ => ref this._iorqLine;
 
-        public ref PinLevel RD => ref _rdLine;
+        public ref PinLevel RD => ref this._rdLine;
 
-        public ref PinLevel WR => ref _wrLine;
+        public ref PinLevel WR => ref this._wrLine;
 
         private Register16 DisplacedAddress
         {
             get
             {
-                var displacement = (_prefixDD ? IX : IY).Word + _displacement;
-                MEMPTR.Word = (ushort)displacement;
-                return MEMPTR;
+                var displacement = (this._prefixDD ? this.IX : this.IY).Word + this._displacement;
+                this.MEMPTR.Word = (ushort)displacement;
+                return this.MEMPTR;
             }
         }
 
-        public void Exx() => _registerSet ^= 1;
+        public void Exx() => this._registerSet ^= 1;
 
-        public void ExxAF() => _accumulatorFlagsSet ^= 1;
+        public void ExxAF() => this._accumulatorFlagsSet ^= 1;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseNMI()
         {
-            if (NMI.Lowered())
+            if (this.NMI.Lowered())
             {
-                OnRaisingNMI();
-                NMI.Raise();
-                OnRaisedNMI();
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
             }
         }
 
         public virtual void LowerNMI()
         {
-            if (NMI.Raised())
+            if (this.NMI.Raised())
             {
-                OnLoweringNMI();
-                NMI.Lower();
-                OnLoweredNMI();
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseM1()
         {
-            if (M1.Lowered())
+            if (this.M1.Lowered())
             {
-                OnRaisingM1();
-                M1.Raise();
-                OnRaisedM1();
+                this.OnRaisingM1();
+                this.M1.Raise();
+                this.OnRaisedM1();
             }
         }
 
         public virtual void LowerM1()
         {
-            if (M1.Raised())
+            if (this.M1.Raised())
             {
-                OnLoweringM1();
-                M1.Lower();
-                OnLoweredM1();
+                this.OnLoweringM1();
+                this.M1.Lower();
+                this.OnLoweredM1();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRFSH()
         {
-            if (RFSH.Lowered())
+            if (this.RFSH.Lowered())
             {
-                OnRaisingRFSH();
-                RFSH.Raise();
-                OnRaisedRFSH();
+                this.OnRaisingRFSH();
+                this.RFSH.Raise();
+                this.OnRaisedRFSH();
             }
         }
 
         public virtual void LowerRFSH()
         {
-            if (RFSH.Raised())
+            if (this.RFSH.Raised())
             {
-                OnLoweringRFSH();
-                RFSH.Lower();
-                OnLoweredRFSH();
+                this.OnLoweringRFSH();
+                this.RFSH.Lower();
+                this.OnLoweredRFSH();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseMREQ()
         {
-            if (MREQ.Lowered())
+            if (this.MREQ.Lowered())
             {
-                OnRaisingMREQ();
-                MREQ.Raise();
-                OnRaisedMREQ();
+                this.OnRaisingMREQ();
+                this.MREQ.Raise();
+                this.OnRaisedMREQ();
             }
         }
 
         public virtual void LowerMREQ()
         {
-            if (MREQ.Raised())
+            if (this.MREQ.Raised())
             {
-                OnLoweringMREQ();
-                MREQ.Lower();
-                OnLoweredMREQ();
+                this.OnLoweringMREQ();
+                this.MREQ.Lower();
+                this.OnLoweredMREQ();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseIORQ()
         {
-            if (IORQ.Lowered())
+            if (this.IORQ.Lowered())
             {
-                OnRaisingIORQ();
-                IORQ.Raise();
-                OnRaisedIORQ();
+                this.OnRaisingIORQ();
+                this.IORQ.Raise();
+                this.OnRaisedIORQ();
             }
         }
 
         public virtual void LowerIORQ()
         {
-            if (IORQ.Raised())
+            if (this.IORQ.Raised())
             {
-                OnLoweringIORQ();
-                IORQ.Lower();
-                OnLoweredIORQ();
+                this.OnLoweringIORQ();
+                this.IORQ.Lower();
+                this.OnLoweredIORQ();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRD()
         {
-            if (RD.Lowered())
+            if (this.RD.Lowered())
             {
-                OnRaisingRD();
-                RD.Raise();
-                OnRaisedRD();
+                this.OnRaisingRD();
+                this.RD.Raise();
+                this.OnRaisedRD();
             }
         }
 
         public virtual void LowerRD()
         {
-            if (RD.Raised())
+            if (this.RD.Raised())
             {
-                OnLoweringRD();
-                RD.Lower();
-                OnLoweredRD();
+                this.OnLoweringRD();
+                this.RD.Lower();
+                this.OnLoweredRD();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseWR()
         {
-            if (WR.Lowered())
+            if (this.WR.Lowered())
             {
-                OnRaisingWR();
-                WR.Raise();
-                OnRaisedWR();
+                this.OnRaisingWR();
+                this.WR.Raise();
+                this.OnRaisedWR();
             }
         }
 
         public virtual void LowerWR()
         {
-            if (WR.Raised())
+            if (this.WR.Raised())
             {
-                OnLoweringWR();
-                WR.Lower();
-                OnLoweredWR();
+                this.OnLoweringWR();
+                this.WR.Lower();
+                this.OnLoweredWR();
             }
         }
 
         public override void Execute()
         {
-            var decoded = GetDecodedOpCode(OpCode);
+            var decoded = this.GetDecodedOpCode(this.OpCode);
 
             var x = decoded.X;
             var y = decoded.Y;
@@ -322,45 +329,45 @@ namespace EightBit
             var p = decoded.P;
             var q = decoded.Q;
 
-            if (_prefixCB)
+            if (this._prefixCB)
             {
-                ExecuteCB(x, y, z);
+                this.ExecuteCB(x, y, z);
             }
-            else if (_prefixED)
+            else if (this._prefixED)
             {
-                ExecuteED(x, y, z, p, q);
+                this.ExecuteED(x, y, z, p, q);
             }
             else
             {
-                ExecuteOther(x, y, z, p, q);
+                this.ExecuteOther(x, y, z, p, q);
             }
         }
 
         public override void PoweredStep()
         {
-            _displaced = _prefixCB = _prefixDD = _prefixED = _prefixFD = false;
+            this._displaced = this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
             var handled = false;
-            if (RESET.Lowered())
+            if (this.RESET.Lowered())
             {
-                HandleRESET();
+                this.HandleRESET();
                 handled = true;
             }
-            else if (NMI.Lowered())
+            else if (this.NMI.Lowered())
             {
-                HandleNMI();
+                this.HandleNMI();
                 handled = true;
             }
-            else if (INT.Lowered())
+            else if (this.INT.Lowered())
             {
-                RaiseINT();
-                RaiseHALT();
-                if (IFF1)
+                this.RaiseINT();
+                this.RaiseHALT();
+                if (this.IFF1)
                 {
-                    HandleINT();
+                    this.HandleINT();
                     handled = true;
                 }
             }
-            else if (HALT.Lowered())
+            else if (this.HALT.Lowered())
             {
                 // ** From the Z80 CPU User Manual
                 // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
@@ -376,37 +383,37 @@ namespace EightBit
                 // received from the memory is ignored and an NOP instruction is forced internally to the
                 // CPU.The HALT acknowledge signal is active during this time indicating that the processor
                 // is in the HALT state.
-                _ = ReadInitialOpCode();
-                Execute(0); // NOP
+                _ = this.ReadInitialOpCode();
+                this.Execute(0); // NOP
                 handled = true;
             }
 
             if (!handled)
             {
-                Execute(FetchInitialOpCode());
+                this.Execute(this.FetchInitialOpCode());
             }
         }
 
         protected override void OnRaisedPOWER()
         {
-            RaiseM1();
-            RaiseMREQ();
-            RaiseIORQ();
-            RaiseRD();
-            RaiseWR();
+            this.RaiseM1();
+            this.RaiseMREQ();
+            this.RaiseIORQ();
+            this.RaiseRD();
+            this.RaiseWR();
 
-            DisableInterrupts();
-            IM = 0;
+            this.DisableInterrupts();
+            this.IM = 0;
 
-            REFRESH = new(0);
-            IV = (byte)Mask.Eight;
+            this.REFRESH = new(0);
+            this.IV = (byte)Mask.Eight;
 
-            ExxAF();
-            Exx();
+            this.ExxAF();
+            this.Exx();
 
-            AF.Word = IX.Word = IY.Word = BC.Word = DE.Word = HL.Word = (ushort)Mask.Sixteen;
+            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
 
-            _prefixCB = _prefixDD = _prefixED = _prefixFD = false;
+            this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
 
             base.OnRaisedPOWER();
         }
@@ -423,7 +430,7 @@ namespace EightBit
 
         protected virtual void OnRaisedM1()
         {
-            ++REFRESH;
+            ++this.REFRESH;
             RaisedM1?.Invoke(this, EventArgs.Empty);
         }
 
@@ -473,57 +480,57 @@ namespace EightBit
 
         protected override void MemoryWrite()
         {
-            Tick(3);
-            LowerMREQ();
-            LowerWR();
+            this.Tick(3);
+            this.LowerMREQ();
+            this.LowerWR();
             base.MemoryWrite();
-            RaiseWR();
-            RaiseMREQ();
+            this.RaiseWR();
+            this.RaiseMREQ();
         }
 
         protected override byte MemoryRead()
         {
-            Tick(3);
-            LowerMREQ();
-            LowerRD();
+            this.Tick(3);
+            this.LowerMREQ();
+            this.LowerRD();
             var returned = base.MemoryRead();
-            RaiseRD();
-            RaiseMREQ();
+            this.RaiseRD();
+            this.RaiseMREQ();
             return returned;
         }
 
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            DisableInterrupts();
-            IV = REFRESH = 0;
-            SP.Word = AF.Word = (ushort)Mask.Sixteen;
-            Tick(3);
+            this.DisableInterrupts();
+            this.IV = this.REFRESH = 0;
+            this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
+            this.Tick(3);
         }
 
         protected override void HandleINT()
         {
             base.HandleINT();
-            LowerM1();
-            LowerIORQ();
-            var data = Bus.Data;
-            RaiseIORQ();
-            RaiseM1();
-            DisableInterrupts();
-            Tick(5);
-            switch (IM)
+            this.LowerM1();
+            this.LowerIORQ();
+            var data = this.Bus.Data;
+            this.RaiseIORQ();
+            this.RaiseM1();
+            this.DisableInterrupts();
+            this.Tick(5);
+            switch (this.IM)
             {
                 case 0: // i8080 equivalent
-                    Execute(data);
+                    this.Execute(data);
                     break;
                 case 1:
-                    Tick();
-                    Restart(7 << 3);   // 7 cycles
+                    this.Tick();
+                    this.Restart(7 << 3);   // 7 cycles
                     break;
                 case 2:
-                    Tick(7);
-                    MEMPTR.Assign(data, IV);
-                    Call(MEMPTR);
+                    this.Tick(7);
+                    this.MEMPTR.Assign(data, this.IV);
+                    this.Call(this.MEMPTR);
                     break;
                 default:
                     throw new NotSupportedException("Invalid interrupt mode");
@@ -532,7 +539,7 @@ namespace EightBit
 
         protected override void Call(Register16 destination)
         {
-            Tick();
+            this.Tick();
             base.Call(destination);
         }
 
@@ -588,7 +595,7 @@ namespace EightBit
 
         private static byte AdjustOverflowAdd(byte input, int beforeNegative, int valueNegative, int afterNegative)
         {
-            var overflow = (beforeNegative == valueNegative) && (beforeNegative != afterNegative);
+            var overflow = beforeNegative == valueNegative && beforeNegative != afterNegative;
             return SetBit(input, StatusBits.VF, overflow);
         }
 
@@ -596,7 +603,7 @@ namespace EightBit
 
         private static byte AdjustOverflowSub(byte input, int beforeNegative, int valueNegative, int afterNegative)
         {
-            var overflow = (beforeNegative != valueNegative) && (beforeNegative != afterNegative);
+            var overflow = beforeNegative != valueNegative && beforeNegative != afterNegative;
             return SetBit(input, StatusBits.VF, overflow);
         }
 
@@ -606,27 +613,27 @@ namespace EightBit
 
         private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
 
-        private void DisableInterrupts() => IFF1 = IFF2 = false;
+        private void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
 
-        private void EnableInterrupts() => IFF1 = IFF2 = true;
+        private void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
 
-        private Register16 HL2() => _prefixDD ? IX : _prefixFD ? IY : HL;
+        private Register16 HL2() => this._prefixDD ? this.IX : this._prefixFD ? this.IY : this.HL;
 
         private Register16 RP(int rp) => rp switch
         {
-            0 => BC,
-            1 => DE,
-            2 => HL2(),
-            3 => SP,
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL2(),
+            3 => this.SP,
             _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
         private Register16 RP2(int rp) => rp switch
         {
-            0 => BC,
-            1 => DE,
-            2 => HL2(),
-            3 => AF,
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL2(),
+            3 => this.AF,
             _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
@@ -635,27 +642,27 @@ namespace EightBit
             switch (r)
             {
                 case 0:
-                    return ref B;
+                    return ref this.B;
                 case 1:
-                    return ref C;
+                    return ref this.C;
                 case 2:
-                    return ref D;
+                    return ref this.D;
                 case 3:
-                    return ref E;
+                    return ref this.E;
                 case 4:
-                    return ref HL2().High;
+                    return ref this.HL2().High;
                 case 5:
-                    return ref HL2().Low;
+                    return ref this.HL2().Low;
                 case 6:
-                    Bus.Address.Assign(_displaced ? DisplacedAddress : HL);
+                    this.Bus.Address.Assign(this._displaced ? this.DisplacedAddress : this.HL);
                     if (access == AccessLevel.ReadOnly)
                     {
-                        MemoryRead();
+                        _ = this.MemoryRead();
                     }
                     // Will need a post-MemoryWrite
-                    return ref Bus.Data;
+                    return ref this.Bus.Data;
                 case 7:
-                    return ref A;
+                    return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
             }
@@ -663,9 +670,11 @@ namespace EightBit
 
         private void R(int r, byte value)
         {
-            R(r, AccessLevel.WriteOnly) = value;
+            this.R(r, AccessLevel.WriteOnly) = value;
             if (r == 6)
-                MemoryWrite();
+            {
+                this.MemoryWrite();
+            }
         }
 
         private ref byte R2(int r)
@@ -673,23 +682,23 @@ namespace EightBit
             switch (r)
             {
                 case 0:
-                    return ref B;
+                    return ref this.B;
                 case 1:
-                    return ref C;
+                    return ref this.C;
                 case 2:
-                    return ref D;
+                    return ref this.D;
                 case 3:
-                    return ref E;
+                    return ref this.E;
                 case 4:
-                    return ref H;
+                    return ref this.H;
                 case 5:
-                    return ref L;
+                    return ref this.L;
                 case 6:
                     // N.B. Write not possible, when r == 6
-                    MemoryRead(HL);
-                    return ref Bus.Data;
+                    _ = this.MemoryRead(this.HL);
+                    return ref this.Bus.Data;
                 case 7:
-                    return ref A;
+                    return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
             }
@@ -698,18 +707,18 @@ namespace EightBit
         private void ExecuteCB(int x, int y, int z)
         {
             var memoryZ = z == 6;
-            var indirect = (!_displaced && memoryZ) || _displaced;
+            var indirect = (!this._displaced && memoryZ) || this._displaced;
             var direct = !indirect;
 
             byte operand;
-            if (_displaced)
+            if (this._displaced)
             {
-                Tick(2);
-                operand = MemoryRead(DisplacedAddress);
+                this.Tick(2);
+                operand = this.MemoryRead(this.DisplacedAddress);
             }
             else
             {
-                operand = R(z);
+                operand = this.R(z);
             }
 
             var update = x != 1; // BIT does not update
@@ -718,21 +727,21 @@ namespace EightBit
                 case 0: // rot[y] r[z]
                     operand = y switch
                     {
-                        0 => RLC(operand),
-                        1 => RRC(operand),
-                        2 => RL(operand),
-                        3 => RR(operand),
-                        4 => SLA(operand),
-                        5 => SRA(operand),
-                        6 => SLL(operand),
-                        7 => SRL(operand),
+                        0 => this.RLC(operand),
+                        1 => this.RRC(operand),
+                        2 => this.RL(operand),
+                        3 => this.RR(operand),
+                        4 => this.SLA(operand),
+                        5 => this.SRA(operand),
+                        6 => this.SLL(operand),
+                        7 => this.SRL(operand),
                         _ => throw new NotSupportedException("Invalid operation mode"),
                     };
-                    F = AdjustSZP(F, operand);
+                    this.F = AdjustSZP(this.F, operand);
                     break;
                 case 1: // BIT y, r[z]
-                    BIT(y, operand);
-                    F = AdjustXY(F, direct ? operand : MEMPTR.High);
+                    this.BIT(y, operand);
+                    this.F = AdjustXY(this.F, direct ? operand : this.MEMPTR.High);
                     break;
                 case 2: // RES y, r[z]
                     operand = RES(y, operand);
@@ -746,18 +755,18 @@ namespace EightBit
 
             if (update)
             {
-                Tick();
-                if (_displaced)
+                this.Tick();
+                if (this._displaced)
                 {
-                    MemoryWrite(operand);
+                    this.MemoryWrite(operand);
                     if (!memoryZ)
                     {
-                        R2(z) = operand;
+                        this.R2(z) = operand;
                     }
                 }
                 else
                 {
-                    R(z, operand);
+                    this.R(z, operand);
                 }
             }
         }
@@ -773,42 +782,42 @@ namespace EightBit
                     switch (z)
                     {
                         case 0: // Input from port with 16-bit address
-                            Bus.Address.Assign(BC);
-                            MEMPTR.Assign(Bus.Address);
-                            MEMPTR.Word++;
-                            ReadPort();
+                            this.Bus.Address.Assign(this.BC);
+                            this.MEMPTR.Assign(this.Bus.Address);
+                            this.MEMPTR.Word++;
+                            _ = this.ReadPort();
                             if (y != 6)
                             {
-                                R(y, AccessLevel.WriteOnly) = Bus.Data; // IN r[y],(C)
+                                this.R(y, AccessLevel.WriteOnly) = this.Bus.Data; // IN r[y],(C)
                             }
 
-                            F = AdjustSZPXY(F, Bus.Data);
-                            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
+                            this.F = AdjustSZPXY(this.F, this.Bus.Data);
+                            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                             break;
                         case 1: // Output to port with 16-bit address
-                            Bus.Address.Assign(BC);
-                            MEMPTR.Assign(Bus.Address);
-                            MEMPTR.Word++;
-                            Bus.Data = y != 6 ? R(y) : (byte)0;
-                            WritePort();
+                            this.Bus.Address.Assign(this.BC);
+                            this.MEMPTR.Assign(this.Bus.Address);
+                            this.MEMPTR.Word++;
+                            this.Bus.Data = y != 6 ? this.R(y) : (byte)0;
+                            this.WritePort();
                             break;
                         case 2: // 16-bit add/subtract with carry
-                            HL2().Assign(q switch
+                            this.HL2().Assign(q switch
                             {
-                                0 => SBC(HL2(), RP(p)), // SBC HL, rp[p]
-                                1 => ADC(HL2(), RP(p)), // ADC HL, rp[p]
+                                0 => this.SBC(this.HL2(), this.RP(p)), // SBC HL, rp[p]
+                                1 => this.ADC(this.HL2(), this.RP(p)), // ADC HL, rp[p]
                                 _ => throw new NotSupportedException("Invalid operation mode"),
                             });
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
-                            FetchWordAddress();
+                            this.FetchWordAddress();
                             switch (q)
                             {
                                 case 0: // LD (nn), rp[p]
-                                    SetWord(RP(p));
+                                    this.SetWord(this.RP(p));
                                     break;
                                 case 1: // LD rp[p], (nn)
-                                    RP(p).Assign(GetWord());
+                                    this.RP(p).Assign(this.GetWord());
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -816,22 +825,22 @@ namespace EightBit
 
                             break;
                         case 4: // Negate accumulator
-                            NEG();
+                            this.NEG();
                             break;
                         case 5: // Return from interrupt
                             switch (y)
                             {
                                 case 1:
-                                    RetI(); // RETI
+                                    this.RetI(); // RETI
                                     break;
                                 default:
-                                    RetN(); // RETN
+                                    this.RetN(); // RETN
                                     break;
                             }
 
                             break;
                         case 6: // Set interrupt mode
-                            IM = y switch
+                            this.IM = y switch
                             {
                                 0 or 1 or 4 or 5 => 0,
                                 2 or 6 => 1,
@@ -843,26 +852,26 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0: // LD I,A
-                                    IV = A;
+                                    this.IV = this.A;
                                     break;
                                 case 1: // LD R,A
-                                    REFRESH = A;
+                                    this.REFRESH = this.A;
                                     break;
                                 case 2: // LD A,I
-                                    F = AdjustSZXY(F, A = IV);
-                                    F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-                                    F = SetBit(F, StatusBits.PF, IFF2);
+                                    this.F = AdjustSZXY(this.F, this.A = this.IV);
+                                    this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+                                    this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
                                     break;
                                 case 3: // LD A,R
-                                    F = AdjustSZXY(F, A = REFRESH);
-                                    F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-                                    F = SetBit(F, StatusBits.PF, IFF2);
+                                    this.F = AdjustSZXY(this.F, this.A = this.REFRESH);
+                                    this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+                                    this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
                                     break;
                                 case 4: // RRD
-                                    RRD();
+                                    this.RRD();
                                     break;
                                 case 5: // RLD
-                                    RLD();
+                                    this.RLD();
                                     break;
                                 case 6: // NOP
                                 case 7: // NOP
@@ -884,30 +893,32 @@ namespace EightBit
                             switch (y)
                             {
                                 case 4: // LDI
-                                    LDI();
+                                    this.LDI();
                                     break;
                                 case 5: // LDD
-                                    LDD();
+                                    this.LDD();
                                     break;
                                 case 6: // LDIR
-                                    if (LDIR())
+                                    if (this.LDIR())
                                     {
-                                        --PC.Word;
-                                        MEMPTR.Assign(PC);
-                                        --PC.Word;
+                                        --this.PC.Word;
+                                        this.MEMPTR.Assign(this.PC);
+                                        --this.PC.Word;
                                     }
 
-                                    Tick(7);
+                                    this.Tick(7);
                                     break;
                                 case 7: // LDDR
-                                    if (LDDR())
+                                    if (this.LDDR())
                                     {
-                                        --PC.Word;
-                                        MEMPTR.Assign(PC);
-                                        --PC.Word;
+                                        --this.PC.Word;
+                                        this.MEMPTR.Assign(this.PC);
+                                        --this.PC.Word;
                                     }
 
-                                    Tick(7);
+                                    this.Tick(7);
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -916,36 +927,38 @@ namespace EightBit
                             switch (y)
                             {
                                 case 4: // CPI
-                                    CPI();
+                                    this.CPI();
                                     break;
                                 case 5: // CPD
-                                    CPD();
+                                    this.CPD();
                                     break;
                                 case 6: // CPIR
-                                    if (CPIR())
+                                    if (this.CPIR())
                                     {
-                                        --PC.Word;
-                                        MEMPTR.Assign(PC);
-                                        --PC.Word;
-                                        Tick(5);
+                                        --this.PC.Word;
+                                        this.MEMPTR.Assign(this.PC);
+                                        --this.PC.Word;
+                                        this.Tick(5);
                                     }
 
-                                    Tick(5);
+                                    this.Tick(5);
                                     break;
                                 case 7: // CPDR
-                                    if (CPDR())
+                                    if (this.CPDR())
                                     {
-                                        --PC.Word;
-                                        MEMPTR.Assign(PC);
-                                        --PC.Word;
-                                        Tick(3);
+                                        --this.PC.Word;
+                                        this.MEMPTR.Assign(this.PC);
+                                        --this.PC.Word;
+                                        this.Tick(3);
                                     }
                                     else
                                     {
-                                        MEMPTR.Word = (ushort)(PC.Word - 2);
+                                        this.MEMPTR.Word = (ushort)(this.PC.Word - 2);
                                     }
 
-                                    Tick(7);
+                                    this.Tick(7);
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -954,26 +967,28 @@ namespace EightBit
                             switch (y)
                             {
                                 case 4: // INI
-                                    INI();
+                                    this.INI();
                                     break;
                                 case 5: // IND
-                                    IND();
+                                    this.IND();
                                     break;
                                 case 6: // INIR
-                                    if (INIR())
+                                    if (this.INIR())
                                     {
-                                        PC.Word -= 2;
-                                        Tick(5);
+                                        this.PC.Word -= 2;
+                                        this.Tick(5);
                                     }
 
                                     break;
                                 case 7: // INDR
-                                    if (INDR())
+                                    if (this.INDR())
                                     {
-                                        PC.Word -= 2;
-                                        Tick(5);
+                                        this.PC.Word -= 2;
+                                        this.Tick(5);
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -982,34 +997,40 @@ namespace EightBit
                             switch (y)
                             {
                                 case 4: // OUTI
-                                    OUTI();
+                                    this.OUTI();
                                     break;
                                 case 5: // OUTD
-                                    OUTD();
+                                    this.OUTD();
                                     break;
                                 case 6: // OTIR
-                                    if (OTIR())
+                                    if (this.OTIR())
                                     {
-                                        PC.Word -= 2;
-                                        Tick(5);
+                                        this.PC.Word -= 2;
+                                        this.Tick(5);
                                     }
 
-                                    Tick(3);
+                                    this.Tick(3);
                                     break;
                                 case 7: // OTDR
-                                    if (OTDR())
+                                    if (this.OTDR())
                                     {
-                                        PC.Word -= 2;
-                                        Tick(5);
+                                        this.PC.Word -= 2;
+                                        this.Tick(5);
                                     }
 
-                                    Tick(3);
+                                    this.Tick(3);
+                                    break;
+                                default:
                                     break;
                             }
 
                             break;
+                        default:
+                            break;
                     }
 
+                    break;
+                default:
                     break;
             }
         }
@@ -1029,25 +1050,25 @@ namespace EightBit
                                 case 0: // NOP
                                     break;
                                 case 1: // EX AF AF'
-                                    ExxAF();
+                                    this.ExxAF();
                                     break;
                                 case 2: // DJNZ d
-                                    Tick();
-                                    if (JumpRelativeConditional(--B != 0))
+                                    this.Tick();
+                                    if (this.JumpRelativeConditional(--this.B != 0))
                                     {
-                                        Tick(2);
+                                        this.Tick(2);
                                     }
 
-                                    Tick(3);
+                                    this.Tick(3);
                                     break;
                                 case 3: // JR d
-                                    JumpRelative((sbyte)FetchByte());
+                                    this.JumpRelative((sbyte)this.FetchByte());
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
                                 case 6:
                                 case 7:
-                                    JumpRelativeConditionalFlag(y - 4);
+                                    this.JumpRelativeConditionalFlag(y - 4);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1058,10 +1079,10 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    RP(p).Assign(FetchWord());
+                                    this.RP(p).Assign(this.FetchWord());
                                     break;
                                 case 1: // ADD HL,rp
-                                    HL2().Assign(Add(HL2(), RP(p)));
+                                    this.HL2().Assign(this.Add(this.HL2(), this.RP(p)));
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1075,29 +1096,29 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            Bus.Address.Assign(BC);
-                                            MEMPTR.Assign(Bus.Address);
-                                            ++MEMPTR.Word;
-                                            MEMPTR.High = Bus.Data = A;
-                                            MemoryWrite();
+                                            this.Bus.Address.Assign(this.BC);
+                                            this.MEMPTR.Assign(this.Bus.Address);
+                                            ++this.MEMPTR.Word;
+                                            this.MEMPTR.High = this.Bus.Data = this.A;
+                                            this.MemoryWrite();
                                             break;
                                         case 1: // LD (DE),A
-                                            Bus.Address.Assign(DE);
-                                            MEMPTR.Assign(Bus.Address);
-                                            ++MEMPTR.Word;
-                                            MEMPTR.High = Bus.Data = A;
-                                            MemoryWrite();
+                                            this.Bus.Address.Assign(this.DE);
+                                            this.MEMPTR.Assign(this.Bus.Address);
+                                            ++this.MEMPTR.Word;
+                                            this.MEMPTR.High = this.Bus.Data = this.A;
+                                            this.MemoryWrite();
                                             break;
                                         case 2: // LD (nn),HL
-                                            FetchWordAddress();
-                                            SetWord(HL2());
+                                            this.FetchWordAddress();
+                                            this.SetWord(this.HL2());
                                             break;
                                         case 3: // LD (nn),A
-                                            FetchWordMEMPTR();
-                                            Bus.Address.Assign(MEMPTR);
-                                            ++MEMPTR.Word;
-                                            MEMPTR.High = Bus.Data = A;
-                                            MemoryWrite();
+                                            this.FetchWordMEMPTR();
+                                            this.Bus.Address.Assign(this.MEMPTR);
+                                            ++this.MEMPTR.Word;
+                                            this.MEMPTR.High = this.Bus.Data = this.A;
+                                            this.MemoryWrite();
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1108,26 +1129,26 @@ namespace EightBit
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            Bus.Address.Assign(BC);
-                                            MEMPTR.Assign(Bus.Address);
-                                            ++MEMPTR.Word;
-                                            A = MemoryRead();
+                                            this.Bus.Address.Assign(this.BC);
+                                            this.MEMPTR.Assign(this.Bus.Address);
+                                            ++this.MEMPTR.Word;
+                                            this.A = this.MemoryRead();
                                             break;
                                         case 1: // LD A,(DE)
-                                            Bus.Address.Assign(DE);
-                                            MEMPTR.Assign(Bus.Address);
-                                            ++MEMPTR.Word;
-                                            A = MemoryRead();
+                                            this.Bus.Address.Assign(this.DE);
+                                            this.MEMPTR.Assign(this.Bus.Address);
+                                            ++this.MEMPTR.Word;
+                                            this.A = this.MemoryRead();
                                             break;
                                         case 2: // LD HL,(nn)
-                                            FetchWordAddress();
-                                            HL2().Assign(GetWord());
+                                            this.FetchWordAddress();
+                                            this.HL2().Assign(this.GetWord());
                                             break;
                                         case 3: // LD A,(nn)
-                                            FetchWordMEMPTR();
-                                            Bus.Address.Assign(MEMPTR);
-                                            ++MEMPTR.Word;
-                                            A = MemoryRead();
+                                            this.FetchWordMEMPTR();
+                                            this.Bus.Address.Assign(this.MEMPTR);
+                                            ++this.MEMPTR.Word;
+                                            this.A = this.MemoryRead();
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1143,10 +1164,10 @@ namespace EightBit
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    ++RP(p).Word;
+                                    ++this.RP(p).Word;
                                     break;
                                 case 1: // DEC rp
-                                    --RP(p).Word;
+                                    --this.RP(p).Word;
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1155,46 +1176,46 @@ namespace EightBit
                             break;
                         case 4: // 8-bit INC
                             {
-                                if (memoryY && _displaced)
+                                if (memoryY && this._displaced)
                                 {
-                                    FetchDisplacement();
-                                    Tick(5);
+                                    this.FetchDisplacement();
+                                    this.Tick(5);
                                 }
 
-                                var original = R(y);
-                                Tick();
-                                R(y, Increment(original));
+                                var original = this.R(y);
+                                this.Tick();
+                                this.R(y, this.Increment(original));
                                 break;
                             }
 
                         case 5: // 8-bit DEC
                             {
-                                if (memoryY && _displaced)
+                                if (memoryY && this._displaced)
                                 {
-                                    FetchDisplacement();
-                                    Tick(5);
+                                    this.FetchDisplacement();
+                                    this.Tick(5);
                                 }
 
-                                var original = R(y);
-                                Tick();
-                                R(y, Decrement(original));
+                                var original = this.R(y);
+                                this.Tick();
+                                this.R(y, this.Decrement(original));
                                 break;
                             }
 
                         case 6: // 8-bit load immediate
                             {
-                                if (memoryY && _displaced)
+                                if (memoryY && this._displaced)
                                 {
-                                    FetchDisplacement();
+                                    this.FetchDisplacement();
                                 }
 
-                                var value = FetchByte();
-                                if (_displaced)
+                                var value = this.FetchByte();
+                                if (this._displaced)
                                 {
-                                    Tick(2);
+                                    this.Tick(2);
                                 }
 
-                                R(y, value);  // LD r,n
+                                this.R(y, value);  // LD r,n
                                 break;
                             }
 
@@ -1202,28 +1223,28 @@ namespace EightBit
                             switch (y)
                             {
                                 case 0:
-                                    A = RLC(A);
+                                    this.A = this.RLC(this.A);
                                     break;
                                 case 1:
-                                    A = RRC(A);
+                                    this.A = this.RRC(this.A);
                                     break;
                                 case 2:
-                                    A = RL(A);
+                                    this.A = this.RL(this.A);
                                     break;
                                 case 3:
-                                    A = RR(A);
+                                    this.A = this.RR(this.A);
                                     break;
                                 case 4:
-                                    DAA();
+                                    this.DAA();
                                     break;
                                 case 5:
-                                    CPL();
+                                    this.CPL();
                                     break;
                                 case 6:
-                                    SCF();
+                                    this.SCF();
                                     break;
                                 case 7:
-                                    CCF();
+                                    this.CCF();
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1239,11 +1260,11 @@ namespace EightBit
                     if (!(memoryZ && memoryY))
                     {
                         var normal = true;
-                        if (_displaced)
+                        if (this._displaced)
                         {
                             if (memoryZ || memoryY)
                             {
-                                FetchDisplacement();
+                                this.FetchDisplacement();
                             }
 
                             if (memoryZ)
@@ -1251,22 +1272,24 @@ namespace EightBit
                                 switch (y)
                                 {
                                     case 4:
-                                        if (_displaced)
+                                        if (this._displaced)
                                         {
-                                            Tick(5);
+                                            this.Tick(5);
                                         }
 
-                                        H = R(z);
+                                        this.H = this.R(z);
                                         normal = false;
                                         break;
                                     case 5:
-                                        if (_displaced)
+                                        if (this._displaced)
                                         {
-                                            Tick(5);
+                                            this.Tick(5);
                                         }
 
-                                        L = R(z);
+                                        this.L = this.R(z);
                                         normal = false;
+                                        break;
+                                    default:
                                         break;
                                 }
                             }
@@ -1276,22 +1299,24 @@ namespace EightBit
                                 switch (z)
                                 {
                                     case 4:
-                                        if (_displaced)
+                                        if (this._displaced)
                                         {
-                                            Tick(5);
+                                            this.Tick(5);
                                         }
 
-                                        R(y, H);
+                                        this.R(y, this.H);
                                         normal = false;
                                         break;
                                     case 5:
-                                        if (_displaced)
+                                        if (this._displaced)
                                         {
-                                            Tick(5);
+                                            this.Tick(5);
                                         }
 
-                                        R(y, L);
+                                        this.R(y, this.L);
                                         normal = false;
+                                        break;
+                                    default:
                                         break;
                                 }
                             }
@@ -1299,54 +1324,54 @@ namespace EightBit
 
                         if (normal)
                         {
-                            if (_displaced)
+                            if (this._displaced)
                             {
-                                Tick(5);
+                                this.Tick(5);
                             }
 
-                            R(y, R(z));
+                            this.R(y, this.R(z));
                         }
                     }
                     else
                     {
-                        LowerHALT(); // Exception (replaces LD (HL), (HL))
+                        this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                     }
 
                     break;
                 case 2:
                     { // Operate on accumulator and register/memory location
-                        if (memoryZ && _displaced)
+                        if (memoryZ && this._displaced)
                         {
-                            FetchDisplacement();
-                            Tick(5);
+                            this.FetchDisplacement();
+                            this.Tick(5);
                         }
 
-                        var value = R(z);
+                        var value = this.R(z);
                         switch (y)
                         {
                             case 0: // ADD A,r
-                                A = Add(A, value);
+                                this.A = this.Add(this.A, value);
                                 break;
                             case 1: // ADC A,r
-                                A = ADC(A, value);
+                                this.A = this.ADC(this.A, value);
                                 break;
                             case 2: // SUB r
-                                A = SUB(A, value);
+                                this.A = this.SUB(this.A, value);
                                 break;
                             case 3: // SBC A,r
-                                A = SBC(A, value);
+                                this.A = this.SBC(this.A, value);
                                 break;
                             case 4: // AND r
-                                AndR(value);
+                                this.AndR(value);
                                 break;
                             case 5: // XOR r
-                                XorR(value);
+                                this.XorR(value);
                                 break;
                             case 6: // OR r
-                                OrR(value);
+                                this.OrR(value);
                                 break;
                             case 7: // CP r
-                                Compare(value);
+                                this.Compare(value);
                                 break;
                             default:
                                 throw new NotSupportedException("Invalid operation mode");
@@ -1359,28 +1384,28 @@ namespace EightBit
                     switch (z)
                     {
                         case 0: // Conditional return
-                            ReturnConditionalFlag(y);
+                            this.ReturnConditionalFlag(y);
                             break;
                         case 1: // POP & various ops
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    RP2(p).Assign(PopWord());
+                                    this.RP2(p).Assign(this.PopWord());
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // RET
-                                            Return();
+                                            this.Return();
                                             break;
                                         case 1: // EXX
-                                            Exx();
+                                            this.Exx();
                                             break;
                                         case 2: // JP HL
-                                            Jump(HL2());
+                                            this.Jump(this.HL2());
                                             break;
                                         case 3: // LD SP,HL
-                                            SP.Assign(HL2());
+                                            this.SP.Assign(this.HL2());
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1393,48 +1418,48 @@ namespace EightBit
 
                             break;
                         case 2: // Conditional jump
-                            JumpConditionalFlag(y);
+                            this.JumpConditionalFlag(y);
                             break;
                         case 3: // Assorted operations
                             switch (y)
                             {
                                 case 0: // JP nn
-                                    JumpIndirect();
+                                    this.JumpIndirect();
                                     break;
                                 case 1: // CB prefix
-                                    _prefixCB = true;
-                                    if (_displaced)
+                                    this._prefixCB = true;
+                                    if (this._displaced)
                                     {
-                                        FetchDisplacement();
-                                        Execute(FetchByte());
+                                        this.FetchDisplacement();
+                                        this.Execute(this.FetchByte());
                                     }
                                     else
                                     {
-                                        Execute(FetchInitialOpCode());
+                                        this.Execute(this.FetchInitialOpCode());
                                     }
 
                                     break;
                                 case 2: // OUT (n),A
-                                    WritePort(FetchByte());
+                                    this.WritePort(this.FetchByte());
                                     break;
                                 case 3: // IN A,(n)
-                                    A = ReadPort(FetchByte());
+                                    this.A = this.ReadPort(this.FetchByte());
                                     break;
                                 case 4: // EX (SP),HL
-                                    XHTL(HL2());
+                                    this.XHTL(this.HL2());
                                     break;
                                 case 5: // EX DE,HL
                                     {
-                                        Intermediate.Assign(DE);
-                                        DE.Assign(HL);
-                                        HL.Assign(Intermediate);
+                                        this.Intermediate.Assign(this.DE);
+                                        this.DE.Assign(this.HL);
+                                        this.HL.Assign(this.Intermediate);
                                     }
                                     break;
                                 case 6: // DI
-                                    DisableInterrupts();
+                                    this.DisableInterrupts();
                                     break;
                                 case 7: // EI
-                                    EnableInterrupts();
+                                    this.EnableInterrupts();
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1442,32 +1467,32 @@ namespace EightBit
 
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
-                            CallConditionalFlag(y);
+                            this.CallConditionalFlag(y);
                             break;
                         case 5: // PUSH & various ops
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
-                                    Tick();
-                                    PushWord(RP2(p));
+                                    this.Tick();
+                                    this.PushWord(this.RP2(p));
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            CallIndirect();
+                                            this.CallIndirect();
                                             break;
                                         case 1: // DD prefix
-                                            _displaced = _prefixDD = true;
-                                            Execute(FetchInitialOpCode());
+                                            this._displaced = this._prefixDD = true;
+                                            this.Execute(this.FetchInitialOpCode());
                                             break;
                                         case 2: // ED prefix
-                                            _prefixED = true;
-                                            Execute(FetchInitialOpCode());
+                                            this._prefixED = true;
+                                            this.Execute(this.FetchInitialOpCode());
                                             break;
                                         case 3: // FD prefix
-                                            _displaced = _prefixFD = true;
-                                            Execute(FetchInitialOpCode());
+                                            this._displaced = this._prefixFD = true;
+                                            this.Execute(this.FetchInitialOpCode());
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1481,32 +1506,32 @@ namespace EightBit
                             break;
                         case 6:
                             { // Operate on accumulator and immediate operand: alu[y] n
-                                var operand = FetchByte();
+                                var operand = this.FetchByte();
                                 switch (y)
                                 {
                                     case 0: // ADD A,n
-                                        A = Add(A, operand);
+                                        this.A = this.Add(this.A, operand);
                                         break;
                                     case 1: // ADC A,n
-                                        A = ADC(A, operand);
+                                        this.A = this.ADC(this.A, operand);
                                         break;
                                     case 2: // SUB n
-                                        A = SUB(A, operand);
+                                        this.A = this.SUB(this.A, operand);
                                         break;
                                     case 3: // SBC A,n
-                                        A = SBC(A, operand);
+                                        this.A = this.SBC(this.A, operand);
                                         break;
                                     case 4: // AND n
-                                        AndR(operand);
+                                        this.AndR(operand);
                                         break;
                                     case 5: // XOR n
-                                        XorR(operand);
+                                        this.XorR(operand);
                                         break;
                                     case 6: // OR n
-                                        OrR(operand);
+                                        this.OrR(operand);
                                         break;
                                     case 7: // CP n
-                                        Compare(operand);
+                                        this.Compare(operand);
                                         break;
                                     default:
                                         throw new NotSupportedException("Invalid operation mode");
@@ -1516,34 +1541,36 @@ namespace EightBit
                             }
 
                         case 7: // Restart: RST y * 8
-                            Restart((byte)(y << 3));
+                            this.Restart((byte)(y << 3));
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
                     }
 
                     break;
+                default:
+                    break;
             }
         }
 
         private void HandleNMI()
         {
-            RaiseNMI();
-            RaiseHALT();
-            IFF2 = IFF1;
-            IFF1 = false;
-            LowerM1();
-            _ = Bus.Data;
-            RaiseM1();
-            Restart(0x66);
+            this.RaiseNMI();
+            this.RaiseHALT();
+            this.IFF2 = this.IFF1;
+            this.IFF1 = false;
+            this.LowerM1();
+            _ = this.Bus.Data;
+            this.RaiseM1();
+            this.Restart(0x66);
         }
 
-        private void FetchDisplacement() => _displacement = (sbyte)FetchByte();
+        private void FetchDisplacement() => this._displacement = (sbyte)this.FetchByte();
 
         private byte FetchInitialOpCode()
         {
-            var returned = ReadInitialOpCode();
-            ++PC.Word;
+            var returned = this.ReadInitialOpCode();
+            ++this.PC.Word;
             return returned;
         }
 
@@ -1561,287 +1588,287 @@ namespace EightBit
         // instruction so that no other concurrent operation can be performed.
         private byte ReadInitialOpCode()
         {
-            Tick();
-            LowerM1();
-            var returned = MemoryRead(PC);
-            RaiseM1();
-            Bus.Address.Assign(REFRESH, IV);
-            LowerRFSH();
-            LowerMREQ();
-            RaiseMREQ();
-            RaiseRFSH();
+            this.Tick();
+            this.LowerM1();
+            var returned = this.MemoryRead(this.PC);
+            this.RaiseM1();
+            this.Bus.Address.Assign(this.REFRESH, this.IV);
+            this.LowerRFSH();
+            this.LowerMREQ();
+            this.RaiseMREQ();
+            this.RaiseRFSH();
             return returned;
         }
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            Intermediate.Word = (ushort)(operand - value - carry);
-            var result = Intermediate.Low;
+            this.Intermediate.Word = (ushort)(operand - value - carry);
+            var result = this.Intermediate.Low;
 
-            F = AdjustHalfCarrySub(F, operand, value, result);
-            F = AdjustOverflowSub(F, operand, value, result);
+            this.F = AdjustHalfCarrySub(this.F, operand, value, result);
+            this.F = AdjustOverflowSub(this.F, operand, value, result);
 
-            F = SetBit(F, StatusBits.NF);
-            F = SetBit(F, StatusBits.CF, Intermediate.High & (byte)StatusBits.CF);
-            F = AdjustSZ(F, result);
+            this.F = SetBit(this.F, StatusBits.NF);
+            this.F = SetBit(this.F, StatusBits.CF, this.Intermediate.High & (byte)StatusBits.CF);
+            this.F = AdjustSZ(this.F, result);
 
             return result;
         }
 
         private byte Increment(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF);
+            this.F = ClearBit(this.F, StatusBits.NF);
             var result = ++operand;
-            F = AdjustSZXY(F, result);
-            F = SetBit(F, StatusBits.VF, result == (byte)Bits.Bit7);
-            F = ClearBit(F, StatusBits.HC, LowNibble(result));
+            this.F = AdjustSZXY(this.F, result);
+            this.F = SetBit(this.F, StatusBits.VF, result == (byte)Bits.Bit7);
+            this.F = ClearBit(this.F, StatusBits.HC, LowNibble(result));
             return result;
         }
 
         private byte Decrement(byte operand)
         {
-            F = SetBit(F, StatusBits.NF);
-            F = ClearBit(F, StatusBits.HC, LowNibble(operand));
+            this.F = SetBit(this.F, StatusBits.NF);
+            this.F = ClearBit(this.F, StatusBits.HC, LowNibble(operand));
             var result = --operand;
-            F = AdjustSZXY(F, result);
-            F = SetBit(F, StatusBits.VF, result == (byte)Mask.Seven);
+            this.F = AdjustSZXY(this.F, result);
+            this.F = SetBit(this.F, StatusBits.VF, result == (byte)Mask.Seven);
             return result;
         }
 
         private void RetN()
         {
-            Return();
-            IFF1 = IFF2;
+            this.Return();
+            this.IFF1 = this.IFF2;
         }
 
-        private void RetI() => RetN();
+        private void RetI() => this.RetN();
 
         private bool ConvertCondition(int flag) => flag switch
         {
-            0 => (F & (byte)StatusBits.ZF) == 0,
-            1 => (F & (byte)StatusBits.ZF) != 0,
-            2 => (F & (byte)StatusBits.CF) == 0,
-            3 => (F & (byte)StatusBits.CF) != 0,
-            4 => (F & (byte)StatusBits.PF) == 0,
-            5 => (F & (byte)StatusBits.PF) != 0,
-            6 => (F & (byte)StatusBits.SF) == 0,
-            7 => (F & (byte)StatusBits.SF) != 0,
+            0 => (this.F & (byte)StatusBits.ZF) == 0,
+            1 => (this.F & (byte)StatusBits.ZF) != 0,
+            2 => (this.F & (byte)StatusBits.CF) == 0,
+            3 => (this.F & (byte)StatusBits.CF) != 0,
+            4 => (this.F & (byte)StatusBits.PF) == 0,
+            5 => (this.F & (byte)StatusBits.PF) != 0,
+            6 => (this.F & (byte)StatusBits.SF) == 0,
+            7 => (this.F & (byte)StatusBits.SF) != 0,
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
         private void ReturnConditionalFlag(int flag)
         {
-            if (ConvertCondition(flag))
+            if (this.ConvertCondition(flag))
             {
-                Tick();
-                Return();
+                this.Tick();
+                this.Return();
             }
         }
 
-        private void JumpRelativeConditionalFlag(int flag) => JumpRelativeConditional(ConvertCondition(flag));
+        private void JumpRelativeConditionalFlag(int flag) => this.JumpRelativeConditional(this.ConvertCondition(flag));
 
-        private void JumpConditionalFlag(int flag) => JumpConditional(ConvertCondition(flag));
+        private void JumpConditionalFlag(int flag) => this.JumpConditional(this.ConvertCondition(flag));
 
-        private void CallConditionalFlag(int flag) => CallConditional(ConvertCondition(flag));
+        private void CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
 
         private Register16 SBC(Register16 operand, Register16 value)
         {
-            var subtraction = operand.Word - value.Word - (F & (byte)StatusBits.CF);
-            Intermediate.Word = (ushort)subtraction;
+            var subtraction = operand.Word - value.Word - (this.F & (byte)StatusBits.CF);
+            this.Intermediate.Word = (ushort)subtraction;
 
-            F = SetBit(F, StatusBits.NF);
-            F = ClearBit(F, StatusBits.ZF, Intermediate.Word);
-            F = SetBit(F, StatusBits.CF, subtraction & (int)Bits.Bit16);
-            F = AdjustHalfCarrySub(F, operand.High, value.High, Intermediate.High);
-            F = AdjustXY(F, Intermediate.High);
+            this.F = SetBit(this.F, StatusBits.NF);
+            this.F = ClearBit(this.F, StatusBits.ZF, this.Intermediate.Word);
+            this.F = SetBit(this.F, StatusBits.CF, subtraction & (int)Bits.Bit16);
+            this.F = AdjustHalfCarrySub(this.F, operand.High, value.High, this.Intermediate.High);
+            this.F = AdjustXY(this.F, this.Intermediate.High);
 
             var beforeNegative = operand.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
-            var afterNegative = Intermediate.High & (byte)StatusBits.SF;
+            var afterNegative = this.Intermediate.High & (byte)StatusBits.SF;
 
-            F = SetBit(F, StatusBits.SF, afterNegative);
-            F = AdjustOverflowSub(F, beforeNegative, valueNegative, afterNegative);
+            this.F = SetBit(this.F, StatusBits.SF, afterNegative);
+            this.F = AdjustOverflowSub(this.F, beforeNegative, valueNegative, afterNegative);
 
-            MEMPTR.Word = (ushort)(operand.Word + 1);
+            this.MEMPTR.Word = (ushort)(operand.Word + 1);
 
-            return Intermediate;
+            return this.Intermediate;
         }
 
         private Register16 ADC(Register16 operand, Register16 value)
         {
-            Add(operand, value, F & (byte)StatusBits.CF); // Leaves result in intermediate anyway
-            F = ClearBit(F, StatusBits.ZF, Intermediate.Word);
+            _ = this.Add(operand, value, this.F & (byte)StatusBits.CF);
+            this.F = ClearBit(this.F, StatusBits.ZF, this.Intermediate.Word);
 
             var beforeNegative = operand.High & (byte)StatusBits.SF;
             var valueNegative = value.High & (byte)StatusBits.SF;
-            var afterNegative = Intermediate.High & (byte)StatusBits.SF;
+            var afterNegative = this.Intermediate.High & (byte)StatusBits.SF;
 
-            F = SetBit(F, StatusBits.SF, afterNegative);
-            F = AdjustOverflowAdd(F, beforeNegative, valueNegative, afterNegative);
+            this.F = SetBit(this.F, StatusBits.SF, afterNegative);
+            this.F = AdjustOverflowAdd(this.F, beforeNegative, valueNegative, afterNegative);
 
-            return Intermediate;
+            return this.Intermediate;
         }
 
         private Register16 Add(Register16 operand, Register16 value, int carry = 0)
         {
             var addition = operand.Word + value.Word + carry;
-            Intermediate.Word = (ushort)addition;
+            this.Intermediate.Word = (ushort)addition;
 
-            F = ClearBit(F, StatusBits.NF);
-            F = SetBit(F, StatusBits.CF, addition & (int)Bits.Bit16);
-            F = AdjustHalfCarryAdd(F, operand.High, value.High, Intermediate.High);
-            F = AdjustXY(F, Intermediate.High);
+            this.F = ClearBit(this.F, StatusBits.NF);
+            this.F = SetBit(this.F, StatusBits.CF, addition & (int)Bits.Bit16);
+            this.F = AdjustHalfCarryAdd(this.F, operand.High, value.High, this.Intermediate.High);
+            this.F = AdjustXY(this.F, this.Intermediate.High);
 
-            MEMPTR.Word = (ushort)(operand.Word + 1);
+            this.MEMPTR.Word = (ushort)(operand.Word + 1);
 
-            return Intermediate;
+            return this.Intermediate;
         }
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
-            Intermediate.Word = (ushort)(operand + value + carry);
-            var result = Intermediate.Low;
+            this.Intermediate.Word = (ushort)(operand + value + carry);
+            var result = this.Intermediate.Low;
 
-            F = AdjustHalfCarryAdd(F, operand, value, result);
-            F = AdjustOverflowAdd(F, operand, value, result);
+            this.F = AdjustHalfCarryAdd(this.F, operand, value, result);
+            this.F = AdjustOverflowAdd(this.F, operand, value, result);
 
-            F = ClearBit(F, StatusBits.NF);
-            F = SetBit(F, StatusBits.CF, Intermediate.High & (byte)StatusBits.CF);
-            F = AdjustSZXY(F, result);
+            this.F = ClearBit(this.F, StatusBits.NF);
+            this.F = SetBit(this.F, StatusBits.CF, this.Intermediate.High & (byte)StatusBits.CF);
+            this.F = AdjustSZXY(this.F, result);
 
             return result;
         }
 
-        private byte ADC(byte operand, byte value) => Add(operand, value, F & (byte)StatusBits.CF);
+        private byte ADC(byte operand, byte value) => this.Add(operand, value, this.F & (byte)StatusBits.CF);
 
         private byte SUB(byte operand, byte value, int carry = 0)
         {
-            var subtraction = Subtract(operand, value, carry);
-            F = AdjustXY(F, subtraction);
+            var subtraction = this.Subtract(operand, value, carry);
+            this.F = AdjustXY(this.F, subtraction);
             return subtraction;
         }
 
-        private byte SBC(byte operand, byte value) => SUB(operand, value, F & (byte)StatusBits.CF);
+        private byte SBC(byte operand, byte value) => this.SUB(operand, value, this.F & (byte)StatusBits.CF);
 
         private void AndR(byte value)
         {
-            F = SetBit(F, StatusBits.HC);
-            F = ClearBit(F, StatusBits.CF | StatusBits.NF);
-            F = AdjustSZPXY(F, A &= value);
+            this.F = SetBit(this.F, StatusBits.HC);
+            this.F = ClearBit(this.F, StatusBits.CF | StatusBits.NF);
+            this.F = AdjustSZPXY(this.F, this.A &= value);
         }
 
         private void XorR(byte value)
         {
-            F = ClearBit(F, StatusBits.HC | StatusBits.CF | StatusBits.NF);
-            F = AdjustSZPXY(F, A ^= value);
+            this.F = ClearBit(this.F, StatusBits.HC | StatusBits.CF | StatusBits.NF);
+            this.F = AdjustSZPXY(this.F, this.A ^= value);
         }
 
         private void OrR(byte value)
         {
-            F = ClearBit(F, StatusBits.HC | StatusBits.CF | StatusBits.NF);
-            F = AdjustSZPXY(F, A |= value);
+            this.F = ClearBit(this.F, StatusBits.HC | StatusBits.CF | StatusBits.NF);
+            this.F = AdjustSZPXY(this.F, this.A |= value);
         }
 
         private void Compare(byte value)
         {
-            Subtract(A, value);
-            F = AdjustXY(F, value);
+            _ = this.Subtract(this.A, value);
+            this.F = AdjustXY(this.F, value);
         }
 
         private byte RLC(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
             var carry = operand & (byte)Bits.Bit7;
-            F = SetBit(F, StatusBits.CF, carry);
+            this.F = SetBit(this.F, StatusBits.CF, carry);
             var result = (byte)((operand << 1) | (carry >> 7));
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte RRC(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
             var carry = operand & (byte)Bits.Bit0;
-            F = SetBit(F, StatusBits.CF, carry);
+            this.F = SetBit(this.F, StatusBits.CF, carry);
             var result = (byte)((operand >> 1) | (carry << 7));
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte RL(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            var carry = F & (byte)StatusBits.CF;
-            F = SetBit(F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            var carry = this.F & (byte)StatusBits.CF;
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (byte)((operand << 1) | carry);
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte RR(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            var carry = F & (byte)StatusBits.CF;
-            F = SetBit(F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            var carry = this.F & (byte)StatusBits.CF;
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) | (carry << 7));
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte SLA(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            F = SetBit(F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (byte)(operand << 1);
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte SRA(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            F = SetBit(F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) | (operand & (byte)Bits.Bit7));
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte SLL(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            F = SetBit(F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (byte)((operand << 1) | (byte)Bits.Bit0);
-            F = AdjustXY(F, result);
+            this.F = AdjustXY(this.F, result);
             return result;
         }
 
         private byte SRL(byte operand)
         {
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            F = SetBit(F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) & ~(byte)Bits.Bit7);
-            F = AdjustXY(F, result);
-            F = SetBit(F, StatusBits.ZF, result);
+            this.F = AdjustXY(this.F, result);
+            this.F = SetBit(this.F, StatusBits.ZF, result);
             return result;
         }
 
         private void BIT(int n, byte operand)
         {
-            F = SetBit(F, StatusBits.HC);
-            F = ClearBit(F, StatusBits.NF);
+            this.F = SetBit(this.F, StatusBits.HC);
+            this.F = ClearBit(this.F, StatusBits.NF);
             var discarded = (byte)(operand & Bit(n));
-            F = AdjustSZ(F, discarded);
-            F = ClearBit(F, StatusBits.PF, discarded);
+            this.F = AdjustSZ(this.F, discarded);
+            this.F = ClearBit(this.F, StatusBits.PF, discarded);
         }
 
         private void DAA()
         {
-            var updated = A;
+            var updated = this.A;
 
-            var lowAdjust = ((F & (byte)StatusBits.HC) != 0) || (LowNibble(A) > 9);
-            var highAdjust = ((F & (byte)StatusBits.CF) != 0) || (A > 0x99);
+            var lowAdjust = (this.F & (byte)StatusBits.HC) != 0 || LowNibble(this.A) > 9;
+            var highAdjust = (this.F & (byte)StatusBits.CF) != 0 || this.A > 0x99;
 
-            if ((F & (byte)StatusBits.NF) != 0)
+            if ((this.F & (byte)StatusBits.NF) != 0)
             {
                 if (lowAdjust)
                 {
@@ -1866,105 +1893,105 @@ namespace EightBit
                 }
             }
 
-            F = (byte)((F & (byte)(StatusBits.CF | StatusBits.NF)) | (A > 0x99 ? (byte)StatusBits.CF : 0) | ((A ^ updated) & (byte)StatusBits.HC));
+            this.F = (byte)((this.F & (byte)(StatusBits.CF | StatusBits.NF)) | (this.A > 0x99 ? (byte)StatusBits.CF : 0) | ((this.A ^ updated) & (byte)StatusBits.HC));
 
-            F = AdjustSZPXY(F, A = updated);
+            this.F = AdjustSZPXY(this.F, this.A = updated);
         }
 
         private void SCF()
         {
-            F = SetBit(F, StatusBits.CF);
-            F = ClearBit(F, StatusBits.HC | StatusBits.NF);
-            F = AdjustXY(F, A);
+            this.F = SetBit(this.F, StatusBits.CF);
+            this.F = ClearBit(this.F, StatusBits.HC | StatusBits.NF);
+            this.F = AdjustXY(this.F, this.A);
         }
 
         private void CCF()
         {
-            F = ClearBit(F, StatusBits.NF);
-            var carry = F & (byte)StatusBits.CF;
-            F = SetBit(F, StatusBits.HC, carry);
-            F = ClearBit(F, StatusBits.CF, carry);
-            F = AdjustXY(F, A);
+            this.F = ClearBit(this.F, StatusBits.NF);
+            var carry = this.F & (byte)StatusBits.CF;
+            this.F = SetBit(this.F, StatusBits.HC, carry);
+            this.F = ClearBit(this.F, StatusBits.CF, carry);
+            this.F = AdjustXY(this.F, this.A);
         }
 
         private void CPL()
         {
-            F = SetBit(F, StatusBits.HC | StatusBits.NF);
-            F = AdjustXY(F, A = (byte)~A);
+            this.F = SetBit(this.F, StatusBits.HC | StatusBits.NF);
+            this.F = AdjustXY(this.F, this.A = (byte)~this.A);
         }
 
         private void XHTL(Register16 exchange)
         {
-            MEMPTR.Low = MemoryRead(SP);
-            ++Bus.Address.Word;
-            MEMPTR.High = MemoryRead();
-            Tick();
-            MemoryWrite(exchange.High);
-            exchange.High = MEMPTR.High;
-            --Bus.Address.Word;
-            MemoryWrite(exchange.Low);
-            exchange.Low = MEMPTR.Low;
+            this.MEMPTR.Low = this.MemoryRead(this.SP);
+            ++this.Bus.Address.Word;
+            this.MEMPTR.High = this.MemoryRead();
+            this.Tick();
+            this.MemoryWrite(exchange.High);
+            exchange.High = this.MEMPTR.High;
+            --this.Bus.Address.Word;
+            this.MemoryWrite(exchange.Low);
+            exchange.Low = this.MEMPTR.Low;
         }
 
         private void BlockCompare(Register16 source, ushort counter)
         {
-            var value = MemoryRead(source);
-            var result = (byte)(A - value);
+            var value = this.MemoryRead(source);
+            var result = (byte)(this.A - value);
 
-            F = SetBit(F, StatusBits.PF, counter);
+            this.F = SetBit(this.F, StatusBits.PF, counter);
 
-            F = AdjustSZ(F, result);
-            F = AdjustHalfCarrySub(F, A, value, result);
-            F = SetBit(F, StatusBits.NF);
+            this.F = AdjustSZ(this.F, result);
+            this.F = AdjustHalfCarrySub(this.F, this.A, value, result);
+            this.F = SetBit(this.F, StatusBits.NF);
 
-            result -= (byte)((F & (byte)StatusBits.HC) >> 4);
+            result -= (byte)((this.F & (byte)StatusBits.HC) >> 4);
 
-            F = SetBit(F, StatusBits.YF, result & (byte)Bits.Bit1);
-            F = SetBit(F, StatusBits.XF, result & (byte)Bits.Bit3);
+            this.F = SetBit(this.F, StatusBits.YF, result & (byte)Bits.Bit1);
+            this.F = SetBit(this.F, StatusBits.XF, result & (byte)Bits.Bit3);
         }
 
         private void CPI()
         {
-            BlockCompare(HL, --BC.Word);
-            ++HL.Word;
-            ++MEMPTR.Word;
+            this.BlockCompare(this.HL, --this.BC.Word);
+            ++this.HL.Word;
+            ++this.MEMPTR.Word;
         }
 
         private bool CPIR()
         {
-            CPI();
-            return ((F & (byte)StatusBits.PF) != 0) && ((F & (byte)StatusBits.ZF) == 0); // See CPI
+            this.CPI();
+            return (this.F & (byte)StatusBits.PF) != 0 && (this.F & (byte)StatusBits.ZF) == 0; // See CPI
         }
 
         private void CPD()
         {
-            BlockCompare(HL, --BC.Word);
-            --HL.Word;
-            --MEMPTR.Word;
+            this.BlockCompare(this.HL, --this.BC.Word);
+            --this.HL.Word;
+            --this.MEMPTR.Word;
         }
 
         private bool CPDR()
         {
-            CPD();
-            return ((F & (byte)StatusBits.PF) != 0) && ((F & (byte)StatusBits.ZF) == 0); // See CPD
+            this.CPD();
+            return (this.F & (byte)StatusBits.PF) != 0 && (this.F & (byte)StatusBits.ZF) == 0; // See CPD
         }
 
         private void BlockLoad(Register16 source, Register16 destination, ushort counter)
         {
-            var value = MemoryRead(source);
-            MemoryWrite(destination);
-            var xy = A + value;
-            F = SetBit(F, StatusBits.XF, xy & (int)Bits.Bit3);
-            F = SetBit(F, StatusBits.YF, xy & (int)Bits.Bit1);
-            F = ClearBit(F, StatusBits.NF | StatusBits.HC);
-            F = SetBit(F, StatusBits.PF, counter);
+            var value = this.MemoryRead(source);
+            this.MemoryWrite(destination);
+            var xy = this.A + value;
+            this.F = SetBit(this.F, StatusBits.XF, xy & (int)Bits.Bit3);
+            this.F = SetBit(this.F, StatusBits.YF, xy & (int)Bits.Bit1);
+            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
+            this.F = SetBit(this.F, StatusBits.PF, counter);
         }
 
         private void LDI()
         {
-            BlockLoad(HL, DE, --BC.Word);
-            ++HL.Word;
-            ++DE.Word;
+            this.BlockLoad(this.HL, this.DE, --this.BC.Word);
+            ++this.HL.Word;
+            ++this.DE.Word;
         }
 
         private bool LDIR()
@@ -1989,9 +2016,9 @@ namespace EightBit
         private void BlockIn(Register16 source, Register16 destination)
         {
             this.Bus.Address.Assign(source);
-            this.MEMPTR.Assign(Bus.Address);
+            this.MEMPTR.Assign(this.Bus.Address);
             this.Tick();
-            this.ReadPort();
+            _ = this.ReadPort();
             this.Tick(3);
             this.MemoryWrite(destination);
             source.High = this.Decrement(source.High);
@@ -2027,7 +2054,7 @@ namespace EightBit
         private void BlockOut(Register16 source, Register16 destination)
         {
             this.Tick();
-            this.MemoryRead(source);
+            _ = this.MemoryRead(source);
             destination.High = this.Decrement(destination.High);
             this.Bus.Address.Assign(destination);
             this.WritePort();
@@ -2039,7 +2066,7 @@ namespace EightBit
             // HL needs to have been incremented or decremented prior to this call
             var value = this.Bus.Data;
             this.F = SetBit(this.F, StatusBits.NF, value & (byte)Bits.Bit7);
-            this.F = SetBit(this.F, StatusBits.HC | StatusBits.CF, (this.L + value) > 0xff);
+            this.F = SetBit(this.F, StatusBits.HC | StatusBits.CF, this.L + value > 0xff);
             this.F = AdjustParity(this.F, (byte)(((value + this.L) & (int)Mask.Three) ^ this.B));
         }
 
@@ -2081,7 +2108,7 @@ namespace EightBit
 
             this.A = (byte)(~this.A + 1);   // two's complement
 
-            this.F = AdjustHalfCarrySub(this.F, (byte)0, original, this.A);
+            this.F = AdjustHalfCarrySub(this.F, 0, original, this.A);
             this.F = AdjustOverflowSub(this.F, (byte)0, original, this.A);
 
             this.F = AdjustSZXY(this.F, this.A);

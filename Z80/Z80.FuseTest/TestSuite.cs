@@ -1,18 +1,15 @@
 ﻿// <copyright file="TestSuite.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Fuse
-{
-    public class TestSuite
-    {
-        private readonly Tests<RegisterState> tests;
-        private readonly Results<RegisterState> results;
 
-        public TestSuite(string path)
-        {
-            this.tests = new Tests<RegisterState>(path + ".in");
-            this.results = new Results<RegisterState>(path + ".expected");
-        }
+namespace Z80.FuseTest
+{
+    using Fuse;
+
+    internal class TestSuite(string path)
+    {
+        private readonly Tests<RegisterState> tests = new(path + ".in");
+        private readonly Results<RegisterState> results = new(path + ".expected");
 
         public void Read()
         {
@@ -33,7 +30,7 @@ namespace Fuse
             foreach (var test in this.tests.Container)
             {
                 var key = test.Key;
-                System.Console.Out.WriteLine($"** Checking: {key}");
+                Console.Out.WriteLine($"** Checking: {key}");
 
                 var input = test.Value;
                 var result = this.results.Container[key];
@@ -51,8 +48,8 @@ namespace Fuse
                 }
             }
 
-            System.Console.Out.WriteLine($"+++ Failed test count: {failedCount}");
-            System.Console.Out.WriteLine($"+++ Unimplemented test count: {unimplementedCount}");
+            Console.Out.WriteLine($"+++ Failed test count: {failedCount}");
+            Console.Out.WriteLine($"+++ Unimplemented test count: {unimplementedCount}");
         }
     }
 }

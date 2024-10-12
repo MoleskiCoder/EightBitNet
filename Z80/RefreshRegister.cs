@@ -2,8 +2,10 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace Z80
 {
+    using EightBit;
+
     public struct RefreshRegister(byte value) : IEquatable<RefreshRegister>
     {
         private readonly byte high = (byte)(value & (byte)Bits.Bit7);
@@ -31,15 +33,8 @@ namespace EightBit
 
         public readonly byte ToByte() => ToByte(this);
 
-        public override readonly bool Equals(object? obj)
-        {
-            if (obj is null)
-            {
-                return false;
-            }
+        public override readonly bool Equals(object? obj) => obj is not null && this.Equals((RefreshRegister)obj);
 
-            return this.Equals((RefreshRegister)obj);
-        }
         public readonly bool Equals(RefreshRegister other) => other.high == this.high && other.variable == this.variable;
 
         public override readonly int GetHashCode() => this.high + this.variable;

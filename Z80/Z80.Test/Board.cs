@@ -48,7 +48,7 @@ namespace Z80.Test
         {
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress.Word);
+            _ = this.ram.Load(programPath, loadAddress.Word);
 
             this.CPU.LoweredHALT += this.CPU_LoweredHALT;
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_CPM;
@@ -79,6 +79,8 @@ namespace Z80.Test
                     }
 
                     break;
+                default:
+                    break;
             }
         }
 
@@ -108,6 +110,6 @@ namespace Z80.Test
 
         private void CPU_LoweredHALT(object? sender, System.EventArgs e) => this.LowerPOWER();
 
-        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
+        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e) => System.Console.Error.WriteLine($"{Z80.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
     }
 }
