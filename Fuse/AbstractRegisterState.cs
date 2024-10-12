@@ -12,7 +12,7 @@ namespace Fuse
     {
         public ReadOnlyCollection<Register16> Registers => this.MutableRegisters.AsReadOnly();
 
-        public bool Halted { get; protected set; } = false;
+        public bool Halted { get; protected set; }
 
         public int TStates { get; protected set; } = -1;
 
@@ -26,10 +26,15 @@ namespace Fuse
             this.ParseInternalState(lines);
         }
 
-        protected void ParseInternalState(Lines lines) => this.ParseInternalState(lines.ReadLine());
-
-        protected virtual void ParseInternalState(string line)
+        protected void ParseInternalState(Lines lines)
         {
+            ArgumentNullException.ThrowIfNull(lines);
+            this.ParseInternalState(lines.ReadLine());
+        }
+
+        protected virtual void ParseInternalState(string? line)
+        {
+            ArgumentNullException.ThrowIfNull(line);
             var tokens = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             this.ParseInternalState(tokens);
         }
@@ -38,6 +43,7 @@ namespace Fuse
 
         protected virtual void ParseExternalState(Lines lines)
         {
+            ArgumentNullException.ThrowIfNull(lines);
             var line = lines.ReadLine();
             foreach (var token in line.Split(separator, StringSplitOptions.RemoveEmptyEntries))
             {

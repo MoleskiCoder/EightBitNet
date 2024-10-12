@@ -24,7 +24,7 @@ namespace Fuse
                 {
                     var line = reader.ReadLine();
                     Debug.Assert(line != null);
-                    var ignored = line.StartsWith(";", StringComparison.OrdinalIgnoreCase);
+                    var ignored = line.StartsWith(';');
                     if (!ignored)
                     {
                         this.lines.Add(line);

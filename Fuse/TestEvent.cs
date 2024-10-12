@@ -33,7 +33,7 @@ namespace Fuse
 
         public byte Value { get; private set; } = (byte)EightBit.Mask.Eight;
 
-        private bool ContentionEvent { get; set; } = false;
+        private bool ContentionEvent { get; set; }
 
         private static readonly char[] separator = [' ', '\t'];
 
