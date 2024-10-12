@@ -4,9 +4,9 @@
 
 namespace M6502
 {
+    using EightBit;
     using System.Globalization;
     using System.Text;
-    using EightBit;
 
     public class Disassembler(Bus bus, Core processor, Symbols.Parser symbols)
     {
@@ -35,16 +35,16 @@ namespace M6502
 
         public string Disassemble(ushort current)
         {
-            address = current;
+            this.address = current;
 
             var output = new StringBuilder();
 
-            var cell = bus.Peek(current);
+            var cell = this.bus.Peek(current);
 
             output.Append(DumpByteValue(cell));
             output.Append(' ');
 
-            var next = bus.Peek((ushort)(current + 1));
+            var next = this.bus.Peek((ushort)(current + 1));
             var relative = (ushort)(current + 2 + (sbyte)next);
 
             var aaa = (cell & 0b11100000) >> 5;
@@ -60,28 +60,28 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b000: // BRK
-                                    output.Append(Disassemble_Implied("BRK"));
+                                    output.Append(this.Disassemble_Implied("BRK"));
                                     break;
                                 case 0b001: // DOP/NOP (0x04)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PHP
-                                    output.Append(Disassemble_Implied("PHP"));
+                                    output.Append(this.Disassemble_Implied("PHP"));
                                     break;
                                 case 0b011: // TOP/NOP (0b00001100, 0x0c)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b100: // BPL
-                                    output.Append(Disassemble_Relative("BPL", relative));
+                                    output.Append(this.Disassemble_Relative("BPL", relative));
                                     break;
                                 case 0b101: // DOP/NOP (0x14)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLC
-                                    output.Append(Disassemble_Implied("CLC"));
+                                    output.Append(this.Disassemble_Implied("CLC"));
                                     break;
                                 case 0b111: // TOP/NOP (0b00011100, 0x1c)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 default:
                                     throw new InvalidOperationException("Illegal instruction");
@@ -92,25 +92,25 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b000: // JSR
-                                    output.Append(Disassemble_Absolute("JSR"));
+                                    output.Append(this.Disassemble_Absolute("JSR"));
                                     break;
                                 case 0b010: // PLP
-                                    output.Append(Disassemble_Implied("PLP"));
+                                    output.Append(this.Disassemble_Implied("PLP"));
                                     break;
                                 case 0b100: // BMI
-                                    output.Append(Disassemble_Relative("BMI", relative));
+                                    output.Append(this.Disassemble_Relative("BMI", relative));
                                     break;
                                 case 0b101: // DOP/NOP (0x34)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SEC
-                                    output.Append(Disassemble_Implied("SEC"));
+                                    output.Append(this.Disassemble_Implied("SEC"));
                                     break;
                                 case 0b111: // TOP/NOP (0b00111100, 0x3c)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 default: // BIT
-                                    output.Append(Disassemble_AM_00(bbb, "BIT"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "BIT"));
                                     break;
                             }
 
@@ -119,28 +119,28 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b000: // RTI
-                                    output.Append(Disassemble_Implied("RTI"));
+                                    output.Append(this.Disassemble_Implied("RTI"));
                                     break;
                                 case 0b001: // DOP/NOP (0x44)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PHA
-                                    output.Append(Disassemble_Implied("PHA"));
+                                    output.Append(this.Disassemble_Implied("PHA"));
                                     break;
                                 case 0b011: // JMP
-                                    output.Append(Disassemble_Absolute("JMP"));
+                                    output.Append(this.Disassemble_Absolute("JMP"));
                                     break;
                                 case 0b100: // BVC
-                                    output.Append(Disassemble_Relative("BVC", relative));
+                                    output.Append(this.Disassemble_Relative("BVC", relative));
                                     break;
                                 case 0b101: // DOP/NOP (0x54)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLI
-                                    output.Append(Disassemble_Implied("CLI"));
+                                    output.Append(this.Disassemble_Implied("CLI"));
                                     break;
                                 case 0b111: // TOP/NOP (0b01011100, 0x5c)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 default:
                                     throw new InvalidOperationException("Illegal addressing mode");
@@ -151,28 +151,28 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b000: // RTS
-                                    output.Append(Disassemble_Implied("RTS"));
+                                    output.Append(this.Disassemble_Implied("RTS"));
                                     break;
                                 case 0b001: // DOP/NOP (0x64)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // PLA
-                                    output.Append(Disassemble_Implied("PLA"));
+                                    output.Append(this.Disassemble_Implied("PLA"));
                                     break;
                                 case 0b011: // JMP (abs)
-                                    output.Append(Disassemble_Indirect("JMP"));
+                                    output.Append(this.Disassemble_Indirect("JMP"));
                                     break;
                                 case 0b100: // BVS
-                                    output.Append(Disassemble_Relative("BVS", relative));
+                                    output.Append(this.Disassemble_Relative("BVS", relative));
                                     break;
                                 case 0b101: // DOP/NOP (0x74)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SEI
-                                    output.Append(Disassemble_Implied("SEI"));
+                                    output.Append(this.Disassemble_Implied("SEI"));
                                     break;
                                 case 0b111: // TOP/NOP (0b01111100, 0x7c)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 default:
                                     throw new InvalidOperationException("Illegal addressing mode");
@@ -183,19 +183,19 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b000: // DOP/NOP (0x80)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b010: // DEY
-                                    output.Append(Disassemble_Implied("DEY"));
+                                    output.Append(this.Disassemble_Implied("DEY"));
                                     break;
                                 case 0b100: // BCC
-                                    output.Append(Disassemble_Relative("BCC", relative));
+                                    output.Append(this.Disassemble_Relative("BCC", relative));
                                     break;
                                 case 0b110: // TYA
-                                    output.Append(Disassemble_Implied("TYA"));
+                                    output.Append(this.Disassemble_Implied("TYA"));
                                     break;
                                 default: // STY
-                                    output.Append(Disassemble_AM_00(bbb, "STY"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "STY"));
                                     break;
                             }
 
@@ -204,16 +204,16 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // TAY
-                                    output.Append(Disassemble_Implied("TAY"));
+                                    output.Append(this.Disassemble_Implied("TAY"));
                                     break;
                                 case 0b100: // BCS
-                                    output.Append(Disassemble_Relative("BCS", relative));
+                                    output.Append(this.Disassemble_Relative("BCS", relative));
                                     break;
                                 case 0b110: // CLV
-                                    output.Append(Disassemble_Implied("CLV"));
+                                    output.Append(this.Disassemble_Implied("CLV"));
                                     break;
                                 default: // LDY
-                                    output.Append(Disassemble_AM_00(bbb, "LDY"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "LDY"));
                                     break;
                             }
 
@@ -222,22 +222,22 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // INY
-                                    output.Append(Disassemble_Implied("INY"));
+                                    output.Append(this.Disassemble_Implied("INY"));
                                     break;
                                 case 0b100: // BNE
-                                    output.Append(Disassemble_Relative("BNE", relative));
+                                    output.Append(this.Disassemble_Relative("BNE", relative));
                                     break;
                                 case 0b101: // DOP/NOP (0xd4)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // CLD
-                                    output.Append(Disassemble_Implied("CLD"));
+                                    output.Append(this.Disassemble_Implied("CLD"));
                                     break;
                                 case 0b111: // TOP/NOP (0b11011100, 0xdc)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 default: // CPY
-                                    output.Append(Disassemble_AM_00(bbb, "CPY"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "CPY"));
                                     break;
                             }
 
@@ -246,22 +246,22 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // INX
-                                    output.Append(Disassemble_Implied("INX"));
+                                    output.Append(this.Disassemble_Implied("INX"));
                                     break;
                                 case 0b100: // BEQ
-                                    output.Append(Disassemble_Relative("BEQ", relative));
+                                    output.Append(this.Disassemble_Relative("BEQ", relative));
                                     break;
                                 case 0b101: // DOP/NOP (0xf4)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 case 0b110: // SED
-                                    output.Append(Disassemble_Implied("SED"));
+                                    output.Append(this.Disassemble_Implied("SED"));
                                     break;
                                 case 0b111: // TOP/NOP (0b11111100, 0xfc)
-                                    output.Append(Disassemble_AM_00(bbb, "*NOP"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "*NOP"));
                                     break;
                                 default: // CPX
-                                    output.Append(Disassemble_AM_00(bbb, "CPX"));
+                                    output.Append(this.Disassemble_AM_00(bbb, "CPX"));
                                     break;
                             }
 
@@ -273,28 +273,28 @@ namespace M6502
                     switch (aaa)
                     {
                         case 0b000: // ORA
-                            output.Append(Disassemble_AM_01(bbb, "ORA"));
+                            output.Append(this.Disassemble_AM_01(bbb, "ORA"));
                             break;
                         case 0b001: // AND
-                            output.Append(Disassemble_AM_01(bbb, "AND"));
+                            output.Append(this.Disassemble_AM_01(bbb, "AND"));
                             break;
                         case 0b010: // EOR
-                            output.Append(Disassemble_AM_01(bbb, "EOR"));
+                            output.Append(this.Disassemble_AM_01(bbb, "EOR"));
                             break;
                         case 0b011: // ADC
-                            output.Append(Disassemble_AM_01(bbb, "ADC"));
+                            output.Append(this.Disassemble_AM_01(bbb, "ADC"));
                             break;
                         case 0b100: // STA
-                            output.Append(Disassemble_AM_01(bbb, "STA"));
+                            output.Append(this.Disassemble_AM_01(bbb, "STA"));
                             break;
                         case 0b101: // LDA
-                            output.Append(Disassemble_AM_01(bbb, "LDA"));
+                            output.Append(this.Disassemble_AM_01(bbb, "LDA"));
                             break;
                         case 0b110: // CMP
-                            output.Append(Disassemble_AM_01(bbb, "CMP"));
+                            output.Append(this.Disassemble_AM_01(bbb, "CMP"));
                             break;
                         case 0b111: // SBC
-                            output.Append(Disassemble_AM_01(bbb, "SBC"));
+                            output.Append(this.Disassemble_AM_01(bbb, "SBC"));
                             break;
                         default:
                             throw new InvalidOperationException("Illegal addressing mode");
@@ -308,10 +308,10 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b110: // 0x1a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
-                                    output.Append(Disassemble_AM_10(bbb, "ASL"));
+                                    output.Append(this.Disassemble_AM_10(bbb, "ASL"));
                                     break;
                             }
 
@@ -320,10 +320,10 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b110: // 0x3a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
-                                    output.Append(Disassemble_AM_10(bbb, "ROL"));
+                                    output.Append(this.Disassemble_AM_10(bbb, "ROL"));
                                     break;
                             }
 
@@ -332,10 +332,10 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b110: // 0x5a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
-                                    output.Append(Disassemble_AM_10(bbb, "LSR"));
+                                    output.Append(this.Disassemble_AM_10(bbb, "LSR"));
                                     break;
                             }
 
@@ -344,10 +344,10 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b110: // 0x7a
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default:
-                                    output.Append(Disassemble_AM_10(bbb, "ROR"));
+                                    output.Append(this.Disassemble_AM_10(bbb, "ROR"));
                                     break;
                             }
 
@@ -356,13 +356,13 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // TXA
-                                    output.Append(Disassemble_Implied("TXA"));
+                                    output.Append(this.Disassemble_Implied("TXA"));
                                     break;
                                 case 0b110: // TXS
-                                    output.Append(Disassemble_Implied("TXS"));
+                                    output.Append(this.Disassemble_Implied("TXS"));
                                     break;
                                 default: // STX
-                                    output.Append(Disassemble_AM_10_x(bbb, "STX"));
+                                    output.Append(this.Disassemble_AM_10_x(bbb, "STX"));
                                     break;
                             }
 
@@ -371,13 +371,13 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // TAX
-                                    output.Append(Disassemble_Implied("TAX"));
+                                    output.Append(this.Disassemble_Implied("TAX"));
                                     break;
                                 case 0b110: // TSX
-                                    output.Append(Disassemble_Implied("TSX"));
+                                    output.Append(this.Disassemble_Implied("TSX"));
                                     break;
                                 default: // LDX
-                                    output.Append(Disassemble_AM_10_x(bbb, "LDX"));
+                                    output.Append(this.Disassemble_AM_10_x(bbb, "LDX"));
                                     break;
                             }
 
@@ -386,13 +386,13 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // DEX
-                                    output.Append(Disassemble_Implied("DEX"));
+                                    output.Append(this.Disassemble_Implied("DEX"));
                                     break;
                                 case 0b110: // 0xda
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default: // DEC
-                                    output.Append(Disassemble_AM_10(bbb, "DEC"));
+                                    output.Append(this.Disassemble_AM_10(bbb, "DEC"));
                                     break;
                             }
 
@@ -401,13 +401,13 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010: // NOP
-                                    output.Append(Disassemble_Implied("NOP"));
+                                    output.Append(this.Disassemble_Implied("NOP"));
                                     break;
                                 case 0b110: // 0xfa
-                                    output.Append(Disassemble_Implied("*NOP"));
+                                    output.Append(this.Disassemble_Implied("*NOP"));
                                     break;
                                 default: // INC
-                                    output.Append(Disassemble_AM_10(bbb, "INC"));
+                                    output.Append(this.Disassemble_AM_10(bbb, "INC"));
                                     break;
                             }
 
@@ -424,10 +424,10 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010:
-                                    output.Append(Disassemble_Immediate("*AAC"));
+                                    output.Append(this.Disassemble_Immediate("*AAC"));
                                     break;
                                 default:
-                                    output.Append(Disassemble_AM_01(bbb, "*SLO"));
+                                    output.Append(this.Disassemble_AM_01(bbb, "*SLO"));
                                     break;
                             }
 
@@ -437,28 +437,28 @@ namespace M6502
                             switch (bbb)
                             {
                                 case 0b010:
-                                    output.Append(Disassemble_Immediate("*AAC"));
+                                    output.Append(this.Disassemble_Immediate("*AAC"));
                                     break;
                                 default:
-                                    output.Append(Disassemble_AM_01(bbb, "*RLA"));
+                                    output.Append(this.Disassemble_AM_01(bbb, "*RLA"));
                                     break;
                             }
 
                             break;
                         case 0b010:
-                            output.Append(Disassemble_AM_01(bbb, "*SRE"));
+                            output.Append(this.Disassemble_AM_01(bbb, "*SRE"));
                             break;
                         case 0b011:
-                            output.Append(Disassemble_AM_01(bbb, "*RRA"));
+                            output.Append(this.Disassemble_AM_01(bbb, "*RRA"));
                             break;
                         case 0b100:
-                            output.Append(Disassemble_AM_11(bbb, "*SAX"));
+                            output.Append(this.Disassemble_AM_11(bbb, "*SAX"));
                             break;
                         case 0b101:
-                            output.Append(Disassemble_AM_11(bbb, "*LAX"));
+                            output.Append(this.Disassemble_AM_11(bbb, "*LAX"));
                             break;
                         case 0b110:
-                            output.Append(Disassemble_AM_11_x(bbb, "*DCP"));
+                            output.Append(this.Disassemble_AM_11_x(bbb, "*DCP"));
                             break;
                         case 0b111:
                             switch (bbb)
@@ -470,10 +470,10 @@ namespace M6502
                                 case 0b101:
                                 case 0b110:
                                 case 0b111:
-                                    output.Append(Disassemble_AM_01(bbb, "*ISB"));
+                                    output.Append(this.Disassemble_AM_01(bbb, "*ISB"));
                                     break;
                                 case 0b010:
-                                    output.Append(Disassemble_AM_11(bbb, "*SBC"));
+                                    output.Append(this.Disassemble_AM_11(bbb, "*SBC"));
                                     break;
                                 default:
                                     throw new InvalidOperationException("Impossible addressing mode");
@@ -496,27 +496,27 @@ namespace M6502
 
         #region Label conversions
 
-        private string ConvertAddressAt(ushort absolute) => ConvertAddress(GetWord(absolute));
+        private string ConvertAddressAt(ushort absolute) => this.ConvertAddress(this.GetWord(absolute));
 
-        private string ConvertAddress(ushort absolute) => TryGetLabel(absolute, out var label) ? label : "$" + DumpWordValue(absolute);
+        private string ConvertAddress(ushort absolute) => this.TryGetLabel(absolute, out var label) ? label : "$" + DumpWordValue(absolute);
 
-        private string ConvertZPAddressAt(ushort absolute) => ConvertZPAddress(GetByte(absolute));
+        private string ConvertZPAddressAt(ushort absolute) => this.ConvertZPAddress(this.GetByte(absolute));
 
-        private string ConvertZPAddress(byte absolute) => TryGetLabel(absolute, out var label) ? label : "$" + DumpByteValue(absolute);
+        private string ConvertZPAddress(byte absolute) => this.TryGetLabel(absolute, out var label) ? label : "$" + DumpByteValue(absolute);
 
         private bool TryGetLabel(ushort absolute, out string name)
         {
-            return symbols.TryGetQualifiedLabelByAddress(absolute, out name);
+            return this.symbols.TryGetQualifiedLabelByAddress(absolute, out name);
         }
 
         private string MaybeGetLabel(ushort absolute)
         {
-            return symbols.MaybeGetQualifiedLabelByAddress(absolute);
+            return this.symbols.MaybeGetQualifiedLabelByAddress(absolute);
         }
 
         private string MaybeGetCodeLabel(ushort absolute)
         {
-            var label = MaybeGetLabel(absolute);
+            var label = this.MaybeGetLabel(absolute);
             if (string.IsNullOrEmpty(label))
             {
                 return string.Empty;
@@ -526,7 +526,7 @@ namespace M6502
 
         private string MaybeGetCodeLabel()
         {
-            return Pad(MaybeGetCodeLabel(address), 30);
+            return Pad(this.MaybeGetCodeLabel(this.address), 30);
         }
 
         #endregion
@@ -535,46 +535,46 @@ namespace M6502
 
         private bool TryGetConstant(ushort value, out string name)
         {
-            return symbols.TryGetQualifiedEquateValue(value, out name);
+            return this.symbols.TryGetQualifiedEquateValue(value, out name);
         }
 
-        private string ConvertConstantByte(ushort address) => ConvertConstant(GetByte(address));
+        private string ConvertConstantByte(ushort address) => this.ConvertConstant(this.GetByte(address));
 
-        private string ConvertConstant(byte constant) => TryGetConstant(constant, out var label) ? label : "$" + DumpByteValue(constant);
-
-        #endregion
+        private string ConvertConstant(byte constant) => this.TryGetConstant(constant, out var label) ? label : "$" + DumpByteValue(constant);
 
         #endregion
 
-        private byte GetByte(ushort absolute) => bus.Peek(absolute);
+        #endregion
 
-        private ushort GetWord(ushort absolute) => processor.PeekWord(absolute).Word;
+        private byte GetByte(ushort absolute) => this.bus.Peek(absolute);
 
-        private string Dump_Byte(ushort absolute) => DumpByteValue(GetByte(absolute));
+        private ushort GetWord(ushort absolute) => this.processor.PeekWord(absolute).Word;
 
-        private string Dump_DByte(ushort absolute) => Dump_Byte(absolute) + " " + Dump_Byte(++absolute);
+        private string Dump_Byte(ushort absolute) => DumpByteValue(this.GetByte(absolute));
 
-        private string Disassemble_Implied(string instruction) => $"{Pad()}\t{MaybeGetCodeLabel()}" + instruction;
+        private string Dump_DByte(ushort absolute) => this.Dump_Byte(absolute) + " " + this.Dump_Byte(++absolute);
 
-        private string Disassemble_Absolute(string instruction) => AM_Absolute_dump() + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_Absolute();
+        private string Disassemble_Implied(string instruction) => $"{Pad()}\t{this.MaybeGetCodeLabel()}" + instruction;
 
-        private string Disassemble_Indirect(string instruction) => AM_Absolute_dump() + $"\t{MaybeGetCodeLabel()}" + instruction + " (" + AM_Absolute() + ")";
+        private string Disassemble_Absolute(string instruction) => this.AM_Absolute_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_Absolute();
 
-        private string Disassemble_Relative(string instruction, ushort absolute) => AM_Immediate_dump() + $"\t{MaybeGetCodeLabel()}" + instruction + " " + ConvertAddress(absolute);
+        private string Disassemble_Indirect(string instruction) => this.AM_Absolute_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " (" + this.AM_Absolute() + ")";
 
-        private string Disassemble_Immediate(string instruction) => AM_Immediate_dump() + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_Immediate();
+        private string Disassemble_Relative(string instruction, ushort absolute) => this.AM_Immediate_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.ConvertAddress(absolute);
 
-        private string Disassemble_AM_00(int bbb, string instruction) => AM_00_dump(bbb) + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_00(bbb);
+        private string Disassemble_Immediate(string instruction) => this.AM_Immediate_dump() + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_Immediate();
 
-        private string Disassemble_AM_01(int bbb, string instruction) => AM_01_dump(bbb) + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_01(bbb);
+        private string Disassemble_AM_00(int bbb, string instruction) => this.AM_00_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_00(bbb);
 
-        private string Disassemble_AM_10(int bbb, string instruction) => AM_10_dump(bbb) + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_10(bbb);
+        private string Disassemble_AM_01(int bbb, string instruction) => this.AM_01_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_01(bbb);
 
-        private string Disassemble_AM_10_x(int bbb, string instruction) => AM_10_x_dump(bbb) + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_10_x(bbb);
+        private string Disassemble_AM_10(int bbb, string instruction) => this.AM_10_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_10(bbb);
 
-        private string Disassemble_AM_11(int bbb, string instruction) => AM_11_dump(bbb) + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_11(bbb);
+        private string Disassemble_AM_10_x(int bbb, string instruction) => this.AM_10_x_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_10_x(bbb);
 
-        private string Disassemble_AM_11_x(int bbb, string instruction) => AM_11_x_dump(bbb) + $"\t{MaybeGetCodeLabel()}" + instruction + " " + AM_11_x(bbb);
+        private string Disassemble_AM_11(int bbb, string instruction) => this.AM_11_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_11(bbb);
+
+        private string Disassemble_AM_11_x(int bbb, string instruction) => this.AM_11_x_dump(bbb) + $"\t{this.MaybeGetCodeLabel()}" + instruction + " " + this.AM_11_x(bbb);
 
 
         private static string Pad(string? value = null, int limit = 10)
@@ -589,179 +589,179 @@ namespace M6502
             return value + padding;
         }
 
-        private string AM_Immediate_dump() => Pad(Dump_Byte((ushort)(address + 1)));
+        private string AM_Immediate_dump() => Pad(this.Dump_Byte((ushort)(this.address + 1)));
 
-        private string AM_Immediate() => "#" + ConvertConstantByte((ushort)(address + 1));
+        private string AM_Immediate() => "#" + this.ConvertConstantByte((ushort)(this.address + 1));
 
-        private string AM_Absolute_dump() => Pad(Dump_DByte((ushort)(address + 1)));
+        private string AM_Absolute_dump() => Pad(this.Dump_DByte((ushort)(this.address + 1)));
 
-        private string AM_Absolute() => ConvertAddressAt((ushort)(address + 1));
+        private string AM_Absolute() => this.ConvertAddressAt((ushort)(this.address + 1));
 
-        private string AM_ZeroPage_dump() => Pad(Dump_Byte((ushort)(address + 1)));
+        private string AM_ZeroPage_dump() => Pad(this.Dump_Byte((ushort)(this.address + 1)));
 
-        private string AM_ZeroPage() => ConvertZPAddressAt((ushort)(address + 1));
+        private string AM_ZeroPage() => this.ConvertZPAddressAt((ushort)(this.address + 1));
 
-        private string AM_ZeroPageX_dump() => AM_ZeroPage_dump();
+        private string AM_ZeroPageX_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_ZeroPageX() => AM_ZeroPage() + ",X";
+        private string AM_ZeroPageX() => this.AM_ZeroPage() + ",X";
 
-        private string AM_ZeroPageY_dump() => AM_ZeroPage_dump();
+        private string AM_ZeroPageY_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_ZeroPageY() => AM_ZeroPage() + ",Y";
+        private string AM_ZeroPageY() => this.AM_ZeroPage() + ",Y";
 
-        private string AM_AbsoluteX_dump() => AM_Absolute_dump();
+        private string AM_AbsoluteX_dump() => this.AM_Absolute_dump();
 
-        private string AM_AbsoluteX() => AM_Absolute() + ",X";
+        private string AM_AbsoluteX() => this.AM_Absolute() + ",X";
 
-        private string AM_AbsoluteY_dump() => AM_Absolute_dump();
+        private string AM_AbsoluteY_dump() => this.AM_Absolute_dump();
 
-        private string AM_AbsoluteY() => AM_Absolute() + ",Y";
+        private string AM_AbsoluteY() => this.AM_Absolute() + ",Y";
 
-        private string AM_IndexedIndirectX_dump() => AM_ZeroPage_dump();
+        private string AM_IndexedIndirectX_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_IndexedIndirectX() => "(" + ConvertZPAddressAt((ushort)(address + 1)) + ",X)";
+        private string AM_IndexedIndirectX() => "(" + this.ConvertZPAddressAt((ushort)(this.address + 1)) + ",X)";
 
-        private string AM_IndirectIndexedY_dump() => AM_ZeroPage_dump();
+        private string AM_IndirectIndexedY_dump() => this.AM_ZeroPage_dump();
 
-        private string AM_IndirectIndexedY() => "(" + ConvertZPAddressAt((ushort)(address + 1)) + "),Y";
+        private string AM_IndirectIndexedY() => "(" + this.ConvertZPAddressAt((ushort)(this.address + 1)) + "),Y";
 
         private string AM_00_dump(int bbb) => bbb switch
         {
-            0b000 => AM_Immediate_dump(),
-            0b001 => AM_ZeroPage_dump(),
-            0b011 => AM_Absolute_dump(),
-            0b101 => AM_ZeroPageX_dump(),
-            0b111 => AM_AbsoluteX_dump(),
+            0b000 => this.AM_Immediate_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_00(int bbb) => bbb switch
         {
-            0b000 => AM_Immediate(),
-            0b001 => AM_ZeroPage(),
-            0b011 => AM_Absolute(),
-            0b101 => AM_ZeroPageX(),
-            0b111 => AM_AbsoluteX(),
+            0b000 => this.AM_Immediate(),
+            0b001 => this.AM_ZeroPage(),
+            0b011 => this.AM_Absolute(),
+            0b101 => this.AM_ZeroPageX(),
+            0b111 => this.AM_AbsoluteX(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_01_dump(int bbb) => bbb switch
         {
-            0b000 => AM_IndexedIndirectX_dump(),
-            0b001 => AM_ZeroPage_dump(),
-            0b010 => AM_Immediate_dump(),
-            0b011 => AM_Absolute_dump(),
-            0b100 => AM_IndirectIndexedY_dump(),
-            0b101 => AM_ZeroPageX_dump(),
-            0b110 => AM_AbsoluteY_dump(),
-            0b111 => AM_AbsoluteX_dump(),
+            0b000 => this.AM_IndexedIndirectX_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => this.AM_Immediate_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b100 => this.AM_IndirectIndexedY_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b110 => this.AM_AbsoluteY_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_01(int bbb) => bbb switch
         {
-            0b000 => AM_IndexedIndirectX(),
-            0b001 => AM_ZeroPage(),
-            0b010 => AM_Immediate(),
-            0b011 => AM_Absolute(),
-            0b100 => AM_IndirectIndexedY(),
-            0b101 => AM_ZeroPageX(),
-            0b110 => AM_AbsoluteY(),
-            0b111 => AM_AbsoluteX(),
+            0b000 => this.AM_IndexedIndirectX(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => this.AM_Immediate(),
+            0b011 => this.AM_Absolute(),
+            0b100 => this.AM_IndirectIndexedY(),
+            0b101 => this.AM_ZeroPageX(),
+            0b110 => this.AM_AbsoluteY(),
+            0b111 => this.AM_AbsoluteX(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_10_dump(int bbb) => bbb switch
         {
-            0b000 => AM_Immediate_dump(),
-            0b001 => AM_ZeroPage_dump(),
+            0b000 => this.AM_Immediate_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
             0b010 => string.Empty,
-            0b011 => AM_Absolute_dump(),
-            0b101 => AM_ZeroPageX_dump(),
-            0b111 => AM_AbsoluteX_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_10(int bbb) => bbb switch
         {
-            0b000 => AM_Immediate(),
-            0b001 => AM_ZeroPage(),
+            0b000 => this.AM_Immediate(),
+            0b001 => this.AM_ZeroPage(),
             0b010 => "A",
-            0b011 => AM_Absolute(),
-            0b101 => AM_ZeroPageX(),
-            0b111 => AM_AbsoluteX(),
+            0b011 => this.AM_Absolute(),
+            0b101 => this.AM_ZeroPageX(),
+            0b111 => this.AM_AbsoluteX(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_10_x_dump(int bbb) => bbb switch
         {
-            0b000 => AM_Immediate_dump(),
-            0b001 => AM_ZeroPage_dump(),
+            0b000 => this.AM_Immediate_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
             0b010 => string.Empty,
-            0b011 => AM_Absolute_dump(),
-            0b101 => AM_ZeroPageY_dump(),
-            0b111 => AM_AbsoluteY_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b101 => this.AM_ZeroPageY_dump(),
+            0b111 => this.AM_AbsoluteY_dump(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_10_x(int bbb) => bbb switch
         {
-            0b000 => AM_Immediate(),
-            0b001 => AM_ZeroPage(),
+            0b000 => this.AM_Immediate(),
+            0b001 => this.AM_ZeroPage(),
             0b010 => "A",
-            0b011 => AM_Absolute(),
-            0b101 => AM_ZeroPageY(),
-            0b111 => AM_AbsoluteY(),
+            0b011 => this.AM_Absolute(),
+            0b101 => this.AM_ZeroPageY(),
+            0b111 => this.AM_AbsoluteY(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_11_dump(int bbb) => bbb switch
         {
-            0b000 => AM_IndexedIndirectX_dump(),
-            0b001 => AM_ZeroPage_dump(),
-            0b010 => AM_Immediate_dump(),
-            0b011 => AM_Absolute_dump(),
-            0b100 => AM_IndirectIndexedY_dump(),
-            0b101 => AM_ZeroPageY_dump(),
-            0b111 => AM_AbsoluteY_dump(),
+            0b000 => this.AM_IndexedIndirectX_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => this.AM_Immediate_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b100 => this.AM_IndirectIndexedY_dump(),
+            0b101 => this.AM_ZeroPageY_dump(),
+            0b111 => this.AM_AbsoluteY_dump(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_11_x_dump(int bbb) => bbb switch
         {
-            0b000 => AM_IndexedIndirectX_dump(),
-            0b001 => AM_ZeroPage_dump(),
-            0b010 => AM_Immediate_dump(),
-            0b011 => AM_Absolute_dump(),
-            0b100 => AM_IndirectIndexedY_dump(),
-            0b101 => AM_ZeroPageX_dump(),
-            0b110 => AM_AbsoluteY_dump(),
-            0b111 => AM_AbsoluteX_dump(),
+            0b000 => this.AM_IndexedIndirectX_dump(),
+            0b001 => this.AM_ZeroPage_dump(),
+            0b010 => this.AM_Immediate_dump(),
+            0b011 => this.AM_Absolute_dump(),
+            0b100 => this.AM_IndirectIndexedY_dump(),
+            0b101 => this.AM_ZeroPageX_dump(),
+            0b110 => this.AM_AbsoluteY_dump(),
+            0b111 => this.AM_AbsoluteX_dump(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_11(int bbb) => bbb switch
         {
-            0b000 => AM_IndexedIndirectX(),
-            0b001 => AM_ZeroPage(),
-            0b010 => AM_Immediate(),
-            0b011 => AM_Absolute(),
-            0b100 => AM_IndirectIndexedY(),
-            0b101 => AM_ZeroPageY(),
-            0b111 => AM_AbsoluteY(),
+            0b000 => this.AM_IndexedIndirectX(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => this.AM_Immediate(),
+            0b011 => this.AM_Absolute(),
+            0b100 => this.AM_IndirectIndexedY(),
+            0b101 => this.AM_ZeroPageY(),
+            0b111 => this.AM_AbsoluteY(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
 
         private string AM_11_x(int bbb) => bbb switch
         {
-            0b000 => AM_IndexedIndirectX(),
-            0b001 => AM_ZeroPage(),
-            0b010 => AM_Immediate(),
-            0b011 => AM_Absolute(),
-            0b100 => AM_IndirectIndexedY(),
-            0b101 => AM_ZeroPageX(),
-            0b110 => AM_AbsoluteY(),
-            0b111 => AM_AbsoluteX(),
+            0b000 => this.AM_IndexedIndirectX(),
+            0b001 => this.AM_ZeroPage(),
+            0b010 => this.AM_Immediate(),
+            0b011 => this.AM_Absolute(),
+            0b100 => this.AM_IndirectIndexedY(),
+            0b101 => this.AM_ZeroPageX(),
+            0b110 => this.AM_AbsoluteY(),
+            0b111 => this.AM_AbsoluteX(),
             _ => throw new InvalidOperationException("Illegal addressing mode"),
         };
     }

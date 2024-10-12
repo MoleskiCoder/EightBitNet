@@ -4,12 +4,12 @@
 
 namespace M6502.Test
 {
+    using EightBit;
+    using M6502;
     using System.Diagnostics;
     using System.Globalization;
     using System.Text;
     using System.Threading.Tasks;
-    using EightBit;
-    using M6502;
 
     internal class Board : Bus
     {

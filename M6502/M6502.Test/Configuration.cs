@@ -10,7 +10,7 @@ namespace M6502.Test
     {
         public bool DebugMode { get; set; }
 
-        public bool Profile { get; set; }
+        public bool Profile { get; set; };
 
         // Sudoku
         public string Program { get; } = "sudoku.65b";

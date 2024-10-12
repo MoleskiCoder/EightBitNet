@@ -16,11 +16,11 @@
 
         public bool Valid { get; private set; }
 
-        public bool Invalid => !Valid;
+        public bool Invalid => !this.Valid;
 
-        public bool Unimplemented => Invalid && CycleCountMismatch && (Cycles == 1);
+        public bool Unimplemented => this.Invalid && this.CycleCountMismatch && (this.Cycles == 1);
 
-        public bool Implemented => !Unimplemented;
+        public bool Implemented => !this.Unimplemented;
 
         public List<string> Messages { get; } = [];
 
@@ -28,67 +28,67 @@
 
         public Checker(TestRunner runner)
         {
-            Runner = runner;
-            Disassembler = new(Runner, (M6502.Core)Runner.CPU, Symbols);
+            this.Runner = runner;
+            this.Disassembler = new(this.Runner, this.Runner.CPU, this.Symbols);
         }
 
         public void Check(Test test)
         {
-            var cpu = Runner.CPU;
+            var cpu = this.Runner.CPU;
 
-            Reset();
+            this.Reset();
 
-            Runner.RaisePOWER();
-            InitialiseState(test);
+            this.Runner.RaisePOWER();
+            this.InitialiseState(test);
             var pc = cpu.PC.Word;
 
-            Cycles = cpu.Step();
-            Runner.LowerPOWER();
+            this.Cycles = cpu.Step();
+            this.Runner.LowerPOWER();
 
-            Valid = CheckState(test);
+            this.Valid = this.CheckState(test);
 
-            if (Unimplemented)
+            if (this.Unimplemented)
             {
-                Messages.Add("Unimplemented");
+                this.Messages.Add("Unimplemented");
                 return;
             }
 
-            Debug.Assert(Implemented);
-            if (Invalid)
+            Debug.Assert(this.Implemented);
+            if (this.Invalid)
             {
-                AddDisassembly(pc);
+                this.AddDisassembly(pc);
 
                 var final = test.Final ?? throw new InvalidOperationException("Final test state cannot be null");
 
-                Raise("PC", final.PC, cpu.PC.Word);
-                Raise("S", final.S, cpu.S);
-                Raise("A", final.A, cpu.A);
-                Raise("X", final.X, cpu.X);
-                Raise("Y", final.Y, cpu.Y);
-                Raise("P", final.P, cpu.P);
+                this.Raise("PC", final.PC, cpu.PC.Word);
+                this.Raise("S", final.S, cpu.S);
+                this.Raise("A", final.A, cpu.A);
+                this.Raise("X", final.X, cpu.X);
+                this.Raise("Y", final.Y, cpu.Y);
+                this.Raise("P", final.P, cpu.P);
 
                 if (test.Cycles == null)
                 {
                     throw new InvalidOperationException("test cycles cannot be null");
                 }
 
-                Messages.Add($"Fixed page is: {cpu.FixedPage:X2}");
+                this.Messages.Add($"Fixed page is: {cpu.FixedPage:X2}");
 
-                Messages.Add($"Stepped cycles: {Cycles}, expected events: {test.Cycles.Count}, actual events: {ActualCycles.Count}");
+                this.Messages.Add($"Stepped cycles: {this.Cycles}, expected events: {test.Cycles.Count}, actual events: {this.ActualCycles.Count}");
 
-                DumpCycles("-- Expected cycles", test.AvailableCycles());
-                DumpCycles("-- Actual cycles", ActualCycles);
+                this.DumpCycles("-- Expected cycles", test.AvailableCycles());
+                this.DumpCycles("-- Actual cycles", this.ActualCycles);
             }
         }
 
         private void Reset()
         {
-            Messages.Clear();
-            ActualCycles.Clear();
+            this.Messages.Clear();
+            this.ActualCycles.Clear();
 
-            CycleCountMismatch = false;
-            Cycles = 0;
-            Valid = false;
+            this.CycleCountMismatch = false;
+            this.Cycles = 0;
+            this.Valid = false;
         }
 
         private bool Check(string what, ushort expected, ushort actual)
@@ -96,7 +96,7 @@
             var success = actual == expected;
             if (!success)
             {
-                Raise(what, expected, actual);
+                this.Raise(what, expected, actual);
             }
             return success;
         }
@@ -106,7 +106,7 @@
             var success = actual == expected;
             if (!success)
             {
-                Raise(what, expected, actual);
+                this.Raise(what, expected, actual);
             }
             return success;
         }
@@ -118,7 +118,7 @@
             var success = actual == expected;
             if (!success)
             {
-                Raise(what, expected, actual);
+                this.Raise(what, expected, actual);
             }
             return success;
         }
@@ -128,7 +128,7 @@
             var success = actual == expected;
             if (!success)
             {
-                Raise($"{what}: {address}", expected, actual);
+                this.Raise($"{what}: {address}", expected, actual);
             }
             return success;
         }
@@ -138,32 +138,33 @@
             string message;
             try
             {
-                message = Disassemble(address);
+                message = this.Disassemble(address);
             }
             catch (InvalidOperationException error)
             {
                 message = $"Disassembly problem: {error.Message}";
             }
 
-            Messages.Add(message);
+            this.Messages.Add(message);
         }
 
-        private string Disassemble(ushort address) => Disassembler.Disassemble(address);
+        private string Disassemble(ushort address) => this.Disassembler.Disassemble(address);
 
         private bool CheckState(Test test)
         {
-            var cpu = Runner.CPU;
-            var ram = Runner.RAM;
+            var cpu = this.Runner.CPU;
+            var ram = this.Runner.RAM;
 
             var expectedCycles = test.AvailableCycles();
-            var actualCycles = ActualCycles;
+            var actualCycles = this.ActualCycles;
 
             var actualIDX = 0;
-            foreach (var expectedCycle in expectedCycles) {
+            foreach (var expectedCycle in expectedCycles)
+            {
 
                 if (actualIDX >= actualCycles.Count)
                 {
-                    CycleCountMismatch = true;
+                    this.CycleCountMismatch = true;
                     return false; // more expected cycles than actual
                 }
 
@@ -171,40 +172,40 @@
 
                 var expectedAddress = expectedCycle.Address;
                 var actualAddress = actualCycle.Address;
-                _ = Check("Cycle address", expectedAddress, actualAddress);
+                _ = this.Check("Cycle address", expectedAddress, actualAddress);
 
                 var expectedValue = expectedCycle.Value;
                 var actualValue = actualCycle.Value;
-                _ = Check("Cycle value", expectedValue, actualValue);
+                _ = this.Check("Cycle value", expectedValue, actualValue);
 
                 var expectedAction = expectedCycle.Type;
                 var actualAction = actualCycle.Type;
-                _ = Check("Cycle action", expectedAction, actualAction);
+                _ = this.Check("Cycle action", expectedAction, actualAction);
             }
 
             if (actualIDX < actualCycles.Count)
             {
-                CycleCountMismatch = true;
+                this.CycleCountMismatch = true;
                 return false; // less expected cycles than actual
             }
 
-            if (Messages.Count > 0)
+            if (this.Messages.Count > 0)
             {
                 return false;
             }
 
             var final = test.Final ?? throw new InvalidOperationException("Final state cannot be null");
-            var pc_good = Check("PC", final.PC, cpu.PC.Word);
-            var s_good = Check("S", final.S, cpu.S);
-            var a_good = Check("A", final.A, cpu.A);
-            var x_good = Check("X", final.X, cpu.X);
-            var y_good = Check("Y", final.Y, cpu.Y);
-            var p_good = Check("P", final.P, cpu.P);
+            var pc_good = this.Check("PC", final.PC, cpu.PC.Word);
+            var s_good = this.Check("S", final.S, cpu.S);
+            var a_good = this.Check("A", final.A, cpu.A);
+            var x_good = this.Check("X", final.X, cpu.X);
+            var y_good = this.Check("Y", final.Y, cpu.Y);
+            var p_good = this.Check("P", final.P, cpu.P);
 
             if (!p_good)
             {
-                Messages.Add($"Expected flags: {Disassembler.DumpFlags(final.P)}");
-                Messages.Add($"Actual flags  : {Disassembler.DumpFlags(cpu.P)}");
+                this.Messages.Add($"Expected flags: {Disassembler.DumpFlags(final.P)}");
+                this.Messages.Add($"Actual flags  : {Disassembler.DumpFlags(cpu.P)}");
             }
 
             if (final.RAM == null)
@@ -223,7 +224,7 @@
                 var address = (ushort)entry[0];
                 var value = (byte)entry[1];
 
-                var ramGood = Check("RAM", address, value, ram.Peek(address));
+                var ramGood = this.Check("RAM", address, value, ram.Peek(address));
                 if (!ramGood && !ramProblem)
                 {
                     ramProblem = true;
@@ -236,28 +237,28 @@
                 && !ramProblem;
         }
 
-        private void Raise(string what, ushort expected, ushort actual) => Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");
+        private void Raise(string what, ushort expected, ushort actual) => this.Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");
 
-        private void Raise(string what, byte expected, byte actual) => Messages.Add($"{what}: expected: {expected:X2}, actual: {actual:X2}");
+        private void Raise(string what, byte expected, byte actual) => this.Messages.Add($"{what}: expected: {expected:X2}, actual: {actual:X2}");
 
-        private void Raise(string what, string expected, string actual) => Messages.Add($"{what}: expected: {expected}, actual: {actual}");
+        private void Raise(string what, string expected, string actual) => this.Messages.Add($"{what}: expected: {expected}, actual: {actual}");
 
         public void Initialise()
         {
-            Runner.ReadByte += Runner_ReadByte;
-            Runner.WrittenByte += Runner_WrittenByte;
+            this.Runner.ReadByte += this.Runner_ReadByte;
+            this.Runner.WrittenByte += this.Runner_WrittenByte;
         }
 
         private void InitialiseState(Test test)
         {
             var initial = test.Initial ?? throw new InvalidOperationException("Test cannot have an invalid initial state");
-            InitialiseState(initial);
+            this.InitialiseState(initial);
         }
 
         private void InitialiseState(State state)
         {
-            var cpu = Runner.CPU;
-            var ram = Runner.RAM;
+            var cpu = this.Runner.CPU;
+            var ram = this.Runner.RAM;
 
             cpu.PC.Word = state.PC;
             cpu.S = state.S;
@@ -281,39 +282,39 @@
             }
         }
 
-        private void Runner_ReadByte(object? sender, EventArgs e) => AddActualReadCycle(Runner.Address, Runner.Data);
+        private void Runner_ReadByte(object? sender, EventArgs e) => this.AddActualReadCycle(this.Runner.Address, this.Runner.Data);
 
-        private void Runner_WrittenByte(object? sender, EventArgs e) => AddActualWriteCycle(Runner.Address, Runner.Data);
+        private void Runner_WrittenByte(object? sender, EventArgs e) => this.AddActualWriteCycle(this.Runner.Address, this.Runner.Data);
 
-        private void AddActualReadCycle(EightBit.Register16 address, byte value) => AddActualCycle(address, value, "read");
+        private void AddActualReadCycle(EightBit.Register16 address, byte value) => this.AddActualCycle(address, value, "read");
 
-        private void AddActualWriteCycle(EightBit.Register16 address, byte value) => AddActualCycle(address, value, "write");
+        private void AddActualWriteCycle(EightBit.Register16 address, byte value) => this.AddActualCycle(address, value, "write");
 
-        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => AddActualCycle(address.Word, value, action);
+        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Word, value, action);
 
-        private void AddActualCycle(ushort address, byte value, string action) => ActualCycles.Add(new Cycle(address, value, action));
+        private void AddActualCycle(ushort address, byte value, string action) => this.ActualCycles.Add(new Cycle(address, value, action));
 
         private void DumpCycle(ushort address, byte value, string? action)
         {
             ArgumentNullException.ThrowIfNull(action);
-            Messages.Add($"Address: {address:X4}, value: {value:X2}, action: {action}");
+            this.Messages.Add($"Address: {address:X4}, value: {value:X2}, action: {action}");
         }
 
-        private void DumpCycle(Cycle cycle) => DumpCycle(cycle.Address, cycle.Value, cycle.Type);
+        private void DumpCycle(Cycle cycle) => this.DumpCycle(cycle.Address, cycle.Value, cycle.Type);
 
         private void DumpCycles(IEnumerable<Cycle>? cycles)
         {
             ArgumentNullException.ThrowIfNull(cycles);
             foreach (var cycle in cycles)
             {
-                DumpCycle(cycle);
+                this.DumpCycle(cycle);
             }
         }
 
         private void DumpCycles(string which, IEnumerable<Cycle>? events)
         {
-            Messages.Add(which);
-            DumpCycles(events);
+            this.Messages.Add(which);
+            this.DumpCycles(events);
         }
     }
 }

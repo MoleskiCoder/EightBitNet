@@ -1,5 +1,6 @@
 ﻿namespace M6502.HarteTest
 {
+    using System.Runtime.CompilerServices;
     using System.Text.Json;
     using System.Text.Json.Serialization;
 
@@ -12,28 +13,28 @@
         };
         private bool _disposed;
 
-        public string Path { get; set; } = path;
+        public string Path { get; } = path;
 
         private readonly FileStream _stream = File.Open(path, FileMode.Open);
 
-        public IAsyncEnumerable<Test?> TestsAsync => JsonSerializer.DeserializeAsyncEnumerable<Test>(_stream, SerializerOptions);
+        public ConfiguredCancelableAsyncEnumerable<Test?> TestsAsync => JsonSerializer.DeserializeAsyncEnumerable<Test>(this._stream, SerializerOptions).ConfigureAwait(false);
 
         private void Dispose(bool disposing)
         {
-            if (!_disposed)
+            if (!this._disposed)
             {
                 if (disposing)
                 {
-                    _stream.Dispose();
+                    this._stream.Dispose();
                 }
 
-                _disposed = true;
+                this._disposed = true;
             }
         }
 
         public void Dispose()
         {
-            Dispose(disposing: true);
+            this.Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
     }

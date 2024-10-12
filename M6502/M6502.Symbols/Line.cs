@@ -1,7 +1,5 @@
 ﻿namespace M6502.Symbols
 {
-    using M6502.Symbols;
-
     // line id = 268, file = 1, line = 60, type = 2, count = 1, span = 286 + 195
     [Section("line", "Lines")]
     public sealed class Line(Parser container) : IdentifiableSection(container)

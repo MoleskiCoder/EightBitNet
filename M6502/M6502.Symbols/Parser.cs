@@ -124,7 +124,7 @@
 
         public Scope? LookupScopeByAddress(int address)
         {
-            var index = _scopeAddressCache[address] ?? (_scopeAddressCache[address] = this.LocateScopeByAddress(address));
+            var index = this._scopeAddressCache[address] ?? (this._scopeAddressCache[address] = this.LocateScopeByAddress(address));
             return index == -1 ? null : this.AddressableScopes[index.Value];
         }
 
@@ -352,7 +352,7 @@
             {
                 if (this._version != null)
                 {
-                    throw new InvalidOperationException("Verson object has already been parsed");
+                    throw new InvalidOperationException("Version object has already been parsed");
                 }
                 this._version = new(this);
                 this._version.Parse(BuildDictionary(parts));

@@ -11,7 +11,7 @@ namespace M6502.HarteTest
             var directory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\6502\v1";
             //var directory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\wdc65c02\v1";
 
-            await ProcessTestSuiteAsync(directory);
+            await ProcessTestSuiteAsync(directory).ConfigureAwait(false);
         }
 
         private static async Task ProcessTestSuiteAsync(string directory)
@@ -33,7 +33,7 @@ namespace M6502.HarteTest
                 Console.WriteLine($"Processing: {Path.GetFileName(opcode.Path)}");
 
                 List<string?> testNames = [];
-                var tests = opcode.TestsAsync ?? throw new InvalidOperationException("No tests are available");
+                var tests = opcode.TestsAsync;
                 await foreach (var test in tests)
                 {
                     if (test == null)
@@ -55,7 +55,7 @@ namespace M6502.HarteTest
                         // Let's see if we had any successes!
                         if (testNames.Count > 0)
                         {
-                            Console.WriteLine("**** The follow test variations succeeeded");
+                            Console.WriteLine("**** The follow test variations succeeded");
                             foreach (var testName in testNames)
                             {
                                 Console.WriteLine($"****** {testName}");

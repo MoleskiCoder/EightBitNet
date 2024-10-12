@@ -31,8 +31,8 @@
 
             if (activate)
             {
-                this.processor.RaisingSYNC += Processor_RaisingSYNC;
-                this.processor.ExecutedInstruction += Processor_ExecutedInstruction;
+                this.processor.RaisingSYNC += this.Processor_RaisingSYNC;
+                this.processor.ExecutedInstruction += this.Processor_ExecutedInstruction;
             }
         }
 
@@ -62,147 +62,147 @@
         {
             get
             {
-                Debug.Assert(totalCyclesValid);
-                return totalCycles;
+                Debug.Assert(this.totalCyclesValid);
+                return this.totalCycles;
             }
             private set
             {
-                Debug.Assert(!totalCyclesValid);
-                totalCycles = value;
-                totalCyclesValid = true;
+                Debug.Assert(!this.totalCyclesValid);
+                this.totalCycles = value;
+                this.totalCyclesValid = true;
             }
         }
         public void Generate()
         {
-            OnStartingOutput();
+            this.OnStartingOutput();
             try
             {
-                EmitProfileInformation();
+                this.EmitProfileInformation();
             }
             finally
             {
-                OnFinishedOutput();
+                this.OnFinishedOutput();
             }
         }
 
         private void EmitProfileInformation()
         {
-            TotalCycles = instructionCycles.Sum();
+            this.TotalCycles = this.instructionCycles.Sum();
 
-            EmitProfileLineInformation();
-            EmitProfileScopeInformation();
-            EmitProfileInstructionInformation();
+            this.EmitProfileLineInformation();
+            this.EmitProfileScopeInformation();
+            this.EmitProfileInstructionInformation();
         }
 
         private void EmitProfileScopeInformation()
         {
-            OnStartingScopeOutput();
+            this.OnStartingScopeOutput();
             try
             {
-                foreach (var (id, cycles) in scopeCycles)
+                foreach (var (id, cycles) in this.scopeCycles)
                 {
-                    var symbol = symbols.LookupLabelByID(id);
+                    var symbol = this.symbols.LookupLabelByID(id);
                     Debug.Assert(symbol != null);
-                    var available = ExtractCycleDistribution((ushort)symbol.Value, out var _, out var _, out var count);
+                    var available = this.ExtractCycleDistribution((ushort)symbol.Value, out var _, out var _, out var count);
                     Debug.Assert(available);
-                    OnEmitScope(id, cycles, count);
+                    this.OnEmitScope(id, cycles, count);
                 }
             }
             finally
             {
-                OnFinishedScopeOutput();
+                this.OnFinishedScopeOutput();
             }
         }
 
         private void EmitProfileLineInformation()
         {
-            OnStartingLineOutput();
+            this.OnStartingLineOutput();
             try
             {
                 // For each memory address
                 for (var i = 0; i < 0x10000; ++i)
                 {
                     var address = (ushort)i;
-                    var available = ExtractCycleDistribution(address, out var cycleDistributions, out var cycles, out var count);
+                    var available = this.ExtractCycleDistribution(address, out var cycleDistributions, out var cycles, out var count);
                     if (available)
                     {
                         // Dump a profile/disassembly line
-                        var source = disassembler.Disassemble(address);
+                        var source = this.disassembler.Disassemble(address);
                         Debug.Assert(cycleDistributions != null);
-                        OnEmitLine(address, source, cycles, count, cycleDistributions);
+                        this.OnEmitLine(address, source, cycles, count, cycleDistributions);
                     }
                 }
             }
             finally
             {
-                OnFinishedLineOutput();
+                this.OnFinishedLineOutput();
             }
         }
 
         private void EmitProfileInstructionInformation()
         {
-            OnStartingInstructionOutput();
+            this.OnStartingInstructionOutput();
             try
             {
                 // For each instruction
                 for (var i = 0; i < 0x100; ++i)
                 {
                     // If there are any cycles associated
-                    var cycles = instructionCycles[i];
+                    var cycles = this.instructionCycles[i];
                     if (cycles > 0)
                     {
-                        var count = instructionCounts[i];
+                        var count = this.instructionCounts[i];
                         Debug.Assert(count > 0);
                         var instruction = (byte)i;
 
                         // Emit an instruction event
-                        OnEmitInstruction(instruction, cycles, count);
+                        this.OnEmitInstruction(instruction, cycles, count);
                     }
                 }
             }
             finally
             {
-                OnFinishedInstructionOutput();
+                this.OnFinishedInstructionOutput();
             }
         }
 
         private void Processor_RaisingSYNC(object? sender, EventArgs e)
         {
-            executingAddress = processor.Bus.Address.Word;
-            ++instructionCounts[executingInstruction = processor.Bus.Data];
+            this.executingAddress = this.processor.Bus.Address.Word;
+            ++this.instructionCounts[this.executingInstruction = this.processor.Bus.Data];
         }
 
         private void Processor_ExecutedInstruction(object? sender, EventArgs e)
         {
-            var cycles = processor.Cycles;
+            var cycles = this.processor.Cycles;
 
             {
-                var addressDistribution = addressCycleDistributions[executingAddress];
+                var addressDistribution = this.addressCycleDistributions[this.executingAddress];
                 if (addressDistribution == null)
                 {
-                    addressCycleDistributions[executingAddress] = addressDistribution = [];
+                    this.addressCycleDistributions[this.executingAddress] = addressDistribution = [];
                 }
                 _ = addressDistribution.TryGetValue(cycles, out var current);
                 addressDistribution[cycles] = ++current;
             }
 
-            instructionCycles[executingInstruction] += cycles;
+            this.instructionCycles[this.executingInstruction] += cycles;
 
             {
-                var scope = symbols.LookupScopeByAddress(executingAddress);
+                var scope = this.symbols.LookupScopeByAddress(this.executingAddress);
                 if (scope != null)
                 {
                     var id = scope.ID;
                     // Current will be initialised to zero, if absent
-                    _ = scopeCycles.TryGetValue(id, out var current);
-                    scopeCycles[id] = current + cycles;
+                    _ = this.scopeCycles.TryGetValue(id, out var current);
+                    this.scopeCycles[id] = current + cycles;
                 }
             }
         }
 
         private bool ExtractCycleDistribution(ushort address, out Dictionary<int, long>? cycleDistribution, out long cycleCount, out long hitCount)
         {
-            cycleDistribution = addressCycleDistributions[address];
+            cycleDistribution = this.addressCycleDistributions[address];
             if (cycleDistribution == null)
             {
                 cycleCount = -1;

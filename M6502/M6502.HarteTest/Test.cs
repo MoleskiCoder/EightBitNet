@@ -1,6 +1,6 @@
 ﻿namespace M6502.HarteTest
 {
-    public sealed class Test
+    internal sealed class Test
     {
         public string? Name { get; set; }
 
@@ -12,12 +12,12 @@
 
         public IEnumerable<Cycle> AvailableCycles()
         {
-            if (Cycles == null)
+            if (this.Cycles == null)
             {
                 throw new InvalidOperationException("Cycles have not been initialised");
             }
 
-            foreach (var cycle in Cycles)
+            foreach (var cycle in this.Cycles)
             {
                 yield return new Cycle(cycle);
             }

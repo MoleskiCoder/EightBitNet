@@ -8,8 +8,8 @@
 
     public class Section
     {
-        protected static readonly Dictionary<System.Type, ReflectedSectionProperties> _sectionPropertiesCache = [];
-        protected static readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        protected static readonly Dictionary<System.Type, ReflectedSectionProperties> SectionPropertiesCache = [];
+        protected static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         protected readonly Parser _container;
 
@@ -23,7 +23,7 @@
 
         protected static ReflectedSectionProperties GetSectionProperties(System.Type type)
         {
-            var obtained = _sectionPropertiesCache.TryGetValue(type, out var properties);
+            var obtained = SectionPropertiesCache.TryGetValue(type, out var properties);
             Debug.Assert(obtained, $"Section properties for {type.Name} have not been built");
             Debug.Assert(properties != null);
             return properties;
@@ -35,8 +35,8 @@
         {
             var type = this.GetType();
             var entry = new ReflectedSectionProperties();
-            Debug.Assert(_sectionPropertiesCache != null);
-            if (_sectionPropertiesCache.TryAdd(type, entry))
+            Debug.Assert(SectionPropertiesCache != null);
+            if (SectionPropertiesCache.TryAdd(type, entry))
             {
                 entry.Build(type);
             }
@@ -44,8 +44,9 @@
 
         public T GetValueT<T>(string key) => this.SectionProperties.GetValueT<T>(this, key);
 
-        public virtual void Parse(Dictionary<string, string> entries)
+        public virtual void Parse(Dictionary<string, string>? entries)
         {
+            ArgumentNullException.ThrowIfNull(entries);
             this._parsed = entries;
             this._container.SectionEntries.Add(this);
             this.ProcessAttributesOfProperties();
@@ -129,7 +130,12 @@
             }
         }
 
-        protected static string ExtractString(string value) => value.Trim('"');
+        protected static string ExtractString(string? value)
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            return value.Trim('"');
+        }
+
         protected static string ExtractEnumeration(string value) => value;
 
         private static T ExtractHexValue<T>(string value) where T : INumberBase<T> => T.Parse(value.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
@@ -139,8 +145,13 @@
         protected static long ExtractHexLong(string value) => ExtractHexValue<long>(value);
         protected static int ExtractInteger(string value) => ExtractNumericValue<int>(value);
         protected static long ExtractLong(string value) => ExtractNumericValue<long>(value);
-        protected static DateTime ExtractDateTime(string value) => _unixEpoch.AddSeconds(ExtractHexLong(value));
-        protected static string[] ExtractCompoundString(string value) => value.Split('+');
+        protected static DateTime ExtractDateTime(string value) => UnixEpoch.AddSeconds(ExtractHexLong(value));
+
+        protected static string[] ExtractCompoundString(string? value)
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            return value.Split('+');
+        }
 
         protected static List<int> ExtractCompoundInteger(string value)
         {

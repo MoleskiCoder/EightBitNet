@@ -26,6 +26,7 @@
 
         public void Build(System.Type type)
         {
+            ArgumentNullException.ThrowIfNull(type);
             var sectionAttributes = type.GetCustomAttributes(typeof(SectionAttribute), true);
             Debug.Assert(sectionAttributes != null, "No section attributes available");
             Debug.Assert(sectionAttributes.Length == 1, "Must be a single section attribute available");
@@ -154,7 +155,8 @@
             if (attribute is SectionReferenceAttribute)
             {
                 this.ReferenceAttributes.Add(key, new Tuple<string, System.Type>(name, originalType));
-            } else if (attribute is SectionReferencesAttribute)
+            }
+            else if (attribute is SectionReferencesAttribute)
             {
                 this.ReferencesAttributes.Add(key, new Tuple<string, System.Type>(name, originalType));
             }

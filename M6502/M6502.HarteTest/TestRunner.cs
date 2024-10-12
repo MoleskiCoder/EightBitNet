@@ -13,8 +13,8 @@
 
         public TestRunner()
         {
-            CPU = new(this);
-            _mapping = new(RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.CPU = new(this);
+            this._mapping = new(this.RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }
 
         public override void Initialize()
@@ -23,21 +23,21 @@
 
         public override void LowerPOWER()
         {
-            CPU.LowerPOWER();
+            this.CPU.LowerPOWER();
             base.LowerPOWER();
         }
 
-        public override MemoryMapping Mapping(ushort _) => _mapping;
+        public override MemoryMapping Mapping(ushort _) => this._mapping;
 
         public override void RaisePOWER()
         {
             base.RaisePOWER();
-            CPU.RaisePOWER();
-            CPU.RaiseRESET();
-            CPU.RaiseINT();
-            CPU.RaiseNMI();
-            CPU.RaiseSO();
-            CPU.RaiseRDY();
+            this.CPU.RaisePOWER();
+            this.CPU.RaiseRESET();
+            this.CPU.RaiseINT();
+            this.CPU.RaiseNMI();
+            this.CPU.RaiseSO();
+            this.CPU.RaiseRDY();
         }
     }
 }
