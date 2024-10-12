@@ -15,5 +15,5 @@ namespace EightBit.GameBoy
         public const int RasterHeight = 144;
 
         public const int PixelCount = RasterWidth * RasterHeight;
-   }
+    }
 }

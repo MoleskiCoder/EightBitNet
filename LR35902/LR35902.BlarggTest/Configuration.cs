@@ -4,9 +4,9 @@
 
 namespace LR35902.BlarggTest
 {
-    public class Configuration
+    internal class Configuration
     {
-        public bool DebugMode { get; set; } = false;
+        public bool DebugMode { get; set; }
 
         public string RomDirectory { get; set; } = "roms";
     }

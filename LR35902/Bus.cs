@@ -3,6 +3,7 @@
 // </copyright>
 namespace EightBit.GameBoy
 {
+    using LR35902;
     using System;
     using System.Collections.Generic;
 
@@ -15,13 +16,13 @@ namespace EightBit.GameBoy
         public const int CyclesPerLine = CyclesPerFrame / TotalLineCount;
         public const int RomPageSize = 0x4000;
 
-        private readonly Rom bootRom = new Rom(0x100);                                  // 0x0000 - 0x00ff
-        private readonly List<Rom> gameRomBanks = new List<Rom>();                      // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
-        private readonly List<Ram> ramBanks = new List<Ram>();                          // 0xa000 - 0xbfff (switchable)
-        private readonly UnusedMemory unmapped2000 = new UnusedMemory(0x2000, 0xff);    // 0xa000 - 0xbfff
-        private readonly Ram lowInternalRam = new Ram(0x2000);                          // 0xc000 - 0xdfff (mirrored at 0xe000)
-        private readonly UnusedMemory unmapped60 = new UnusedMemory(0x60, 0xff);        // 0xfea0 - 0xfeff
-        private readonly Ram highInternalRam = new Ram(0x80);                           // 0xff80 - 0xffff
+        private readonly Rom bootRom = new(0x100);                                  // 0x0000 - 0x00ff
+        private readonly List<Rom> gameRomBanks = new();                      // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
+        private readonly List<Ram> ramBanks = new();                          // 0xa000 - 0xbfff (switchable)
+        private readonly UnusedMemory unmapped2000 = new(0x2000, 0xff);    // 0xa000 - 0xbfff
+        private readonly Ram lowInternalRam = new(0x2000);                          // 0xc000 - 0xdfff (mirrored at 0xe000)
+        private readonly UnusedMemory unmapped60 = new(0x60, 0xff);        // 0xfea0 - 0xfeff
+        private readonly Ram highInternalRam = new(0x80);                           // 0xff80 - 0xffff
 
         private bool enabledLCD = false;
 
@@ -240,20 +241,20 @@ namespace EightBit.GameBoy
             // ROM type
             switch (this.gameRomBanks[0].Peek(0x147))
             {
-            case (byte)CartridgeType.ROM:
-                this.rom = true;
-                break;
-            case (byte)CartridgeType.ROM_MBC1:
-                this.rom = this.banked = true;
-                break;
-            case (byte)CartridgeType.ROM_MBC1_RAM:
-                this.rom = this.banked = this.ram = true;
-                break;
-            case (byte)CartridgeType.ROM_MBC1_RAM_BATTERY:
-                this.rom = this.banked = this.ram = this.battery = true;
-                break;
-            default:
-                throw new InvalidOperationException("Unhandled cartridge ROM type");
+                case (byte)CartridgeType.ROM:
+                    this.rom = true;
+                    break;
+                case (byte)CartridgeType.ROM_MBC1:
+                    this.rom = this.banked = true;
+                    break;
+                case (byte)CartridgeType.ROM_MBC1_RAM:
+                    this.rom = this.banked = this.ram = true;
+                    break;
+                case (byte)CartridgeType.ROM_MBC1_RAM_BATTERY:
+                    this.rom = this.banked = this.ram = this.battery = true;
+                    break;
+                default:
+                    throw new InvalidOperationException("Unhandled cartridge ROM type");
             }
 
             // ROM size
@@ -262,28 +263,28 @@ namespace EightBit.GameBoy
                 var romSizeSpecification = this.Peek(0x148);
                 switch (romSizeSpecification)
                 {
-                case 0x52:
-                    gameRomBanks = 72;
-                    break;
-                case 0x53:
-                    gameRomBanks = 80;
-                    break;
-                case 0x54:
-                    gameRomBanks = 96;
-                    break;
-                default:
-                    if (romSizeSpecification > 6)
-                    {
-                        throw new InvalidOperationException("Invalid ROM size specification");
-                    }
+                    case 0x52:
+                        gameRomBanks = 72;
+                        break;
+                    case 0x53:
+                        gameRomBanks = 80;
+                        break;
+                    case 0x54:
+                        gameRomBanks = 96;
+                        break;
+                    default:
+                        if (romSizeSpecification > 6)
+                        {
+                            throw new InvalidOperationException("Invalid ROM size specification");
+                        }
 
-                    gameRomBanks = 1 << (romSizeSpecification + 1);
-                    if (gameRomBanks != this.gameRomBanks.Count)
-                    {
-                        throw new InvalidOperationException("ROM size specification mismatch");
-                    }
+                        gameRomBanks = 1 << (romSizeSpecification + 1);
+                        if (gameRomBanks != this.gameRomBanks.Count)
+                        {
+                            throw new InvalidOperationException("ROM size specification mismatch");
+                        }
 
-                    break;
+                        break;
                 }
 
                 // RAM size

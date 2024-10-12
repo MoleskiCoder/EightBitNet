@@ -68,8 +68,8 @@ namespace EightBit.GameBoy
         public const int BOOT_DISABLE = 0x50;
 
         private readonly Bus bus;
-        private readonly Register16 divCounter = new Register16(0xab, 0xcc);
-        private readonly Register16 dmaAddress = new Register16();
+        private readonly Register16 divCounter = new(0xab, 0xcc);
+        private readonly Register16 dmaAddress = new();
 
         private int timerCounter = 0;
 
@@ -288,7 +288,7 @@ namespace EightBit.GameBoy
 
         private void TriggerKeypadInterrupt() => this.TriggerInterrupt(Interrupts.KeypadPressed);
 
-        private void Bus_WrittenByte(object sender, System.EventArgs e)
+        private void Bus_WrittenByte(object? sender, System.EventArgs e)
         {
             var address = this.bus.Address.Word;
             var value = this.bus.Data;
@@ -296,55 +296,55 @@ namespace EightBit.GameBoy
 
             switch (port)
             {
-            case P1:
-                this.scanP14 = (value & (byte)Bits.Bit4) == 0;
-                this.scanP15 = (value & (byte)Bits.Bit5) == 0;
-                break;
+                case P1:
+                    this.scanP14 = (value & (byte)Bits.Bit4) == 0;
+                    this.scanP15 = (value & (byte)Bits.Bit5) == 0;
+                    break;
 
-            case SB: // R/W
-            case SC: // R/W
-                break;
+                case SB: // R/W
+                case SC: // R/W
+                    break;
 
-            case DIV: // R/W
-                this.Poke(port, 0);
-                this.timerCounter = this.divCounter.Word = 0;
-                break;
-            case TIMA: // R/W
-                break;
-            case TMA: // R/W
-                break;
-            case TAC: // R/W
-                break;
+                case DIV: // R/W
+                    this.Poke(port, 0);
+                    this.timerCounter = this.divCounter.Word = 0;
+                    break;
+                case TIMA: // R/W
+                    break;
+                case TMA: // R/W
+                    break;
+                case TAC: // R/W
+                    break;
 
-            case IF: // R/W
-                break;
+                case IF: // R/W
+                    break;
 
-            case LCDC:
-            case STAT:
-            case SCY:
-            case SCX:
-                break;
-            case DMA:
-                this.dmaAddress.Word = Chip.PromoteByte(value);
-                this.dmaTransferActive = true;
-                break;
-            case LY: // R/O
-                this.Poke(port, 0);
-                break;
-            case BGP:
-            case OBP0:
-            case OBP1:
-            case WY:
-            case WX:
-                break;
+                case LCDC:
+                case STAT:
+                case SCY:
+                case SCX:
+                    break;
+                case DMA:
+                    this.dmaAddress.Word = Chip.PromoteByte(value);
+                    this.dmaTransferActive = true;
+                    break;
+                case LY: // R/O
+                    this.Poke(port, 0);
+                    break;
+                case BGP:
+                case OBP0:
+                case OBP1:
+                case WY:
+                case WX:
+                    break;
 
-            case BOOT_DISABLE:
-                this.BootRomDisabled = value != 0;
-                break;
+                case BOOT_DISABLE:
+                    this.BootRomDisabled = value != 0;
+                    break;
             }
         }
 
-        private void Bus_ReadingByte(object sender, System.EventArgs e)
+        private void Bus_ReadingByte(object? sender, System.EventArgs e)
         {
             var address = this.bus.Address.Word;
             var io = (address >= BASE) && (address < 0xff80);

@@ -2,18 +2,17 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit.GameBoy
+namespace LR35902
 {
-    using System;
+    using EightBit;
+    using EightBit.GameBoy;
+    using Bus = EightBit.GameBoy.Bus;
 
-    public class LR35902 : IntelProcessor
+    public sealed class LR35902(Bus bus) : IntelProcessor(bus)
     {
-        private readonly Bus bus;
-        private readonly Register16 af = new Register16((int)Mask.Sixteen);
+        private readonly Bus bus = bus;
+        private readonly Register16 af = new((int)Mask.Sixteen);
         private bool prefixCB = false;
-
-        public LR35902(Bus bus)
-        : base(bus) => this.bus = bus;
 
         public int ClockCycles => this.Cycles * 4;
 
@@ -73,7 +72,7 @@ namespace EightBit.GameBoy
                 {
                     this.bus.IO.Poke(IoRegisters.IF, 0);
                     this.LowerINT();
-                    var index = Chip.FindFirstSet(masked);
+                    var index = FindFirstSet(masked);
                     this.Bus.Data = (byte)(0x38 + (index << 3));
                 }
                 else
@@ -148,30 +147,18 @@ namespace EightBit.GameBoy
 
         private void Start() => this.Stopped = false;
 
-        private byte R(int r)
+        private byte R(int r) => r switch
         {
-            switch (r)
-            {
-                case 0:
-                    return this.B;
-                case 1:
-                    return this.C;
-                case 2:
-                    return this.D;
-                case 3:
-                    return this.E;
-                case 4:
-                    return this.H;
-                case 5:
-                    return this.L;
-                case 6:
-                    return this.MemoryRead(this.HL.Word);
-                case 7:
-                    return this.A;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(r));
-            }
-        }
+            0 => this.B,
+            1 => this.C,
+            2 => this.D,
+            3 => this.E,
+            4 => this.H,
+            5 => this.L,
+            6 => this.MemoryRead(this.HL.Word),
+            7 => this.A,
+            _ => throw new ArgumentOutOfRangeException(nameof(r)),
+        };
 
         private void R(int r, byte value)
         {
@@ -206,87 +193,53 @@ namespace EightBit.GameBoy
             }
         }
 
-        private Register16 RP(int rp)
+        private Register16 RP(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return this.BC;
-                case 1:
-                    return this.DE;
-                case 2:
-                    return this.HL;
-                case 3:
-                    return this.SP;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(rp));
-            }
-        }
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL,
+            3 => this.SP,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-        private Register16 RP2(int rp)
+        private Register16 RP2(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return this.BC;
-                case 1:
-                    return this.DE;
-                case 2:
-                    return this.HL;
-                case 3:
-                    return this.AF;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(rp));
-            }
-        }
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL,
+            3 => this.AF,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
         private void ExecuteCB(int x, int y, int z)
         {
             switch (x)
             {
                 case 0: // rot[y] r[z]
-                {
-                    var operand = this.R(z);
-                    switch (y)
                     {
-                        case 0:
-                            operand = this.RLC(operand);
-                            break;
-                        case 1:
-                            operand = this.RRC(operand);
-                            break;
-                        case 2:
-                            operand = this.RL(operand);
-                            break;
-                        case 3:
-                            operand = this.RR(operand);
-                            break;
-                        case 4:
-                            operand = this.SLA(operand);
-                            break;
-                        case 5:
-                            operand = this.SRA(operand);
-                            break;
-                        case 6: // GB: SWAP r
-                            operand = this.Swap(operand);
-                            break;
-                        case 7:
-                            operand = this.SRL(operand);
-                            break;
-                        default:
-                            throw new InvalidOperationException("Unreachable code block reached");
-                    }
-
-                    this.Tick(2);
-                    this.R(z, operand);
-                    this.F = AdjustZero(this.F, operand);
-                    if (z == 6)
-                    {
+                        var operand = this.R(z);
+                        operand = y switch
+                        {
+                            0 => this.RLC(operand),
+                            1 => this.RRC(operand),
+                            2 => this.RL(operand),
+                            3 => this.RR(operand),
+                            4 => this.SLA(operand),
+                            5 => this.SRA(operand),
+                            6 => this.Swap(operand),    // GB: SWAP r
+                            7 => this.SRL(operand),
+                            _ => throw new InvalidOperationException("Unreachable code block reached"),
+                        };
                         this.Tick(2);
-                    }
+                        this.R(z, operand);
+                        this.F = AdjustZero(this.F, operand);
+                        if (z == 6)
+                        {
+                            this.Tick(2);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case 1: // BIT y, r[z]
                     this.Bit(y, this.R(z));
@@ -543,7 +496,7 @@ namespace EightBit.GameBoy
                     else
                     {
                         this.R(y, this.R(z));
-                        if ((y == 6) || (z == 6))
+                        if (y == 6 || z == 6)
                         {
                             this.Tick(); // M operations
                         }
@@ -847,73 +800,41 @@ namespace EightBit.GameBoy
             return operand;
         }
 
-        private bool JumpConditionalFlag(int flag)
+        private bool JumpConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.JumpConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.JumpConditional((this.F & (byte)StatusBits.CF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0), // NZ
+            1 => this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0), // Z
+            2 => this.JumpConditional((this.F & (byte)StatusBits.CF) == 0), // NC
+            3 => this.JumpConditional((this.F & (byte)StatusBits.CF) != 0), // C
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-        private bool JumpRelativeConditionalFlag(int flag)
+        private bool JumpRelativeConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) == 0), // NZ
+            1 => this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) != 0), // Z
+            2 => this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) == 0), // NC
+            3 => this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) != 0), // C
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-        private bool ReturnConditionalFlag(int flag)
+        private bool ReturnConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0),   // NZ
+            1 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0),   // Z
+            2 => this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0),   // NC
+            3 => this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0),   // C
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-        private bool CallConditionalFlag(int flag)
+        private bool CallConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.CallConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.CallConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.CallConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.CallConditional((this.F & (byte)StatusBits.CF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.CallConditional((this.F & (byte)StatusBits.ZF) == 0), // NZ
+            1 => this.CallConditional((this.F & (byte)StatusBits.ZF) != 0), // Z
+            2 => this.CallConditional((this.F & (byte)StatusBits.CF) == 0), // NC
+            3 => this.CallConditional((this.F & (byte)StatusBits.CF) != 0), // C
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
         private void Add(Register16 operand, Register16 value)
         {
@@ -1054,7 +975,7 @@ namespace EightBit.GameBoy
         private void Bit(int n, byte operand)
         {
             var carry = this.F & (byte)StatusBits.CF;
-            this.AndR(operand, Bit(n));
+            _ = this.AndR(operand, Bit(n));
             this.F = SetBit(this.F, StatusBits.CF, carry);
         }
 
@@ -1076,19 +997,19 @@ namespace EightBit.GameBoy
             }
             else
             {
-                if (((this.F & (byte)StatusBits.HC) != 0) || LowNibble((byte)updated) > 9)
+                if ((this.F & (byte)StatusBits.HC) != 0 || LowNibble((byte)updated) > 9)
                 {
                     updated += 6;
                 }
 
-                if (((this.F & (byte)StatusBits.CF) != 0) || updated > 0x9F)
+                if ((this.F & (byte)StatusBits.CF) != 0 || updated > 0x9F)
                 {
                     updated += 0x60;
                 }
             }
 
             this.F = ClearBit(this.F, (byte)StatusBits.HC | (byte)StatusBits.ZF);
-            this.F = SetBit(this.F, StatusBits.CF, ((this.F & (byte)StatusBits.CF) != 0) || ((updated & (int)Bits.Bit8) != 0));
+            this.F = SetBit(this.F, StatusBits.CF, (this.F & (byte)StatusBits.CF) != 0 || (updated & (int)Bits.Bit8) != 0);
             this.A = LowByte(updated);
 
             this.F = AdjustZero(this.F, this.A);

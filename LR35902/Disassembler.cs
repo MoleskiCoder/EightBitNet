@@ -4,6 +4,8 @@
 
 namespace EightBit.GameBoy
 {
+    using LR35902;
+
     public enum IoRegister
     {
         Abbreviated,    // FF00 + dd

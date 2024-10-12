@@ -4,11 +4,9 @@
 
 namespace LR35902.BlarggTest
 {
-    public class Computer
+    internal class Computer(Configuration configuration)
     {
-        private readonly Board board;
-
-        public Computer(Configuration configuration) => this.board = new Board(configuration);
+        private readonly Board board = new(configuration);
 
         public void Run()
         {

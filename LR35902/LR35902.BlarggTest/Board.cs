@@ -6,7 +6,7 @@ namespace LR35902.BlarggTest
 {
     using System;
 
-    public class Board : EightBit.GameBoy.Bus
+    internal class Board : EightBit.GameBoy.Bus
     {
         private readonly Configuration configuration;
         private readonly EightBit.GameBoy.Disassembler disassembler;
@@ -30,17 +30,19 @@ namespace LR35902.BlarggTest
 
         public void Plug(string path) => this.LoadGameRom(this.configuration.RomDirectory + "/" + path);
 
-        private void Board_WrittenByte(object sender, System.EventArgs e)
+        private void Board_WrittenByte(object? sender, System.EventArgs e)
         {
             switch (this.Address.Word)
             {
                 case EightBit.GameBoy.IoRegisters.BASE + EightBit.GameBoy.IoRegisters.SB:
                     System.Console.Out.Write(Convert.ToChar(this.Data));
                     break;
+                default:
+                    break;
             }
         }
 
-        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e)
+        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e)
         {
             if (this.IO.BootRomDisabled)
             {

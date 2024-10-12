@@ -4,7 +4,7 @@
 
 namespace LR35902.BlarggTest
 {
-    public static class Program
+    internal static class Program
     {
         public static void Main(string[] args)
         {
@@ -17,7 +17,7 @@ namespace LR35902.BlarggTest
 
             var computer = new Computer(configuration);
 
-            computer.Plug("blargg/cpu_instrs.gb");                  // Passed
+            //computer.Plug("blargg/cpu_instrs.gb");                  // Passed
             ////computer.Plug("blargg/01-special.gb");				// Passed
             ////computer.Plug("blargg/02-interrupts.gb");			// Passed
             ////computer.Plug("blargg/03-op sp,hl.gb");				// Passed
@@ -30,8 +30,8 @@ namespace LR35902.BlarggTest
             ////computer.Plug("blargg/10-bit ops.gb");				// Passed
             ////computer.Plug("blargg/11-op a,(hl).gb");				// Passed
 
-            ////computer.Plug("blargg/instr_timing.gb");				// Failed #255
-            ////computer.Plug("blargg/interrupt_time.gb");			// Failed
+            computer.Plug("blargg/instr_timing.gb");				// Failed #255
+            //computer.Plug("blargg/interrupt_time.gb");			// Failed
 
             computer.RaisePOWER();
             computer.Run();

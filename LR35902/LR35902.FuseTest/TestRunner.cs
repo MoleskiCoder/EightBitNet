@@ -19,7 +19,7 @@ namespace Fuse
     {
         private readonly Test<T> test;
         private readonly Result<T> result;
-        private readonly EightBit.Ram ram = new EightBit.Ram(0x10000);
+        private readonly EightBit.Ram ram = new(0x10000);
 
         public TestRunner(Test<T> test, Result<T> result)
         {
@@ -31,7 +31,7 @@ namespace Fuse
 
         public bool Unimplemented { get; private set; } = false;
 
-        public override EightBit.MemoryMapping Mapping(ushort address) => new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
+        public override EightBit.MemoryMapping Mapping(ushort address) => new(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
 
         public void Run()
         {
