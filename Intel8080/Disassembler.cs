@@ -6,11 +6,9 @@ namespace EightBit
 {
     using System;
 
-    public class Disassembler
+    public class Disassembler(Bus bus)
     {
-        public Disassembler(Bus bus) => this.Bus = bus;
-
-        public Bus Bus { get; }
+        public Bus Bus { get; } = bus;
 
         public static string AsFlag(byte value, StatusBits flag, string represents, string off = "-") => (value & (byte)flag) != 0 ? represents : off;
 
@@ -51,80 +49,44 @@ namespace EightBit
 
         public string Disassemble(Intel8080 cpu) => this.Disassemble(cpu, cpu.PC.Word);
 
-        private static string CC(int flag)
+        private static string CC(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0:
-                    return "NZ";
-                case 1:
-                    return "Z";
-                case 2:
-                    return "NC";
-                case 3:
-                    return "C";
-                case 4:
-                    return "PO";
-                case 5:
-                    return "PE";
-                case 6:
-                    return "P";
-                case 7:
-                    return "M";
-            }
+            0 => "NZ",
+            1 => "Z",
+            2 => "NC",
+            3 => "C",
+            4 => "PO",
+            5 => "PE",
+            6 => "P",
+            7 => "M",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(flag));
-        }
-
-        private static string ALU(int which)
+        private static string ALU(int which) => which switch
         {
-            switch (which)
-            {
-                case 0: // ADD A,n
-                    return "ADD";
-                case 1: // ADC
-                    return "ADC";
-                case 2: // SUB n
-                    return "SUB";
-                case 3: // SBC A,n
-                    return "SBB";
-                case 4: // AND n
-                    return "ANA";
-                case 5: // XOR n
-                    return "XRA";
-                case 6: // OR n
-                    return "ORA";
-                case 7: // CP n
-                    return "CMP";
-            }
+            0 => "ADD", // ADD A,n
+            1 => "ADC", // ADC
+            2 => "SUB", // SUB n
+            3 => "SBB", // SBC A,n
+            4 => "ANA", // AND n
+            5 => "XRA", // XOR n
+            6 => "ORA", // OR n
+            7 => "CMP", // CP n
+            _ => throw new System.ArgumentOutOfRangeException(nameof(which)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(which));
-        }
-
-        private static string ALU2(int which)
+        private static string ALU2(int which) => which switch
         {
-            switch (which)
-            {
-                case 0: // ADD A,n
-                    return "ADI";
-                case 1: // ADC
-                    return "ACI";
-                case 2: // SUB n
-                    return "SUI";
-                case 3: // SBC A,n
-                    return "SBI";
-                case 4: // AND n
-                    return "ANI";
-                case 5: // XOR n
-                    return "XRI";
-                case 6: // OR n
-                    return "ORI";
-                case 7: // CP n
-                    return "CPI";
-            }
-
-            throw new System.ArgumentOutOfRangeException(nameof(which));
-        }
+            0 => "ADI", // ADD A,n
+            1 => "ACI", // ADC
+            2 => "SUI", // SUB n
+            3 => "SBI", // SBC A,n
+            4 => "ANI", // AND n
+            5 => "XRI", // XOR n
+            6 => "ORI", // OR n
+            7 => "CPI", // CP n
+            _ => throw new System.ArgumentOutOfRangeException(nameof(which)),
+        };
 
         private static Tuple<string, int> Disassemble(int x, int y, int z, int p, int q)
         {
@@ -384,64 +346,36 @@ namespace EightBit
             return new Tuple<string, int>(specification, dumpCount);
         }
 
-        private static string RP(int rp)
+        private static string RP(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return "B";
-                case 1:
-                    return "D";
-                case 2:
-                    return "H";
-                case 3:
-                    return "SP";
-            }
+            0 => "B",
+            1 => "D",
+            2 => "H",
+            3 => "SP",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(rp));
-        }
-
-        private static string RP2(int rp)
+        private static string RP2(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return "B";
-                case 1:
-                    return "D";
-                case 2:
-                    return "H";
-                case 3:
-                    return "PSW";
-            }
+            0 => "B",
+            1 => "D",
+            2 => "H",
+            3 => "PSW",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(rp));
-        }
-
-        private static string R(int r)
+        private static string R(int r) => r switch
         {
-            switch (r)
-            {
-                case 0:
-                    return "B";
-                case 1:
-                    return "C";
-                case 2:
-                    return "D";
-                case 3:
-                    return "E";
-                case 4:
-                    return "H";
-                case 5:
-                    return "L";
-                case 6:
-                    return "M";
-                case 7:
-                    return "A";
-            }
-
-            throw new System.ArgumentOutOfRangeException(nameof(r));
-        }
+            0 => "B",
+            1 => "C",
+            2 => "D",
+            3 => "E",
+            4 => "H",
+            5 => "L",
+            6 => "M",
+            7 => "A",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(r)),
+        };
 
         private string Disassemble(Intel8080 cpu, ushort pc)
         {

@@ -6,16 +6,13 @@ namespace EightBit
 {
     using System;
 
-    public class Intel8080 : IntelProcessor
+    public class Intel8080(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
-        private readonly Register16 af = new Register16();
+        private readonly Register16 af = new();
 
-        private readonly InputOutput ports;
+        private readonly InputOutput ports = ports;
 
         private bool interruptEnable = false;
-
-        public Intel8080(Bus bus, InputOutput ports)
-        : base(bus) => this.ports = ports;
 
         public override Register16 AF
         {
@@ -121,30 +118,18 @@ namespace EightBit
 
         private void EnableInterrupts() => this.interruptEnable = true;
 
-        private byte R(int r)
+        private byte R(int r) => r switch
         {
-            switch (r)
-            {
-                case 0:
-                    return this.B;
-                case 1:
-                    return this.C;
-                case 2:
-                    return this.D;
-                case 3:
-                    return this.E;
-                case 4:
-                    return this.H;
-                case 5:
-                    return this.L;
-                case 6:
-                    return this.MemoryRead(this.HL.Word);
-                case 7:
-                    return this.A;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(r));
-            }
-        }
+            0 => this.B,
+            1 => this.C,
+            2 => this.D,
+            3 => this.E,
+            4 => this.H,
+            5 => this.L,
+            6 => this.MemoryRead(this.HL.Word),
+            7 => this.A,
+            _ => throw new ArgumentOutOfRangeException(nameof(r)),
+        };
 
         private void R(int r, byte value)
         {
@@ -179,39 +164,23 @@ namespace EightBit
             }
         }
 
-        private Register16 RP(int rp)
+        private Register16 RP(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return this.BC;
-                case 1:
-                    return this.DE;
-                case 2:
-                    return this.HL;
-                case 3:
-                    return this.SP;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(rp));
-            }
-        }
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL,
+            3 => this.SP,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-        private Register16 RP2(int rp)
+        private Register16 RP2(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return this.BC;
-                case 1:
-                    return this.DE;
-                case 2:
-                    return this.HL;
-                case 3:
-                    return this.AF;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(rp));
-            }
-        }
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL,
+            3 => this.AF,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
         private void Execute(int x, int y, int z, int p, int q)
         {
@@ -476,7 +445,7 @@ namespace EightBit
 
                             break;
                         case 2: // Conditional jump
-                            this.JumpConditionalFlag(y);
+                            _ = this.JumpConditionalFlag(y);
                             this.Tick(10);
                             break;
                         case 3: // Assorted operations
@@ -602,80 +571,44 @@ namespace EightBit
             return operand;
         }
 
-        private bool JumpConditionalFlag(int flag)
+        private bool JumpConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.JumpConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.JumpConditional((this.F & (byte)StatusBits.CF) != 0);
-                case 4: // PO
-                    return this.JumpConditional((this.F & (byte)StatusBits.PF) == 0);
-                case 5: // PE
-                    return this.JumpConditional((this.F & (byte)StatusBits.PF) != 0);
-                case 6: // P
-                    return this.JumpConditional((this.F & (byte)StatusBits.SF) == 0);
-                case 7: // M
-                    return this.JumpConditional((this.F & (byte)StatusBits.SF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0),     // NZ
+            1 => this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0),     // Z
+            2 => this.JumpConditional((this.F & (byte)StatusBits.CF) == 0),     // NC
+            3 => this.JumpConditional((this.F & (byte)StatusBits.CF) != 0),     // C
+            4 => this.JumpConditional((this.F & (byte)StatusBits.PF) == 0),     // PO
+            5 => this.JumpConditional((this.F & (byte)StatusBits.PF) != 0),     // PE
+            6 => this.JumpConditional((this.F & (byte)StatusBits.SF) == 0),     // P
+            7 => this.JumpConditional((this.F & (byte)StatusBits.SF) != 0),     // M
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-        private bool ReturnConditionalFlag(int flag)
+        private bool ReturnConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0);
-                case 4: // PO
-                    return this.ReturnConditional((this.F & (byte)StatusBits.PF) == 0);
-                case 5: // PE
-                    return this.ReturnConditional((this.F & (byte)StatusBits.PF) != 0);
-                case 6: // P
-                    return this.ReturnConditional((this.F & (byte)StatusBits.SF) == 0);
-                case 7: // M
-                    return this.ReturnConditional((this.F & (byte)StatusBits.SF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0),   // NZ
+            1 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0),   // Z
+            2 => this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0),   // NC
+            3 => this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0),   // C
+            4 => this.ReturnConditional((this.F & (byte)StatusBits.PF) == 0),   // PO
+            5 => this.ReturnConditional((this.F & (byte)StatusBits.PF) != 0),   // PE
+            6 => this.ReturnConditional((this.F & (byte)StatusBits.SF) == 0),   // P
+            7 => this.ReturnConditional((this.F & (byte)StatusBits.SF) != 0),   // M
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-        private bool CallConditionalFlag(int flag)
+        private bool CallConditionalFlag(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0: // NZ
-                    return this.CallConditional((this.F & (byte)StatusBits.ZF) == 0);
-                case 1: // Z
-                    return this.CallConditional((this.F & (byte)StatusBits.ZF) != 0);
-                case 2: // NC
-                    return this.CallConditional((this.F & (byte)StatusBits.CF) == 0);
-                case 3: // C
-                    return this.CallConditional((this.F & (byte)StatusBits.CF) != 0);
-                case 4: // PO
-                    return this.CallConditional((this.F & (byte)StatusBits.PF) == 0);
-                case 5: // PE
-                    return this.CallConditional((this.F & (byte)StatusBits.PF) != 0);
-                case 6: // P
-                    return this.CallConditional((this.F & (byte)StatusBits.SF) == 0);
-                case 7: // M
-                    return this.CallConditional((this.F & (byte)StatusBits.SF) != 0);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(flag));
-            }
-        }
+            0 => this.CallConditional((this.F & (byte)StatusBits.ZF) == 0),     // NZ
+            1 => this.CallConditional((this.F & (byte)StatusBits.ZF) != 0),     // Z
+            2 => this.CallConditional((this.F & (byte)StatusBits.CF) == 0),     // NC
+            3 => this.CallConditional((this.F & (byte)StatusBits.CF) != 0),     // C
+            4 => this.CallConditional((this.F & (byte)StatusBits.PF) == 0),     // PO
+            5 => this.CallConditional((this.F & (byte)StatusBits.PF) != 0),     // PE
+            6 => this.CallConditional((this.F & (byte)StatusBits.SF) == 0),     // P
+            7 => this.CallConditional((this.F & (byte)StatusBits.SF) != 0),     // M
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
         private void Add(Register16 value)
         {
@@ -770,7 +703,7 @@ namespace EightBit
             var before = this.A;
             var carry = (this.F & (byte)StatusBits.CF) != 0;
             byte addition = 0;
-            if (((this.F & (byte)StatusBits.AC) != 0) || (LowNibble(before) > (byte)9))
+            if (((this.F & (byte)StatusBits.AC) != 0) || (LowNibble(before) > 9))
             {
                 addition = 0x6;
             }
