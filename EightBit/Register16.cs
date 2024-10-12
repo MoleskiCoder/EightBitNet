@@ -14,14 +14,14 @@ namespace EightBit
 
         public Register16(byte low, byte high)
         {
-            Low = low;
-            High = high;
+            this.Low = low;
+            this.High = high;
         }
 
         public Register16(ushort value)
         {
-            Low = Chip.LowByte(value);
-            High = Chip.HighByte(value);
+            this.Low = Chip.LowByte(value);
+            this.High = Chip.HighByte(value);
         }
 
         public Register16()
@@ -47,24 +47,24 @@ namespace EightBit
         public Register16(Register16 rhs)
         {
             ArgumentNullException.ThrowIfNull(rhs);
-            Low = rhs.Low;
-            High = rhs.High;
+            this.Low = rhs.Low;
+            this.High = rhs.High;
         }
 
         public ushort Word
         {
-            get => Chip.MakeWord(Low, High);
+            get => Chip.MakeWord(this.Low, this.High);
 
             set
             {
-                Low = Chip.LowByte(value);
-                High = Chip.HighByte(value);
+                this.Low = Chip.LowByte(value);
+                this.High = Chip.HighByte(value);
             }
         }
 
-        public ref byte Low => ref _low;
+        public ref byte Low => ref this._low;
 
-        public ref byte High => ref _high;
+        public ref byte High => ref this._high;
 
         public static bool operator ==(Register16 left, Register16 right)
         {
@@ -74,38 +74,22 @@ namespace EightBit
 
         public static bool operator !=(Register16 left, Register16 right) => !(left == right);
 
-        public override int GetHashCode() => Word;
+        public override int GetHashCode() => this.Word;
 
-        public override bool Equals(object? obj)
-        {
-            return Equals(obj as Register16);
-        }
+        public override bool Equals(object? obj) => this.Equals(obj as Register16);
 
-        public bool Equals(Register16? rhs)
-        {
-            if (ReferenceEquals(this, rhs))
-            {
-                return true;
-            }
-
-            if (rhs is null)
-            {
-                return false;
-            }
-
-            return rhs.Low == Low && rhs.High == High;
-        }
+        public bool Equals(Register16? rhs) => ReferenceEquals(this, rhs) || (rhs is not null && rhs.Low == this.Low && rhs.High == this.High);
 
         public void Assign(byte low, byte high)
         {
-            _low = low;
-            _high = high;
+            this._low = low;
+            this._high = high;
         }
 
         public void Assign(Register16 from)
         {
             ArgumentNullException.ThrowIfNull(from);
-            Assign(from._low, from._high);
+            this.Assign(from._low, from._high);
         }
     }
 }

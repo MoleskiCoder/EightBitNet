@@ -19,9 +19,6 @@ namespace EightBit
 
         public AccessLevel Access { get; set; } = access;
 
-        public int Offset(ushort absolute)
-        {
-            return (absolute - Begin) & Mask;
-        }
+        public int Offset(ushort absolute) => (absolute - this.Begin) & this.Mask;
     }
 }

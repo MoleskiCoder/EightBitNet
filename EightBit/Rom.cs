@@ -4,11 +4,13 @@
 
 namespace EightBit
 {
+    using System.Diagnostics;
+
     public class Rom(int size = 0) : Memory
     {
         private byte[] _bytes = new byte[size];
 
-        public override int Size => _bytes.Length;
+        public override int Size => this._bytes.Length;
 
         public static int Load(Stream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
@@ -24,7 +26,7 @@ namespace EightBit
 
             if ((limit < 0) || (limit > size))
             {
-                limit = (int)size;
+                limit = size;
             }
 
             var extent = limit + writeOffset;
@@ -35,10 +37,12 @@ namespace EightBit
                 output = updated;
             }
 
-            file.Seek(readOffset, SeekOrigin.Begin);
+            var position = file.Seek(readOffset, SeekOrigin.Begin);
+            Debug.Assert(position == readOffset);
             using (var reader = new BinaryReader(file))
             {
-                reader.Read(output, writeOffset, limit);
+                var actual = reader.Read(output, writeOffset, limit);
+                Debug.Assert(actual <= limit);
             }
 
             return size;
@@ -52,14 +56,14 @@ namespace EightBit
 
         public override int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
-            var maximumSize = Size - writeOffset;
-            return Load(file, ref Bytes(), writeOffset, readOffset, limit, maximumSize);
+            var maximumSize = this.Size - writeOffset;
+            return Load(file, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(string path, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
-            var maximumSize = Size - writeOffset;
-            return Load(path, ref Bytes(), writeOffset, readOffset, limit, maximumSize);
+            var maximumSize = this.Size - writeOffset;
+            return Load(path, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
         public override int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1)
@@ -68,26 +72,26 @@ namespace EightBit
 
             if (limit < 0)
             {
-                limit = Math.Min(from.Length, Size - readOffset);
+                limit = Math.Min(from.Length, this.Size - readOffset);
             }
 
             var extent = limit + writeOffset;
-            if (Size < extent)
+            if (this.Size < extent)
             {
                 var updated = new byte[extent];
-                Array.Copy(Bytes(), updated, Size);
-                Bytes() = updated;
+                Array.Copy(this.Bytes(), updated, this.Size);
+                this.Bytes() = updated;
             }
 
-            Array.Copy(from, readOffset, Bytes(), writeOffset, limit);
+            Array.Copy(from, readOffset, this.Bytes(), writeOffset, limit);
 
             return limit;
         }
 
-        public override byte Peek(ushort address) => Bytes()[address];
+        public override byte Peek(ushort address) => this.Bytes()[address];
 
-        protected ref byte[] Bytes() => ref _bytes;
+        protected ref byte[] Bytes() => ref this._bytes;
 
-        protected override void Poke(ushort address, byte value) => Bytes()[address] = value;
+        protected override void Poke(ushort address, byte value) => this.Bytes()[address] = value;
     }
 }

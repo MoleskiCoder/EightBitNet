@@ -52,24 +52,10 @@ namespace EightBit
 
         public static int DemoteNibble(byte value) => HighNibble(value);
 
-        public static int CountBits(uint value)
-        {
-            return System.Numerics.BitOperations.PopCount(value);
-        }
+        public static int CountBits(uint value) => System.Numerics.BitOperations.PopCount(value);
 
-        public static bool EvenParity(uint value)
-        {
-            return CountBits(value) % 2 == 0;
-        }
+        public static bool EvenParity(uint value) => CountBits(value) % 2 == 0;
 
-        public static int FindFirstSet(uint value)
-        {
-            if (value == 0)
-            {
-                return 0;
-            }
-
-            return System.Numerics.BitOperations.TrailingZeroCount(value) + 1;
-        }
+        public static int FindFirstSet(uint value) => value == 0 ? 0 : System.Numerics.BitOperations.TrailingZeroCount(value) + 1;
     }
 }

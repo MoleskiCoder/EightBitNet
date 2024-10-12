@@ -20,7 +20,7 @@ namespace EightBit
         {
             for (var i = 0; i < 0x100; ++i)
             {
-                _decodedOpCodes[i] = new((byte)i);
+                this._decodedOpCodes[i] = new((byte)i);
             }
         }
 
@@ -38,49 +38,50 @@ namespace EightBit
 
         public abstract Register16 AF { get; }
 
-        public ref byte A => ref AF.High;
+        public ref byte A => ref this.AF.High;
 
-        public ref byte F => ref AF.Low;
+        public ref byte F => ref this.AF.Low;
 
         public abstract Register16 BC { get; }
 
-        public ref byte B => ref BC.High;
+        public ref byte B => ref this.BC.High;
 
-        public ref byte C => ref BC.Low;
+        public ref byte C => ref this.BC.Low;
 
         public abstract Register16 DE { get; }
 
-        public ref byte D => ref DE.High;
+        public ref byte D => ref this.DE.High;
 
-        public ref byte E => ref DE.Low;
+        public ref byte E => ref this.DE.Low;
 
         public abstract Register16 HL { get; }
 
-        public ref byte H => ref HL.High;
+        public ref byte H => ref this.HL.High;
 
-        public ref byte L => ref HL.Low;
+        public ref byte L => ref this.HL.Low;
 
-        public ref PinLevel HALT => ref _haltLine;
+        public ref PinLevel HALT => ref this._haltLine;
 
-        public IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => _decodedOpCodes[opCode];
+        public IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this._decodedOpCodes[opCode];
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseHALT()
         {
-            if (HALT.Lowered())
+            if (this.HALT.Lowered())
             {
-                OnRaisingHALT();
-                HALT.Raise();
-                OnRaisedHALT();
+                this.OnRaisingHALT();
+                this.HALT.Raise();
+                this.OnRaisedHALT();
             }
         }
 
         public virtual void LowerHALT()
         {
-            if (HALT.Raised())
+            if (this.HALT.Raised())
             {
-                OnLoweringHALT();
-                HALT.Lower();
-                OnLoweredHALT();
+                this.OnLoweringHALT();
+                this.HALT.Lower();
+                this.OnLoweredHALT();
             }
         }
 
@@ -100,8 +101,8 @@ namespace EightBit
 
         protected override void OnRaisedPOWER()
         {
-            PC.Word = SP.Word = AF.Word = BC.Word = DE.Word = HL.Word = (ushort)Mask.Sixteen;
-            RaiseHALT();
+            this.PC.Word = this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
+            this.RaiseHALT();
             base.OnRaisedPOWER();
         }
 
@@ -109,7 +110,7 @@ namespace EightBit
 
         protected virtual void OnRaisedHALT()
         {
-            ++PC.Word; // Release the PC from HALT instruction
+            ++this.PC.Word; // Release the PC from HALT instruction
             RaisedHALT?.Invoke(this, EventArgs.Empty);
         }
 
@@ -117,56 +118,56 @@ namespace EightBit
 
         protected virtual void OnLoweredHALT()
         {
-            --PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
+            --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
             LoweredHALT?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            Jump(0);
+            this.Jump(0);
         }
 
         protected sealed override void Push(byte value)
         {
-            --SP.Word;
-            MemoryWrite(SP, value);
+            --this.SP.Word;
+            this.MemoryWrite(this.SP, value);
         }
 
         protected sealed override byte Pop()
         {
-            var returned = MemoryRead(SP);
-            SP.Word++;
+            var returned = this.MemoryRead(this.SP);
+            this.SP.Word++;
             return returned;
         }
 
         protected sealed override Register16 GetWord()
         {
             var returned = base.GetWord();
-            MEMPTR.Assign(Bus.Address);
+            this.MEMPTR.Assign(this.Bus.Address);
             return returned;
         }
 
         protected sealed override void SetWord(Register16 value)
         {
             base.SetWord(value);
-            MEMPTR.Assign(Bus.Address);
+            this.MEMPTR.Assign(this.Bus.Address);
         }
 
         ////
 
         protected void Restart(byte address)
         {
-            MEMPTR.Assign(address, 0);
-            Call(MEMPTR);
+            this.MEMPTR.Assign(address, 0);
+            this.Call(this.MEMPTR);
         }
 
         protected bool CallConditional(bool condition)
         {
-            FetchWordMEMPTR();
+            this.FetchWordMEMPTR();
             if (condition)
             {
-                Call(MEMPTR);
+                this.Call(this.MEMPTR);
             }
 
             return condition;
@@ -174,10 +175,10 @@ namespace EightBit
 
         protected bool JumpConditional(bool condition)
         {
-            FetchWordMEMPTR();
+            this.FetchWordMEMPTR();
             if (condition)
             {
-                Jump(MEMPTR);
+                this.Jump(this.MEMPTR);
             }
 
             return condition;
@@ -187,7 +188,7 @@ namespace EightBit
         {
             if (condition)
             {
-                Return();
+                this.Return();
             }
 
             return condition;
@@ -195,45 +196,45 @@ namespace EightBit
 
         protected void FetchWordMEMPTR()
         {
-            FetchWord();
-            MEMPTR.Assign(Intermediate);
+            _ = this.FetchWord();
+            this.MEMPTR.Assign(this.Intermediate);
         }
 
         protected void JumpIndirect()
         {
-            FetchWordMEMPTR();
-            Jump(MEMPTR);
+            this.FetchWordMEMPTR();
+            this.Jump(this.MEMPTR);
         }
 
         protected void CallIndirect()
         {
-            FetchWordMEMPTR();
-            Call(MEMPTR);
+            this.FetchWordMEMPTR();
+            this.Call(this.MEMPTR);
         }
 
         protected void JumpRelative(sbyte offset)
         {
-            MEMPTR.Word = (ushort)(PC.Word + offset);
-            Jump(MEMPTR);
+            this.MEMPTR.Word = (ushort)(this.PC.Word + offset);
+            this.Jump(this.MEMPTR);
         }
 
         protected bool JumpRelativeConditional(bool condition)
         {
-            Intermediate.Assign(PC);
-            ++PC.Word;
+            this.Intermediate.Assign(this.PC);
+            ++this.PC.Word;
             if (condition)
             {
-                var offset = (sbyte)MemoryRead(Intermediate);
-                JumpRelative(offset);
+                var offset = (sbyte)this.MemoryRead(this.Intermediate);
+                this.JumpRelative(offset);
             }
 
             return condition;
         }
 
-        protected override sealed void Return()
+        protected sealed override void Return()
         {
             base.Return();
-            MEMPTR.Assign(PC);
+            this.MEMPTR.Assign(this.PC);
         }
     }
 }

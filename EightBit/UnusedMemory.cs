@@ -9,7 +9,7 @@ namespace EightBit
         private readonly int _size = size;
         private readonly byte _unchanging = unchanging;
 
-        public override int Size => _size;
+        public override int Size => this._size;
 
         public override int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1) => throw new NotImplementedException();
 
@@ -17,7 +17,7 @@ namespace EightBit
 
         public override int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1) => throw new NotImplementedException();
 
-        public override byte Peek(ushort address) => _unchanging;
+        public override byte Peek(ushort address) => this._unchanging;
 
         protected override void Poke(ushort address, byte value) => throw new NotImplementedException();
     }

@@ -11,7 +11,7 @@ namespace EightBit
         {
         }
 
-        public override sealed ref byte Reference(ushort address) => ref Bytes()[address];
+        public sealed override ref byte Reference(ushort address) => ref this.Bytes()[address];
 
         public new void Poke(ushort address, byte value) => base.Poke(address, value);
     }

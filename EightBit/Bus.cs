@@ -18,89 +18,90 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? ReadByte;
 
-        public ref byte Data => ref _data;
+        public ref byte Data => ref this._data;
 
         public Register16 Address { get; } = new();
 
         public abstract MemoryMapping Mapping(ushort absolute);
 
-        public byte Peek() => Reference();
+        public byte Peek() => this.Reference();
 
-        public byte Peek(ushort absolute) => Reference(absolute);
+        public byte Peek(ushort absolute) => this.Reference(absolute);
 
         public byte Peek(Register16 absolute)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            return Peek(absolute.Word);
+            return this.Peek(absolute.Word);
         }
 
-        public void Poke(byte value) => Reference() = value;
+        public void Poke(byte value) => this.Reference() = value;
 
-        public void Poke(ushort absolute, byte value) => Reference(absolute) = value;
+        public void Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
 
         public void Poke(Register16 absolute, byte value)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            Poke(absolute.Word, value);
+            this.Poke(absolute.Word, value);
         }
 
         public byte Read()
         {
-            OnReadingByte();
-            var returned = Data = Reference();
-            OnReadByte();
+            this.OnReadingByte();
+            var returned = this.Data = this.Reference();
+            this.OnReadByte();
             return returned;
         }
 
         public byte Read(ushort absolute)
         {
-            Address.Word = absolute;
-            return Read();
+            this.Address.Word = absolute;
+            return this.Read();
         }
 
         public byte Read(Register16 absolute)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            return Read(absolute.Low, absolute.High);
+            return this.Read(absolute.Low, absolute.High);
         }
 
         public byte Read(byte low, byte high)
         {
-            Address.Assign(low, high);
-            return Read();
+            this.Address.Assign(low, high);
+            return this.Read();
         }
 
         public void Write()
         {
-            OnWritingByte();
-            Reference() = Data;
-            OnWrittenByte();
+            this.OnWritingByte();
+            this.Reference() = this.Data;
+            this.OnWrittenByte();
         }
 
         public void Write(byte value)
         {
-            Data = value;
-            Write();
+            this.Data = value;
+            this.Write();
         }
 
         public void Write(ushort absolute, byte value)
         {
-            Address.Word = absolute;
-            Write(value);
+            this.Address.Word = absolute;
+            this.Write(value);
         }
 
         public void Write(Register16 absolute, byte value)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            Write(absolute.Low, absolute.High, value);
+            this.Write(absolute.Low, absolute.High, value);
         }
 
         public void Write(byte low, byte high, byte value)
         {
-            Address.Assign(low, high);
-            Write(value);
+            this.Address.Assign(low, high);
+            this.Write(value);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaisePOWER()
         {
         }
@@ -121,12 +122,12 @@ namespace EightBit
 
         protected ref byte Reference(ushort absolute)
         {
-            var mapped = Mapping(absolute);
+            var mapped = this.Mapping(absolute);
             var offset = (ushort)mapped.Offset(absolute);
             if (mapped.Access == AccessLevel.ReadOnly)
             {
-                Data = mapped.Memory.Peek(offset);
-                return ref _data;
+                this.Data = mapped.Memory.Peek(offset);
+                return ref this._data;
             }
 
             return ref mapped.Memory.Reference(offset);
@@ -135,19 +136,19 @@ namespace EightBit
         protected ref byte Reference(Register16 absolute)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            return ref Reference(absolute.Word);
+            return ref this.Reference(absolute.Word);
         }
 
-        protected ref byte Reference() => ref Reference(Address);
+        protected ref byte Reference() => ref this.Reference(this.Address);
 
         protected void LoadHexFile(string path)
         {
             var file = new IntelHexFile(path);
             foreach (var (address, content) in file.Parse())
             {
-                var mapped = Mapping(address);
+                var mapped = this.Mapping(address);
                 var offset = address - mapped.Begin;
-                mapped.Memory.Load(content, offset);
+                _ = mapped.Memory.Load(content, offset);
             }
         }
     }

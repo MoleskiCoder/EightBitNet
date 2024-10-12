@@ -10,6 +10,7 @@ namespace EightBit
 
         public static bool Lowered(this PinLevel line) => line == PinLevel.Low;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public static void Raise(this ref PinLevel line) => line = PinLevel.High;
 
         public static void Lower(this ref PinLevel line) => line = PinLevel.Low;

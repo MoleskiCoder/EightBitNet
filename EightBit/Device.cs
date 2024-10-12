@@ -18,27 +18,28 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? LoweredPOWER;
 
-        public bool Powered => POWER.Raised();
+        public bool Powered => this.POWER.Raised();
 
-        public ref PinLevel POWER => ref _powerLine;
+        public ref PinLevel POWER => ref this._powerLine;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaisePOWER()
         {
-            if (POWER.Lowered())
+            if (this.POWER.Lowered())
             {
-                OnRaisingPOWER();
-                POWER.Raise();
-                OnRaisedPOWER();
+                this.OnRaisingPOWER();
+                this.POWER.Raise();
+                this.OnRaisedPOWER();
             }
         }
 
         public virtual void LowerPOWER()
         {
-            if (POWER.Raised())
+            if (this.POWER.Raised())
             {
-                OnLoweringPOWER();
-                POWER.Lower();
-                OnLoweredPOWER();
+                this.OnLoweringPOWER();
+                this.POWER.Lower();
+                this.OnLoweredPOWER();
             }
         }
 

@@ -19,27 +19,27 @@ namespace EightBit
 
         public event EventHandler<PortEventArgs>? WrittenPort;
 
-        public byte Read(byte port) => ReadInputPort(port);
+        public byte Read(byte port) => this.ReadInputPort(port);
 
-        public void Write(byte port, byte value) => WriteOutputPort(port, value);
+        public void Write(byte port, byte value) => this.WriteOutputPort(port, value);
 
         public byte ReadInputPort(byte port)
         {
-            OnReadingPort(port);
-            var value = _input[port];
-            OnReadPort(port);
+            this.OnReadingPort(port);
+            var value = this._input[port];
+            this.OnReadPort(port);
             return value;
         }
 
-        public void WriteInputPort(byte port, byte value) => _input[port] = value;
+        public void WriteInputPort(byte port, byte value) => this._input[port] = value;
 
-        public byte ReadOutputPort(byte port) => _output[port];
+        public byte ReadOutputPort(byte port) => this._output[port];
 
         public void WriteOutputPort(byte port, byte value)
         {
-            OnWritingPort(port);
-            _output[port] = value;
-            OnWrittenPort(port);
+            this.OnWritingPort(port);
+            this._output[port] = value;
+            this.OnWrittenPort(port);
         }
 
         private void OnReadingPort(byte port) => ReadingPort?.Invoke(this, new PortEventArgs(port));

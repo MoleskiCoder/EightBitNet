@@ -11,19 +11,19 @@ namespace EightBit
 
         public IEnumerable<Tuple<ushort, byte[]>> Parse()
         {
-            _eof = false;
-            using var reader = File.OpenText(_path);
-            while (!reader.EndOfStream && !_eof)
+            this._eof = false;
+            using var reader = File.OpenText(this._path);
+            while (!reader.EndOfStream && !this._eof)
             {
                 var line = reader.ReadLine() ?? throw new InvalidOperationException("Early EOF detected");
-                var parsed = Parse(line);
-                if (parsed != null)
+                var parsed = this.Parse(line);
+                if (parsed is not null)
                 {
                     yield return parsed;
                 }
             }
 
-            if (!_eof)
+            if (!this._eof)
             {
                 throw new InvalidOperationException("File is missing an EOF record");
             }
@@ -73,7 +73,7 @@ namespace EightBit
                     return new Tuple<ushort, byte[]>(address, ParseDataRecord(line, count));
 
                 case 0x01:
-                    _eof = true;
+                    this._eof = true;
                     return null;
 
                 default:

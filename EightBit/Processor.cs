@@ -36,9 +36,10 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? LoweredINT;
 
-        public ref PinLevel RESET => ref _resetLine;
+        public ref PinLevel RESET => ref this._resetLine;
 
-        public ref PinLevel INT => ref _intLine;
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "Chip pin name")]
+        public ref PinLevel INT => ref this._intLine;
 
         public Bus Bus { get; } = memory;
 
@@ -58,17 +59,17 @@ namespace EightBit
 
         public static sbyte SignExtend(int b, int x) => SignExtend(b, (byte)x);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
         public virtual int Step()
         {
-            ResetCycles();
-            OnExecutingInstruction();
-            if (Powered)
+            this.ResetCycles();
+            this.OnExecutingInstruction();
+            if (this.Powered)
             {
-                PoweredStep();
+                this.PoweredStep();
             }
- 
-            OnExecutedInstruction();
-            return Cycles;
+            this.OnExecutedInstruction();
+            return this.Cycles;
         }
 
         public abstract void PoweredStep();
@@ -78,9 +79,9 @@ namespace EightBit
         public int Run(int limit)
         {
             var current = 0;
-            while (Powered && (current < limit))
+            while (this.Powered && (current < limit))
             {
-                current += Step();
+                current += this.Step();
             }
 
             return current;
@@ -88,53 +89,55 @@ namespace EightBit
 
         public void Execute(byte value)
         {
-            OpCode = value;
-            Execute();
+            this.OpCode = value;
+            this.Execute();
         }
 
         public abstract Register16 PeekWord(ushort address);
 
         public abstract void PokeWord(ushort address, Register16 value);
 
-        public void PokeWord(ushort address, ushort value) => PokeWord(address, new Register16(value));
+        public void PokeWord(ushort address, ushort value) => this.PokeWord(address, new Register16(value));
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRESET()
         {
-            if (RESET.Lowered())
+            if (this.RESET.Lowered())
             {
-                OnRaisingRESET();
-                RESET.Raise();
-                OnRaisedRESET();
+                this.OnRaisingRESET();
+                this.RESET.Raise();
+                this.OnRaisedRESET();
             }
         }
 
         public virtual void LowerRESET()
         {
-            if (RESET.Raised())
+            if (this.RESET.Raised())
             {
-                OnLoweringRESET();
-                RESET.Lower();
-                OnLoweredRESET();
+                this.OnLoweringRESET();
+                this.RESET.Lower();
+                this.OnLoweredRESET();
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseINT()
         {
-            if (INT.Lowered())
+            if (this.INT.Lowered())
             {
-                OnRaisingINT();
-                INT.Raise();
-                OnRaisedINT();
+                this.OnRaisingINT();
+                this.INT.Raise();
+                this.OnRaisedINT();
             }
         }
 
         public virtual void LowerINT()
         {
-            if (INT.Raised())
+            if (this.INT.Raised())
             {
-                OnLoweringINT();
-                INT.Lower();
-                OnLoweredINT();
+                this.OnLoweringINT();
+                this.INT.Lower();
+                this.OnLoweredINT();
             }
         }
 
@@ -154,77 +157,77 @@ namespace EightBit
 
         protected virtual void OnLoweredINT() => LoweredINT?.Invoke(this, EventArgs.Empty);
 
-        protected virtual void HandleRESET() => RaiseRESET();
+        protected virtual void HandleRESET() => this.RaiseRESET();
 
-        protected virtual void HandleINT() => RaiseINT();
+        protected virtual void HandleINT() => this.RaiseINT();
 
         protected void MemoryWrite(byte low, byte high)
         {
-            Bus.Address.Assign(low, high);
-            MemoryWrite();
+            this.Bus.Address.Assign(low, high);
+            this.MemoryWrite();
         }
 
         protected void MemoryWrite(byte low, byte high, byte data)
         {
-            Bus.Address.Assign(low, high);
-            MemoryWrite(data);
+            this.Bus.Address.Assign(low, high);
+            this.MemoryWrite(data);
         }
 
         protected void MemoryWrite(ushort address, byte data)
         {
-            Bus.Address.Word = address;
-            MemoryWrite(data);
+            this.Bus.Address.Word = address;
+            this.MemoryWrite(data);
         }
 
         protected void MemoryWrite(Register16 address, byte data)
         {
             ArgumentNullException.ThrowIfNull(address);
-            MemoryWrite(address.Low, address.High, data);
+            this.MemoryWrite(address.Low, address.High, data);
         }
 
         protected void MemoryWrite(Register16 address)
         {
             ArgumentNullException.ThrowIfNull(address);
-            MemoryWrite(address.Low, address.High);
+            this.MemoryWrite(address.Low, address.High);
         }
 
         protected void MemoryWrite(byte data)
         {
-            Bus.Data = data;
-            MemoryWrite();
+            this.Bus.Data = data;
+            this.MemoryWrite();
         }
 
-        protected virtual void MemoryWrite() => BusWrite();
+        protected virtual void MemoryWrite() => this.BusWrite();
 
-        protected virtual void BusWrite() => Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
+        protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
         protected byte MemoryRead(byte low, byte high)
         {
-            Bus.Address.Assign(low, high);
-            return MemoryRead();
+            this.Bus.Address.Assign(low, high);
+            return this.MemoryRead();
         }
 
         protected byte MemoryRead(ushort address)
         {
-            Bus.Address.Word = address;
-            return MemoryRead();
+            this.Bus.Address.Word = address;
+            return this.MemoryRead();
         }
 
         protected byte MemoryRead(Register16 address)
         {
             ArgumentNullException.ThrowIfNull(address);
-            return MemoryRead(address.Low, address.High);
+            return this.MemoryRead(address.Low, address.High);
         }
 
-        protected virtual byte MemoryRead() => BusRead();
+        protected virtual byte MemoryRead() => this.BusRead();
 
-        protected virtual byte BusRead() => Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
+        protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
         protected virtual byte FetchByte()
         {
-            Bus.Address.Assign(PC);
-            PC.Word++;
-            return MemoryRead();
+            this.Bus.Address.Assign(this.PC);
+            this.PC.Word++;
+            return this.MemoryRead();
         }
 
         protected abstract Register16 GetWord();
@@ -236,13 +239,13 @@ namespace EightBit
         protected Register16 GetWordPaged(Register16 address)
         {
             ArgumentNullException.ThrowIfNull(address);
-            return GetWordPaged(address.High, address.Low);
+            return this.GetWordPaged(address.High, address.Low);
         }
 
         protected Register16 GetWordPaged(byte page, byte offset)
         {
-            Bus.Address.Assign(offset, page);
-        	return GetWordPaged();
+            this.Bus.Address.Assign(offset, page);
+            return this.GetWordPaged();
         }
 
         protected abstract void SetWordPaged(Register16 value);
@@ -250,21 +253,21 @@ namespace EightBit
         protected void SetWordPaged(Register16 address, Register16 value)
         {
             ArgumentNullException.ThrowIfNull(address);
-            SetWordPaged(address.High, address.Low, value);
+            this.SetWordPaged(address.High, address.Low, value);
         }
 
         protected void SetWordPaged(byte page, byte offset, Register16 value)
         {
-            Bus.Address.Assign(offset, page);
-            SetWordPaged(value);
+            this.Bus.Address.Assign(offset, page);
+            this.SetWordPaged(value);
         }
 
         protected abstract Register16 FetchWord();
 
         protected void FetchWordAddress()
         {
-            FetchWord();
-            Bus.Address.Assign(Intermediate);
+            _ = this.FetchWord();
+            this.Bus.Address.Assign(this.Intermediate);
         }
 
         protected abstract void Push(byte value);
@@ -277,47 +280,50 @@ namespace EightBit
 
         protected Register16 GetWord(ushort address)
         {
-            Bus.Address.Word = address;
-            return GetWord();
+            this.Bus.Address.Word = address;
+            return this.GetWord();
         }
 
         protected Register16 GetWord(Register16 address)
         {
-            Bus.Address.Assign(address);
-            return GetWord();
+            this.Bus.Address.Assign(address);
+            return this.GetWord();
         }
 
         protected void SetWord(ushort address, Register16 value)
         {
-            Bus.Address.Word = address;
-            SetWord(value);
+            this.Bus.Address.Word = address;
+            this.SetWord(value);
         }
 
         protected void SetWord(Register16 address, Register16 value)
         {
-            Bus.Address.Assign(address);
-            SetWord(value);
+            this.Bus.Address.Assign(address);
+            this.SetWord(value);
         }
 
-        protected void Jump(ushort destination) => PC.Word = destination;
+        protected void Jump(ushort destination) => this.PC.Word = destination;
 
         protected void Jump(Register16 destination)
         {
-            PC.Assign(destination);
+            ArgumentNullException.ThrowIfNull(destination);
+            this.PC.Assign(destination);
         }
 
         protected void Call(ushort destination)
         {
-            Intermediate.Word = destination;
-            Call(Intermediate);
+            this.Intermediate.Word = destination;
+            this.Call(this.Intermediate);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
         protected virtual void Call(Register16 destination)
         {
-            PushWord(PC);
-            Jump(destination);
+            this.PushWord(this.PC);
+            this.Jump(destination);
         }
 
-        protected virtual void Return() => Jump(PopWord());
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
+        protected virtual void Return() => this.Jump(this.PopWord());
     }
 }
