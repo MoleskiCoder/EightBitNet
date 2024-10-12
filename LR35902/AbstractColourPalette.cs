@@ -1,7 +1,7 @@
 ﻿// <copyright file="AbstractColourPalette.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+namespace LR35902
 {
     public class AbstractColourPalette<T>
     {

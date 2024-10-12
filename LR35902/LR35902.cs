@@ -5,8 +5,6 @@
 namespace LR35902
 {
     using EightBit;
-    using EightBit.GameBoy;
-    using Bus = EightBit.GameBoy.Bus;
 
     public sealed class LR35902(Bus bus) : IntelProcessor(bus)
     {

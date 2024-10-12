@@ -1,10 +1,13 @@
 ﻿// <copyright file="Interrupts.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+
+namespace LR35902
 {
+    using EightBit;
+
     // IF and IE flags
-    [System.Flags]
+    [Flags]
     public enum Interrupts
     {
         None = 0,

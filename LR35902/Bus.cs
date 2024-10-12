@@ -1,11 +1,10 @@
 ﻿// <copyright file="Bus.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+
+namespace LR35902
 {
-    using LR35902;
-    using System;
-    using System.Collections.Generic;
+    using EightBit;
 
     public abstract class Bus : EightBit.Bus
     {
@@ -16,22 +15,19 @@ namespace EightBit.GameBoy
         public const int CyclesPerLine = CyclesPerFrame / TotalLineCount;
         public const int RomPageSize = 0x4000;
 
-        private readonly Rom bootRom = new(0x100);                                  // 0x0000 - 0x00ff
-        private readonly List<Rom> gameRomBanks = new();                      // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
-        private readonly List<Ram> ramBanks = new();                          // 0xa000 - 0xbfff (switchable)
-        private readonly UnusedMemory unmapped2000 = new(0x2000, 0xff);    // 0xa000 - 0xbfff
-        private readonly Ram lowInternalRam = new(0x2000);                          // 0xc000 - 0xdfff (mirrored at 0xe000)
-        private readonly UnusedMemory unmapped60 = new(0x60, 0xff);        // 0xfea0 - 0xfeff
-        private readonly Ram highInternalRam = new(0x80);                           // 0xff80 - 0xffff
+        private readonly Rom bootRom = new(0x100);                          // 0x0000 - 0x00ff
+        private readonly List<Rom> gameRomBanks = [];                       // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
+        private readonly List<Ram> ramBanks = [];                           // 0xa000 - 0xbfff (switchable)
+        private readonly UnusedMemory unmapped2000 = new(0x2000, 0xff);     // 0xa000 - 0xbfff
+        private readonly Ram lowInternalRam = new(0x2000);                  // 0xc000 - 0xdfff (mirrored at 0xe000)
+        private readonly UnusedMemory unmapped60 = new(0x60, 0xff);         // 0xfea0 - 0xfeff
+        private readonly Ram highInternalRam = new(0x80);                   // 0xff80 - 0xffff
 
-        private bool enabledLCD = false;
-
-        private bool disabledGameRom = false;
-
-        private bool rom = false;
-        private bool banked = false;
-        private bool ram = false;
-        private bool battery = false;
+        private bool enabledLCD;
+        private bool rom;
+        private bool banked;
+        private bool ram;
+        private bool battery;
 
         private bool higherRomBank = true;
         private bool ramBankSwitching = false;
@@ -55,7 +51,7 @@ namespace EightBit.GameBoy
 
         public IoRegisters IO { get; }
 
-        public bool GameRomDisabled => this.disabledGameRom;
+        public bool GameRomDisabled { get; private set; } = false;
 
         public bool GameRomEnabled => !this.GameRomDisabled;
 
@@ -79,9 +75,9 @@ namespace EightBit.GameBoy
             this.CPU.LowerRESET();
         }
 
-        public void DisableGameRom() => this.disabledGameRom = true;
+        public void DisableGameRom() => this.GameRomDisabled = true;
 
-        public void EnableGameRom() => this.disabledGameRom = false;
+        public void EnableGameRom() => this.GameRomDisabled = false;
 
         public void LoadBootRom(string path) => this.bootRom.Load(path);
 
@@ -95,7 +91,7 @@ namespace EightBit.GameBoy
             for (var bank = 1; bank < banks; ++bank)
             {
                 this.gameRomBanks.Add(new Rom());
-                this.gameRomBanks[bank].Load(path, 0, bankSize * bank, bankSize);
+                _ = this.gameRomBanks[bank].Load(path, 0, bankSize * bank, bankSize);
             }
 
             this.ValidateCartridgeType();
@@ -116,17 +112,17 @@ namespace EightBit.GameBoy
 
         public override MemoryMapping Mapping(ushort address)
         {
-            if ((address < 0x100) && this.IO.BootRomEnabled)
+            if (address < 0x100 && this.IO.BootRomEnabled)
             {
                 return new MemoryMapping(this.bootRom, 0x0000, Mask.Sixteen, AccessLevel.ReadOnly);
             }
 
-            if ((address < 0x4000) && this.GameRomEnabled)
+            if (address < 0x4000 && this.GameRomEnabled)
             {
                 return new MemoryMapping(this.gameRomBanks[0], 0x0000, 0xffff, AccessLevel.ReadOnly);
             }
 
-            if ((address < 0x8000) && this.GameRomEnabled)
+            if (address < 0x8000 && this.GameRomEnabled)
             {
                 return new MemoryMapping(this.gameRomBanks[this.romBank], 0x4000, 0xffff, AccessLevel.ReadOnly);
             }
@@ -138,14 +134,9 @@ namespace EightBit.GameBoy
 
             if (address < 0xc000)
             {
-                if (this.ramBanks.Count == 0)
-                {
-                    return new MemoryMapping(this.unmapped2000, 0xa000, 0xffff, AccessLevel.ReadOnly);
-                }
-                else
-                {
-                    return new MemoryMapping(this.ramBanks[this.ramBank], 0xa000, 0xffff, AccessLevel.ReadWrite);
-                }
+                return this.ramBanks.Count == 0
+                    ? new MemoryMapping(this.unmapped2000, 0xa000, 0xffff, AccessLevel.ReadOnly)
+                    : new MemoryMapping(this.ramBanks[this.ramBank], 0xa000, 0xffff, AccessLevel.ReadWrite);
             }
 
             if (address < 0xe000)
@@ -239,28 +230,19 @@ namespace EightBit.GameBoy
             this.rom = this.banked = this.ram = this.battery = false;
 
             // ROM type
-            switch (this.gameRomBanks[0].Peek(0x147))
+            this.rom = this.gameRomBanks[0].Peek(0x147) switch
             {
-                case (byte)CartridgeType.ROM:
-                    this.rom = true;
-                    break;
-                case (byte)CartridgeType.ROM_MBC1:
-                    this.rom = this.banked = true;
-                    break;
-                case (byte)CartridgeType.ROM_MBC1_RAM:
-                    this.rom = this.banked = this.ram = true;
-                    break;
-                case (byte)CartridgeType.ROM_MBC1_RAM_BATTERY:
-                    this.rom = this.banked = this.ram = this.battery = true;
-                    break;
-                default:
-                    throw new InvalidOperationException("Unhandled cartridge ROM type");
-            }
+                (byte)CartridgeType.ROM => true,
+                (byte)CartridgeType.ROM_MBC1 => this.banked = true,
+                (byte)CartridgeType.ROM_MBC1_RAM => this.banked = this.ram = true,
+                (byte)CartridgeType.ROM_MBC1_RAM_BATTERY => this.banked = this.ram = this.battery = true,
+                _ => throw new InvalidOperationException("Unhandled cartridge ROM type"),
+            };
 
             // ROM size
             {
-                var gameRomBanks = 0;
                 var romSizeSpecification = this.Peek(0x148);
+                int gameRomBanks;
                 switch (romSizeSpecification)
                 {
                     case 0x52:
@@ -278,7 +260,7 @@ namespace EightBit.GameBoy
                             throw new InvalidOperationException("Invalid ROM size specification");
                         }
 
-                        gameRomBanks = 1 << (romSizeSpecification + 1);
+                        gameRomBanks = 1 << romSizeSpecification + 1;
                         if (gameRomBanks != this.gameRomBanks.Count)
                         {
                             throw new InvalidOperationException("ROM size specification mismatch");
@@ -393,7 +375,7 @@ namespace EightBit.GameBoy
             this.allowed += suggested;
             if (this.enabledLCD)
             {
-                if (((this.IO.Peek(IoRegisters.STAT) & (byte)Bits.Bit6) != 0) && (this.IO.Peek(IoRegisters.LYC) == this.IO.Peek(IoRegisters.LY)))
+                if ((this.IO.Peek(IoRegisters.STAT) & (byte)Bits.Bit6) != 0 && this.IO.Peek(IoRegisters.LYC) == this.IO.Peek(IoRegisters.LY))
                 {
                     this.IO.TriggerInterrupt(Interrupts.DisplayControlStatus);
                 }

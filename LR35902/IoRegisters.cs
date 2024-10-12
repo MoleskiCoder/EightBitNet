@@ -1,11 +1,12 @@
 ﻿// <copyright file="IoRegisters.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
-{
-    using System;
 
-    public sealed class IoRegisters : EightBit.Ram
+namespace LR35902
+{
+    using EightBit;
+
+    public sealed class IoRegisters : Ram
     {
         public const int BASE = 0xFF00;
 
@@ -174,7 +175,7 @@ namespace EightBit.GameBoy
             this.TimerCounter = Chip.LowByte(updated);
         }
 
-        public void IncrementLY() => this.Poke(LY, (byte)((this.Peek(LY) + 1) % GameBoy.Bus.TotalLineCount));
+        public void IncrementLY() => this.Poke(LY, (byte)((this.Peek(LY) + 1) % Bus.TotalLineCount));
 
         public void ResetLY() => this.Poke(LY, 0);
 
@@ -288,7 +289,7 @@ namespace EightBit.GameBoy
 
         private void TriggerKeypadInterrupt() => this.TriggerInterrupt(Interrupts.KeypadPressed);
 
-        private void Bus_WrittenByte(object? sender, System.EventArgs e)
+        private void Bus_WrittenByte(object? sender, EventArgs e)
         {
             var address = this.bus.Address.Word;
             var value = this.bus.Data;
@@ -344,10 +345,10 @@ namespace EightBit.GameBoy
             }
         }
 
-        private void Bus_ReadingByte(object? sender, System.EventArgs e)
+        private void Bus_ReadingByte(object? sender, EventArgs e)
         {
             var address = this.bus.Address.Word;
-            var io = (address >= BASE) && (address < 0xff80);
+            var io = address >= BASE && address < 0xff80;
             if (io)
             {
                 var port = (ushort)(address - BASE);
@@ -359,10 +360,10 @@ namespace EightBit.GameBoy
                             var directionKeys = this.scanP14 && !this.p14;
                             var miscKeys = this.scanP15 && !this.p15;
                             var live = directionKeys || miscKeys;
-                            var rightOrA = (live && !this.p10) ? 0 : Bits.Bit0;
-                            var leftOrB = (live && !this.p11) ? 0 : Bits.Bit1;
-                            var upOrSelect = (live && !this.p12) ? 0 : Bits.Bit2;
-                            var downOrStart = (live && !this.p13) ? 0 : Bits.Bit3;
+                            var rightOrA = live && !this.p10 ? 0 : Bits.Bit0;
+                            var leftOrB = live && !this.p11 ? 0 : Bits.Bit1;
+                            var upOrSelect = live && !this.p12 ? 0 : Bits.Bit2;
+                            var downOrStart = live && !this.p13 ? 0 : Bits.Bit3;
                             var lowNibble = (byte)(rightOrA | leftOrB | upOrSelect | downOrStart);
                             var highNibble = (byte)Chip.PromoteNibble((byte)Mask.Four);
                             var value = (byte)(lowNibble | highNibble);

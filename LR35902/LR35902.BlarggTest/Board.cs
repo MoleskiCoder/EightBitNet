@@ -6,15 +6,15 @@ namespace LR35902.BlarggTest
 {
     using System;
 
-    internal class Board : EightBit.GameBoy.Bus
+    internal class Board : Bus
     {
         private readonly Configuration configuration;
-        private readonly EightBit.GameBoy.Disassembler disassembler;
+        private readonly Disassembler disassembler;
 
         public Board(Configuration configuration)
         {
             this.configuration = configuration;
-            this.disassembler = new EightBit.GameBoy.Disassembler(this);
+            this.disassembler = new Disassembler(this);
         }
 
         public override void Initialize()
@@ -34,7 +34,7 @@ namespace LR35902.BlarggTest
         {
             switch (this.Address.Word)
             {
-                case EightBit.GameBoy.IoRegisters.BASE + EightBit.GameBoy.IoRegisters.SB:
+                case IoRegisters.BASE + IoRegisters.SB:
                     System.Console.Out.Write(Convert.ToChar(this.Data));
                     break;
                 default:
@@ -46,7 +46,7 @@ namespace LR35902.BlarggTest
         {
             if (this.IO.BootRomDisabled)
             {
-                System.Console.Error.WriteLine($"{EightBit.GameBoy.Disassembler.State(this.CPU)} {this.disassembler.Disassemble(this.CPU)}");
+                System.Console.Error.WriteLine($"{Disassembler.State(this.CPU)} {this.disassembler.Disassemble(this.CPU)}");
             }
         }
     }

@@ -1,25 +1,20 @@
 ﻿// <copyright file="Display.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+
+namespace LR35902
 {
-    public sealed class Display<T>
+    using EightBit;
+
+    public sealed class Display<T>(AbstractColourPalette<T> colours, Bus bus, Ram oam, Ram vram)
     {
-        private readonly Bus bus;
-        private readonly Ram oam;
-        private readonly Ram vram;
-        private readonly AbstractColourPalette<T> colours;
+        private readonly Bus bus = bus;
+        private readonly Ram oam = oam;
+        private readonly Ram vram = vram;
+        private readonly AbstractColourPalette<T> colours = colours;
         private readonly ObjectAttribute[] objectAttributes = new ObjectAttribute[40];
         private byte control;
         private byte scanLine = 0;
-
-        public Display(AbstractColourPalette<T> colours, Bus bus, Ram oam, Ram vram)
-        {
-            this.colours = colours;
-            this.bus = bus;
-            this.oam = oam;
-            this.vram = vram;
-        }
 
         public T[] Pixels { get; } = new T[DisplayCharacteristics.PixelCount];
 
@@ -55,13 +50,13 @@ namespace EightBit.GameBoy
         private int[] CreatePalette(ushort address)
         {
             var raw = this.bus.IO.Peek(address);
-            return new int[4]
-            {
+            return
+            [
                 raw & 0b11,
                 (raw & 0b1100) >> 2,
                 (raw & 0b110000) >> 4,
                 (raw & 0b11000000) >> 6,
-            };
+            ];
         }
 
         private void RenderBackground()
@@ -114,7 +109,7 @@ namespace EightBit.GameBoy
                 var spriteY = current.PositionY;
                 var drawY = spriteY - 16;
 
-                if ((this.scanLine >= drawY) && (this.scanLine < (drawY + objBlockHeight)))
+                if (this.scanLine >= drawY && this.scanLine < drawY + objBlockHeight)
                 {
                     var spriteX = current.PositionX;
                     var drawX = spriteX - 8;
@@ -156,7 +151,7 @@ namespace EightBit.GameBoy
                 }
 
                 var colour = rowDefinition[cx];
-                if (!allowTransparencies || (allowTransparencies && (colour > 0)))
+                if (!allowTransparencies || (allowTransparencies && colour > 0))
                 {
                     var outputPixel = lineAddress + x;
                     this.Pixels[outputPixel] = this.colours.Colour(palette[colour]);

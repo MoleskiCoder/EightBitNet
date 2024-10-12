@@ -1,18 +1,15 @@
 ﻿// <copyright file="CharacterDefinition.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
-{
-    public sealed class CharacterDefinition
-    {
-        private readonly Ram vram;
-        private readonly ushort address;
 
-        public CharacterDefinition(Ram vram, ushort address)
-        {
-            this.vram = vram;
-            this.address = address;
-        }
+namespace LR35902
+{
+    using EightBit;
+
+    public sealed class CharacterDefinition(Ram vram, ushort address)
+    {
+        private readonly Ram vram = vram;
+        private readonly ushort address = address;
 
         public int[] Get(int row)
         {

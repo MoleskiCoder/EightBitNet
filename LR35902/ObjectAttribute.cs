@@ -1,8 +1,11 @@
 ﻿// <copyright file="ObjectAttribute.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+
+namespace LR35902
 {
+    using EightBit;
+
     public class ObjectAttribute
     {
         public ObjectAttribute()

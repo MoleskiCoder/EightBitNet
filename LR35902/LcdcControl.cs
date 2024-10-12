@@ -1,9 +1,12 @@
 ﻿// <copyright file="LcdcControl.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+
+namespace LR35902
 {
-    [System.Flags]
+    using EightBit;
+
+    [Flags]
     public enum LcdcControls
     {
         None = 0,

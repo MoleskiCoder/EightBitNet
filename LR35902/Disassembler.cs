@@ -2,9 +2,9 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit.GameBoy
+namespace LR35902
 {
-    using LR35902;
+    using EightBit;
 
     public enum IoRegister
     {
@@ -14,13 +14,11 @@ namespace EightBit.GameBoy
         Unused,         // Unused!
     }
 
-    public class Disassembler
+    public sealed class Disassembler(Bus bus)
     {
         private bool prefixCB = false;
 
-        public Disassembler(Bus bus) => this.Bus = bus;
-
-        public Bus Bus { get; }
+        public Bus Bus { get; } = bus;
 
         public static string AsFlag(byte value, byte flag, string represents) => (value & flag) != 0 ? represents : "-";
 
@@ -69,224 +67,117 @@ namespace EightBit.GameBoy
             return this.Disassemble(cpu, cpu.PC.Word);
         }
 
-        private static string RP(int rp)
+        private static string RP(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return "BC";
-                case 1:
-                    return "DE";
-                case 2:
-                    return "HL";
-                case 3:
-                    return "SP";
-            }
+            0 => "BC",
+            1 => "DE",
+            2 => "HL",
+            3 => "SP",
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(rp));
-        }
-
-        private static string RP2(int rp)
+        private static string RP2(int rp) => rp switch
         {
-            switch (rp)
-            {
-                case 0:
-                    return "BC";
-                case 1:
-                    return "DE";
-                case 2:
-                    return "HL";
-                case 3:
-                    return "AF";
-            }
+            0 => "BC",
+            1 => "DE",
+            2 => "HL",
+            3 => "AF",
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(rp));
-        }
-
-        private static string R(int r)
+        private static string R(int r) => r switch
         {
-            switch (r)
-            {
-                case 0:
-                    return "B";
-                case 1:
-                    return "C";
-                case 2:
-                    return "D";
-                case 3:
-                    return "E";
-                case 4:
-                    return "H";
-                case 5:
-                    return "L";
-                case 6:
-                    return "(HL)";
-                case 7:
-                    return "A";
-            }
+            0 => "B",
+            1 => "C",
+            2 => "D",
+            3 => "E",
+            4 => "H",
+            5 => "L",
+            6 => "(HL)",
+            7 => "A",
+            _ => throw new ArgumentOutOfRangeException(nameof(r)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(r));
-        }
-
-        private static string IO(byte value)
+        private static string IO(byte value) => value switch
         {
-            switch (value)
-            {
-                // Port/Mode Registers
-                case IoRegisters.P1:
-                    return "P1";
-                case IoRegisters.SB:
-                    return "SB";
-                case IoRegisters.SC:
-                    return "SC";
-                case IoRegisters.DIV:
-                    return "DIV";
-                case IoRegisters.TIMA:
-                    return "TIMA";
-                case IoRegisters.TMA:
-                    return "TMA";
-                case IoRegisters.TAC:
-                    return "TAC";
+            // Port/Mode Registers
+            IoRegisters.P1 => "P1",
+            IoRegisters.SB => "SB",
+            IoRegisters.SC => "SC",
+            IoRegisters.DIV => "DIV",
+            IoRegisters.TIMA => "TIMA",
+            IoRegisters.TMA => "TMA",
+            IoRegisters.TAC => "TAC",
+            // Interrupt Flags
+            IoRegisters.IF => "IF",
+            IoRegisters.IE => "IE",
+            // LCD Display Registers
+            IoRegisters.LCDC => "LCDC",
+            IoRegisters.STAT => "STAT",
+            IoRegisters.SCY => "SCY",
+            IoRegisters.SCX => "SCX",
+            IoRegisters.LY => "LY",
+            IoRegisters.LYC => "LYC",
+            IoRegisters.DMA => "DMA",
+            IoRegisters.BGP => "BGP",
+            IoRegisters.OBP0 => "OBP0",
+            IoRegisters.OBP1 => "OBP1",
+            IoRegisters.WY => "WY",
+            IoRegisters.WX => "WX",
+            // Sound Registers
+            IoRegisters.NR10 => "NR10",
+            IoRegisters.NR11 => "NR11",
+            IoRegisters.NR12 => "NR12",
+            IoRegisters.NR13 => "NR13",
+            IoRegisters.NR14 => "NR14",
+            IoRegisters.NR21 => "NR21",
+            IoRegisters.NR22 => "NR22",
+            IoRegisters.NR23 => "NR23",
+            IoRegisters.NR24 => "NR24",
+            IoRegisters.NR30 => "NR30",
+            IoRegisters.NR31 => "NR31",
+            IoRegisters.NR32 => "NR32",
+            IoRegisters.NR33 => "NR33",
+            IoRegisters.NR34 => "NR34",
+            IoRegisters.NR41 => "NR41",
+            IoRegisters.NR42 => "NR42",
+            IoRegisters.NR43 => "NR43",
+            IoRegisters.NR44 => "NR44",
+            IoRegisters.NR50 => "NR50",
+            IoRegisters.NR51 => "NR51",
+            IoRegisters.NR52 => "NR52",
+            IoRegisters.WAVE_PATTERN_RAM_START => "WAVE_PATTERN_RAM_START",
+            IoRegisters.WAVE_PATTERN_RAM_END => "WAVE_PATTERN_RAM_END",
+            // Boot rom control
+            IoRegisters.BOOT_DISABLE => "BOOT_DISABLE",
+            _ => $"{value:x2}",
+        };
 
-                // Interrupt Flags
-                case IoRegisters.IF:
-                    return "IF";
-                case IoRegisters.IE:
-                    return "IE";
-
-                // LCD Display Registers
-                case IoRegisters.LCDC:
-                    return "LCDC";
-                case IoRegisters.STAT:
-                    return "STAT";
-                case IoRegisters.SCY:
-                    return "SCY";
-                case IoRegisters.SCX:
-                    return "SCX";
-                case IoRegisters.LY:
-                    return "LY";
-                case IoRegisters.LYC:
-                    return "LYC";
-                case IoRegisters.DMA:
-                    return "DMA";
-                case IoRegisters.BGP:
-                    return "BGP";
-                case IoRegisters.OBP0:
-                    return "OBP0";
-                case IoRegisters.OBP1:
-                    return "OBP1";
-                case IoRegisters.WY:
-                    return "WY";
-                case IoRegisters.WX:
-                    return "WX";
-
-                // Sound Registers
-                case IoRegisters.NR10:
-                    return "NR10";
-                case IoRegisters.NR11:
-                    return "NR11";
-                case IoRegisters.NR12:
-                    return "NR12";
-                case IoRegisters.NR13:
-                    return "NR13";
-                case IoRegisters.NR14:
-                    return "NR14";
-                case IoRegisters.NR21:
-                    return "NR21";
-                case IoRegisters.NR22:
-                    return "NR22";
-                case IoRegisters.NR23:
-                    return "NR23";
-                case IoRegisters.NR24:
-                    return "NR24";
-                case IoRegisters.NR30:
-                    return "NR30";
-                case IoRegisters.NR31:
-                    return "NR31";
-                case IoRegisters.NR32:
-                    return "NR32";
-                case IoRegisters.NR33:
-                    return "NR33";
-                case IoRegisters.NR34:
-                    return "NR34";
-                case IoRegisters.NR41:
-                    return "NR41";
-                case IoRegisters.NR42:
-                    return "NR42";
-                case IoRegisters.NR43:
-                    return "NR43";
-                case IoRegisters.NR44:
-                    return "NR44";
-                case IoRegisters.NR50:
-                    return "NR50";
-                case IoRegisters.NR51:
-                    return "NR51";
-                case IoRegisters.NR52:
-                    return "NR52";
-
-                case IoRegisters.WAVE_PATTERN_RAM_START:
-                    return "WAVE_PATTERN_RAM_START";
-                case IoRegisters.WAVE_PATTERN_RAM_END:
-                    return "WAVE_PATTERN_RAM_END";
-
-                // Boot rom control
-                case IoRegisters.BOOT_DISABLE:
-                    return "BOOT_DISABLE";
-
-                default:
-                    return $"{value:x2}";
-            }
-        }
-
-        private static string CC(int flag)
+        private static string CC(int flag) => flag switch
         {
-            switch (flag)
-            {
-                case 0:
-                    return "NZ";
-                case 1:
-                    return "Z";
-                case 2:
-                    return "NC";
-                case 3:
-                    return "C";
-                case 4:
-                    return "PO";
-                case 5:
-                    return "PE";
-                case 6:
-                    return "P";
-                case 7:
-                    return "M";
-            }
+            0 => "NZ",
+            1 => "Z",
+            2 => "NC",
+            3 => "C",
+            4 => "PO",
+            5 => "PE",
+            6 => "P",
+            7 => "M",
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
+        };
 
-            throw new System.ArgumentOutOfRangeException(nameof(flag));
-        }
-
-        private static string ALU(int which)
+        private static string ALU(int which) => which switch
         {
-            switch (which)
-            {
-                case 0: // ADD A,n
-                    return "ADD";
-                case 1: // ADC
-                    return "ADC";
-                case 2: // SUB n
-                    return "SUB";
-                case 3: // SBC A,n
-                    return "SBC";
-                case 4: // AND n
-                    return "AND";
-                case 5: // XOR n
-                    return "XOR";
-                case 6: // OR n
-                    return "OR";
-                case 7: // CP n
-                    return "CP";
-            }
-
-            throw new System.ArgumentOutOfRangeException(nameof(which));
-        }
+            0 => "ADD", // ADD A,n
+            1 => "ADC", // ADC
+            2 => "SUB", // SUB n
+            3 => "SBC", // SBC A,n
+            4 => "AND", // AND n
+            5 => "XOR", // XOR n
+            6 => "OR",  // OR n
+            7 => "CP",  // CP n
+            _ => throw new ArgumentOutOfRangeException(nameof(which)),
+        };
 
         private static string DisassembleCB(ref string specification, int x, int y, int z)
         {

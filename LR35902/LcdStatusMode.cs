@@ -1,7 +1,7 @@
 ﻿// <copyright file="LcdStatusMode.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit.GameBoy
+namespace LR35902
 {
     public enum LcdStatusMode
     {

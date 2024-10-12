@@ -4,6 +4,8 @@
 
 namespace Fuse
 {
+    using LR35902;
+
     public enum Register
     {
         AF,
@@ -14,7 +16,7 @@ namespace Fuse
         PC,
     }
 
-    public class TestRunner<T> : EightBit.GameBoy.Bus
+    public class TestRunner<T> : LR35902.Bus
         where T : Fuse.IRegisterState, new()
     {
         private readonly Test<T> test;
