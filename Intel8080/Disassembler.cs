@@ -2,9 +2,10 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace Intel8080
 {
-    using System;
+    using EightBit;
+    using System.Globalization;
 
     public class Disassembler(Bus bus)
     {
@@ -24,6 +25,8 @@ namespace EightBit
 
         public static string State(Intel8080 cpu)
         {
+            ArgumentNullException.ThrowIfNull(cpu);
+
             var pc = cpu.PC.Word;
             var sp = cpu.SP.Word;
 
@@ -47,7 +50,11 @@ namespace EightBit
                 + $"H={h:x2} L={l:x2}";
         }
 
-        public string Disassemble(Intel8080 cpu) => this.Disassemble(cpu, cpu.PC.Word);
+        public string Disassemble(Intel8080 cpu)
+        {
+            ArgumentNullException.ThrowIfNull(cpu);
+            return this.Disassemble(cpu, cpu.PC.Word);
+        }
 
         private static string CC(int flag) => flag switch
         {
@@ -59,7 +66,7 @@ namespace EightBit
             5 => "PE",
             6 => "P",
             7 => "M",
-            _ => throw new System.ArgumentOutOfRangeException(nameof(flag)),
+            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
         private static string ALU(int which) => which switch
@@ -72,7 +79,7 @@ namespace EightBit
             5 => "XRA", // XOR n
             6 => "ORA", // OR n
             7 => "CMP", // CP n
-            _ => throw new System.ArgumentOutOfRangeException(nameof(which)),
+            _ => throw new ArgumentOutOfRangeException(nameof(which)),
         };
 
         private static string ALU2(int which) => which switch
@@ -85,7 +92,7 @@ namespace EightBit
             5 => "XRI", // XOR n
             6 => "ORI", // OR n
             7 => "CPI", // CP n
-            _ => throw new System.ArgumentOutOfRangeException(nameof(which)),
+            _ => throw new ArgumentOutOfRangeException(nameof(which)),
         };
 
         private static Tuple<string, int> Disassemble(int x, int y, int z, int p, int q)
@@ -124,6 +131,8 @@ namespace EightBit
                                 case 1: // ADD HL,rp
                                     specification = $"DAD {RP(p)}";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -147,6 +156,8 @@ namespace EightBit
                                             specification = "STA {1:X4}H";
                                             dumpCount += 2;
                                             break;
+                                        default:
+                                            break;
                                     }
 
                                     break;
@@ -167,8 +178,12 @@ namespace EightBit
                                             specification = "LDA {1:X4}H";
                                             dumpCount += 2;
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -181,6 +196,8 @@ namespace EightBit
                                     break;
                                 case 1: // DEC rp
                                     specification = $"DCX {RP(p)}";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -222,8 +239,12 @@ namespace EightBit
                                 case 7:
                                     specification = "CMC";
                                     break;
+                                default:
+                                    break;
                             }
 
+                            break;
+                        default:
                             break;
                     }
 
@@ -260,8 +281,12 @@ namespace EightBit
                                         case 3: // LD SP,HL
                                             specification = "SPHL";
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -299,6 +324,8 @@ namespace EightBit
                                 case 7: // EI
                                     specification = "EI";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -325,8 +352,12 @@ namespace EightBit
                                             break;
                                         case 3: // FD prefix
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -338,8 +369,12 @@ namespace EightBit
                         case 7: // Restart: RST y * 8
                             specification = $"RST {y * 8:X2}";
                             break;
+                        default:
+                            break;
                     }
 
+                    break;
+                default:
                     break;
             }
 
@@ -352,7 +387,7 @@ namespace EightBit
             1 => "D",
             2 => "H",
             3 => "SP",
-            _ => throw new System.ArgumentOutOfRangeException(nameof(rp)),
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
         private static string RP2(int rp) => rp switch
@@ -361,7 +396,7 @@ namespace EightBit
             1 => "D",
             2 => "H",
             3 => "PSW",
-            _ => throw new System.ArgumentOutOfRangeException(nameof(rp)),
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
         private static string R(int r) => r switch
@@ -374,7 +409,7 @@ namespace EightBit
             5 => "L",
             6 => "M",
             7 => "A",
-            _ => throw new System.ArgumentOutOfRangeException(nameof(r)),
+            _ => throw new ArgumentOutOfRangeException(nameof(r)),
         };
 
         private string Disassemble(Intel8080 cpu, ushort pc)
@@ -407,7 +442,7 @@ namespace EightBit
             }
 
             output += '\t';
-            output += string.Format(specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
+            output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
 
             return output;
         }

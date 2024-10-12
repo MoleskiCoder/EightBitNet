@@ -46,7 +46,7 @@ namespace Intel8080.Test
         {
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress.Word);
+            _ = this.ram.Load(programPath, loadAddress.Word);
 
             this.CPU.LoweredHALT += this.CPU_LoweredHALT;
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_CPM;
@@ -80,7 +80,7 @@ namespace Intel8080.Test
             }
         }
 
-        private void CPU_ExecutingInstruction_CPM(object sender, System.EventArgs e)
+        private void CPU_ExecutingInstruction_CPM(object? sender, System.EventArgs e)
         {
             switch (this.CPU.PC.Word)
             {
@@ -99,8 +99,8 @@ namespace Intel8080.Test
             }
         }
 
-        private void CPU_LoweredHALT(object sender, System.EventArgs e) => this.LowerPOWER();
+        private void CPU_LoweredHALT(object? sender, System.EventArgs e) => this.LowerPOWER();
 
-        private void CPU_ExecutingInstruction_Debug(object sender, System.EventArgs e) => System.Console.Error.WriteLine($"{EightBit.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
+        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e) => System.Console.Error.WriteLine($"{Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
     }
 }

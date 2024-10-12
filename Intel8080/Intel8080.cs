@@ -2,9 +2,10 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+
+namespace Intel8080
 {
-    using System;
+    using EightBit;
 
     public class Intel8080(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
@@ -12,7 +13,7 @@ namespace EightBit
 
         private readonly InputOutput ports = ports;
 
-        private bool interruptEnable = false;
+        private bool interruptEnable;
 
         public override Register16 AF
         {
@@ -195,6 +196,8 @@ namespace EightBit
                                 case 0: // NOP
                                     this.Tick(4);
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -357,7 +360,7 @@ namespace EightBit
                     else
                     {
                         this.R(y, this.R(z));
-                        if ((y == 6) || (z == 6))
+                        if (y == 6 || z == 6)
                         {
                             this.Tick(3); // M operations
                         }
@@ -436,6 +439,8 @@ namespace EightBit
                                             this.SP.Word = this.HL.Word;
                                             this.Tick(4);
                                             break;
+                                        default:
+                                            break;
                                     }
 
                                     break;
@@ -479,6 +484,8 @@ namespace EightBit
                                     this.EnableInterrupts();
                                     this.Tick(4);
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -503,6 +510,8 @@ namespace EightBit
                                         case 0: // CALL nn
                                             this.CallIndirect();
                                             this.Tick(17);
+                                            break;
+                                        default:
                                             break;
                                     }
 
@@ -553,6 +562,8 @@ namespace EightBit
                             throw new NotSupportedException("Invalid operation mode");
                     }
 
+                    break;
+                default:
                     break;
             }
         }
@@ -703,12 +714,12 @@ namespace EightBit
             var before = this.A;
             var carry = (this.F & (byte)StatusBits.CF) != 0;
             byte addition = 0;
-            if (((this.F & (byte)StatusBits.AC) != 0) || (LowNibble(before) > 9))
+            if ((this.F & (byte)StatusBits.AC) != 0 || LowNibble(before) > 9)
             {
                 addition = 0x6;
             }
 
-            if (((this.F & (byte)StatusBits.CF) != 0) || HighNibble(before) > 9 || (HighNibble(before) >= 9 && LowNibble(before) > 9))
+            if ((this.F & (byte)StatusBits.CF) != 0 || HighNibble(before) > 9 || (HighNibble(before) >= 9 && LowNibble(before) > 9))
             {
                 addition |= 0x60;
                 carry = true;

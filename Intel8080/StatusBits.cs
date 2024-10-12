@@ -2,9 +2,9 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace Intel8080
 {
-    using System;
+    using EightBit;
 
     [Flags]
     public enum StatusBits
