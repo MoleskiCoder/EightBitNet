@@ -14,7 +14,7 @@
 
         private bool MaybeExtractFromParsed(string key, out string? value)
         {
-            Debug.Assert(this._parsed != null);
+            Debug.Assert(this._parsed is not null);
             var found = this._parsed.TryGetValue(key, out var extracted);
             value = extracted;
             return found;
@@ -23,14 +23,14 @@
         private bool MaybeExtractIntegerFromParsed(string key, out int value)
         {
             var available = this.MaybeExtractFromParsed(key, out var extracted);
-            value = extracted == null ? 0 : ExtractInteger(extracted);
+            value = extracted is null ? 0 : ExtractInteger(extracted);
             return available;
         }
 
         protected bool MaybeExtractCompoundInteger(string key, out List<int> value)
         {
             var available = this.MaybeExtractFromParsed(key, out var extracted);
-            value = extracted == null ? [] : ExtractCompoundInteger(extracted);
+            value = extracted is null ? [] : ExtractCompoundInteger(extracted);
             return available;
         }
 
@@ -38,7 +38,7 @@
         {
             var type = this.GetType();
             var property = type.GetProperty(name);
-            Debug.Assert(property != null);
+            Debug.Assert(property is not null);
             property.SetValue(this, obj);
         }
 
@@ -66,23 +66,23 @@
             // The reference container in the parent class
             var referenceSectionProperties = GetSectionProperties(type);
             var referenceClassAttribute = referenceSectionProperties.ClassAttribute;
-            Debug.Assert(referenceClassAttribute != null);
+            Debug.Assert(referenceClassAttribute is not null);
             var referencingContainer = referenceClassAttribute.Referencing;
 
             // Get the parent container field
             var containerType = this._container.GetType();
-            Debug.Assert(referencingContainer != null);
+            Debug.Assert(referencingContainer is not null);
             var containerField = containerType.GetField(referencingContainer);
-            Debug.Assert(containerField != null);
+            Debug.Assert(containerField is not null);
             var fieldValue = containerField.GetValue(this._container);
             var fieldList = fieldValue as IList;
 
             // Now get the referenced object from the parent container field (via ID as an index)
-            Debug.Assert(fieldList != null);
+            Debug.Assert(fieldList is not null);
             var referencingObject = fieldList[id];
 
             // Now set our reference field
-            Debug.Assert(referencingObject != null);
+            Debug.Assert(referencingObject is not null);
             this.SetProperty(name, referencingObject);
         }
 
@@ -105,23 +105,23 @@
             // The reference container in the parent class
             //var referenceSectionProperties = GetSectionProperties(type);
             //var referenceClassAttribute = referenceSectionProperties.ClassAttribute;
-            //Debug.Assert(referenceClassAttribute != null);
+            //Debug.Assert(referenceClassAttribute is not null);
             //var referencingContainer = referenceClassAttribute.Referencing;
 
             // Get the parent container field
             //var containerType = this._container.GetType();
-            //Debug.Assert(referencingContainer != null);
+            //Debug.Assert(referencingContainer is not null);
             //var containerField = containerType.GetField(referencingContainer);
-            //Debug.Assert(containerField != null);
+            //Debug.Assert(containerField is not null);
             //var fieldValue = containerField.GetValue(this._container);
             //var fieldList = fieldValue as IList;
 
             // Now get the referenced object from the parent container field (via ID as an index)
-            //Debug.Assert(fieldList != null);
+            //Debug.Assert(fieldList is not null);
             //var referencingObject = fieldList[id];
 
             //// Now set our reference field
-            //Debug.Assert(referencingObject != null);
+            //Debug.Assert(referencingObject is not null);
             //this.SetProperty(name, referencingObject);
         }
     }

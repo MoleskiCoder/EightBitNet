@@ -25,7 +25,7 @@
         {
             var obtained = SectionPropertiesCache.TryGetValue(type, out var properties);
             Debug.Assert(obtained, $"Section properties for {type.Name} have not been built");
-            Debug.Assert(properties != null);
+            Debug.Assert(properties is not null);
             return properties;
         }
 
@@ -35,7 +35,7 @@
         {
             var type = this.GetType();
             var entry = new ReflectedSectionProperties();
-            Debug.Assert(SectionPropertiesCache != null);
+            Debug.Assert(SectionPropertiesCache is not null);
             if (SectionPropertiesCache.TryAdd(type, entry))
             {
                 entry.Build(type);
@@ -65,7 +65,7 @@
             {
                 throw new InvalidOperationException($"Unable to locate property name {propertyName} using reflection");
             }
-            Debug.Assert(property != null);
+            Debug.Assert(property is not null);
             this.Parse(property, key, value);
         }
 

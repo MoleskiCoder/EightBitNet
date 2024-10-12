@@ -97,7 +97,7 @@
                 var scope = this.AddressableScopes[mid];
 
                 var symbol = scope.Symbol;
-                Debug.Assert(symbol != null);
+                Debug.Assert(symbol is not null);
                 var start = symbol.Value;
 
                 if (address < start)
@@ -142,9 +142,9 @@
 
         private static List<Scope> EvaluateScope(Scope? start)
         {
-            Debug.Assert(start != null);
+            Debug.Assert(start is not null);
             var returned = new List<Scope>();
-            for (var current = start; current.Parent != null; current = current.Parent)
+            for (var current = start; current.Parent is not null; current = current.Parent)
             {
                 returned.Add(current);
             }
@@ -196,7 +196,7 @@
         {
             var symbol = this.LookupLabelByAddress(absolute);
             label = PrefixNamespace(symbol);
-            return symbol != null;
+            return symbol is not null;
         }
 
         public string MaybeGetQualifiedLabelByAddress(ushort absolute) => this.TryGetQualifiedLabelByAddress(absolute, out var label) ? label : string.Empty;
@@ -205,7 +205,7 @@
         {
             var symbol = this.LookupEquateByValue(value);
             name = PrefixNamespace(symbol);
-            return symbol != null;
+            return symbol is not null;
         }
 
         #endregion
@@ -274,14 +274,14 @@
         private T ExtractEntry<T>(Dictionary<string, string> information) where T : Section
         {
             var entry = (T?)Activator.CreateInstance(typeof(T), this);
-            Debug.Assert(entry != null);
+            Debug.Assert(entry is not null);
             entry.Parse(information);
             return entry;
         }
 
         private void VerifyInformationCount(string key, int actual)
         {
-            Debug.Assert(this._information != null);
+            Debug.Assert(this._information is not null);
             var expected = this._information.Count(key);
             if (expected != actual)
             {
@@ -302,7 +302,7 @@
 
         private void BuildAddressableScopes()
         {
-            var scopes = from scope in this.Scopes where scope.Symbol != null select scope;
+            var scopes = from scope in this.Scopes where scope.Symbol is not null select scope;
             this.AddressableScopes.AddRange(scopes);
         }
 
@@ -331,7 +331,7 @@
             while (!reader.EndOfStream)
             {
                 var line = await reader.ReadLineAsync().ConfigureAwait(false);
-                if (line == null)
+                if (line is null)
                 {
                     break;
                 }
@@ -350,7 +350,7 @@
 
             if (key is "version")
             {
-                if (this._version != null)
+                if (this._version is not null)
                 {
                     throw new InvalidOperationException("Version object has already been parsed");
                 }
@@ -360,7 +360,7 @@
             }
             else if (key is "info")
             {
-                if (this._information != null)
+                if (this._information is not null)
                 {
                     throw new InvalidOperationException("Information object has already been parsed");
                 }
@@ -403,7 +403,7 @@
 
         private void VerifyVersion()
         {
-            if (this._version == null)
+            if (this._version is null)
             {
                 throw new InvalidOperationException("Version has not yet been parsed");
             }

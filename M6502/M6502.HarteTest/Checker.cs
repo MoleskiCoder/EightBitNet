@@ -67,7 +67,7 @@
                 this.Raise("Y", final.Y, cpu.Y);
                 this.Raise("P", final.P, cpu.P);
 
-                if (test.Cycles == null)
+                if (test.Cycles is null)
                 {
                     throw new InvalidOperationException("test cycles cannot be null");
                 }
@@ -208,7 +208,7 @@
                 this.Messages.Add($"Actual flags  : {Disassembler.DumpFlags(cpu.P)}");
             }
 
-            if (final.RAM == null)
+            if (final.RAM is null)
             {
                 throw new InvalidOperationException("Expected RAM cannot be null");
             }

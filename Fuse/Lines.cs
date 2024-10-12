@@ -23,7 +23,7 @@ namespace Fuse
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
-                    Debug.Assert(line != null);
+                    Debug.Assert(line is not null);
                     var ignored = line.StartsWith(';');
                     if (!ignored)
                     {

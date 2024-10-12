@@ -12,7 +12,7 @@
 
         public IEnumerable<Cycle> AvailableCycles()
         {
-            if (this.Cycles == null)
+            if (this.Cycles is null)
             {
                 throw new InvalidOperationException("Cycles have not been initialised");
             }

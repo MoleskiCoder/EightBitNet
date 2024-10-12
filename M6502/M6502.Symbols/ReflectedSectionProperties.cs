@@ -28,10 +28,10 @@
         {
             ArgumentNullException.ThrowIfNull(type);
             var sectionAttributes = type.GetCustomAttributes(typeof(SectionAttribute), true);
-            Debug.Assert(sectionAttributes != null, "No section attributes available");
+            Debug.Assert(sectionAttributes is not null, "No section attributes available");
             Debug.Assert(sectionAttributes.Length == 1, "Must be a single section attribute available");
             var sectionAttribute = sectionAttributes[0];
-            Debug.Assert(sectionAttribute != null, "Section attribute cannot be null");
+            Debug.Assert(sectionAttribute is not null, "Section attribute cannot be null");
             this.ClassAttribute = (SectionAttribute)sectionAttribute;
 
             foreach (var property in type.GetProperties())
@@ -47,7 +47,7 @@
             {
                 throw new ArgumentOutOfRangeException(nameof(name), name, "Missing property mapping");
             }
-            Debug.Assert(propertyName != null);
+            Debug.Assert(propertyName is not null);
             return propertyName;
         }
 
@@ -56,7 +56,7 @@
             var propertyName = this.GetPropertyNameFromEntryName(key);
             var propertyAvailable = this.Properties.TryGetValue(propertyName, out var property);
             Debug.Assert(propertyAvailable);
-            Debug.Assert(property != null);
+            Debug.Assert(property is not null);
             return property;
         }
 
@@ -79,7 +79,7 @@
         public T GetValueT<T>(object? obj, string key)
         {
             var possible = this.MaybeGetValue<T>(obj, key);
-            return possible != null ? possible : throw new ArgumentOutOfRangeException(nameof(key), key, "Property read issue");
+            return possible is not null ? possible : throw new ArgumentOutOfRangeException(nameof(key), key, "Property read issue");
         }
 
         private void ProcessPropertyAttributes(PropertyInfo property)

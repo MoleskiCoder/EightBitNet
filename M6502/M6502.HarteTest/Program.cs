@@ -36,7 +36,7 @@ namespace M6502.HarteTest
                 var tests = opcode.TestsAsync;
                 await foreach (var test in tests)
                 {
-                    if (test == null)
+                    if (test is null)
                     {
                         throw new InvalidOperationException("Test cannot be null");
                     }

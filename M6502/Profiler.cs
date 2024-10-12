@@ -102,7 +102,7 @@
                 foreach (var (id, cycles) in this.scopeCycles)
                 {
                     var symbol = this.symbols.LookupLabelByID(id);
-                    Debug.Assert(symbol != null);
+                    Debug.Assert(symbol is not null);
                     var available = this.ExtractCycleDistribution((ushort)symbol.Value, out var _, out var _, out var count);
                     Debug.Assert(available);
                     this.OnEmitScope(id, cycles, count);
@@ -128,7 +128,7 @@
                     {
                         // Dump a profile/disassembly line
                         var source = this.disassembler.Disassemble(address);
-                        Debug.Assert(cycleDistributions != null);
+                        Debug.Assert(cycleDistributions is not null);
                         this.OnEmitLine(address, source, cycles, count, cycleDistributions);
                     }
                 }
@@ -178,7 +178,7 @@
 
             {
                 var addressDistribution = this.addressCycleDistributions[this.executingAddress];
-                if (addressDistribution == null)
+                if (addressDistribution is null)
                 {
                     this.addressCycleDistributions[this.executingAddress] = addressDistribution = [];
                 }
@@ -190,7 +190,7 @@
 
             {
                 var scope = this.symbols.LookupScopeByAddress(this.executingAddress);
-                if (scope != null)
+                if (scope is not null)
                 {
                     var id = scope.ID;
                     // Current will be initialised to zero, if absent
@@ -203,7 +203,7 @@
         private bool ExtractCycleDistribution(ushort address, out Dictionary<int, long>? cycleDistribution, out long cycleCount, out long hitCount)
         {
             cycleDistribution = this.addressCycleDistributions[address];
-            if (cycleDistribution == null)
+            if (cycleDistribution is null)
             {
                 cycleCount = -1;
                 hitCount = -1;

@@ -71,7 +71,7 @@ namespace M6502.Test
 
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress.Word);
+            _ = this.ram.Load(programPath, loadAddress.Word);
 
             if (this.configuration.DebugMode)
             {
@@ -171,7 +171,7 @@ namespace M6502.Test
         {
             var cycles = this.CPU.Cycles;
             this.cyclesPolled += cycles;
-            Debug.Assert(cycles > 0, "Invalid pollingcycle count");
+            Debug.Assert(cycles > 0, "Invalid polling cycle count");
             if (this.cyclesPolled > this.configuration.PollingTickInterval)
             {
                 this.cyclesPolled = 0;
@@ -196,13 +196,13 @@ namespace M6502.Test
 
             var output = new StringBuilder();
 
-            output.Append($"PC={Disassembler.DumpWordValue(address)}:");
-            output.Append($"P={Disassembler.DumpFlags(this.CPU.P)}, ");
-            output.Append($"A={Disassembler.DumpByteValue(this.CPU.A)}, ");
-            output.Append($"X={Disassembler.DumpByteValue(this.CPU.X)}, ");
-            output.Append($"Y={Disassembler.DumpByteValue(this.CPU.Y)}, ");
-            output.Append($"S={Disassembler.DumpByteValue(this.CPU.S)}\t");
-            output.Append(this.disassembler.Disassemble(address));
+            _ = output.Append(CultureInfo.InvariantCulture, $"PC={Disassembler.DumpWordValue(address)}:");
+            _ = output.Append(CultureInfo.InvariantCulture, $"P={Disassembler.DumpFlags(this.CPU.P)}, ");
+            _ = output.Append(CultureInfo.InvariantCulture, $"A={Disassembler.DumpByteValue(this.CPU.A)}, ");
+            _ = output.Append(CultureInfo.InvariantCulture, $"X={Disassembler.DumpByteValue(this.CPU.X)}, ");
+            _ = output.Append(CultureInfo.InvariantCulture, $"Y={Disassembler.DumpByteValue(this.CPU.Y)}, ");
+            _ = output.Append(CultureInfo.InvariantCulture, $"S={Disassembler.DumpByteValue(this.CPU.S)}\t");
+            _ = output.Append(this.disassembler.Disassemble(address));
 
             Console.Out.WriteLine(output.ToString());
         }
@@ -211,7 +211,7 @@ namespace M6502.Test
         {
             var proportion = (double)e.Cycles / this.profiler.TotalCycles;
             var scope = this.symbols.LookupScopeByID(e.ID);
-            Debug.Assert(scope != null);
+            Debug.Assert(scope is not null);
             Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3}\n", proportion, e.Cycles, e.Count, scope.Name));
         }
 
@@ -237,44 +237,20 @@ namespace M6502.Test
             Console.Out.Write(string.Format(CultureInfo.InvariantCulture, "\t[{0:P2}][{1:d9}][{2:d9}]\t{3:X2}\n", proportion, e.Cycles, e.Count, e.Instruction));
         }
 
-        private void Profiler_FinishedScopeOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Finished profiler scope output...\n");
-        }
+        private void Profiler_FinishedScopeOutput(object? sender, EventArgs e) => Console.Out.Write("Finished profiler scope output...\n");
 
-        private void Profiler_StartingScopeOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Starting profiler scope output...\n");
-        }
+        private void Profiler_StartingScopeOutput(object? sender, EventArgs e) => Console.Out.Write("Starting profiler scope output...\n");
 
-        private void Profiler_FinishedLineOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Finished profiler line output...\n");
-        }
+        private void Profiler_FinishedLineOutput(object? sender, EventArgs e) => Console.Out.Write("Finished profiler line output...\n");
 
-        private void Profiler_StartingLineOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Starting profiler line output...\n");
-        }
+        private void Profiler_StartingLineOutput(object? sender, EventArgs e) => Console.Out.Write("Starting profiler line output...\n");
 
-        private void Profiler_FinishedOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Finished profiler output...\n");
-        }
+        private void Profiler_FinishedOutput(object? sender, EventArgs e) => Console.Out.Write("Finished profiler output...\n");
 
-        private void Profiler_StartingOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Starting profiler output...\n");
-        }
+        private void Profiler_StartingOutput(object? sender, EventArgs e) => Console.Out.Write("Starting profiler output...\n");
 
-        private void Profiler_FinishedInstructionOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Finished instruction output...\n");
-        }
+        private void Profiler_FinishedInstructionOutput(object? sender, EventArgs e) => Console.Out.Write("Finished instruction output...\n");
 
-        private void Profiler_StartingInstructionOutput(object? sender, EventArgs e)
-        {
-            Console.Out.Write("Starting instruction output...\n");
-        }
+        private void Profiler_StartingInstructionOutput(object? sender, EventArgs e) => Console.Out.Write("Starting instruction output...\n");
     }
 }
