@@ -11,7 +11,7 @@ namespace M6502.Test
     using System.Text;
     using System.Threading.Tasks;
 
-    internal class Board : Bus
+    internal sealed class Board : Bus
     {
         private readonly Configuration configuration;
         private readonly Ram ram = new(0x10000);

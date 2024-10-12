@@ -33,15 +33,15 @@ namespace Z80.FuseTest
         private readonly TestEvents actualEvents = new();
         private readonly EightBit.Ram ram = new(0x10000);
         private readonly EightBit.InputOutput ports = new();
-        private readonly Z80.Z80 cpu;
+        private readonly Z80 cpu;
         private readonly Disassembler disassembler;
 
         private int totalCycles;
 
         public TestRunner(Test<RegisterState> test, Result<RegisterState> result)
         {
-            this.cpu = new EightBit.Z80(this, this.ports);
-            this.disassembler = new EightBit.Disassembler(this);
+            this.cpu = new Z80(this, this.ports);
+            this.disassembler = new Disassembler(this);
             this.test = test ?? throw new ArgumentNullException(nameof(test));
             this.result = result ?? throw new ArgumentNullException(nameof(result));
 

@@ -1,7 +1,5 @@
 ﻿namespace M6502.Symbols
 {
-    using System.Collections.Generic;
-
     // sym id = 16, name = "solve", addrsize = absolute, size = 274, scope = 0, def = 94,ref=144+17+351,val=0xF314,seg=6,type=lab
     [Section("symbol", "Symbols")]
     public sealed class Symbol(Parser container) : NamedSection(container)

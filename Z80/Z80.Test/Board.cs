@@ -110,6 +110,6 @@ namespace Z80.Test
 
         private void CPU_LoweredHALT(object? sender, System.EventArgs e) => this.LowerPOWER();
 
-        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e) => System.Console.Error.WriteLine($"{Z80.Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
+        private void CPU_ExecutingInstruction_Debug(object? sender, System.EventArgs e) => System.Console.Error.WriteLine($"{Disassembler.State(this.CPU)}\t{this.disassembler.Disassemble(this.CPU)}");
     }
 }

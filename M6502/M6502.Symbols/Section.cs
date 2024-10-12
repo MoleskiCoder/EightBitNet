@@ -23,6 +23,7 @@
 
         protected static ReflectedSectionProperties GetSectionProperties(System.Type type)
         {
+            ArgumentNullException.ThrowIfNull(type);
             var obtained = SectionPropertiesCache.TryGetValue(type, out var properties);
             Debug.Assert(obtained, $"Section properties for {type.Name} have not been built");
             Debug.Assert(properties is not null);
