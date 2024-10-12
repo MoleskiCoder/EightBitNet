@@ -95,9 +95,6 @@ namespace LR35902
             {
                 this.Execute(this.FetchByte());
             }
-
-            this.bus.IO.CheckTimers(this.ClockCycles);
-            this.bus.IO.TransferDma();
         }
 
         protected override void HandleRESET()
@@ -105,7 +102,7 @@ namespace LR35902
             base.HandleRESET();
             this.DI();
             this.SP.Word = (ushort)(Mask.Sixteen - 1);
-            this.Tick(4);
+            this.TickMachine(4);
         }
 
         protected override void HandleINT()
@@ -114,7 +111,91 @@ namespace LR35902
             this.RaiseHALT();
             this.DI();
             this.Restart(this.Bus.Data);
+        }
+
+        public event EventHandler<EventArgs>? MachineTicked;
+
+        private void OnMachineTicked()
+        {
+            MachineTicked?.Invoke(this, EventArgs.Empty);
+            this.bus.IO.IncrementTimers();
+            this.bus.IO.TransferDma();
+
+        }
+
+        private void TickMachine(int extra)
+        {
+            for (var i = 0; i < extra; ++i)
+            {
+                this.TickMachine();
+            }
+        }
+
+		private void TickMachine()
+        {
             this.Tick(4);
+            this.OnMachineTicked();
+        }
+
+        protected override void MemoryWrite()
+        {
+            this.TickMachine();
+            base.MemoryWrite();
+        }
+
+        protected override byte MemoryRead()
+        {
+            this.TickMachine();
+            return base.MemoryRead();
+        }
+
+        protected override void PushWord(Register16 value)
+        {
+            this.TickMachine();
+            base.PushWord(value);
+        }
+
+        protected override void JumpRelative(sbyte offset)
+        {
+	        base.JumpRelative(offset);
+	        this.TickMachine();
+        }
+
+        protected override bool JumpConditional(bool condition)
+        {
+            if (base.JumpConditional(condition))
+            {
+                this.TickMachine();
+            }
+	        return condition;
+        }
+
+        protected override bool ReturnConditional(bool condition)
+        {
+	        _ = base.ReturnConditional(condition);
+            this.TickMachine();
+            return condition;
+        }
+
+        protected override bool JumpRelativeConditional(bool condition)
+        {
+            if (!base.JumpRelativeConditional(condition))
+            {
+                this.TickMachine();
+            }
+            return condition;
+        }
+
+        protected override void Return()
+        {
+	        base.Return();
+            this.TickMachine();
+        }
+
+        protected override void JumpIndirect()
+        {
+            base.JumpIndirect();
+            this.TickMachine();
         }
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
@@ -228,45 +309,21 @@ namespace LR35902
                             7 => this.SRL(operand),
                             _ => throw new InvalidOperationException("Unreachable code block reached"),
                         };
-                        this.Tick(2);
                         this.R(z, operand);
                         this.F = AdjustZero(this.F, operand);
-                        if (z == 6)
-                        {
-                            this.Tick(2);
-                        }
-
                         break;
                     }
 
                 case 1: // BIT y, r[z]
                     this.Bit(y, this.R(z));
-                    this.Tick(2);
-                    if (z == 6)
-                    {
-                        this.Tick(2);
-                    }
-
                     break;
 
                 case 2: // RES y, r[z]
                     this.R(z, Res(y, this.R(z)));
-                    this.Tick(2);
-                    if (z == 6)
-                    {
-                        this.Tick(2);
-                    }
-
                     break;
 
                 case 3: // SET y, r[z]
                     this.R(z, Set(y, this.R(z)));
-                    this.Tick(2);
-                    if (z == 6)
-                    {
-                        this.Tick(2);
-                    }
-
                     break;
 
                 default:
@@ -285,31 +342,22 @@ namespace LR35902
                             switch (y)
                             {
                                 case 0: // NOP
-                                    this.Tick();
                                     break;
                                 case 1: // GB: LD (nn),SP
                                     this.Bus.Address.Word = this.FetchWord().Word;
                                     this.SetWord(this.SP);
-                                    this.Tick(5);
                                     break;
                                 case 2: // GB: STOP
                                     this.Stop();
-                                    this.Tick();
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative((sbyte)this.FetchByte());
-                                    this.Tick(3);
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
                                 case 6:
                                 case 7:
-                                    if (this.JumpRelativeConditionalFlag(y - 4))
-                                    {
-                                        this.Tick();
-                                    }
-
-                                    this.Tick(2);
+                                    _ = this.JumpRelativeConditionalFlag(y - 4);
                                     break;
                                 default:
                                     throw new InvalidOperationException("Unreachable code block reached");
@@ -322,12 +370,10 @@ namespace LR35902
                             {
                                 case 0: // LD rp,nn
                                     this.RP(p).Word = this.FetchWord().Word;
-                                    this.Tick(3);
                                     break;
 
                                 case 1: // ADD HL,rp
                                     this.Add(this.HL, this.RP(p));
-                                    this.Tick(2);
                                     break;
 
                                 default:
@@ -344,22 +390,18 @@ namespace LR35902
                                     {
                                         case 0: // LD (BC),A
                                             this.MemoryWrite(this.BC, this.A);
-                                            this.Tick(2);
                                             break;
 
                                         case 1: // LD (DE),A
                                             this.MemoryWrite(this.DE, this.A);
-                                            this.Tick(2);
                                             break;
 
                                         case 2: // GB: LDI (HL),A
                                             this.MemoryWrite(this.HL.Word++, this.A);
-                                            this.Tick(2);
                                             break;
 
                                         case 3: // GB: LDD (HL),A
                                             this.MemoryWrite(this.HL.Word--, this.A);
-                                            this.Tick(2);
                                             break;
 
                                         default:
@@ -369,32 +411,14 @@ namespace LR35902
                                     break;
 
                                 case 1:
-                                    switch (p)
+                                    this.A = p switch
                                     {
-                                        case 0: // LD A,(BC)
-                                            this.A = this.MemoryRead(this.BC);
-                                            this.Tick(2);
-                                            break;
-
-                                        case 1: // LD A,(DE)
-                                            this.A = this.MemoryRead(this.DE);
-                                            this.Tick(2);
-                                            break;
-
-                                        case 2: // GB: LDI A,(HL)
-                                            this.A = this.MemoryRead(this.HL.Word++);
-                                            this.Tick(2);
-                                            break;
-
-                                        case 3: // GB: LDD A,(HL)
-                                            this.A = this.MemoryRead(this.HL.Word--);
-                                            this.Tick(2);
-                                            break;
-
-                                        default:
-                                            throw new InvalidOperationException("Invalid operation mode");
-                                    }
-
+                                        0 => this.MemoryRead(this.BC),          // LD A,(BC)
+                                        1 => this.MemoryRead(this.DE),          // LD A,(DE)
+                                        2 => this.MemoryRead(this.HL.Word++),   // GB: LDI A,(HL)
+                                        3 => this.MemoryRead(this.HL.Word--),   // GB: LDD A,(HL)
+                                        _ => throw new InvalidOperationException("Invalid operation mode"),
+                                    };
                                     break;
 
                                 default:
@@ -418,32 +442,19 @@ namespace LR35902
                                     throw new InvalidOperationException("Invalid operation mode");
                             }
 
-                            this.Tick(2);
+                            this.TickMachine();
                             break;
 
                         case 4: // 8-bit INC
                             this.R(y, this.Increment(this.R(y)));
-                            this.Tick();
-                            if (y == 6)
-                            {
-                                this.Tick(2);
-                            }
-
                             break;
 
                         case 5: // 8-bit DEC
                             this.R(y, this.Decrement(this.R(y)));
-                            this.Tick();
-                            if (y == 6)
-                            {
-                                this.Tick(2);
-                            }
-
                             break;
 
                         case 6: // 8-bit load immediate
                             this.R(y, this.FetchByte());
-                            this.Tick(2);
                             break;
 
                         case 7: // Assorted operations on accumulator/flags
@@ -476,8 +487,6 @@ namespace LR35902
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
                             }
-
-                            this.Tick();
                             break;
 
                         default:
@@ -494,13 +503,7 @@ namespace LR35902
                     else
                     {
                         this.R(y, this.R(z));
-                        if (y == 6 || z == 6)
-                        {
-                            this.Tick(); // M operations
-                        }
                     }
-
-                    this.Tick();
                     break;
 
                 case 2: // Operate on accumulator and register/memory location
@@ -533,13 +536,6 @@ namespace LR35902
                         default:
                             throw new InvalidOperationException("Invalid operation mode");
                     }
-
-                    this.Tick();
-                    if (z == 6)
-                    {
-                        this.Tick();
-                    }
-
                     break;
                 case 3:
                     switch (z)
@@ -551,23 +547,18 @@ namespace LR35902
                                 case 1:
                                 case 2:
                                 case 3:
-                                    if (this.ReturnConditionalFlag(y))
-                                    {
-                                        this.Tick(3);
-                                    }
-
-                                    this.Tick(2);
+                                    _ = this.ReturnConditionalFlag(y);
                                     break;
 
                                 case 4: // GB: LD (FF00 + n),A
                                     this.MemoryWrite((ushort)(IoRegisters.BASE + this.FetchByte()), this.A);
-                                    this.Tick(3);
                                     break;
 
                                 case 5:
                                     { // GB: ADD SP,dd
                                         var before = this.SP.Word;
                                         var value = (sbyte)this.FetchByte();
+                                        this.TickMachine(2);
                                         var result = before + value;
                                         this.SP.Word = (ushort)result;
                                         var carried = before ^ value ^ (result & (int)Mask.Sixteen);
@@ -575,19 +566,17 @@ namespace LR35902
                                         this.F = SetBit(this.F, StatusBits.CF, carried & (int)Bits.Bit8);
                                         this.F = SetBit(this.F, StatusBits.HC, carried & (int)Bits.Bit4);
                                     }
-
-                                    this.Tick(4);
                                     break;
 
                                 case 6: // GB: LD A,(FF00 + n)
                                     this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.FetchByte()));
-                                    this.Tick(3);
                                     break;
 
                                 case 7:
                                     { // GB: LD HL,SP + dd
                                         var before = this.SP.Word;
                                         var value = (sbyte)this.FetchByte();
+                                        this.TickMachine();
                                         var result = before + value;
                                         this.HL.Word = (ushort)result;
                                         var carried = before ^ value ^ (result & (int)Mask.Sixteen);
@@ -595,8 +584,6 @@ namespace LR35902
                                         this.F = SetBit(this.F, StatusBits.CF, carried & (int)Bits.Bit8);
                                         this.F = SetBit(this.F, StatusBits.HC, carried & (int)Bits.Bit4);
                                     }
-
-                                    this.Tick(3);
                                     break;
 
                                 default:
@@ -609,26 +596,22 @@ namespace LR35902
                             {
                                 case 0: // POP rp2[p]
                                     this.RP2(p).Word = this.PopWord().Word;
-                                    this.Tick(3);
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // RET
                                             this.Return();
-                                            this.Tick(4);
                                             break;
                                         case 1: // GB: RETI
                                             this.RetI();
-                                            this.Tick(4);
                                             break;
                                         case 2: // JP HL
                                             this.Jump(this.HL.Word);
-                                            this.Tick();
                                             break;
                                         case 3: // LD SP,HL
                                             this.SP.Word = this.HL.Word;
-                                            this.Tick(2);
+                                            this.TickMachine();
                                             break;
                                         default:
                                             throw new InvalidOperationException("Invalid operation mode");
@@ -648,30 +631,21 @@ namespace LR35902
                                 case 1:
                                 case 2:
                                 case 3:
-                                    if (this.JumpConditionalFlag(y))
-                                    {
-                                        this.Tick();
-                                    }
-
-                                    this.Tick(3);
+                                    _ = this.JumpConditionalFlag(y);
                                     break;
                                 case 4: // GB: LD (FF00 + C),A
                                     this.MemoryWrite((ushort)(IoRegisters.BASE + this.C), this.A);
-                                    this.Tick(2);
                                     break;
                                 case 5: // GB: LD (nn),A
                                     this.Bus.Address.Word = this.MEMPTR.Word = this.FetchWord().Word;
                                     this.MemoryWrite(this.A);
-                                    this.Tick(4);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
                                     this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.C));
-                                    this.Tick(2);
                                     break;
                                 case 7: // GB: LD A,(nn)
                                     this.Bus.Address.Word = this.MEMPTR.Word = this.FetchWord().Word;
                                     this.A = this.MemoryRead();
-                                    this.Tick(4);
                                     break;
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
@@ -683,7 +657,6 @@ namespace LR35902
                             {
                                 case 0: // JP nn
                                     this.JumpIndirect();
-                                    this.Tick(4);
                                     break;
                                 case 1: // CB prefix
                                     this.prefixCB = true;
@@ -691,23 +664,18 @@ namespace LR35902
                                     break;
                                 case 6: // DI
                                     this.DI();
-                                    this.Tick();
+                                    //this.Tick();
                                     break;
                                 case 7: // EI
                                     this.EI();
-                                    this.Tick();
+                                    //this.Tick();
                                     break;
                             }
 
                             break;
 
                         case 4: // Conditional call: CALL cc[y], nn
-                            if (this.CallConditionalFlag(y))
-                            {
-                                this.Tick(3);
-                            }
-
-                            this.Tick(3);
+                            _ = this.CallConditionalFlag(y);
                             break;
 
                         case 5: // PUSH & various ops
@@ -715,7 +683,6 @@ namespace LR35902
                             {
                                 case 0: // PUSH rp2[p]
                                     this.PushWord(this.RP2(p));
-                                    this.Tick(4);
                                     break;
 
                                 case 1:
@@ -723,7 +690,6 @@ namespace LR35902
                                     {
                                         case 0: // CALL nn
                                             this.CallIndirect();
-                                            this.Tick(6);
                                             break;
                                     }
 
@@ -765,13 +731,10 @@ namespace LR35902
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
                             }
-
-                            this.Tick(2);
                             break;
 
                         case 7: // Restart: RST y * 8
                             this.Restart((byte)(y << 3));
-                            this.Tick(4);
                             break;
 
                         default:
@@ -836,6 +799,8 @@ namespace LR35902
 
         private void Add(Register16 operand, Register16 value)
         {
+            this.TickMachine();
+
             this.MEMPTR.Word = operand.Word;
 
             var result = this.MEMPTR.Word + value.Word;

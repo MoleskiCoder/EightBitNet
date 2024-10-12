@@ -171,7 +171,7 @@ namespace EightBit
             return condition;
         }
 
-        protected bool JumpConditional(bool condition)
+        protected virtual bool JumpConditional(bool condition)
         {
             this.FetchWordMEMPTR();
             if (condition)
@@ -182,7 +182,7 @@ namespace EightBit
             return condition;
         }
 
-        protected bool ReturnConditional(bool condition)
+        protected virtual bool ReturnConditional(bool condition)
         {
             if (condition)
             {
@@ -198,7 +198,7 @@ namespace EightBit
             this.MEMPTR.Assign(this.Intermediate);
         }
 
-        protected void JumpIndirect()
+        protected virtual void JumpIndirect()
         {
             this.FetchWordMEMPTR();
             this.Jump(this.MEMPTR);
@@ -210,13 +210,13 @@ namespace EightBit
             this.Call(this.MEMPTR);
         }
 
-        protected void JumpRelative(sbyte offset)
+        protected virtual void JumpRelative(sbyte offset)
         {
             this.MEMPTR.Word = (ushort)(this.PC.Word + offset);
             this.Jump(this.MEMPTR);
         }
 
-        protected bool JumpRelativeConditional(bool condition)
+        protected virtual bool JumpRelativeConditional(bool condition)
         {
             this.Intermediate.Assign(this.PC);
             ++this.PC.Word;
@@ -229,7 +229,7 @@ namespace EightBit
             return condition;
         }
 
-        protected sealed override void Return()
+        protected override void Return()
         {
             base.Return();
             this.MEMPTR.Assign(this.PC);

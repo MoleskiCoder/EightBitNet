@@ -70,11 +70,11 @@ namespace LR35902
 
         private readonly Bus bus;
         private readonly Register16 divCounter = new(0xab, 0xcc);
+        private int timerCounter;
+        private int timerRate;
+
         private readonly Register16 dmaAddress = new();
-
-        private int timerCounter = 0;
-
-        private bool dmaTransferActive = false;
+        private bool dmaTransferActive;
 
         private bool scanP15 = false;
         private bool scanP14 = false;
@@ -94,7 +94,7 @@ namespace LR35902
             this.bus.WrittenByte += this.Bus_WrittenByte;
         }
 
-        public event EventHandler<LcdStatusModeEventArgs> DisplayStatusModeUpdated;
+        public event EventHandler<LcdStatusModeEventArgs>? DisplayStatusModeUpdated;
 
         public bool BootRomDisabled { get; private set; } = false;
 
@@ -106,31 +106,18 @@ namespace LR35902
 
         public bool TimerDisabled => (this.TimerControl & (byte)Bits.Bit2) == 0;
 
-        public int TimerClockTicks
+        public int TimerClockTicks => this.TimerClock switch
         {
-            get
-            {
-                switch (this.TimerClock)
-                {
-                    case 0b00:
-                        return 1024;    // 4.096 Khz
-                    case 0b01:
-                        return 16;      // 262.144 Khz
-                    case 0b10:
-                        return 64;      // 65.536 Khz
-                    case 0b11:
-                        return 256;     // 16.384 Khz
-                }
-
-                throw new InvalidOperationException("Invalid timer clock specification");
-            }
-        }
+            0b00 => 256,// 4.096 Khz
+            0b01 => 4,  // 262.144 Khz
+            0b10 => 16, // 65.536 Khz
+            0b11 => 64, // 16.384 Khz
+            _ => throw new InvalidOperationException("Invalid timer clock specification"),
+        };
 
         private ref byte TimerControl => ref this.Reference(TAC);
 
         private ref byte TimerModulo => ref this.Reference(TMA);
-
-        private ref byte TimerCounter => ref this.Reference(TIMA);
 
         public void Reset()
         {
@@ -151,28 +138,28 @@ namespace LR35902
 
         public void TriggerInterrupt(Interrupts cause) => this.Reference(IF) |= (byte)cause;
 
-        public void CheckTimers(int cycles)
+        public void IncrementTimers()
         {
-            this.IncrementDIV(cycles);
-            this.CheckTimer(cycles);
+            this.IncrementDIV();
+            this.IncrementTimer();
         }
 
-        public void IncrementDIV(int cycles)
+        public void IncrementDIV()
         {
-            this.divCounter.Word += (ushort)cycles;
+            ++this.divCounter.Word;
             this.Poke(DIV, this.divCounter.High);
         }
 
         public void IncrementTIMA()
         {
-            var updated = this.TimerCounter + 1;
+            var updated = this.Peek(TIMA) + 1;
             if ((updated & (int)Bits.Bit8) != 0)
             {
                 this.TriggerInterrupt(Interrupts.TimerOverflow);
                 updated = this.TimerModulo;
             }
 
-            this.TimerCounter = Chip.LowByte(updated);
+            this.Poke(TIMA, Chip.LowByte(updated));
         }
 
         public void IncrementLY() => this.Poke(LY, (byte)((this.Peek(LY) + 1) % Bus.TotalLineCount));
@@ -272,14 +259,13 @@ namespace LR35902
 
         private void OnDisplayStatusModeUpdated(LcdStatusMode mode) => this.DisplayStatusModeUpdated?.Invoke(this, new LcdStatusModeEventArgs(mode));
 
-        private void CheckTimer(int cycles)
+        private void IncrementTimer()
         {
             if (this.TimerEnabled)
             {
-                this.timerCounter -= cycles;
-                if (this.timerCounter <= 0)
+                if (--this.timerCounter <= 0)
                 {
-                    this.timerCounter += this.TimerClockTicks;
+                    this.timerCounter += this.timerRate;
                     this.IncrementTIMA();
                 }
             }
@@ -315,6 +301,7 @@ namespace LR35902
                 case TMA: // R/W
                     break;
                 case TAC: // R/W
+                    timerRate = this.TimerClockTicks;
                     break;
 
                 case IF: // R/W
