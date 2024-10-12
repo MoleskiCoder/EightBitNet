@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     public abstract class IntelProcessor : LittleEndianProcessor
     {
         private static readonly int[] HalfCarryTableAdd = [0, 0, 1, 0, 1, 0, 1, 1];

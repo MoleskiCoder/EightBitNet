@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     public abstract class Bus : IMapper
     {
         private byte _data;

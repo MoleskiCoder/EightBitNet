@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     [Flags]
     public enum Bits
     {

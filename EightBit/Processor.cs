@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     public abstract class Processor(Bus memory) : ClockedChip
     {
         #region Instruction execution events

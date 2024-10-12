@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     public class ClockedChip : Chip
     {
         protected ClockedChip()

@@ -4,8 +4,6 @@
 
 namespace EightBit
 {
-    using System;
-
     public sealed class InputOutput
     {
         private readonly byte[] _input = new byte[0x100];
