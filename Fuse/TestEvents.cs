@@ -8,7 +8,7 @@ namespace Fuse
 
     public class TestEvents
     {
-        private readonly List<TestEvent> container = new List<TestEvent>();
+        private readonly List<TestEvent> container = [];
 
         public ReadOnlyCollection<TestEvent> Container => this.container.AsReadOnly();
 

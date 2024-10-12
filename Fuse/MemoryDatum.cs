@@ -9,16 +9,18 @@ namespace Fuse
 
     public class MemoryDatum
     {
-        private readonly List<byte> bytes = new List<byte>();
+        private readonly List<byte> bytes = [];
 
         public ushort Address { get; private set; } = (ushort)EightBit.Mask.Sixteen;
 
         public ReadOnlyCollection<byte> Bytes => this.bytes.AsReadOnly();
 
+        private static readonly char[] separator = [' ', '\t'];
+
         public void Parse(string line)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(line);
-            var tokens = line.Split(new char[] { ' ', '\t' });
+            var tokens = line.Split(separator);
             this.Parse(tokens);
         }
 

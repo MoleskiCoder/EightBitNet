@@ -3,8 +3,8 @@
 // </copyright>
 namespace Fuse
 {
-    using System;
     using EightBit;
+    using System;
 
     public class TestEvent
     {
@@ -27,13 +27,15 @@ namespace Fuse
 
         public int Cycles => this.cycles;
 
-        public string Specifier { get; private set; }
+        public string? Specifier { get; private set; }
 
         public ushort Address { get; private set; } = (ushort)EightBit.Mask.Sixteen;
 
         public byte Value { get; private set; } = (byte)EightBit.Mask.Eight;
 
         private bool ContentionEvent { get; set; } = false;
+
+        private static readonly char[] separator = [' ', '\t'];
 
         public bool TryParse(Lines lines)
         {
@@ -61,7 +63,7 @@ namespace Fuse
 
         private bool TryParseLine(string line)
         {
-            var split = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            var split = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             return this.TryParseLine(split);
         }
 

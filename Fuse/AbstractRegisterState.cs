@@ -3,22 +3,22 @@
 // </copyright>
 namespace Fuse
 {
+    using EightBit;
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using EightBit;
 
     public abstract class AbstractRegisterState
     {
-        private readonly List<Register16> registers = new List<Register16>();
-
         public ReadOnlyCollection<Register16> Registers => this.MutableRegisters.AsReadOnly();
 
         public bool Halted { get; protected set; } = false;
 
         public int TStates { get; protected set; } = -1;
 
-        protected List<Register16> MutableRegisters => this.registers;
+        protected List<Register16> MutableRegisters { get; } = [];
+
+        private static readonly char[] separator = [' ', '\t'];
 
         public void Parse(Lines lines)
         {
@@ -30,7 +30,7 @@ namespace Fuse
 
         protected virtual void ParseInternalState(string line)
         {
-            var tokens = line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            var tokens = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             this.ParseInternalState(tokens);
         }
 
@@ -39,9 +39,9 @@ namespace Fuse
         protected virtual void ParseExternalState(Lines lines)
         {
             var line = lines.ReadLine();
-            foreach (var token in line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var token in line.Split(separator, StringSplitOptions.RemoveEmptyEntries))
             {
-                this.registers.Add(new Register16(Convert.ToUInt16(token, 16)));
+                this.MutableRegisters.Add(new Register16(Convert.ToUInt16(token, 16)));
             }
         }
     }

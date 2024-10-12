@@ -4,15 +4,14 @@
 namespace Fuse
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
 
-    public class Tests<T>
+    public class Tests<T>(string path)
         where T : Fuse.IRegisterState, new()
     {
-        private readonly Lines lines;
+        private readonly Lines lines = new(path);
 
-        public Tests(string path) => this.lines = new Lines(path);
-
-        public Dictionary<string, Test<T>> Container { get; } = new Dictionary<string, Test<T>>();
+        public Dictionary<string, Test<T>> Container { get; } = [];
 
         public void Read() => this.lines.Read();
 
@@ -23,6 +22,7 @@ namespace Fuse
                 var test = new Test<T>();
                 if (test.TryParse(this.lines))
                 {
+                    Debug.Assert(test.Description is not null);
                     this.Container.Add(test.Description, test);
                 }
             }

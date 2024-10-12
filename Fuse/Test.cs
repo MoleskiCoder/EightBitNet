@@ -9,9 +9,9 @@ namespace Fuse
     public class Test<T>
         where T : Fuse.IRegisterState, new()
     {
-        private readonly List<MemoryDatum> memoryData = new List<MemoryDatum>();
+        private readonly List<MemoryDatum> memoryData = [];
 
-        public string Description { get; private set; }
+        public string? Description { get; private set; }
 
         public T RegisterState { get; } = new T();
 

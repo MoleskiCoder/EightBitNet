@@ -8,13 +8,11 @@ namespace Fuse
     using System.Diagnostics;
     using System.IO;
 
-    public class Lines
+    public class Lines(string path)
     {
-        private readonly string path;
-        private readonly List<string> lines = new List<string>();
+        private readonly string path = path;
+        private readonly List<string> lines = [];
         private int position = -1;
-
-        public Lines(string path) => this.path = path;
 
         public bool EndOfFile => this.position == this.lines.Count;
 

@@ -3,8 +3,8 @@
 // </copyright>
 namespace Fuse
 {
-    using System.Collections.ObjectModel;
     using EightBit;
+    using System.Collections.ObjectModel;
 
     public interface IRegisterState
     {

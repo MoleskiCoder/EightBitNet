@@ -10,14 +10,13 @@ namespace Fuse
     public class Result<T>
         where T : Fuse.IRegisterState, new()
     {
-        private readonly TestEvents events = new TestEvents();
-        private readonly List<MemoryDatum> memoryData = new List<MemoryDatum>();
+        private readonly List<MemoryDatum> memoryData = [];
 
-        public string Description { get; private set; }
+        public string? Description { get; private set; }
 
         public T RegisterState { get; } = new T();
 
-        public TestEvents Events => this.events;
+        public TestEvents Events { get; } = new();
 
         public ReadOnlyCollection<MemoryDatum> MemoryData => this.memoryData.AsReadOnly();
 
@@ -35,7 +34,7 @@ namespace Fuse
                 return false;
             }
 
-            this.events.Parse(lines);
+            this.Events.Parse(lines);
             this.RegisterState.Parse(lines);
 
             bool finished;
