@@ -38,6 +38,6 @@ namespace LR35902
 
         public bool FlipX => (this.Flags & (byte)Bits.Bit5) != 0;
 
-        public int Palette => (this.Flags & (byte)Bits.Bit4) >> 3;  // TODO: Check this!
+        public int Palette => (this.Flags & (byte)Bits.Bit4) >> 4;
     }
 }

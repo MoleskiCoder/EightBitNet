@@ -22,12 +22,13 @@ namespace LR35902
 
             for (var bit = 0; bit < 8; ++bit)
             {
-                var mask = 1 << bit;
+                var mask = Chip.Bit(bit);
 
                 var bitLow = (planeLow & mask) != 0 ? 1 : 0;
                 var bitHigh = (planeHigh & mask) != 0 ? 0b10 : 0;
 
-                returned[7 - bit] = bitHigh | bitLow;
+                var index = 7 - bit;
+                returned[index] = bitHigh | bitLow;
             }
 
             return returned;

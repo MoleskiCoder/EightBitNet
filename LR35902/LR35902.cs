@@ -120,7 +120,6 @@ namespace LR35902
             MachineTicked?.Invoke(this, EventArgs.Empty);
             this.bus.IO.IncrementTimers();
             this.bus.IO.TransferDma();
-
         }
 
         private void TickMachine(int extra)

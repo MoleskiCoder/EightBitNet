@@ -83,15 +83,20 @@ namespace LR35902
 
         public void LoadGameRom(string path)
         {
-            const int bankSize = 0x4000;
             this.gameRomBanks.Clear();
-            this.gameRomBanks.Add(new Rom());
-            var size = this.gameRomBanks[0].Load(path, 0, 0, bankSize);
+
+            const int bankSize = 0x4000;
+
+            var rom = new Rom();
+            var size = rom.Load(path, 0, 0, bankSize);
+            this.gameRomBanks.Add(rom);
+
             var banks = size / bankSize;
             for (var bank = 1; bank < banks; ++bank)
             {
-                this.gameRomBanks.Add(new Rom());
-                _ = this.gameRomBanks[bank].Load(path, 0, bankSize * bank, bankSize);
+                var bankedROM = new Rom();
+                _ = bankedROM.Load(path, 0, bankSize * bank, bankSize);
+                this.gameRomBanks.Add(bankedROM);
             }
 
             this.ValidateCartridgeType();
@@ -99,7 +104,7 @@ namespace LR35902
 
         public void RunRasterLines()
         {
-            this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControls.LcdEnable) != 0;
+            this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControls.LCD_EN) != 0;
             this.IO.ResetLY();
             this.RunRasterLines(DisplayCharacteristics.RasterHeight);
         }
@@ -406,7 +411,7 @@ namespace LR35902
             }
             else
             {
-                this.allowed -= this.CPU.Run(this.allowed);
+                this.allowed -= this.CPU.Run(CyclesPerLine);
             }
         }
     }

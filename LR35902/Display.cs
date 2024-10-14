@@ -24,14 +24,14 @@ namespace LR35902
             if (this.scanLine < DisplayCharacteristics.RasterHeight)
             {
                 this.control = this.bus.IO.Peek(IoRegisters.LCDC);
-                if ((this.control & (byte)LcdcControls.LcdEnable) != 0)
+                if ((this.control & (byte)LcdcControls.LCD_EN) != 0)
                 {
-                    if ((this.control & (byte)LcdcControls.DisplayBackground) != 0)
+                    if ((this.control & (byte)LcdcControls.BG_EN) != 0)
                     {
                         this.RenderBackground();
                     }
 
-                    if ((this.control & (byte)LcdcControls.ObjectEnable) != 0)
+                    if ((this.control & (byte)LcdcControls.OBJ_EN) != 0)
                     {
                         this.RenderObjects();
                     }
@@ -63,9 +63,9 @@ namespace LR35902
         {
             var palette = this.CreatePalette(IoRegisters.BGP);
 
-            var window = (this.control & (byte)LcdcControls.WindowEnable) != 0;
-            var bgArea = (this.control & (byte)LcdcControls.BackgroundCodeAreaSelection) != 0 ? 0x1c00 : 0x1800;
-            var bgCharacters = (this.control & (byte)LcdcControls.BackgroundCharacterDataSelection) != 0 ? 0 : 0x800;
+            var window = (this.control & (byte)LcdcControls.WIN_EN) != 0;
+            var bgArea = (this.control & (byte)LcdcControls.BG_MAP) != 0 ? 0x1c00 : 0x1800;
+            var bgCharacters = (this.control & (byte)LcdcControls.TILE_SEL) != 0 ? 0 : 0x800;
 
             var wx = this.bus.IO.Peek(IoRegisters.WX);
             var wy = this.bus.IO.Peek(IoRegisters.WY);
@@ -88,13 +88,16 @@ namespace LR35902
             {
                 var character = this.vram.Peek((ushort)address++);
                 var definition = new CharacterDefinition(this.vram, (ushort)(bgCharacters + (16 * character)));
-                this.RenderTile(8, (column * 8) + offsetX, (row * 8) + offsetY, false, false, false, palette, definition);
+                this.RenderBackgroundTile(
+                    (column * 8) + offsetX, (row * 8) + offsetY,
+                    palette,
+                    definition);
             }
         }
 
         private void RenderObjects()
         {
-            var objBlockHeight = (this.control & (byte)LcdcControls.ObjectBlockCompositionSelection) != 0 ? 16 : 8;
+            var objBlockHeight = (this.control & (byte)LcdcControls.OBJ_SIZE) != 0 ? 16 : 8;
 
             var palettes = new int[2][];
             palettes[0] = this.CreatePalette(IoRegisters.OBP0);
@@ -120,12 +123,45 @@ namespace LR35902
                     var flipX = current.FlipX;
                     var flipY = current.FlipY;
 
-                    this.RenderTile(objBlockHeight, drawX, drawY, flipX, flipY, true, palette, definition);
+                    this.RenderSpriteTile(
+                        objBlockHeight,
+                        drawX, drawY,
+                        flipX, flipY,
+                        palette,
+                        definition);
                 }
             }
         }
 
-        private void RenderTile(int height, int drawX, int drawY, bool flipX, bool flipY, bool allowTransparencies, int[] palette, CharacterDefinition definition)
+        private void RenderSpriteTile(
+            int height,
+            int drawX, int drawY,
+            bool flipX, bool flipY,
+            int[] palette,
+            CharacterDefinition definition) => this.RenderTile(
+                height,
+                drawX, drawY,
+                flipX, flipY, true,
+                palette,
+                definition);
+
+        private void RenderBackgroundTile(
+            int drawX, int drawY,
+            int[] palette,
+            CharacterDefinition definition) => this.RenderTile(
+                8,
+                drawX, drawY,
+                false, false, false,
+                palette,
+                definition);
+
+        private void RenderTile(
+            int height,
+            int drawX, int drawY,
+            bool flipX, bool flipY,
+            bool allowTransparencies,
+            int[] palette,
+            CharacterDefinition definition)
         {
             const int width = 8;
             const int flipMaskX = width - 1;

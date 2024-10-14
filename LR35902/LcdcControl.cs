@@ -10,13 +10,13 @@ namespace LR35902
     public enum LcdcControls
     {
         None = 0,
-        DisplayBackground = Bits.Bit0,
-        ObjectEnable = Bits.Bit1,
-        ObjectBlockCompositionSelection = Bits.Bit2,
-        BackgroundCodeAreaSelection = Bits.Bit3,
-        BackgroundCharacterDataSelection = Bits.Bit4,
-        WindowEnable = Bits.Bit5,
-        WindowCodeAreaSelection = Bits.Bit6,
-        LcdEnable = Bits.Bit7,
+        BG_EN = Bits.Bit0,
+        OBJ_EN = Bits.Bit1,
+        OBJ_SIZE = Bits.Bit2,
+        BG_MAP = Bits.Bit3,
+        TILE_SEL = Bits.Bit4,
+        WIN_EN = Bits.Bit5,
+        WIN_MAP = Bits.Bit6,
+        LCD_EN = Bits.Bit7,
     }
 }

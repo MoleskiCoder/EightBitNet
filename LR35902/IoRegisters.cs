@@ -122,7 +122,7 @@ namespace LR35902
         public void Reset()
         {
             this.Poke(NR52, 0xf1);
-            this.Poke(LCDC, (byte)(LcdcControls.DisplayBackground | LcdcControls.BackgroundCharacterDataSelection | LcdcControls.LcdEnable));
+            this.Poke(LCDC, (byte)(LcdcControls.BG_EN | LcdcControls.TILE_SEL | LcdcControls.LCD_EN));
             this.divCounter.Word = 0xabcc;
             this.timerCounter = 0;
         }
@@ -168,7 +168,7 @@ namespace LR35902
 
         public void UpdateLcdStatusMode(LcdStatusMode mode)
         {
-            var current = this.Peek(STAT) & unchecked((byte)~Mask.Two);
+            var current = this.Peek(STAT) & ~(byte)Mask.Two;
             this.Poke(STAT, (byte)(current | (int)mode));
             this.OnDisplayStatusModeUpdated(mode);
         }
@@ -273,6 +273,12 @@ namespace LR35902
 
         private void ApplyMask(ushort address, byte masking) => this.Poke(address, (byte)(this.Peek(address) | ~masking));
 
+        private void ApplyMask(ushort address, int masking) => this.ApplyMask(address, (byte)masking);
+
+        private void ApplyMask(ushort address, Bits masking) => this.ApplyMask(address, (byte)masking);
+
+        private void ApplyMask(ushort address, Mask masking) => this.ApplyMask(address, (byte)masking);
+
         private void TriggerKeypadInterrupt() => this.TriggerInterrupt(Interrupts.KeypadPressed);
 
         private void Bus_WrittenByte(object? sender, EventArgs e)
@@ -335,7 +341,7 @@ namespace LR35902
         private void Bus_ReadingByte(object? sender, EventArgs e)
         {
             var address = this.bus.Address.Word;
-            var io = address >= BASE && address < 0xff80;
+            var io = address is >= BASE and < 0xff80;
             if (io)
             {
                 var port = (ushort)(address - BASE);
@@ -361,7 +367,7 @@ namespace LR35902
                     case SB:
                         break;
                     case SC:
-                        this.ApplyMask(port, (byte)(Bits.Bit7 | Bits.Bit0));
+                        this.ApplyMask(port, Bits.Bit7 | Bits.Bit0);
                         break;
 
                     // Timer control
@@ -370,19 +376,19 @@ namespace LR35902
                     case TMA:
                         break;
                     case TAC:
-                        this.ApplyMask(port, (byte)Mask.Three);
+                        this.ApplyMask(port, Mask.Three);
                         break;
 
                     // Interrupt Flags
                     case IF:
-                        this.ApplyMask(port, (byte)Mask.Five);
+                        this.ApplyMask(port, Mask.Five);
                         break;
 
                     // LCD Display Registers
                     case LCDC:
                         break;
                     case STAT:
-                        this.ApplyMask(port, (byte)Mask.Seven);
+                        this.ApplyMask(port, Mask.Seven);
                         break;
                     case SCY:
                     case SCX:
