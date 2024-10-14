@@ -2,7 +2,6 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-
 namespace Z80
 {
     using EightBit;
