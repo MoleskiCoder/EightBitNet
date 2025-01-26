@@ -1,5 +1,6 @@
 ﻿namespace M6502.Symbols
 {
+    using System.Collections;
     using System.Diagnostics;
 
     public class IdentifiableSection : Section
