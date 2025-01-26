@@ -10,7 +10,7 @@ namespace LR35902
     {
         private readonly Bus bus = bus;
         private readonly Register16 af = new((int)Mask.Sixteen);
-        private bool prefixCB = false;
+        private bool prefixCB;
 
         public int ClockCycles => this.Cycles * 4;
 
@@ -29,9 +29,9 @@ namespace LR35902
 
         public override Register16 HL { get; } = new Register16((int)Mask.Sixteen);
 
-        private bool IME { get; set; } = false;
+        private bool IME { get; set; }
 
-        private bool Stopped { get; set; } = false;
+        private bool Stopped { get; set; }
 
         public override void Execute()
         {
@@ -130,7 +130,7 @@ namespace LR35902
             }
         }
 
-		private void TickMachine()
+        private void TickMachine()
         {
             this.Tick(4);
             this.OnMachineTicked();
@@ -156,8 +156,8 @@ namespace LR35902
 
         protected override void JumpRelative(sbyte offset)
         {
-	        base.JumpRelative(offset);
-	        this.TickMachine();
+            base.JumpRelative(offset);
+            this.TickMachine();
         }
 
         protected override bool JumpConditional(bool condition)
@@ -166,12 +166,12 @@ namespace LR35902
             {
                 this.TickMachine();
             }
-	        return condition;
+            return condition;
         }
 
         protected override bool ReturnConditional(bool condition)
         {
-	        _ = base.ReturnConditional(condition);
+            _ = base.ReturnConditional(condition);
             this.TickMachine();
             return condition;
         }
@@ -187,7 +187,7 @@ namespace LR35902
 
         protected override void Return()
         {
-	        base.Return();
+            base.Return();
             this.TickMachine();
         }
 
@@ -669,6 +669,8 @@ namespace LR35902
                                     this.EI();
                                     //this.Tick();
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -689,6 +691,8 @@ namespace LR35902
                                     {
                                         case 0: // CALL nn
                                             this.CallIndirect();
+                                            break;
+                                        default:
                                             break;
                                     }
 
@@ -740,6 +744,8 @@ namespace LR35902
                             throw new InvalidOperationException("Invalid operation mode");
                     }
 
+                    break;
+                default:
                     break;
             }
         }

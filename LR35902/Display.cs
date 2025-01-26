@@ -14,7 +14,7 @@ namespace LR35902
         private readonly AbstractColourPalette<T> colours = colours;
         private readonly ObjectAttribute[] objectAttributes = new ObjectAttribute[40];
         private byte control;
-        private byte scanLine = 0;
+        private byte scanLine;
 
         public T[] Pixels { get; } = new T[DisplayCharacteristics.PixelCount];
 

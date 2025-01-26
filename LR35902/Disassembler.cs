@@ -5,6 +5,7 @@
 namespace LR35902
 {
     using EightBit;
+    using System.Globalization;
 
     public enum IoRegister
     {
@@ -16,7 +17,7 @@ namespace LR35902
 
     public sealed class Disassembler(Bus bus)
     {
-        private bool prefixCB = false;
+        private bool prefixCB;
 
         public Bus Bus { get; } = bus;
 
@@ -38,6 +39,8 @@ namespace LR35902
 
         public static string State(LR35902 cpu)
         {
+            ArgumentNullException.ThrowIfNull(cpu);
+
             var pc = cpu.PC;
             var sp = cpu.SP;
 
@@ -63,6 +66,7 @@ namespace LR35902
 
         public string Disassemble(LR35902 cpu)
         {
+            ArgumentNullException.ThrowIfNull(cpu);
             this.prefixCB = false;
             return this.Disassemble(cpu, cpu.PC.Word);
         }
@@ -211,6 +215,8 @@ namespace LR35902
                         case 7:
                             specification = $"SRL {R(z)}";
                             break;
+                        default:
+                            break;
                     }
 
                     break;
@@ -222,6 +228,8 @@ namespace LR35902
                     break;
                 case 3: // SET y, r[z]
                     specification = $"SET {y},{R(z)}";
+                    break;
+                default:
                     break;
             }
 
@@ -268,7 +276,7 @@ namespace LR35902
             }
 
             output += '\t';
-            output += string.Format(specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
+            output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
 
             switch (ioRegister)
             {
@@ -282,6 +290,8 @@ namespace LR35902
                     output += $"; register C:{IO(cpu.C)}";
                     break;
                 case IoRegister.Unused:
+                    break;
+                default:
                     break;
             }
 
@@ -330,6 +340,8 @@ namespace LR35902
                                 case 1: // ADD HL,rp
                                     specification = $"ADD HL,{RP(p)}";
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -351,6 +363,8 @@ namespace LR35902
                                         case 3: // GB: LDD (HL),A
                                             specification = "LDD (HL),A";
                                             break;
+                                        default:
+                                            break;
                                     }
 
                                     break;
@@ -369,8 +383,12 @@ namespace LR35902
                                         case 3: // GB: LDD A,(HL)
                                             specification = "LDD A,(HL)";
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -383,6 +401,8 @@ namespace LR35902
                                     break;
                                 case 1: // DEC rp
                                     specification = $"DEC {RP(p)}";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -424,8 +444,12 @@ namespace LR35902
                                 case 7:
                                     specification = "CCF";
                                     break;
+                                default:
+                                    break;
                             }
 
+                            break;
+                        default:
                             break;
                     }
 
@@ -474,6 +498,8 @@ namespace LR35902
                                     specification = "LD HL,SP+{4}";
                                     dumpCount++;
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -498,8 +524,12 @@ namespace LR35902
                                         case 3: // LD SP,HL
                                             specification = "LD SP,HL";
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -530,6 +560,8 @@ namespace LR35902
                                     specification = "LD A,({1:X4}H)";
                                     dumpCount += 2;
                                     break;
+                                default:
+                                    break;
                             }
 
                             break;
@@ -549,6 +581,8 @@ namespace LR35902
                                     break;
                                 case 7: // EI
                                     specification = "EI";
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -570,8 +604,12 @@ namespace LR35902
                                             specification = "CALL {1:X4}H";
                                             dumpCount += 2;
                                             break;
+                                        default:
+                                            break;
                                     }
 
+                                    break;
+                                default:
                                     break;
                             }
 
@@ -583,8 +621,12 @@ namespace LR35902
                         case 7: // Restart: RST y * 8
                             specification = $"RST {y * 8:X2}";
                             break;
+                        default:
+                            break;
                     }
 
+                    break;
+                default:
                     break;
             }
 

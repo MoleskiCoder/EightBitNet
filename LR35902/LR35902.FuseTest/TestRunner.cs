@@ -2,9 +2,9 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Fuse
+namespace LR35902.FuseTest
 {
-    using LR35902;
+    using Fuse;
 
     public enum Register
     {
@@ -16,18 +16,12 @@ namespace Fuse
         PC,
     }
 
-    public class TestRunner<T> : LR35902.Bus
-        where T : Fuse.IRegisterState, new()
+    public class TestRunner<T>(Test<T> test, Result<T> result) : Bus
+        where T : IRegisterState, new()
     {
-        private readonly Test<T> test;
-        private readonly Result<T> result;
+        private readonly Test<T> test = test;
+        private readonly Result<T> result = result;
         private readonly EightBit.Ram ram = new(0x10000);
-
-        public TestRunner(Test<T> test, Result<T> result)
-        {
-            this.test = test;
-            this.result = result;
-        }
 
         public bool Failed { get; private set; } = false;
 
@@ -42,13 +36,13 @@ namespace Fuse
             var allowedCycles = this.test.RegisterState.TStates;
             try
             {
-                this.CPU.Run(allowedCycles);
+                _ = this.CPU.Run(allowedCycles);
                 this.Check();
             }
-            catch (System.InvalidOperationException error)
+            catch (InvalidOperationException error)
             {
                 this.Unimplemented = true;
-                System.Console.Error.WriteLine($"**** Error: {error.Message}");
+                Console.Error.WriteLine($"**** Error: {error.Message}");
             }
         }
 
@@ -73,7 +67,7 @@ namespace Fuse
         private static void DumpDifference(string description, byte expected, byte actual)
         {
             var output = $"**** {description}, Expected: {expected:x2}, Got {actual:x2}";
-            System.Console.Error.WriteLine(output);
+            Console.Error.WriteLine(output);
         }
 
         private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
@@ -123,11 +117,11 @@ namespace Fuse
 
         private void Check()
         {
-            this.Checkregisters();
+            this.CheckRegisters();
             this.CheckMemory();
         }
 
-        private void Checkregisters()
+        private void CheckRegisters()
         {
             var expectedState = this.result.RegisterState;
             var expectedRegisters = expectedState.Registers;
@@ -144,7 +138,7 @@ namespace Fuse
             if (!success)
             {
                 this.Failed = true;
-                System.Console.Error.WriteLine($"**** Failed test (Register): {this.test.Description}");
+                Console.Error.WriteLine($"**** Failed test (Register): {this.test.Description}");
 
                 if (!af)
                 {
@@ -206,10 +200,10 @@ namespace Fuse
                         if (first)
                         {
                             first = false;
-                            System.Console.Error.WriteLine($"**** Failed test (Memory): {this.test.Description}");
+                            Console.Error.WriteLine($"**** Failed test (Memory): {this.test.Description}");
                         }
 
-                        System.Console.Error.WriteLine($"**** Difference: Address: {address:x4} Expected: {expected:x2} Actual: {actual:x2}");
+                        Console.Error.WriteLine($"**** Difference: Address: {address:x4} Expected: {expected:x2} Actual: {actual:x2}");
                     }
 
                     ++address;

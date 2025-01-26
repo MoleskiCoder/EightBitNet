@@ -96,7 +96,7 @@ namespace LR35902
 
         public event EventHandler<LcdStatusModeEventArgs>? DisplayStatusModeUpdated;
 
-        public bool BootRomDisabled { get; private set; } = false;
+        public bool BootRomDisabled { get; private set; }
 
         public bool BootRomEnabled => !this.BootRomDisabled;
 
@@ -334,6 +334,8 @@ namespace LR35902
 
                 case BOOT_DISABLE:
                     this.BootRomDisabled = value != 0;
+                    break;
+                default:
                     break;
             }
         }

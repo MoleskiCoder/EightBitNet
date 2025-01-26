@@ -1,10 +1,13 @@
 ﻿// <copyright file="TestSuite.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Fuse
+
+namespace LR35902.FuseTest
 {
+    using Fuse;
+
     public class TestSuite<T>
-        where T : Fuse.IRegisterState, new()
+        where T : IRegisterState, new()
     {
         private readonly Tests<T> tests;
         private readonly Results<T> results;
@@ -34,7 +37,7 @@ namespace Fuse
             foreach (var test in this.tests.Container)
             {
                 var key = test.Key;
-                System.Console.Out.WriteLine($"** Checking: {key}");
+                Console.Out.WriteLine($"** Checking: {key}");
 
                 var input = test.Value;
                 var result = this.results.Container[key];
@@ -52,8 +55,8 @@ namespace Fuse
                 }
             }
 
-            System.Console.Out.WriteLine($"+++ Failed test count: {failedCount}");
-            System.Console.Out.WriteLine($"+++ Unimplemented test count: {unimplementedCount}");
+            Console.Out.WriteLine($"+++ Failed test count: {failedCount}");
+            Console.Out.WriteLine($"+++ Unimplemented test count: {unimplementedCount}");
         }
     }
 }

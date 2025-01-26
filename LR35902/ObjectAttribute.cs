@@ -14,6 +14,7 @@ namespace LR35902
 
         public ObjectAttribute(Ram ram, ushort address)
         {
+            ArgumentNullException.ThrowIfNull(ram);
             this.PositionY = ram.Peek(address);
             this.PositionX = ram.Peek(++address);
             this.Pattern = ram.Peek(++address);

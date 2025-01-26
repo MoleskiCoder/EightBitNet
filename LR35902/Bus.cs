@@ -51,7 +51,7 @@ namespace LR35902
 
         public IoRegisters IO { get; }
 
-        public bool GameRomDisabled { get; private set; } = false;
+        public bool GameRomDisabled { get; private set; }
 
         public bool GameRomEnabled => !this.GameRomDisabled;
 
@@ -115,56 +115,56 @@ namespace LR35902
             this.RunVerticalBlankLines(lines);
         }
 
-        public override MemoryMapping Mapping(ushort address)
+        public override MemoryMapping Mapping(ushort absolute)
         {
-            if (address < 0x100 && this.IO.BootRomEnabled)
+            if (absolute < 0x100 && this.IO.BootRomEnabled)
             {
                 return new MemoryMapping(this.bootRom, 0x0000, Mask.Sixteen, AccessLevel.ReadOnly);
             }
 
-            if (address < 0x4000 && this.GameRomEnabled)
+            if (absolute < 0x4000 && this.GameRomEnabled)
             {
                 return new MemoryMapping(this.gameRomBanks[0], 0x0000, 0xffff, AccessLevel.ReadOnly);
             }
 
-            if (address < 0x8000 && this.GameRomEnabled)
+            if (absolute < 0x8000 && this.GameRomEnabled)
             {
                 return new MemoryMapping(this.gameRomBanks[this.romBank], 0x4000, 0xffff, AccessLevel.ReadOnly);
             }
 
-            if (address < 0xa000)
+            if (absolute < 0xa000)
             {
                 return new MemoryMapping(this.VRAM, 0x8000, 0xffff, AccessLevel.ReadWrite);
             }
 
-            if (address < 0xc000)
+            if (absolute < 0xc000)
             {
                 return this.ramBanks.Count == 0
                     ? new MemoryMapping(this.unmapped2000, 0xa000, 0xffff, AccessLevel.ReadOnly)
                     : new MemoryMapping(this.ramBanks[this.ramBank], 0xa000, 0xffff, AccessLevel.ReadWrite);
             }
 
-            if (address < 0xe000)
+            if (absolute < 0xe000)
             {
                 return new MemoryMapping(this.lowInternalRam, 0xc000, 0xffff, AccessLevel.ReadWrite);
             }
 
-            if (address < 0xfe00)
+            if (absolute < 0xfe00)
             {
                 return new MemoryMapping(this.lowInternalRam, 0xe000, 0xffff, AccessLevel.ReadWrite); // Low internal RAM mirror
             }
 
-            if (address < 0xfea0)
+            if (absolute < 0xfea0)
             {
                 return new MemoryMapping(this.OAMRAM, 0xfe00, 0xffff, AccessLevel.ReadWrite);
             }
 
-            if (address < IoRegisters.BASE)
+            if (absolute < IoRegisters.BASE)
             {
                 return new MemoryMapping(this.unmapped60, 0xfea0, 0xffff, AccessLevel.ReadOnly);
             }
 
-            if (address < 0xff80)
+            if (absolute < 0xff80)
             {
                 return new MemoryMapping(this.IO, IoRegisters.BASE, 0xffff, AccessLevel.ReadWrite);
             }
@@ -193,7 +193,7 @@ namespace LR35902
                     // Register 1: ROM bank code
                     if (this.banked && this.higherRomBank)
                     {
-                        // assert((address >= 0x2000) && (address < 0x4000));
+                        // assert((absolute >= 0x2000) && (absolute < 0x4000));
                         // assert((value > 0) && (value < 0x20));
                         this.romBank = value & (byte)Mask.Five;
                     }
@@ -226,6 +226,8 @@ namespace LR35902
                         }
                     }
 
+                    break;
+                default:
                     break;
             }
         }

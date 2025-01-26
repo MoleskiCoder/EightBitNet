@@ -2,7 +2,7 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Fuse
+namespace LR35902.FuseTest
 {
     public static class Program
     {

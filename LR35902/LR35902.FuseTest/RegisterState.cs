@@ -1,9 +1,10 @@
 ﻿// <copyright file="RegisterState.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Fuse
+
+namespace LR35902.FuseTest
 {
-    using System;
+    using Fuse;
     using System.Globalization;
 
     public class RegisterState : AbstractRegisterState, IRegisterState
