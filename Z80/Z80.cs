@@ -785,7 +785,7 @@ namespace Z80
                             this.Bus.Address.Assign(this.BC);
                             this.MEMPTR.Assign(this.Bus.Address);
                             this.MEMPTR.Word++;
-                            _ = this.ReadPort();
+                            this.ReadPort();
                             if (y != 6)
                             {
                                 this.R(y, AccessLevel.WriteOnly) = this.Bus.Data; // IN r[y],(C)
@@ -1443,7 +1443,8 @@ namespace Z80
                                     this.WritePort(this.FetchByte());
                                     break;
                                 case 3: // IN A,(n)
-                                    this.A = this.ReadPort(this.FetchByte());
+                                    this.ReadPort(this.FetchByte());
+                                    this.A = this.Bus.Data;
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL2());
@@ -2018,7 +2019,7 @@ namespace Z80
             this.Bus.Address.Assign(source);
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick();
-            _ = this.ReadPort();
+            this.ReadPort();
             this.Tick(3);
             this.MemoryWrite(destination);
             source.High = this.Decrement(source.High);
@@ -2158,23 +2159,22 @@ namespace Z80
             this.RaiseIORQ();
         }
 
-        private byte ReadPort(byte port)
+        private void ReadPort(byte port)
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
             this.MEMPTR.Assign(this.Bus.Address);
             ++this.MEMPTR.Low;
-            return this.ReadPort();
+            this.ReadPort();
         }
 
-        private byte ReadPort()
+        private void ReadPort()
         {
             this.Tick();
             this.LowerIORQ();
             this.LowerRD();
-            var returned = this.Bus.Data = this._ports.Read(this.Bus.Address.Low);
+            this.Bus.Data = this._ports.Read(this.Bus.Address.Low);
             this.RaiseRD();
             this.RaiseIORQ();
-            return returned;
         }
     }
 }
