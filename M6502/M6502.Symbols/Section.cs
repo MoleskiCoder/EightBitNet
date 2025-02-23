@@ -1,6 +1,7 @@
 ﻿namespace M6502.Symbols
 {
     using System;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Globalization;
     using System.Numerics;
@@ -11,13 +12,15 @@
         protected static readonly Dictionary<System.Type, ReflectedSectionProperties> SectionPropertiesCache = [];
         protected static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        protected readonly Parser _container;
+        private readonly Parser _container;
 
         // Needed to evaluate references on a second pass
-        protected readonly Dictionary<string, int> _references = [];
-        protected readonly Dictionary<string, List<int>> _multipleReferences = [];
+        private readonly Dictionary<string, int> _references = [];
+        private readonly Dictionary<string, List<int>> _multipleReferences = [];
 
-        protected Dictionary<string, string>? _parsed;
+        protected Parser Container => this._container;
+
+        protected Dictionary<string, string>? Parsed { get; private set; }
 
         protected ReflectedSectionProperties SectionProperties => GetSectionProperties(this.GetType());
 
@@ -48,7 +51,7 @@
         public virtual void Parse(Dictionary<string, string>? entries)
         {
             ArgumentNullException.ThrowIfNull(entries);
-            this._parsed = entries;
+            this.Parsed = entries;
             this._container.SectionEntries.Add(this);
             this.ProcessAttributesOfProperties();
             foreach (var entry in entries)
@@ -84,7 +87,8 @@
                 }
                 else if (references)
                 {
-                    this._multipleReferences.Add(key, ExtractCompoundInteger(value));
+                    var multiple = ExtractCompoundInteger(value);
+                    this._multipleReferences.Add(key, [.. multiple]);
                 }
                 else
                 {
@@ -154,7 +158,7 @@
             return value.Split('+');
         }
 
-        protected static List<int> ExtractCompoundInteger(string value)
+        protected static ReadOnlyCollection<int> ExtractCompoundInteger(string value)
         {
             var elements = ExtractCompoundString(value);
             var returned = new List<int>(elements.Length);
@@ -162,7 +166,7 @@
             {
                 returned.Add(ExtractInteger(element));
             }
-            return returned;
+            return returned.AsReadOnly();
         }
     }
 }

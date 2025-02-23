@@ -1,6 +1,7 @@
 ﻿namespace M6502.Symbols
 {
     using System.Collections;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
 
     public class IdentifiableSection : Section
@@ -14,8 +15,8 @@
 
         private bool MaybeExtractFromParsed(string key, out string? value)
         {
-            Debug.Assert(this._parsed is not null);
-            var found = this._parsed.TryGetValue(key, out var extracted);
+            Debug.Assert(this.Parsed is not null);
+            var found = this.Parsed.TryGetValue(key, out var extracted);
             value = extracted;
             return found;
         }
@@ -27,10 +28,10 @@
             return available;
         }
 
-        protected bool MaybeExtractCompoundInteger(string key, out List<int> value)
+        protected bool MaybeExtractCompoundInteger(string key, out ReadOnlyCollection<int> value)
         {
             var available = this.MaybeExtractFromParsed(key, out var extracted);
-            value = extracted is null ? [] : ExtractCompoundInteger(extracted);
+            value = extracted is null ? new ReadOnlyCollection<int>([]) : ExtractCompoundInteger(extracted);
             return available;
         }
 
@@ -70,11 +71,11 @@
             var referencingContainer = referenceClassAttribute.Referencing;
 
             // Get the parent container field
-            var containerType = this._container.GetType();
+            var containerType = this.Container.GetType();
             Debug.Assert(referencingContainer is not null);
             var containerField = containerType.GetField(referencingContainer);
             Debug.Assert(containerField is not null);
-            var fieldValue = containerField.GetValue(this._container);
+            var fieldValue = containerField.GetValue(this.Container);
             var fieldList = fieldValue as IList;
 
             // Now get the referenced object from the parent container field (via ID as an index)
@@ -100,7 +101,7 @@
             }
         }
 
-        private void ExtractReferencesProperty(List<int> ids, string name, System.Type type)
+        private void ExtractReferencesProperty(ReadOnlyCollection<int> ids, string name, System.Type type)
         {
             // The reference container in the parent class
             //var referenceSectionProperties = GetSectionProperties(type);
