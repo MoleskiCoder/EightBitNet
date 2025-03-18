@@ -15,6 +15,53 @@ namespace EightBit
 
         #endregion
 
+        #region Bus events
+
+        #region Memory events
+
+        #region Memory read events
+
+        public event EventHandler<EventArgs>? ReadingMemory;
+        public event EventHandler<EventArgs>? ReadMemory;
+        protected virtual void OnReadingMemory() => ReadingMemory?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnReadMemory() => ReadMemory?.Invoke(this, EventArgs.Empty);
+
+        #endregion
+
+        #region Memory write events
+
+        public event EventHandler<EventArgs>? WritingMemory;
+        public event EventHandler<EventArgs>? WrittenMemory;
+        protected virtual void OnWritingMemory() => WritingMemory?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnWrittenMemory() => WrittenMemory?.Invoke(this, EventArgs.Empty);
+
+        #endregion
+
+        #endregion
+
+        #region IO events
+
+        #region IO read events
+
+        public event EventHandler<EventArgs>? ReadingIO;
+        public event EventHandler<EventArgs>? ReadIO;
+        protected virtual void OnReadingIO() => ReadingIO?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnReadIO() => ReadIO?.Invoke(this, EventArgs.Empty);
+
+        #endregion
+
+        #region IO write events
+
+        public event EventHandler<EventArgs>? WritingIO;
+        public event EventHandler<EventArgs>? WrittenIO;
+        protected virtual void OnWritingIO() => WritingIO?.Invoke(this, EventArgs.Empty);
+        protected virtual void OnWrittenIO() => WrittenIO?.Invoke(this, EventArgs.Empty);
+        #endregion
+
+        #endregion
+
+        #endregion
+
         private PinLevel _resetLine;
         private PinLevel _intLine;
 
@@ -217,7 +264,10 @@ namespace EightBit
             return this.MemoryRead(address.Low, address.High);
         }
 
-        protected virtual byte MemoryRead() => this.BusRead();
+        protected virtual byte MemoryRead()
+        {
+            return this.BusRead();
+        }
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 

@@ -83,6 +83,11 @@ namespace EightBit
             }
         }
 
+        protected void ResetWorkingRegisters()
+        {
+            this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
+        }
+
         protected static int BuildHalfCarryIndex(byte before, byte value, int calculation) => ((before & 0x88) >> 1) | ((value & 0x88) >> 2) | ((calculation & 0x88) >> 3);
 
         protected static int CalculateHalfCarryAdd(byte before, byte value, int calculation)
