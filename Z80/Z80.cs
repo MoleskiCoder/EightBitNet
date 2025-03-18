@@ -11,15 +11,11 @@ namespace Z80
         private readonly InputOutput _ports = ports;
 
         private readonly Register16[] _accumulatorFlags = [new Register16(), new Register16()];
-        private readonly Register16[,] _registers =
-        {
-            {
-                new Register16(), new Register16(), new Register16(),
-            },
-            {
-                new Register16(), new Register16(), new Register16(),
-            },
-        };
+        private readonly Register16[][] _registers =
+        [
+            [new Register16(), new Register16(), new Register16()],
+            [new Register16(), new Register16(), new Register16()]
+        ];
 
         private RefreshRegister _refresh = new(0x7f);
 
@@ -108,11 +104,13 @@ namespace Z80
 
         public override Register16 AF => this._accumulatorFlags[this._accumulatorFlagsSet];
 
-        public override Register16 BC => this._registers[this._registerSet, (int)RegisterIndex.IndexBC];
+        private Register16[] CurrentRegisterSet => this._registers[this._registerSet];
 
-        public override Register16 DE => this._registers[this._registerSet, (int)RegisterIndex.IndexDE];
+        public override Register16 BC => this.CurrentRegisterSet[(int)RegisterIndex.IndexBC];
 
-        public override Register16 HL => this._registers[this._registerSet, (int)RegisterIndex.IndexHL];
+        public override Register16 DE => this.CurrentRegisterSet[(int)RegisterIndex.IndexDE];
+
+        public override Register16 HL => this.CurrentRegisterSet[(int)RegisterIndex.IndexHL];
 
         public Register16 IX { get; } = new(0xffff);
 
@@ -157,14 +155,10 @@ namespace Z80
 
         public ref PinLevel WR => ref this._wrLine;
 
-        private Register16 DisplacedAddress
+        private void DisplaceAddress()
         {
-            get
-            {
-                var displacement = (this._prefixDD ? this.IX : this.IY).Word + this._displacement;
-                this.MEMPTR.Word = (ushort)displacement;
-                return this.MEMPTR;
-            }
+            var displacement = (this._prefixDD ? this.IX : this.IY).Word + this._displacement;
+            this.MEMPTR.Word = (ushort)displacement;
         }
 
         public void Exx() => this._registerSet ^= 1;
@@ -397,8 +391,9 @@ namespace Z80
         protected override void OnRaisedPOWER()
         {
             this.RaiseM1();
-            this.RaiseMREQ();
+            this.RaiseRFSH();
             this.RaiseIORQ();
+            this.RaiseMREQ();
             this.RaiseRD();
             this.RaiseWR();
 
@@ -411,11 +406,17 @@ namespace Z80
             this.ExxAF();
             this.Exx();
 
-            this.AF.Word = this.IX.Word = this.IY.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
+            this.IX.Word = this.IY.Word = (ushort)Mask.Sixteen;
+            base.ResetWorkingRegisters();
 
-            this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
+            this.ResetPrefixes();
 
             base.OnRaisedPOWER();
+        }
+
+        private void ResetPrefixes()
+        {
+            this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
         }
 
         protected virtual void OnRaisingNMI() => RaisingNMI?.Invoke(this, EventArgs.Empty);
@@ -543,6 +544,76 @@ namespace Z80
             base.Call(destination);
         }
 
+        private int Zero()
+        {
+            return ZeroTest(this.F);
+        }
+
+        private int Carry()
+        {
+            return CarryTest(this.F);
+        }
+
+        private int Parity()
+        {
+            return ParityTest(this.F);
+        }
+
+        private int Sign()
+        {
+            return SignTest(this.F);
+        }
+
+        private int HalfCarry()
+        {
+            return HalfCarryTest(this.F);
+        }
+
+        private int Subtracting()
+        {
+            return SubtractingTest(this.F);
+        }
+
+        private static int ZeroTest(byte data)
+        {
+            return data & (byte)StatusBits.ZF;
+        }
+
+        private static int CarryTest(byte data)
+        {
+            return data & (byte)StatusBits.CF;
+        }
+
+        private static int ParityTest(byte data)
+        {
+            return data & (byte)StatusBits.PF;
+        }
+
+        private static int SignTest(byte data)
+        {
+            return data & (byte)StatusBits.SF;
+        }
+
+        private static int HalfCarryTest(byte data)
+        {
+            return data & (byte)StatusBits.HC;
+        }
+
+        private static int SubtractingTest(byte data)
+        {
+            return data & (byte)StatusBits.NF;
+        }
+
+        private static int XTest(byte data)
+        {
+            return data & (byte)StatusBits.XF;
+        }
+
+        private static int YTest(byte data)
+        {
+            return data & (byte)StatusBits.YF;
+        }
+
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
         private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
@@ -553,7 +624,7 @@ namespace Z80
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
-        private static byte AdjustSign(byte input, byte value) => SetBit(input, StatusBits.SF, value & (byte)StatusBits.SF);
+        private static byte AdjustSign(byte input, byte value) => SetBit(input, StatusBits.SF, SignTest(value));
 
         private static byte AdjustZero(byte input, byte value) => ClearBit(input, StatusBits.ZF, value);
 
@@ -573,8 +644,8 @@ namespace Z80
 
         private static byte AdjustXY(byte input, byte value)
         {
-            input = SetBit(input, StatusBits.XF, value & (byte)StatusBits.XF);
-            return SetBit(input, StatusBits.YF, value & (byte)StatusBits.YF);
+            input = SetBit(input, StatusBits.XF, XTest(value));
+            return SetBit(input, StatusBits.YF, YTest(value));
         }
 
         private static byte AdjustSZPXY(byte input, byte value)
@@ -599,7 +670,7 @@ namespace Z80
             return SetBit(input, StatusBits.VF, overflow);
         }
 
-        private static byte AdjustOverflowAdd(byte input, byte before, byte value, byte calculation) => AdjustOverflowAdd(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
+        private static byte AdjustOverflowAdd(byte input, byte before, byte value, byte calculation) => AdjustOverflowAdd(input, SignTest(before), SignTest(value), SignTest(calculation));
 
         private static byte AdjustOverflowSub(byte input, int beforeNegative, int valueNegative, int afterNegative)
         {
@@ -607,7 +678,7 @@ namespace Z80
             return SetBit(input, StatusBits.VF, overflow);
         }
 
-        private static byte AdjustOverflowSub(byte input, byte before, byte value, byte calculation) => AdjustOverflowSub(input, before & (byte)StatusBits.SF, value & (byte)StatusBits.SF, calculation & (byte)StatusBits.SF);
+        private static byte AdjustOverflowSub(byte input, byte before, byte value, byte calculation) => AdjustOverflowSub(input, SignTest(before), SignTest(value), SignTest(calculation));
 
         private static byte RES(int n, byte operand) => ClearBit(operand, Bit(n));
 
@@ -654,7 +725,15 @@ namespace Z80
                 case 5:
                     return ref this.HL2().Low;
                 case 6:
-                    this.Bus.Address.Assign(this._displaced ? this.DisplacedAddress : this.HL);
+                    if (this._displaced)
+                    {
+                        this.DisplaceAddress();
+                        this.Bus.Address.Assign(this.MEMPTR);
+                    }
+                    else
+                    {
+                        this.Bus.Address.Assign(this.HL);
+                    }
                     if (access == AccessLevel.ReadOnly)
                     {
                         _ = this.MemoryRead();
@@ -714,7 +793,8 @@ namespace Z80
             if (this._displaced)
             {
                 this.Tick(2);
-                operand = this.MemoryRead(this.DisplacedAddress);
+                this.DisplaceAddress();
+                operand = this.MemoryRead(this.MEMPTR);
             }
             else
             {
@@ -1610,7 +1690,7 @@ namespace Z80
             this.F = AdjustOverflowSub(this.F, operand, value, result);
 
             this.F = SetBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, this.Intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, CarryTest(this.Intermediate.High));
             this.F = AdjustSZ(this.F, result);
 
             return result;
@@ -1646,14 +1726,14 @@ namespace Z80
 
         private bool ConvertCondition(int flag) => flag switch
         {
-            0 => (this.F & (byte)StatusBits.ZF) == 0,
-            1 => (this.F & (byte)StatusBits.ZF) != 0,
-            2 => (this.F & (byte)StatusBits.CF) == 0,
-            3 => (this.F & (byte)StatusBits.CF) != 0,
-            4 => (this.F & (byte)StatusBits.PF) == 0,
-            5 => (this.F & (byte)StatusBits.PF) != 0,
-            6 => (this.F & (byte)StatusBits.SF) == 0,
-            7 => (this.F & (byte)StatusBits.SF) != 0,
+            0 => this.Zero() == 0,
+            1 => this.Zero() != 0,
+            2 => this.Carry() == 0,
+            3 => this.Carry() != 0,
+            4 => this.Parity() == 0,
+            5 => this.Parity() != 0,
+            6 => this.Sign() == 0,
+            7 => this.Sign() != 0,
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
@@ -1674,7 +1754,7 @@ namespace Z80
 
         private Register16 SBC(Register16 operand, Register16 value)
         {
-            var subtraction = operand.Word - value.Word - (this.F & (byte)StatusBits.CF);
+            var subtraction = operand.Word - value.Word - this.Carry();
             this.Intermediate.Word = (ushort)subtraction;
 
             this.F = SetBit(this.F, StatusBits.NF);
@@ -1683,9 +1763,9 @@ namespace Z80
             this.F = AdjustHalfCarrySub(this.F, operand.High, value.High, this.Intermediate.High);
             this.F = AdjustXY(this.F, this.Intermediate.High);
 
-            var beforeNegative = operand.High & (byte)StatusBits.SF;
-            var valueNegative = value.High & (byte)StatusBits.SF;
-            var afterNegative = this.Intermediate.High & (byte)StatusBits.SF;
+            var beforeNegative = SignTest(operand.High);
+            var valueNegative = SignTest(value.High);
+            var afterNegative = SignTest(this.Intermediate.High);
 
             this.F = SetBit(this.F, StatusBits.SF, afterNegative);
             this.F = AdjustOverflowSub(this.F, beforeNegative, valueNegative, afterNegative);
@@ -1697,12 +1777,12 @@ namespace Z80
 
         private Register16 ADC(Register16 operand, Register16 value)
         {
-            _ = this.Add(operand, value, this.F & (byte)StatusBits.CF);
+            _ = this.Add(operand, value, this.Carry());
             this.F = ClearBit(this.F, StatusBits.ZF, this.Intermediate.Word);
 
-            var beforeNegative = operand.High & (byte)StatusBits.SF;
-            var valueNegative = value.High & (byte)StatusBits.SF;
-            var afterNegative = this.Intermediate.High & (byte)StatusBits.SF;
+            var beforeNegative = SignTest(operand.High);
+            var valueNegative = SignTest(value.High);
+            var afterNegative = SignTest(this.Intermediate.High);
 
             this.F = SetBit(this.F, StatusBits.SF, afterNegative);
             this.F = AdjustOverflowAdd(this.F, beforeNegative, valueNegative, afterNegative);
@@ -1734,13 +1814,13 @@ namespace Z80
             this.F = AdjustOverflowAdd(this.F, operand, value, result);
 
             this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, this.Intermediate.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, CarryTest(this.Intermediate.High));
             this.F = AdjustSZXY(this.F, result);
 
             return result;
         }
 
-        private byte ADC(byte operand, byte value) => this.Add(operand, value, this.F & (byte)StatusBits.CF);
+        private byte ADC(byte operand, byte value) => this.Add(operand, value, this.Carry());
 
         private byte SUB(byte operand, byte value, int carry = 0)
         {
@@ -1749,7 +1829,7 @@ namespace Z80
             return subtraction;
         }
 
-        private byte SBC(byte operand, byte value) => this.SUB(operand, value, this.F & (byte)StatusBits.CF);
+        private byte SBC(byte operand, byte value) => this.SUB(operand, value, this.Carry());
 
         private void AndR(byte value)
         {
@@ -1799,7 +1879,7 @@ namespace Z80
         private byte RL(byte operand)
         {
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (byte)((operand << 1) | carry);
             this.F = AdjustXY(this.F, result);
@@ -1809,7 +1889,7 @@ namespace Z80
         private byte RR(byte operand)
         {
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) | (carry << 7));
             this.F = AdjustXY(this.F, result);
@@ -1866,10 +1946,10 @@ namespace Z80
         {
             var updated = this.A;
 
-            var lowAdjust = (this.F & (byte)StatusBits.HC) != 0 || LowNibble(this.A) > 9;
-            var highAdjust = (this.F & (byte)StatusBits.CF) != 0 || this.A > 0x99;
+            var lowAdjust = this.HalfCarry() != 0 || LowNibble(this.A) > 9;
+            var highAdjust = this.Carry() != 0 || this.A > 0x99;
 
-            if ((this.F & (byte)StatusBits.NF) != 0)
+            if (this.Subtracting() != 0)
             {
                 if (lowAdjust)
                 {
@@ -1894,7 +1974,7 @@ namespace Z80
                 }
             }
 
-            this.F = (byte)((this.F & (byte)(StatusBits.CF | StatusBits.NF)) | (this.A > 0x99 ? (byte)StatusBits.CF : 0) | ((this.A ^ updated) & (byte)StatusBits.HC));
+            this.F = (byte)((this.F & (byte)(StatusBits.CF | StatusBits.NF)) | (this.A > 0x99 ? (byte)StatusBits.CF : 0) | HalfCarryTest((byte)(this.A ^ updated)));
 
             this.F = AdjustSZPXY(this.F, this.A = updated);
         }
@@ -1909,7 +1989,7 @@ namespace Z80
         private void CCF()
         {
             this.F = ClearBit(this.F, StatusBits.NF);
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.HC, carry);
             this.F = ClearBit(this.F, StatusBits.CF, carry);
             this.F = AdjustXY(this.F, this.A);
@@ -1945,7 +2025,7 @@ namespace Z80
             this.F = AdjustHalfCarrySub(this.F, this.A, value, result);
             this.F = SetBit(this.F, StatusBits.NF);
 
-            result -= (byte)((this.F & (byte)StatusBits.HC) >> 4);
+            result -= (byte)(this.HalfCarry() >> 4);
 
             this.F = SetBit(this.F, StatusBits.YF, result & (byte)Bits.Bit1);
             this.F = SetBit(this.F, StatusBits.XF, result & (byte)Bits.Bit3);
@@ -1961,7 +2041,7 @@ namespace Z80
         private bool CPIR()
         {
             this.CPI();
-            return (this.F & (byte)StatusBits.PF) != 0 && (this.F & (byte)StatusBits.ZF) == 0; // See CPI
+            return this.Parity() != 0 && this.Zero() == 0; // See CPI
         }
 
         private void CPD()
@@ -1974,7 +2054,7 @@ namespace Z80
         private bool CPDR()
         {
             this.CPD();
-            return (this.F & (byte)StatusBits.PF) != 0 && (this.F & (byte)StatusBits.ZF) == 0; // See CPD
+            return this.Parity() != 0 && this.Zero() == 0; // See CPD
         }
 
         private void BlockLoad(Register16 source, Register16 destination, ushort counter)
@@ -1998,7 +2078,7 @@ namespace Z80
         private bool LDIR()
         {
             this.LDI();
-            return (this.F & (byte)StatusBits.PF) != 0; // See LDI
+            return this.Parity() != 0; // See LDI
         }
 
         private void LDD()
@@ -2011,7 +2091,7 @@ namespace Z80
         private bool LDDR()
         {
             this.LDD();
-            return (this.F & (byte)StatusBits.PF) != 0; // See LDD
+            return this.Parity() != 0; // See LDD
         }
 
         private void BlockIn(Register16 source, Register16 destination)
@@ -2036,7 +2116,7 @@ namespace Z80
         private bool INIR()
         {
             this.INI();
-            return (this.F & (byte)StatusBits.ZF) == 0; // See INI
+            return this.Zero() == 0; // See INI
         }
 
         private void IND()
@@ -2049,7 +2129,7 @@ namespace Z80
         private bool INDR()
         {
             this.IND();
-            return (this.F & (byte)StatusBits.ZF) == 0; // See IND
+            return this.Zero() == 0; // See IND
         }
 
         private void BlockOut(Register16 source, Register16 destination)
@@ -2082,7 +2162,7 @@ namespace Z80
         private bool OTIR()
         {
             this.OUTI();
-            return (this.F & (byte)StatusBits.ZF) == 0; // See OUTI
+            return this.Zero() == 0; // See OUTI
         }
 
         private void OUTD()
@@ -2096,7 +2176,7 @@ namespace Z80
         private bool OTDR()
         {
             this.OUTD();
-            return (this.F & (byte)StatusBits.ZF) == 0; // See OUTD
+            return this.Zero() == 0; // See OUTD
         }
 
         private void NEG()
