@@ -5,6 +5,8 @@
 namespace Z80
 {
     using EightBit;
+    using System.Diagnostics;
+
 
     public class Z80(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
@@ -24,75 +26,11 @@ namespace Z80
         private bool _prefixED;
         private bool _prefixFD;
 
-        private PinLevel _nmiLine = PinLevel.Low;
-        private PinLevel _m1Line = PinLevel.Low;
-        private PinLevel _rfshLine = PinLevel.Low;
-        private PinLevel _mreqLine = PinLevel.Low;
-        private PinLevel _iorqLine = PinLevel.Low;
-        private PinLevel _rdLine = PinLevel.Low;
-        private PinLevel _wrLine = PinLevel.Low;
-
         private int _accumulatorFlagsSet;
 
         private int _registerSet;
         private sbyte _displacement;
         private bool _displaced;
-
-        public event EventHandler<EventArgs>? RaisingNMI;
-
-        public event EventHandler<EventArgs>? RaisedNMI;
-
-        public event EventHandler<EventArgs>? LoweringNMI;
-
-        public event EventHandler<EventArgs>? LoweredNMI;
-
-        public event EventHandler<EventArgs>? RaisingM1;
-
-        public event EventHandler<EventArgs>? RaisedM1;
-
-        public event EventHandler<EventArgs>? LoweringM1;
-
-        public event EventHandler<EventArgs>? LoweredM1;
-
-        public event EventHandler<EventArgs>? RaisingRFSH;
-
-        public event EventHandler<EventArgs>? RaisedRFSH;
-
-        public event EventHandler<EventArgs>? LoweringRFSH;
-
-        public event EventHandler<EventArgs>? LoweredRFSH;
-
-        public event EventHandler<EventArgs>? RaisingMREQ;
-
-        public event EventHandler<EventArgs>? RaisedMREQ;
-
-        public event EventHandler<EventArgs>? LoweringMREQ;
-
-        public event EventHandler<EventArgs>? LoweredMREQ;
-
-        public event EventHandler<EventArgs>? RaisingIORQ;
-
-        public event EventHandler<EventArgs>? RaisedIORQ;
-
-        public event EventHandler<EventArgs>? LoweringIORQ;
-
-        public event EventHandler<EventArgs>? LoweredIORQ;
-
-        public event EventHandler<EventArgs>? RaisingRD;
-
-        public event EventHandler<EventArgs>? RaisedRD;
-
-        public event EventHandler<EventArgs>? LoweringRD;
-
-        public event EventHandler<EventArgs>? LoweredRD;
-
-        public event EventHandler<EventArgs>? RaisingWR;
-
-        public event EventHandler<EventArgs>? RaisedWR;
-
-        public event EventHandler<EventArgs>? LoweringWR;
-
-        public event EventHandler<EventArgs>? LoweredWR;
 
         public byte IV { get; set; } = 0xff;
 
@@ -137,24 +75,6 @@ namespace Z80
         // bits of the address bus.
         public ref RefreshRegister REFRESH => ref this._refresh;
 
-        public ref PinLevel NMI => ref this._nmiLine;
-
-        public ref PinLevel M1 => ref this._m1Line;
-
-        // ** From the Z80 CPU User Manual
-        // RFSH.Refresh(output, active Low). RFSH, together with MREQ, indicates that the lower
-        // seven bits of the system’s address bus can be used as a _refresh address to the system’s
-        // dynamic memories.
-        public ref PinLevel RFSH => ref this._rfshLine;
-
-        public ref PinLevel MREQ => ref this._mreqLine;
-
-        public ref PinLevel IORQ => ref this._iorqLine;
-
-        public ref PinLevel RD => ref this._rdLine;
-
-        public ref PinLevel WR => ref this._wrLine;
-
         private void DisplaceAddress()
         {
             var displacement = (this._prefixDD ? this.IX : this.IY).Word + this._displacement;
@@ -164,153 +84,6 @@ namespace Z80
         public void Exx() => this._registerSet ^= 1;
 
         public void ExxAF() => this._accumulatorFlagsSet ^= 1;
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseNMI()
-        {
-            if (this.NMI.Lowered())
-            {
-                this.OnRaisingNMI();
-                this.NMI.Raise();
-                this.OnRaisedNMI();
-            }
-        }
-
-        public virtual void LowerNMI()
-        {
-            if (this.NMI.Raised())
-            {
-                this.OnLoweringNMI();
-                this.NMI.Lower();
-                this.OnLoweredNMI();
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseM1()
-        {
-            if (this.M1.Lowered())
-            {
-                this.OnRaisingM1();
-                this.M1.Raise();
-                this.OnRaisedM1();
-            }
-        }
-
-        public virtual void LowerM1()
-        {
-            if (this.M1.Raised())
-            {
-                this.OnLoweringM1();
-                this.M1.Lower();
-                this.OnLoweredM1();
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRFSH()
-        {
-            if (this.RFSH.Lowered())
-            {
-                this.OnRaisingRFSH();
-                this.RFSH.Raise();
-                this.OnRaisedRFSH();
-            }
-        }
-
-        public virtual void LowerRFSH()
-        {
-            if (this.RFSH.Raised())
-            {
-                this.OnLoweringRFSH();
-                this.RFSH.Lower();
-                this.OnLoweredRFSH();
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseMREQ()
-        {
-            if (this.MREQ.Lowered())
-            {
-                this.OnRaisingMREQ();
-                this.MREQ.Raise();
-                this.OnRaisedMREQ();
-            }
-        }
-
-        public virtual void LowerMREQ()
-        {
-            if (this.MREQ.Raised())
-            {
-                this.OnLoweringMREQ();
-                this.MREQ.Lower();
-                this.OnLoweredMREQ();
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseIORQ()
-        {
-            if (this.IORQ.Lowered())
-            {
-                this.OnRaisingIORQ();
-                this.IORQ.Raise();
-                this.OnRaisedIORQ();
-            }
-        }
-
-        public virtual void LowerIORQ()
-        {
-            if (this.IORQ.Raised())
-            {
-                this.OnLoweringIORQ();
-                this.IORQ.Lower();
-                this.OnLoweredIORQ();
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRD()
-        {
-            if (this.RD.Lowered())
-            {
-                this.OnRaisingRD();
-                this.RD.Raise();
-                this.OnRaisedRD();
-            }
-        }
-
-        public virtual void LowerRD()
-        {
-            if (this.RD.Raised())
-            {
-                this.OnLoweringRD();
-                this.RD.Lower();
-                this.OnLoweredRD();
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseWR()
-        {
-            if (this.WR.Lowered())
-            {
-                this.OnRaisingWR();
-                this.WR.Raise();
-                this.OnRaisedWR();
-            }
-        }
-
-        public virtual void LowerWR()
-        {
-            if (this.WR.Raised())
-            {
-                this.OnLoweringWR();
-                this.WR.Lower();
-                this.OnLoweredWR();
-            }
-        }
 
         public override void Execute()
         {
@@ -419,6 +192,49 @@ namespace Z80
             this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
         }
 
+        private static void WithPinChange(Func<bool> check, Action enter, Action leave, Action task)
+        {
+            if (check())
+            {
+                enter();
+                try
+                {
+                    task();
+                }
+                finally
+                {
+                    leave();
+                }
+            }
+        }
+
+        private static byte WithPin(Action enter, Action leave, Func<byte> task)
+        {
+            enter();
+            try
+            {
+                return task();
+            }
+            finally
+            {
+                leave();
+            }
+        }
+
+        #region NMI pin
+
+        public event EventHandler<EventArgs>? RaisingNMI;
+
+        public event EventHandler<EventArgs>? RaisedNMI;
+
+        public event EventHandler<EventArgs>? LoweringNMI;
+
+        public event EventHandler<EventArgs>? LoweredNMI;
+
+        private PinLevel _nmiLine = PinLevel.Low;
+
+        public ref PinLevel NMI => ref this._nmiLine;
+
         protected virtual void OnRaisingNMI() => RaisingNMI?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnRaisedNMI() => RaisedNMI?.Invoke(this, EventArgs.Empty);
@@ -426,6 +242,43 @@ namespace Z80
         protected virtual void OnLoweringNMI() => LoweringNMI?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweredNMI() => LoweredNMI?.Invoke(this, EventArgs.Empty);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseNMI()
+        {
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
+        }
+
+        public virtual void LowerNMI()
+        {
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
+        }
+
+        #endregion
+
+        #region M1 pin
+
+        public event EventHandler<EventArgs>? RaisingM1;
+
+        public event EventHandler<EventArgs>? RaisedM1;
+
+        public event EventHandler<EventArgs>? LoweringM1;
+
+        public event EventHandler<EventArgs>? LoweredM1;
+
+        private PinLevel _m1Line = PinLevel.Low;
+
+        public ref PinLevel M1 => ref this._m1Line;
 
         protected virtual void OnRaisingM1() => RaisingM1?.Invoke(this, EventArgs.Empty);
 
@@ -439,6 +292,43 @@ namespace Z80
 
         protected virtual void OnLoweredM1() => LoweredM1?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseM1()
+        {
+            WithPinChange(() => this.M1.Lowered(), this.OnRaisingM1, this.OnRaisedM1, () => this.M1.Raise());
+        }
+
+        public virtual void LowerM1()
+        {
+            WithPinChange(() => this.M1.Raised(), this.OnLoweringM1, this.OnLoweredM1, () => this.M1.Lower());
+        }
+
+        private byte WithM1(Func<byte> function)
+        {
+            return WithPin(this.LowerM1, this.RaiseM1, function);
+        }
+
+        #endregion
+
+        #region RFSH pin
+
+        public event EventHandler<EventArgs>? RaisingRFSH;
+
+        public event EventHandler<EventArgs>? RaisedRFSH;
+
+        public event EventHandler<EventArgs>? LoweringRFSH;
+
+        public event EventHandler<EventArgs>? LoweredRFSH;
+
+        // ** From the Z80 CPU User Manual
+        // RFSH.Refresh(output, active Low). RFSH, together with MREQ, indicates that the lower
+        // seven bits of the system’s address bus can be used as a _refresh address to the system’s
+        // dynamic memories.
+
+        private PinLevel _rfshLine = PinLevel.Low;
+
+        public ref PinLevel RFSH => ref this._rfshLine;
+
         protected virtual void OnRaisingRFSH() => RaisingRFSH?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnRaisedRFSH() => RaisedRFSH?.Invoke(this, EventArgs.Empty);
@@ -446,6 +336,38 @@ namespace Z80
         protected virtual void OnLoweringRFSH() => LoweringRFSH?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweredRFSH() => LoweredRFSH?.Invoke(this, EventArgs.Empty);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseRFSH()
+        {
+            WithPinChange(() => this.RFSH.Lowered(), this.OnRaisingRFSH, this.OnRaisedRFSH, () => this.RFSH.Raise());
+        }
+
+        public virtual void LowerRFSH()
+        {
+            WithPinChange(() => this.RFSH.Raised(), this.OnLoweringRFSH, this.OnLoweredRFSH, () => this.RFSH.Lower());
+        }
+
+        private byte WithRFSH(Func<byte> function)
+        {
+            return WithPin(this.LowerRFSH, this.RaiseRFSH, function);
+        }
+
+        #endregion
+
+        #region MREQ pin
+
+        public event EventHandler<EventArgs>? RaisingMREQ;
+
+        public event EventHandler<EventArgs>? RaisedMREQ;
+
+        public event EventHandler<EventArgs>? LoweringMREQ;
+
+        public event EventHandler<EventArgs>? LoweredMREQ;
+
+        private PinLevel _mreqLine = PinLevel.Low;
+
+        public ref PinLevel MREQ => ref this._mreqLine;
 
         protected virtual void OnLoweringMREQ() => LoweringMREQ?.Invoke(this, EventArgs.Empty);
 
@@ -455,6 +377,38 @@ namespace Z80
 
         protected virtual void OnRaisedMREQ() => RaisedMREQ?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseMREQ()
+        {
+            WithPinChange(() => this.MREQ.Lowered(), this.OnRaisingMREQ, this.OnRaisedMREQ, () => this.MREQ.Raise());
+        }
+
+        public virtual void LowerMREQ()
+        {
+            WithPinChange(() => this.MREQ.Raised(), this.OnLoweringMREQ, this.OnLoweredMREQ, () => this.MREQ.Lower());
+        }
+
+        private byte WithMREQ(Func<byte> function)
+        {
+            return WithPin(this.LowerMREQ, this.RaiseMREQ, function);
+        }
+
+        #endregion
+
+        #region IORQ pin
+
+        public event EventHandler<EventArgs>? RaisingIORQ;
+
+        public event EventHandler<EventArgs>? RaisedIORQ;
+
+        public event EventHandler<EventArgs>? LoweringIORQ;
+
+        public event EventHandler<EventArgs>? LoweredIORQ;
+
+        private PinLevel _iorqLine = PinLevel.Low;
+
+        public ref PinLevel IORQ => ref this._iorqLine;
+
         protected virtual void OnLoweringIORQ() => LoweringIORQ?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweredIORQ() => LoweredIORQ?.Invoke(this, EventArgs.Empty);
@@ -462,6 +416,39 @@ namespace Z80
         protected virtual void OnRaisingIORQ() => RaisingIORQ?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnRaisedIORQ() => RaisedIORQ?.Invoke(this, EventArgs.Empty);
+
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseIORQ()
+        {
+            WithPinChange(() => this.IORQ.Lowered(), this.OnRaisingIORQ, this.OnRaisedIORQ, () => this.IORQ.Raise());
+        }
+
+        public virtual void LowerIORQ()
+        {
+            WithPinChange(() => this.IORQ.Raised(), this.OnLoweringIORQ, this.OnLoweredIORQ, () => this.IORQ.Lower());
+        }
+
+        private byte WithIORQ(Func<byte> function)
+        {
+            return WithPin(this.LowerIORQ, this.RaiseIORQ, function);
+        }
+
+        #endregion
+
+        #region RD pin
+
+        public event EventHandler<EventArgs>? RaisingRD;
+
+        public event EventHandler<EventArgs>? RaisedRD;
+
+        public event EventHandler<EventArgs>? LoweringRD;
+
+        public event EventHandler<EventArgs>? LoweredRD;
+
+        private PinLevel _rdLine = PinLevel.Low;
+
+        public ref PinLevel RD => ref this._rdLine;
 
         protected virtual void OnLoweringRD() => LoweringRD?.Invoke(this, EventArgs.Empty);
 
@@ -471,6 +458,38 @@ namespace Z80
 
         protected virtual void OnRaisedRD() => RaisedRD?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseRD()
+        {
+            WithPinChange(() => this.RD.Lowered(), this.OnRaisingRD, this.OnRaisedRD, () => this.RD.Raise());
+        }
+
+        public virtual void LowerRD()
+        {
+            WithPinChange(() => this.RD.Raised(), this.OnLoweringRD, this.OnLoweredRD, () => this.RD.Lower());
+        }
+
+        private byte WithRD(Func<byte> function)
+        {
+            return WithPin(this.LowerRD, this.RaiseRD, function);
+        }
+
+        #endregion
+
+        #region WR pin
+
+        public event EventHandler<EventArgs>? RaisingWR;
+
+        public event EventHandler<EventArgs>? RaisedWR;
+
+        public event EventHandler<EventArgs>? LoweringWR;
+
+        public event EventHandler<EventArgs>? LoweredWR;
+
+        private PinLevel _wrLine = PinLevel.Low;
+
+        public ref PinLevel WR => ref this._wrLine;
+
         protected virtual void OnLoweringWR() => LoweringWR?.Invoke(this, EventArgs.Empty);
 
         protected virtual void OnLoweredWR() => LoweredWR?.Invoke(this, EventArgs.Empty);
@@ -479,25 +498,55 @@ namespace Z80
 
         protected virtual void OnRaisedWR() => RaisedWR?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public virtual void RaiseWR()
+        {
+            WithPinChange(() => this.WR.Lowered(), this.OnRaisingWR, this.OnRaisedWR, () => this.WR.Raise());
+        }
+
+        public virtual void LowerWR()
+        {
+            WithPinChange(() => this.WR.Raised(), this.OnLoweringWR, this.OnLoweredWR, () => this.WR.Lower());
+        }
+
+        private byte WithWR(Func<byte> function)
+        {
+            this.LowerWR();
+            try
+            {
+                return function();
+            }
+            finally
+            {
+                this.RaiseWR();
+            }
+        }
+
+        #endregion
+
         protected override void MemoryWrite()
         {
-            this.Tick(3);
-            this.LowerMREQ();
-            this.LowerWR();
-            base.MemoryWrite();
-            this.RaiseWR();
-            this.RaiseMREQ();
+            _ = this.WithMREQ(() =>
+            {
+                return this.WithWR(() =>
+                {
+                    this.Tick(3);
+                    base.MemoryWrite();
+                    return 0;
+                });
+            });
         }
 
         protected override byte MemoryRead()
         {
-            this.Tick(3);
-            this.LowerMREQ();
-            this.LowerRD();
-            var returned = base.MemoryRead();
-            this.RaiseRD();
-            this.RaiseMREQ();
-            return returned;
+            return this.WithMREQ(() =>
+            {
+                return this.WithRD(() =>
+                {
+                    this.Tick(3);
+                    return base.MemoryRead();
+                });
+            });
         }
 
         protected override void HandleRESET()
@@ -512,11 +561,15 @@ namespace Z80
         protected override void HandleINT()
         {
             base.HandleINT();
-            this.LowerM1();
-            this.LowerIORQ();
-            var data = this.Bus.Data;
-            this.RaiseIORQ();
-            this.RaiseM1();
+
+            var data = this.WithM1(() =>
+            {
+                return this.WithIORQ(() =>
+                {
+                    return this.Bus.Data;
+                });
+            });
+
             this.DisableInterrupts();
             this.Tick(5);
             switch (this.IM)
@@ -1670,14 +1723,18 @@ namespace Z80
         private byte ReadInitialOpCode()
         {
             this.Tick();
-            this.LowerM1();
-            var returned = this.MemoryRead(this.PC);
-            this.RaiseM1();
+            var returned = this.WithM1(() =>
+            {
+                return this.MemoryRead(this.PC);
+            });
             this.Bus.Address.Assign(this.REFRESH, this.IV);
-            this.LowerRFSH();
-            this.LowerMREQ();
-            this.RaiseMREQ();
-            this.RaiseRFSH();
+            _ = this.WithRFSH(() =>
+            {
+                return this.WithMREQ(() =>
+                {
+                    return 0;
+                });
+            });
             return returned;
         }
 
