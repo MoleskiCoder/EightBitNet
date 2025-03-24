@@ -20,6 +20,7 @@ namespace EightBit
             {
                 this._decodedOpCodes[i] = new((byte)i);
             }
+            this.RaisedPOWER += this.IntelProcessor_RaisedPOWER;
         }
 
         public event EventHandler<EventArgs>? RaisingHALT;
@@ -67,9 +68,10 @@ namespace EightBit
         {
             if (this.HALT.Lowered())
             {
-                this.OnRaisingHALT();
+                RaisingHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Raise();
-                this.OnRaisedHALT();
+                ++this.PC.Word; // Release the PC from HALT instruction
+                RaisedHALT?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -77,9 +79,10 @@ namespace EightBit
         {
             if (this.HALT.Raised())
             {
-                this.OnLoweringHALT();
+                LoweringHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Lower();
-                this.OnLoweredHALT();
+                --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
+                LoweredHALT?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -102,27 +105,10 @@ namespace EightBit
             return HalfCarryTableSub[index & (int)Mask.Three];
         }
 
-        protected override void OnRaisedPOWER()
+        private void IntelProcessor_RaisedPOWER(object? sender, EventArgs e)
         {
             this.PC.Word = this.SP.Word = this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
             this.RaiseHALT();
-            base.OnRaisedPOWER();
-        }
-
-        protected virtual void OnRaisingHALT() => RaisingHALT?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedHALT()
-        {
-            ++this.PC.Word; // Release the PC from HALT instruction
-            RaisedHALT?.Invoke(this, EventArgs.Empty);
-        }
-
-        protected virtual void OnLoweringHALT() => LoweringHALT?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredHALT()
-        {
-            --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
-            LoweredHALT?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void HandleRESET()

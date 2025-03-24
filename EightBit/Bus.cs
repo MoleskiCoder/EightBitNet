@@ -28,7 +28,6 @@ namespace EightBit
 
         public byte Peek(Register16 absolute)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
             return this.Peek(absolute.Word);
         }
 
@@ -38,7 +37,6 @@ namespace EightBit
 
         public void Poke(Register16 absolute, byte value)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
             this.Poke(absolute.Word, value);
         }
 
@@ -58,7 +56,6 @@ namespace EightBit
 
         public byte Read(Register16 absolute)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
             return this.Read(absolute.Low, absolute.High);
         }
 
@@ -89,7 +86,6 @@ namespace EightBit
 
         public void Write(Register16 absolute, byte value)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
             this.Write(absolute.Low, absolute.High, value);
         }
 
@@ -133,7 +129,6 @@ namespace EightBit
 
         protected ref byte Reference(Register16 absolute)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
             return ref this.Reference(absolute.Word);
         }
 

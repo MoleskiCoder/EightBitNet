@@ -15,7 +15,6 @@ namespace EightBit
 
         public override void PokeWord(ushort address, Register16 value)
         {
-            ArgumentNullException.ThrowIfNull(value);
             this.Bus.Poke(address, value.Low);
             this.Bus.Poke(++address, value.High);
         }
@@ -52,14 +51,12 @@ namespace EightBit
 
         protected override void PushWord(Register16 value)
         {
-            ArgumentNullException.ThrowIfNull(value);
             this.Push(value.High);
             this.Push(value.Low);
         }
 
         protected override void SetWord(Register16 value)
         {
-            ArgumentNullException.ThrowIfNull(value);
             this.MemoryWrite(value.Low);
             ++this.Bus.Address.Word;
             this.MemoryWrite(value.High);
@@ -67,7 +64,6 @@ namespace EightBit
 
         protected override void SetWordPaged(Register16 value)
         {
-            ArgumentNullException.ThrowIfNull(value);
             this.MemoryWrite(value.Low);
             ++this.Bus.Address.Low;
             this.MemoryWrite(value.High);

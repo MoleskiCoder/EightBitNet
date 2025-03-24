@@ -8,8 +8,14 @@ namespace M6502
 {
     using EightBit;
 
-    public abstract class Core(Bus bus) : LittleEndianProcessor(bus)
+    public abstract class Core : LittleEndianProcessor
     {
+        protected Core(Bus bus)
+        : base(bus)
+        {
+            this.RaisedPOWER += this.Core_RaisedPOWER;
+        }
+
         #region Pin controls
 
         #region NMI pin
@@ -104,16 +110,22 @@ namespace M6502
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         protected virtual void RaiseSYNC()
         {
-            this.OnRaisingSYNC();
-            this.SYNC.Raise();
-            this.OnRaisedSYNC();
+            if (this.SYNC.Lowered())
+            {
+                RaisingSYNC?.Invoke(this, EventArgs.Empty);
+                this.SYNC.Raise();
+                RaisedSYNC?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         protected virtual void LowerSYNC()
         {
-            this.OnLoweringSYNC();
-            this.SYNC.Lower();
-            this.OnLoweredSYNC();
+            if (this.SYNC.Raised())
+            {
+                LoweringSYNC?.Invoke(this, EventArgs.Empty);
+                this.SYNC.Lower();
+                LoweredSYNC?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         #endregion
@@ -190,7 +202,7 @@ namespace M6502
 
         #endregion
 
-        protected override void OnRaisedPOWER()
+        private void Core_RaisedPOWER(object? sender, EventArgs e)
         {
             this.X = (byte)Bits.Bit7;
             this.Y = 0;
@@ -199,7 +211,6 @@ namespace M6502
             this.S = (byte)Mask.Eight;
             this.LowerSYNC();
             this.LowerRW();
-            base.OnRaisedPOWER();
         }
 
         #endregion
@@ -551,9 +562,7 @@ namespace M6502
 
         private void FetchInstruction()
         {
-            // Instruction fetch beginning
             this.LowerSYNC();
-
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "An extra cycle has occurred");
 
             // Can't use fetchByte, since that would add an extra tick.
@@ -561,8 +570,6 @@ namespace M6502
             this.OpCode = this.ReadFromBus();
 
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
-
-            // Instruction fetch has now completed
             this.RaiseSYNC();
         }
 

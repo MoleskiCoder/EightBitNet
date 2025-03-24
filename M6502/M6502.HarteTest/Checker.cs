@@ -282,13 +282,9 @@
             }
         }
 
-        private void Runner_ReadByte(object? sender, EventArgs e) => this.AddActualReadCycle(this.Runner.Address, this.Runner.Data);
+        private void Runner_ReadByte(object? sender, EventArgs e) => this.AddActualCycle(this.Runner.Address, this.Runner.Data, "read");
 
-        private void Runner_WrittenByte(object? sender, EventArgs e) => this.AddActualWriteCycle(this.Runner.Address, this.Runner.Data);
-
-        private void AddActualReadCycle(EightBit.Register16 address, byte value) => this.AddActualCycle(address, value, "read");
-
-        private void AddActualWriteCycle(EightBit.Register16 address, byte value) => this.AddActualCycle(address, value, "write");
+        private void Runner_WrittenByte(object? sender, EventArgs e) => this.AddActualCycle(this.Runner.Address, this.Runner.Data, "write");
 
         private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Word, value, action);
 

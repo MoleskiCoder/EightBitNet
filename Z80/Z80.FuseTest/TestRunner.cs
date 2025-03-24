@@ -98,21 +98,30 @@ namespace Z80.FuseTest
 
         public override void Initialize()
         {
+            this.ReadByte += this.Event_ReadByte;
+            this.WrittenByte += this.Event_WrittenByte;
             this.ports.ReadPort += this.Ports_ReadPort;
             this.ports.WrittenPort += this.Ports_WrittenPort;
             this.cpu.ExecutedInstruction += this.Cpu_ExecutedInstruction;
         }
 
-        protected override void OnReadByte()
-        {
-            this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "MR", this.Address.Word, this.Data));
-            base.OnReadByte();
-        }
+        private void Ports_ReadPort(object? sender, EventArgs e) => this.AddActualEvent("PR");
+        private void Ports_WrittenPort(object? sender, EventArgs e) => this.AddActualEvent("PW");
+        private void Event_ReadByte(object? sender, EventArgs e) => this.AddActualEvent("MR");
+        private void Event_WrittenByte(object? sender, EventArgs e) => this.AddActualEvent("MW");
 
-        protected override void OnWrittenByte()
+        private void AddActualEvent(string specifier)
         {
-            this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "MW", this.Address.Word, this.Data));
-            base.OnWrittenByte();
+            var address = this.Address.Word;
+            var cycles = this.totalCycles + this.cpu.Cycles;
+            if (specifier.EndsWith('C'))
+            {
+                this.actualEvents.Add(new TestEvent(cycles, specifier, address));
+            }
+            else
+            {
+                this.actualEvents.Add(new TestEvent(cycles, specifier, address, this.Data));
+            }
         }
 
         private static void DumpDifference(string description, byte expected, byte actual)
@@ -121,11 +130,12 @@ namespace Z80.FuseTest
             Console.Error.WriteLine(output);
         }
 
-        private void Ports_WrittenPort(object? sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PW", this.Address.Word, this.Data));
-
-        private void Ports_ReadPort(object? sender, EightBit.PortEventArgs e) => this.actualEvents.Add(new TestEvent(this.totalCycles + this.cpu.Cycles, "PR", this.Address.Word, this.Data));
-
-        private void Cpu_ExecutedInstruction(object? sender, EventArgs e) => this.totalCycles += this.cpu.Cycles;
+        private void Cpu_ExecutedInstruction(object? sender, EventArgs e)
+        {
+            var output = $"**** Cycle count: {this.cpu.Cycles}";
+            Console.Out.WriteLine(output);
+            this.totalCycles += this.cpu.Cycles;
+        }
 
         private static void DumpDifference(string highDescription, string lowDescription, EightBit.Register16 expected, EightBit.Register16 actual)
         {

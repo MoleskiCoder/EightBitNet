@@ -10,57 +10,9 @@ namespace EightBit
 
         public event EventHandler<EventArgs>? ExecutingInstruction;
         public event EventHandler<EventArgs>? ExecutedInstruction;
-        protected virtual void OnExecutedInstruction() => ExecutedInstruction?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnExecutingInstruction() => ExecutingInstruction?.Invoke(this, EventArgs.Empty);
 
         #endregion
 
-        #region Bus events
-
-        #region Memory events
-
-        #region Memory read events
-
-        public event EventHandler<EventArgs>? ReadingMemory;
-        public event EventHandler<EventArgs>? ReadMemory;
-        protected virtual void OnReadingMemory() => ReadingMemory?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnReadMemory() => ReadMemory?.Invoke(this, EventArgs.Empty);
-
-        #endregion
-
-        #region Memory write events
-
-        public event EventHandler<EventArgs>? WritingMemory;
-        public event EventHandler<EventArgs>? WrittenMemory;
-        protected virtual void OnWritingMemory() => WritingMemory?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnWrittenMemory() => WrittenMemory?.Invoke(this, EventArgs.Empty);
-
-        #endregion
-
-        #endregion
-
-        #region IO events
-
-        #region IO read events
-
-        public event EventHandler<EventArgs>? ReadingIO;
-        public event EventHandler<EventArgs>? ReadIO;
-        protected virtual void OnReadingIO() => ReadingIO?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnReadIO() => ReadIO?.Invoke(this, EventArgs.Empty);
-
-        #endregion
-
-        #region IO write events
-
-        public event EventHandler<EventArgs>? WritingIO;
-        public event EventHandler<EventArgs>? WrittenIO;
-        protected virtual void OnWritingIO() => WritingIO?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnWrittenIO() => WrittenIO?.Invoke(this, EventArgs.Empty);
-        #endregion
-
-        #endregion
-
-        #endregion
 
         private PinLevel _resetLine;
         private PinLevel _intLine;
@@ -108,12 +60,12 @@ namespace EightBit
         public virtual int Step()
         {
             this.ResetCycles();
-            this.OnExecutingInstruction();
+            ExecutingInstruction?.Invoke(this, EventArgs.Empty);
             if (this.Powered)
             {
                 this.PoweredStep();
             }
-            this.OnExecutedInstruction();
+            ExecutedInstruction?.Invoke(this, EventArgs.Empty);
             return this.Cycles;
         }
 
@@ -149,9 +101,9 @@ namespace EightBit
         {
             if (this.RESET.Lowered())
             {
-                this.OnRaisingRESET();
+                RaisingRESET?.Invoke(this, EventArgs.Empty);
                 this.RESET.Raise();
-                this.OnRaisedRESET();
+                RaisedRESET?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -159,9 +111,9 @@ namespace EightBit
         {
             if (this.RESET.Raised())
             {
-                this.OnLoweringRESET();
+                LoweringRESET?.Invoke(this, EventArgs.Empty);
                 this.RESET.Lower();
-                this.OnLoweredRESET();
+                LoweredRESET?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -170,9 +122,9 @@ namespace EightBit
         {
             if (this.INT.Lowered())
             {
-                this.OnRaisingINT();
+                RaisingINT?.Invoke(this, EventArgs.Empty);
                 this.INT.Raise();
-                this.OnRaisedINT();
+                RaisedINT?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -180,9 +132,9 @@ namespace EightBit
         {
             if (this.INT.Raised())
             {
-                this.OnLoweringINT();
+                LoweringINT?.Invoke(this, EventArgs.Empty);
                 this.INT.Lower();
-                this.OnLoweredINT();
+                LoweredINT?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -226,13 +178,11 @@ namespace EightBit
 
         protected void MemoryWrite(Register16 address, byte data)
         {
-            ArgumentNullException.ThrowIfNull(address);
             this.MemoryWrite(address.Low, address.High, data);
         }
 
         protected void MemoryWrite(Register16 address)
         {
-            ArgumentNullException.ThrowIfNull(address);
             this.MemoryWrite(address.Low, address.High);
         }
 
@@ -260,7 +210,6 @@ namespace EightBit
 
         protected byte MemoryRead(Register16 address)
         {
-            ArgumentNullException.ThrowIfNull(address);
             return this.MemoryRead(address.Low, address.High);
         }
 
@@ -286,7 +235,6 @@ namespace EightBit
 
         protected Register16 GetWordPaged(Register16 address)
         {
-            ArgumentNullException.ThrowIfNull(address);
             return this.GetWordPaged(address.High, address.Low);
         }
 
@@ -300,7 +248,6 @@ namespace EightBit
 
         protected void SetWordPaged(Register16 address, Register16 value)
         {
-            ArgumentNullException.ThrowIfNull(address);
             this.SetWordPaged(address.High, address.Low, value);
         }
 
@@ -354,7 +301,6 @@ namespace EightBit
 
         protected void Jump(Register16 destination)
         {
-            ArgumentNullException.ThrowIfNull(destination);
             this.PC.Assign(destination);
         }
 
