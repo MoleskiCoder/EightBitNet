@@ -21,10 +21,13 @@
   <ItemGroup>
     <Compile Remove="LR35902.BlarggTest\**" />
     <Compile Remove="LR35902.FuseTest\**" />
+    <Compile Remove="SM83.HarteTest\**" />
     <EmbeddedResource Remove="LR35902.BlarggTest\**" />
     <EmbeddedResource Remove="LR35902.FuseTest\**" />
+    <EmbeddedResource Remove="SM83.HarteTest\**" />
     <None Remove="LR35902.BlarggTest\**" />
     <None Remove="LR35902.FuseTest\**" />
+    <None Remove="SM83.HarteTest\**" />
   </ItemGroup>
 
   <ItemGroup>

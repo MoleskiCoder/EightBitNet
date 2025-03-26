@@ -5,14 +5,29 @@
 namespace LR35902
 {
     using EightBit;
+    using System.Diagnostics;
 
-    public sealed class LR35902(Bus bus) : IntelProcessor(bus)
+    public sealed class LR35902 : IntelProcessor
     {
-        private readonly Bus bus = bus;
+        public LR35902(Bus bus)
+        : base(bus)
+        {
+            this.bus = bus;
+            this.RaisedPOWER += this.LR35902_RaisedPOWER;
+        }
+
+        private void LR35902_RaisedPOWER(object? sender, EventArgs e)
+        {
+            this.RaiseWR();
+            this.RaiseRD();
+            this.RaiseMWR();
+        }
+
+        private readonly Bus bus;
         private readonly Register16 af = new((int)Mask.Sixteen);
         private bool prefixCB;
 
-        public int ClockCycles => this.Cycles * 4;
+        public int MachineCycles => this.Cycles / 4;
 
         public override Register16 AF
         {
@@ -29,9 +44,144 @@ namespace LR35902
 
         public override Register16 HL { get; } = new Register16((int)Mask.Sixteen);
 
-        private bool IME { get; set; }
+        public bool IME { get; set; }
+
+        public byte IE
+        {
+            get
+            {
+                return this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
+            }
+            set
+            {
+                this.Bus.Poke(IoRegisters.BASE + IoRegisters.IE, value);
+            }
+        }
+
+        public byte IF
+        {
+            get
+            {
+                return this.bus.IO.Peek(IoRegisters.IF);
+            }
+            set
+            {
+                this.bus.IO.Poke(IoRegisters.IF, value);
+            }
+        }
 
         private bool Stopped { get; set; }
+
+        #region MWR pin
+
+        public event EventHandler<EventArgs>? RaisingMWR;
+
+        public event EventHandler<EventArgs>? RaisedMWR;
+
+        public event EventHandler<EventArgs>? LoweringMWR;
+
+        public event EventHandler<EventArgs>? LoweredMWR;
+
+        private PinLevel _mwrLine = PinLevel.Low;
+
+        public ref PinLevel MWR => ref this._mwrLine;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public void RaiseMWR()
+        {
+            if (this.MWR.Lowered())
+            {
+                RaisingMWR?.Invoke(this, EventArgs.Empty);
+                this.MWR.Raise();
+                RaisedMWR?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public void LowerMWR()
+        {
+            if (this.MWR.Raised())
+            {
+                LoweringMWR?.Invoke(this, EventArgs.Empty);
+                this.MWR.Lower();
+                LoweredMWR?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        #endregion
+
+        #region RD pin
+
+        public event EventHandler<EventArgs>? RaisingRD;
+
+        public event EventHandler<EventArgs>? RaisedRD;
+
+        public event EventHandler<EventArgs>? LoweringRD;
+
+        public event EventHandler<EventArgs>? LoweredRD;
+
+        private PinLevel _rdLine = PinLevel.Low;
+
+        public ref PinLevel RD => ref this._rdLine;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public void RaiseRD()
+        {
+            if (this.RD.Lowered())
+            {
+                RaisingRD?.Invoke(this, EventArgs.Empty);
+                this.RD.Raise();
+                RaisedRD?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public void LowerRD()
+        {
+            if (this.RD.Raised())
+            {
+                LoweringRD?.Invoke(this, EventArgs.Empty);
+                this.RD.Lower();
+                LoweredRD?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        #endregion
+
+        #region WR pin
+
+        public event EventHandler<EventArgs>? RaisingWR;
+
+        public event EventHandler<EventArgs>? RaisedWR;
+
+        public event EventHandler<EventArgs>? LoweringWR;
+
+        public event EventHandler<EventArgs>? LoweredWR;
+
+        private PinLevel _wrLine = PinLevel.Low;
+
+        public ref PinLevel WR => ref this._wrLine;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        public void RaiseWR()
+        {
+            if (this.WR.Lowered())
+            {
+                RaisingWR?.Invoke(this, EventArgs.Empty);
+                this.WR.Raise();
+                RaisedWR?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public void LowerWR()
+        {
+            if (this.WR.Raised())
+            {
+                LoweringWR?.Invoke(this, EventArgs.Empty);
+                this.WR.Lower();
+                LoweredWR?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        #endregion
 
         public override void Execute()
         {
@@ -60,15 +210,12 @@ namespace LR35902
         {
             this.prefixCB = false;
 
-            var interruptEnable = this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
-            var interruptFlags = this.bus.IO.Peek(IoRegisters.IF);
-
-            var masked = (byte)(interruptEnable & interruptFlags);
+            var masked = (byte)(this.IE & this.IF);
             if (masked != 0)
             {
                 if (this.IME)
                 {
-                    this.bus.IO.Poke(IoRegisters.IF, 0);
+                    this.IF = 0;
                     this.LowerINT();
                     var index = FindFirstSet(masked);
                     this.Bus.Data = (byte)(0x38 + (index << 3));
@@ -138,14 +285,23 @@ namespace LR35902
 
         protected override void MemoryWrite()
         {
-            this.TickMachine();
+            this.LowerMWR();
+            this.LowerWR();
             base.MemoryWrite();
+            this.TickMachine();
+            this.RaiseWR();
+            this.RaiseMWR();
         }
 
         protected override byte MemoryRead()
         {
+            this.LowerMWR();
+            this.LowerRD();
+            var returned = base.MemoryRead();
             this.TickMachine();
-            return base.MemoryRead();
+            this.RaiseRD();
+            this.RaiseMWR();
+            return returned;
         }
 
         protected override void PushWord(Register16 value)

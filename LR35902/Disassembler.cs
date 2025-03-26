@@ -236,7 +236,7 @@ namespace LR35902
             return output;
         }
 
-        private string Disassemble(LR35902 cpu, ushort pc)
+        public string Disassemble(LR35902 cpu, ushort pc)
         {
             var opCode = this.Bus.Peek(pc);
 
