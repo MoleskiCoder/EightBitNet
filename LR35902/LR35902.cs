@@ -48,26 +48,14 @@ namespace LR35902
 
         public byte IE
         {
-            get
-            {
-                return this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
-            }
-            set
-            {
-                this.Bus.Poke(IoRegisters.BASE + IoRegisters.IE, value);
-            }
+            get => this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
+            set => this.Bus.Poke(IoRegisters.BASE + IoRegisters.IE, value);
         }
 
         public byte IF
         {
-            get
-            {
-                return this.bus.IO.Peek(IoRegisters.IF);
-            }
-            set
-            {
-                this.bus.IO.Poke(IoRegisters.IF, value);
-            }
+            get => this.bus.IO.Peek(IoRegisters.IF);
+            set => this.bus.IO.Poke(IoRegisters.IF, value);
         }
 
         private bool Stopped { get; set; }
@@ -327,8 +315,8 @@ namespace LR35902
 
         protected override bool ReturnConditional(bool condition)
         {
-            _ = base.ReturnConditional(condition);
             this.TickMachine();
+            _ = base.ReturnConditional(condition);
             return condition;
         }
 
@@ -336,7 +324,7 @@ namespace LR35902
         {
             if (!base.JumpRelativeConditional(condition))
             {
-                this.TickMachine();
+                this.MemoryRead(this.PC);
             }
             return condition;
         }
@@ -504,6 +492,7 @@ namespace LR35902
                                     break;
                                 case 2: // GB: STOP
                                     this.Stop();
+                                    this.TickMachine(2);
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative((sbyte)this.FetchByte());
@@ -654,6 +643,7 @@ namespace LR35902
                     if (z == 6 && y == 6)
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
+                        this.TickMachine(2);
                     }
                     else
                     {
@@ -819,11 +809,9 @@ namespace LR35902
                                     break;
                                 case 6: // DI
                                     this.DI();
-                                    //this.Tick();
                                     break;
                                 case 7: // EI
                                     this.EI();
-                                    //this.Tick();
                                     break;
                                 default:
                                     break;
