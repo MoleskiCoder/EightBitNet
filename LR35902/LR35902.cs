@@ -643,6 +643,7 @@ namespace LR35902
                     if (z == 6 && y == 6)
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
+                        this.PC.Word++;
                         this.TickMachine(2);
                     }
                     else
