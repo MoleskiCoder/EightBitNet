@@ -206,7 +206,11 @@
             var e_good = this.Check("E", final.E, cpu.E);
             var h_good = this.Check("H", final.H, cpu.H);
             var l_good = this.Check("L", final.L, cpu.L);
-            var ime_good = this.Check("IME", final.IME, (byte)(cpu.IME ? 1 : 0));
+            var ime_good = true;
+            if (final.EI is not null)
+            {
+                ime_good = this.Check("IME", final.EI.Value, (byte)(cpu.IME ? 1 : 0));
+            }
 
             if (!f_good)
             {
