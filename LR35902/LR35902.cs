@@ -369,7 +369,7 @@ namespace LR35902
             3 => this.E,
             4 => this.H,
             5 => this.L,
-            6 => this.MemoryRead(this.HL.Word),
+            6 => this.MemoryRead(this.HL),
             7 => this.A,
             _ => throw new ArgumentOutOfRangeException(nameof(r)),
         };
@@ -397,7 +397,7 @@ namespace LR35902
                     this.L = value;
                     break;
                 case 6:
-                    this.MemoryWrite(this.HL.Word, value);
+                    this.MemoryWrite(this.HL, value);
                     break;
                 case 7:
                     this.A = value;
@@ -446,8 +446,8 @@ namespace LR35902
                         };
                         this.R(z, operand);
                         this.F = AdjustZero(this.F, operand);
-                        break;
                     }
+                    break;
 
                 case 1: // BIT y, r[z]
                     this.Bit(y, this.R(z));
@@ -479,7 +479,7 @@ namespace LR35902
                                 case 0: // NOP
                                     break;
                                 case 1: // GB: LD (nn),SP
-                                    this.Bus.Address.Word = this.FetchWord().Word;
+                                    this.Bus.Address.Assign(this.FetchWord());
                                     this.SetWord(this.SP);
                                     break;
                                 case 2: // GB: STOP
@@ -505,7 +505,7 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    this.RP(p).Word = this.FetchWord().Word;
+                                    this.RP(p).Assign(this.FetchWord());
                                     break;
 
                                 case 1: // ADD HL,rp
@@ -733,7 +733,7 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    this.RP2(p).Word = this.PopWord().Word;
+                                    this.RP2(p).Assign(this.PopWord());
                                     break;
                                 case 1:
                                     switch (p)
@@ -745,10 +745,10 @@ namespace LR35902
                                             this.RetI();
                                             break;
                                         case 2: // JP HL
-                                            this.Jump(this.HL.Word);
+                                            this.Jump(this.HL);
                                             break;
                                         case 3: // LD SP,HL
-                                            this.SP.Word = this.HL.Word;
+                                            this.SP.Assign(this.HL);
                                             this.TickMachine();
                                             break;
                                         default:
@@ -775,14 +775,16 @@ namespace LR35902
                                     this.MemoryWrite((ushort)(IoRegisters.BASE + this.C), this.A);
                                     break;
                                 case 5: // GB: LD (nn),A
-                                    this.Bus.Address.Word = this.MEMPTR.Word = this.FetchWord().Word;
+                                    this.MEMPTR.Assign(this.FetchWord());
+                                    this.Bus.Address.Assign(this.MEMPTR);
                                     this.MemoryWrite(this.A);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
                                     this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.C));
                                     break;
                                 case 7: // GB: LD A,(nn)
-                                    this.Bus.Address.Word = this.MEMPTR.Word = this.FetchWord().Word;
+                                    this.MEMPTR.Assign(this.FetchWord());
+                                    this.Bus.Address.Assign(this.MEMPTR);
                                     this.A = this.MemoryRead();
                                     break;
                                 default:
@@ -943,7 +945,7 @@ namespace LR35902
         {
             this.TickMachine();
 
-            this.MEMPTR.Word = operand.Word;
+            this.MEMPTR.Assign(operand);
 
             var result = this.MEMPTR.Word + value.Word;
 
