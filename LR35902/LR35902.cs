@@ -45,10 +45,12 @@ namespace LR35902
 
         public bool IME { get; set; }
 
+        private static readonly Register16 _addressIE = new(IoRegisters.IE, IoRegisters.BasePage);
+
         public byte IE
         {
-            get => this.Bus.Peek(IoRegisters.BASE + IoRegisters.IE);
-            set => this.Bus.Poke(IoRegisters.BASE + IoRegisters.IE, value);
+            get => this.Bus.Peek(_addressIE);
+            set => this.Bus.Poke(_addressIE, value);
         }
 
         public byte IF
@@ -689,7 +691,7 @@ namespace LR35902
                                     break;
 
                                 case 4: // GB: LD (FF00 + n),A
-                                    this.MemoryWrite((ushort)(IoRegisters.BASE + this.FetchByte()), this.A);
+                                    this.MemoryWrite(this.FetchByte(), IoRegisters.BasePage, this.A);
                                     break;
 
                                 case 5:
@@ -707,7 +709,7 @@ namespace LR35902
                                     break;
 
                                 case 6: // GB: LD A,(FF00 + n)
-                                    this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.FetchByte()));
+                                    this.A = this.MemoryRead(this.FetchByte(), IoRegisters.BasePage);
                                     break;
 
                                 case 7:
@@ -772,7 +774,7 @@ namespace LR35902
                                     _ = this.JumpConditionalFlag(y);
                                     break;
                                 case 4: // GB: LD (FF00 + C),A
-                                    this.MemoryWrite((ushort)(IoRegisters.BASE + this.C), this.A);
+                                    this.MemoryWrite(this.C, IoRegisters.BasePage, this.A);
                                     break;
                                 case 5: // GB: LD (nn),A
                                     this.MEMPTR.Assign(this.FetchWord());
@@ -780,7 +782,7 @@ namespace LR35902
                                     this.MemoryWrite(this.A);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
-                                    this.A = this.MemoryRead((ushort)(IoRegisters.BASE + this.C));
+                                    this.A = this.MemoryRead(this.C, IoRegisters.BasePage);
                                     break;
                                 case 7: // GB: LD A,(nn)
                                     this.MEMPTR.Assign(this.FetchWord());

@@ -8,7 +8,11 @@ namespace LR35902
 
     public sealed class IoRegisters : Ram
     {
-        public const int BASE = 0xFF00;
+        public const byte BasePage = 0xFF;
+
+        private static readonly ushort _base = Chip.PromoteByte(BasePage);
+
+        public static ushort BASE => _base;
 
         // Port/Mode Registers
         public const int P1 = 0x0;       // R/W Mask5
@@ -343,7 +347,7 @@ namespace LR35902
         private void Bus_ReadingByte(object? sender, EventArgs e)
         {
             var address = this.bus.Address.Word;
-            var io = address is >= BASE and < 0xff80;
+            var io = address >= BASE && address < 0xff80;
             if (io)
             {
                 var port = (ushort)(address - BASE);
