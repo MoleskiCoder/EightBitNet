@@ -41,6 +41,7 @@ namespace LR35902
         {
             this.IO = new IoRegisters(this);
             this.CPU = new LR35902(this);
+            this.CPU.MachineTicked += this.CPU_MachineTicked;
         }
 
         public LR35902 CPU { get; }
@@ -230,6 +231,12 @@ namespace LR35902
                 default:
                     break;
             }
+        }
+
+        private void CPU_MachineTicked(object? sender, EventArgs e)
+        {
+            this.IO.IncrementTimers();
+            this.IO.TransferDma();
         }
 
         private void ValidateCartridgeType()

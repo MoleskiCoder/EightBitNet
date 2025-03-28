@@ -5,7 +5,6 @@
 namespace LR35902
 {
     using EightBit;
-    using System.Diagnostics;
 
     public sealed class LR35902 : IntelProcessor
     {
@@ -250,13 +249,6 @@ namespace LR35902
 
         public event EventHandler<EventArgs>? MachineTicked;
 
-        private void OnMachineTicked()
-        {
-            MachineTicked?.Invoke(this, EventArgs.Empty);
-            this.bus.IO.IncrementTimers();
-            this.bus.IO.TransferDma();
-        }
-
         private void TickMachine(int extra)
         {
             for (var i = 0; i < extra; ++i)
@@ -268,7 +260,7 @@ namespace LR35902
         private void TickMachine()
         {
             this.Tick(4);
-            this.OnMachineTicked();
+            MachineTicked?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void MemoryWrite()
