@@ -287,70 +287,73 @@ namespace LR35902
 
         private void Bus_WrittenByte(object? sender, EventArgs e)
         {
-            var address = this.bus.Address.Word;
-            var value = this.bus.Data;
-            var port = (ushort)(address - BASE);
-
-            switch (port)
+            var page = this.bus.Address.High;
+            var port = this.bus.Address.Low;
+            var io = (page == BasePage) && (port < 0x80);
+            if (io)
             {
-                case P1:
-                    this.scanP14 = (value & (byte)Bits.Bit4) == 0;
-                    this.scanP15 = (value & (byte)Bits.Bit5) == 0;
-                    break;
+                var value = this.bus.Data;
+                switch (port)
+                {
+                    case P1:
+                        this.scanP14 = (value & (byte)Bits.Bit4) == 0;
+                        this.scanP15 = (value & (byte)Bits.Bit5) == 0;
+                        break;
 
-                case SB: // R/W
-                case SC: // R/W
-                    break;
+                    case SB: // R/W
+                    case SC: // R/W
+                        break;
 
-                case DIV: // R/W
-                    this.Poke(port, 0);
-                    this.timerCounter = this.divCounter.Word = 0;
-                    break;
-                case TIMA: // R/W
-                    break;
-                case TMA: // R/W
-                    break;
-                case TAC: // R/W
-                    timerRate = this.TimerClockTicks;
-                    break;
+                    case DIV: // R/W
+                        this.Poke(port, 0);
+                        this.timerCounter = this.divCounter.Word = 0;
+                        break;
+                    case TIMA: // R/W
+                        break;
+                    case TMA: // R/W
+                        break;
+                    case TAC: // R/W
+                        timerRate = this.TimerClockTicks;
+                        break;
 
-                case IF: // R/W
-                    break;
+                    case IF: // R/W
+                        break;
 
-                case LCDC:
-                case STAT:
-                case SCY:
-                case SCX:
-                    break;
-                case DMA:
-                    this.dmaAddress.Word = Chip.PromoteByte(value);
-                    this.dmaTransferActive = true;
-                    break;
-                case LY: // R/O
-                    this.Poke(port, 0);
-                    break;
-                case BGP:
-                case OBP0:
-                case OBP1:
-                case WY:
-                case WX:
-                    break;
+                    case LCDC:
+                    case STAT:
+                    case SCY:
+                    case SCX:
+                        break;
+                    case DMA:
+                        this.dmaAddress.Word = Chip.PromoteByte(value);
+                        this.dmaTransferActive = true;
+                        break;
+                    case LY: // R/O
+                        this.Poke(port, 0);
+                        break;
+                    case BGP:
+                    case OBP0:
+                    case OBP1:
+                    case WY:
+                    case WX:
+                        break;
 
-                case BOOT_DISABLE:
-                    this.BootRomDisabled = value != 0;
-                    break;
-                default:
-                    break;
+                    case BOOT_DISABLE:
+                        this.BootRomDisabled = value != 0;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
         private void Bus_ReadingByte(object? sender, EventArgs e)
         {
-            var address = this.bus.Address.Word;
-            var io = address >= BASE && address < 0xff80;
+            var page = this.bus.Address.High;
+            var port = this.bus.Address.Low;
+            var io = (page == BasePage) && (port < 0x80);
             if (io)
             {
-                var port = (ushort)(address - BASE);
                 switch (port)
                 {
                     // Port/Mode Registers

@@ -6,8 +6,16 @@ namespace M6502
 {
     using EightBit;
 
-    public class WDC65C02(Bus bus) : Core(bus)
+    public class WDC65C02 : Core
     {
+        public WDC65C02(Bus bus)
+        : base(bus)
+        {
+            this.LoweredRESET += this.WDC65C02_LoweredRESET;
+            this.LoweredINT += this.WDC65C02_LoweredINT;
+        }
+
+
         private bool _stopped;
         private bool _waiting;
 
@@ -171,15 +179,13 @@ namespace M6502
             }
         }
 
-        protected override void OnLoweredRESET()
+        private void WDC65C02_LoweredRESET(object? sender, EventArgs e)
         {
-            base.OnLoweredRESET();
             this.Stopped = this.Waiting = false;
         }
 
-        protected override void OnLoweredINT()
+        private void WDC65C02_LoweredINT(object? sender, EventArgs e)
         {
-            base.OnLoweredINT();
             this.Waiting = false;
         }
 

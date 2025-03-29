@@ -138,22 +138,6 @@ namespace EightBit
             }
         }
 
-        protected virtual void OnRaisingRESET() => RaisingRESET?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedRESET() => RaisedRESET?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringRESET() => LoweringRESET?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredRESET() => LoweredRESET?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisingINT() => RaisingINT?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnRaisedINT() => RaisedINT?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweringINT() => LoweringINT?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredINT() => LoweredINT?.Invoke(this, EventArgs.Empty);
-
         protected virtual void HandleRESET() => this.RaiseRESET();
 
         protected virtual void HandleINT() => this.RaiseINT();

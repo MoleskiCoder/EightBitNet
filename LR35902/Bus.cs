@@ -42,6 +42,7 @@ namespace LR35902
             this.IO = new IoRegisters(this);
             this.CPU = new LR35902(this);
             this.CPU.MachineTicked += this.CPU_MachineTicked;
+            this.WrittenByte += this.Bus_WrittenByte;
         }
 
         public LR35902 CPU { get; }
@@ -173,10 +174,8 @@ namespace LR35902
             return new MemoryMapping(this.highInternalRam, 0xff80, 0xffff, AccessLevel.ReadWrite);
         }
 
-        protected override void OnWrittenByte()
+        private void Bus_WrittenByte(object? sender, EventArgs e)
         {
-            base.OnWrittenByte();
-
             var address = this.Address.Word;
             var value = this.Data;
 

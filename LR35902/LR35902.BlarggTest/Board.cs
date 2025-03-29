@@ -32,13 +32,10 @@ namespace LR35902.BlarggTest
 
         private void Board_WrittenByte(object? sender, System.EventArgs e)
         {
-            switch (this.Address.Word)
+            EightBit.Register16 serial = new(IoRegisters.SB, IoRegisters.BasePage);
+            if (this.Address == serial)
             {
-                case IoRegisters.BASE + IoRegisters.SB:
-                    System.Console.Out.Write(Convert.ToChar(this.Data));
-                    break;
-                default:
-                    break;
+                System.Console.Out.Write(Convert.ToChar(this.Data));
             }
         }
 

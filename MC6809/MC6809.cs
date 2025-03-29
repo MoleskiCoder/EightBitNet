@@ -48,6 +48,7 @@ namespace EightBit
         public MC6809(Bus bus)
         : base(bus)
         {
+            this.RaisedPOWER += this.MC6809_RaisedPOWER;
         }
 
         public event EventHandler<EventArgs> RaisingNMI;
@@ -342,12 +343,11 @@ namespace EightBit
             }
         }
 
-        protected override void OnRaisedPOWER()
+        private void MC6809_RaisedPOWER(object? sender, EventArgs e)
         {
             this.LowerBA();
             this.LowerBS();
             this.LowerRW();
-            base.OnRaisedPOWER();
         }
 
         protected override void HandleRESET()

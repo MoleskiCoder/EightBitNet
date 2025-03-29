@@ -25,10 +25,8 @@ namespace EightBit
         public void Tick()
         {
             ++this.Cycles;
-            this.OnTicked();
+            Ticked?.Invoke(this, EventArgs.Empty);
         }
-
-        protected virtual void OnTicked() => Ticked?.Invoke(this, EventArgs.Empty);
 
         protected void ResetCycles() => this.Cycles = 0;
     }

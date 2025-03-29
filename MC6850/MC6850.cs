@@ -46,6 +46,13 @@ namespace EightBit
     //    *** Data bit is "don't care" in 7-bit plus parity modes
     public sealed class MC6850 : ClockedChip
     {
+        public MC6850()
+        {
+            this.RaisedPOWER += this.MC6850_RaisedPOWER;
+            this.Ticked += this.MC6850_Ticked;
+        }
+
+
         private PinLevel rxdataLine = PinLevel.Low;
         private PinLevel txdataLine = PinLevel.Low;
 
@@ -88,17 +95,17 @@ namespace EightBit
 
         private StartupCondition startup = StartupCondition.WarmStart;
 
-        public event EventHandler<EventArgs> Accessing;
+        public event EventHandler<EventArgs>? Accessing;
 
-        public event EventHandler<EventArgs> Accessed;
+        public event EventHandler<EventArgs>? Accessed;
 
-        public event EventHandler<EventArgs> Transmitting;
+        public event EventHandler<EventArgs>? Transmitting;
 
-        public event EventHandler<EventArgs> Transmitted;
+        public event EventHandler<EventArgs>? Transmitted;
 
-        public event EventHandler<EventArgs> Receiving;
+        public event EventHandler<EventArgs>? Receiving;
 
-        public event EventHandler<EventArgs> Received;
+        public event EventHandler<EventArgs>? Received;
 
         [Flags]
         public enum ControlRegister
@@ -377,15 +384,13 @@ namespace EightBit
             return returned;
         }
 
-        protected override void OnRaisedPOWER()
+        private void MC6850_RaisedPOWER(object? sender, EventArgs e)
         {
             this.startup = StartupCondition.ColdStart;
-            base.OnRaisedPOWER();
         }
 
-        protected override void OnTicked()
+        private void MC6850_Ticked(object? sender, EventArgs e)
         {
-            base.OnTicked();
             this.Step();
         }
 
