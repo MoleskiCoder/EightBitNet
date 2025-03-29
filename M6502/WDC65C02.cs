@@ -13,8 +13,8 @@ namespace M6502
         {
             this.LoweredRESET += this.WDC65C02_LoweredRESET;
             this.LoweredINT += this.WDC65C02_LoweredINT;
+            this.LoweredNMI += this.WDC65C02_LoweredNMI;
         }
-
 
         private bool _stopped;
         private bool _waiting;
@@ -189,9 +189,8 @@ namespace M6502
             this.Waiting = false;
         }
 
-        protected override void OnLoweredNMI()
+        private void WDC65C02_LoweredNMI(object? sender, EventArgs e)
         {
-            base.OnLoweredNMI();
             this.Waiting = false;
         }
 

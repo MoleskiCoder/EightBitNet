@@ -70,7 +70,6 @@ namespace EightBit
             {
                 RaisingHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Raise();
-                ++this.PC.Word; // Release the PC from HALT instruction
                 RaisedHALT?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -81,7 +80,6 @@ namespace EightBit
             {
                 LoweringHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Lower();
-                --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
                 LoweredHALT?.Invoke(this, EventArgs.Empty);
             }
         }

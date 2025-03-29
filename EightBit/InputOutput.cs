@@ -23,9 +23,9 @@ namespace EightBit
 
         public byte ReadInputPort(byte port)
         {
-            this.OnReadingPort(port);
+            ReadingPort?.Invoke(this, new PortEventArgs(port));
             var value = this._input[port];
-            this.OnReadPort(port);
+            ReadPort?.Invoke(this, new PortEventArgs(port));
             return value;
         }
 
@@ -35,17 +35,9 @@ namespace EightBit
 
         public void WriteOutputPort(byte port, byte value)
         {
-            this.OnWritingPort(port);
+            WritingPort?.Invoke(this, new PortEventArgs(port));
             this._output[port] = value;
-            this.OnWrittenPort(port);
+            WrittenPort?.Invoke(this, new PortEventArgs(port));
         }
-
-        private void OnReadingPort(byte port) => ReadingPort?.Invoke(this, new PortEventArgs(port));
-
-        private void OnReadPort(byte port) => ReadPort?.Invoke(this, new PortEventArgs(port));
-
-        private void OnWritingPort(byte port) => WritingPort?.Invoke(this, new PortEventArgs(port));
-
-        private void OnWrittenPort(byte port) => WrittenPort?.Invoke(this, new PortEventArgs(port));
     }
 }

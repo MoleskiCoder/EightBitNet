@@ -13,6 +13,8 @@ namespace Z80
         {
             this._ports = ports;
             this.RaisedPOWER += this.Z80_RaisedPOWER;
+            this.LoweredHALT += this.Z80_LoweredHALT;
+            this.RaisedHALT += this.Z80_RaisedHALT;
         }
 
         private readonly InputOutput _ports;
@@ -188,6 +190,16 @@ namespace Z80
             base.ResetWorkingRegisters();
 
             this.ResetPrefixes();
+        }
+
+        private void Z80_RaisedHALT(object? sender, EventArgs e)
+        {
+            ++this.PC.Word; // Release the PC from HALT instruction
+        }
+
+        private void Z80_LoweredHALT(object? sender, EventArgs e)
+        {
+            --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
         }
 
         private void ResetPrefixes()

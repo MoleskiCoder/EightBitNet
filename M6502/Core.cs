@@ -26,20 +26,15 @@ namespace M6502
         public event EventHandler<EventArgs>? RaisedNMI;
         public event EventHandler<EventArgs>? LoweringNMI;
         public event EventHandler<EventArgs>? LoweredNMI;
-        protected virtual void OnRaisingNMI() => RaisingNMI?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedNMI() => RaisedNMI?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweringNMI() => LoweringNMI?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredNMI() => LoweredNMI?.Invoke(this, EventArgs.Empty);
-
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseNMI()
         {
             if (this.NMI.Lowered())
             {
-                this.OnRaisingNMI();
+                RaisingNMI?.Invoke(this, EventArgs.Empty);
                 this.NMI.Raise();
-                this.OnRaisedNMI();
+                RaisedNMI?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -47,9 +42,9 @@ namespace M6502
         {
             if (this.NMI.Raised())
             {
-                this.OnLoweringNMI();
+                LoweringNMI?.Invoke(this, EventArgs.Empty);
                 this.NMI.Lower();
-                this.OnLoweredNMI();
+                LoweredNMI?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -64,20 +59,14 @@ namespace M6502
         public event EventHandler<EventArgs>? LoweringSO;
         public event EventHandler<EventArgs>? LoweredSO;
 
-        protected virtual void OnRaisingSO() => RaisingSO?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedSO() => RaisedSO?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweringSO() => LoweringSO?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredSO() => LoweredSO?.Invoke(this, EventArgs.Empty);
-
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseSO()
         {
             if (this.SO.Lowered())
             {
-                this.OnRaisingSO();
+                RaisingSO?.Invoke(this, EventArgs.Empty);
                 this.SO.Raise();
-                this.OnRaisedSO();
+                RaisedSO?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -85,9 +74,9 @@ namespace M6502
         {
             if (this.SO.Raised())
             {
-                this.OnLoweringSO();
+                LoweringSO?.Invoke(this, EventArgs.Empty);
                 this.SO.Lower();
-                this.OnLoweredSO();
+                LoweredSO?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -101,11 +90,6 @@ namespace M6502
         public event EventHandler<EventArgs>? RaisedSYNC;
         public event EventHandler<EventArgs>? LoweringSYNC;
         public event EventHandler<EventArgs>? LoweredSYNC;
-
-        protected virtual void OnRaisingSYNC() => RaisingSYNC?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedSYNC() => RaisedSYNC?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweringSYNC() => LoweringSYNC?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredSYNC() => LoweredSYNC?.Invoke(this, EventArgs.Empty);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         protected virtual void RaiseSYNC()
@@ -138,19 +122,15 @@ namespace M6502
         public event EventHandler<EventArgs>? RaisedRDY;
         public event EventHandler<EventArgs>? LoweringRDY;
         public event EventHandler<EventArgs>? LoweredRDY;
-        protected virtual void OnRaisingRDY() => RaisingRDY?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedRDY() => RaisedRDY?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweringRDY() => LoweringRDY?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredRDY() => LoweredRDY?.Invoke(this, EventArgs.Empty);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRDY()
         {
             if (this.RDY.Lowered())
             {
-                this.OnRaisingRDY();
+                RaisingRDY?.Invoke(this, EventArgs.Empty);
                 this.RDY.Raise();
-                this.OnRaisedRDY();
+                RaisedRDY?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -158,9 +138,9 @@ namespace M6502
         {
             if (this.RDY.Raised())
             {
-                this.OnLoweringRDY();
+                LoweringRDY?.Invoke(this, EventArgs.Empty);
                 this.RDY.Lower();
-                this.OnLoweredRDY();
+                LoweredRDY?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -174,19 +154,15 @@ namespace M6502
         public event EventHandler<EventArgs>? RaisedRW;
         public event EventHandler<EventArgs>? LoweringRW;
         public event EventHandler<EventArgs>? LoweredRW;
-        protected virtual void OnRaisingRW() => RaisingRW?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnRaisedRW() => RaisedRW?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweringRW() => LoweringRW?.Invoke(this, EventArgs.Empty);
-        protected virtual void OnLoweredRW() => LoweredRW?.Invoke(this, EventArgs.Empty);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRW()
         {
             if (this.RW.Lowered())
             {
-                this.OnRaisingRW();
+                RaisingRW?.Invoke(this, EventArgs.Empty);
                 this.RW.Raise();
-                this.OnRaisedRW();
+                RaisedRW?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -194,9 +170,9 @@ namespace M6502
         {
             if (this.RW.Raised())
             {
-                this.OnLoweringRW();
+                LoweringRW?.Invoke(this, EventArgs.Empty);
                 this.RW.Lower();
-                this.OnLoweredRW();
+                LoweredRW?.Invoke(this, EventArgs.Empty);
             }
         }
 
