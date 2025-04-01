@@ -3,13 +3,18 @@
 // </copyright>
 namespace LR35902
 {
+    using System.Collections.ObjectModel;
+
     public class AbstractColourPalette<T>
     {
         protected AbstractColourPalette()
         {
+            this.Colours = [.. _colours];
         }
 
-        protected T[] Colours { get; } = new T[4];
+        private readonly List<T> _colours = new(4);
+
+        protected Collection<T> Colours { get; }
 
         public T Colour(int index) => this.Colours[index];
     }

@@ -59,6 +59,8 @@ namespace LR35902
             set => this.bus.IO.Poke(IoRegisters.IF, value);
         }
 
+        public byte MaskedInterrupts => (byte)(this.IE & this.IF);
+
         private bool Stopped { get; set; }
 
         #region MWR pin
@@ -199,14 +201,13 @@ namespace LR35902
         {
             this.prefixCB = false;
 
-            var masked = (byte)(this.IE & this.IF);
-            if (masked != 0)
+            if (this.MaskedInterrupts != 0)
             {
                 if (this.IME)
                 {
                     this.IF = 0;
                     this.LowerINT();
-                    var index = FindFirstSet(masked);
+                    var index = FindFirstSet(this.MaskedInterrupts);
                     this.Bus.Data = (byte)(0x38 + (index << 3));
                 }
                 else
@@ -225,7 +226,7 @@ namespace LR35902
             }
             else if (this.HALT.Lowered())
             {
-                this.Execute(0);  // NOP
+                //this.Execute(0);  // NOP
             }
             else
             {

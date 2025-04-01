@@ -25,6 +25,8 @@ namespace LR35902
 
         public static string AsFlag(byte value, StatusBits flag, string represents) => AsFlag(value, (byte)flag, represents);
 
+        public static string AsFlag(byte value, Interrupts flag, string represents) => AsFlag(value, (byte)flag, represents);
+
         public static string AsFlag(byte value, Bits flag, string represents) => AsFlag(value, (byte)flag, represents);
 
         public static string AsFlags(byte value) =>
@@ -36,6 +38,13 @@ namespace LR35902
                     + $"{AsFlag(value, Bits.Bit2, "+")}"
                     + $"{AsFlag(value, Bits.Bit1, "+")}"
                     + $"{AsFlag(value, Bits.Bit0, "+")}";
+
+        public static string AsInterrupt(byte value) =>
+                      $"{AsFlag(value, Interrupts.KeypadPressed, "K")}"
+                    + $"{AsFlag(value, Interrupts.SerialTransfer, "S")}"
+                    + $"{AsFlag(value, Interrupts.TimerOverflow, "T")}"
+                    + $"{AsFlag(value, Interrupts.DisplayControlStatus, "D")}"
+                    + $"{AsFlag(value, Interrupts.VerticalBlank, "V")}";
 
         public static string State(LR35902 cpu)
         {
@@ -56,12 +65,18 @@ namespace LR35902
             var h = cpu.H;
             var l = cpu.L;
 
+            var ime = cpu.IME?1:0;
+            var ie = cpu.IE;
+            var i_f = cpu.IF;
+            var masked = cpu.MaskedInterrupts;
+
             return
-                    $"PC={pc.Word:x4} SP={sp.Word:x4} "
+                  $"PC={pc.Word:x4} SP={sp.Word:x4} "
                 + $"A={a:x2} F={AsFlags(f)} "
                 + $"B={b:x2} C={c:x2} "
                 + $"D={d:x2} E={e:x2} "
-                + $"H={h:x2} L={l:x2}";
+                + $"H={h:x2} L={l:x2} "
+                + $"IME={ime} IE={AsInterrupt(ie)} IF={AsInterrupt(i_f)} Masked={AsInterrupt(masked)}";
         }
 
         public string Disassemble(LR35902 cpu)
