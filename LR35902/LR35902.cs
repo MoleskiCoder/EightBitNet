@@ -266,6 +266,46 @@ namespace LR35902
             MachineTicked?.Invoke(this, EventArgs.Empty);
         }
 
+        private int Zero()
+        {
+            return ZeroTest(this.F);
+        }
+
+        private int Carry()
+        {
+            return CarryTest(this.F);
+        }
+
+        private int HalfCarry()
+        {
+            return HalfCarryTest(this.F);
+        }
+
+        private int Subtracting()
+        {
+            return SubtractingTest(this.F);
+        }
+
+        private static int ZeroTest(byte data)
+        {
+            return data & (byte)StatusBits.ZF;
+        }
+
+        private static int CarryTest(byte data)
+        {
+            return data & (byte)StatusBits.CF;
+        }
+
+        private static int HalfCarryTest(byte data)
+        {
+            return data & (byte)StatusBits.HC;
+        }
+
+        private static int SubtractingTest(byte data)
+        {
+            return data & (byte)StatusBits.NF;
+        }
+
         protected override void MemoryWrite()
         {
             this.LowerMWR();
@@ -311,8 +351,7 @@ namespace LR35902
         protected override bool ReturnConditional(bool condition)
         {
             this.TickMachine();
-            _ = base.ReturnConditional(condition);
-            return condition;
+            return base.ReturnConditional(condition);
         }
 
         protected override bool JumpRelativeConditional(bool condition)
@@ -490,7 +529,7 @@ namespace LR35902
                                     this.TickMachine(2);
                                     break;
                                 case 3: // JR d
-                                    this.JumpRelative((sbyte)this.FetchByte());
+                                    this.JumpRelative(this.FetchByte());
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
@@ -779,16 +818,14 @@ namespace LR35902
                                     break;
                                 case 5: // GB: LD (nn),A
                                     this.MEMPTR.Assign(this.FetchWord());
-                                    this.Bus.Address.Assign(this.MEMPTR);
-                                    this.MemoryWrite(this.A);
+                                    this.MemoryWrite(this.MEMPTR, this.A);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
                                     this.A = this.MemoryRead(this.C, IoRegisters.BasePage);
                                     break;
                                 case 7: // GB: LD A,(nn)
                                     this.MEMPTR.Assign(this.FetchWord());
-                                    this.Bus.Address.Assign(this.MEMPTR);
-                                    this.A = this.MemoryRead();
+                                    this.A = this.MemoryRead(this.MEMPTR);
                                     break;
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
@@ -908,39 +945,12 @@ namespace LR35902
             return operand;
         }
 
-        private bool JumpConditionalFlag(int flag) => flag switch
+        protected sealed override bool ConvertCondition(int flag) => flag switch
         {
-            0 => this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0), // NZ
-            1 => this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0), // Z
-            2 => this.JumpConditional((this.F & (byte)StatusBits.CF) == 0), // NC
-            3 => this.JumpConditional((this.F & (byte)StatusBits.CF) != 0), // C
-            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
-        };
-
-        private bool JumpRelativeConditionalFlag(int flag) => flag switch
-        {
-            0 => this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) == 0), // NZ
-            1 => this.JumpRelativeConditional((this.F & (byte)StatusBits.ZF) != 0), // Z
-            2 => this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) == 0), // NC
-            3 => this.JumpRelativeConditional((this.F & (byte)StatusBits.CF) != 0), // C
-            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
-        };
-
-        private bool ReturnConditionalFlag(int flag) => flag switch
-        {
-            0 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0),   // NZ
-            1 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0),   // Z
-            2 => this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0),   // NC
-            3 => this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0),   // C
-            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
-        };
-
-        private bool CallConditionalFlag(int flag) => flag switch
-        {
-            0 => this.CallConditional((this.F & (byte)StatusBits.ZF) == 0), // NZ
-            1 => this.CallConditional((this.F & (byte)StatusBits.ZF) != 0), // Z
-            2 => this.CallConditional((this.F & (byte)StatusBits.CF) == 0), // NC
-            3 => this.CallConditional((this.F & (byte)StatusBits.CF) != 0), // C
+            0 => this.Zero() == 0,  // NZ
+            1 => this.Zero() != 0,  // Z
+            2 => this.Carry() == 0, // NC
+            3 => this.Carry() != 0, // C
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
@@ -974,7 +984,7 @@ namespace LR35902
             return operand;
         }
 
-        private byte ADC(byte operand, byte value) => this.Add(operand, value, (this.F & (byte)StatusBits.CF) >> 4);
+        private byte ADC(byte operand, byte value) => this.Add(operand, value, this.Carry() >> 4);
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
@@ -991,7 +1001,7 @@ namespace LR35902
             return result;
         }
 
-        private byte SBC(byte operand, byte value) => this.Subtract(operand, value, (this.F & (byte)StatusBits.CF) >> 4);
+        private byte SBC(byte operand, byte value) => this.Subtract(operand, value, this.Carry() >> 4);
 
         private byte AndR(byte operand, byte value)
         {
@@ -1042,7 +1052,7 @@ namespace LR35902
         private byte RL(byte operand)
         {
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             return (byte)((operand << 1) | (carry >> 4));   // CF at Bit4
         }
@@ -1050,7 +1060,7 @@ namespace LR35902
         private byte RR(byte operand)
         {
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) | (carry << 3));   // CF at Bit4
         }
@@ -1084,7 +1094,7 @@ namespace LR35902
 
         private void Bit(int n, byte operand)
         {
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             _ = this.AndR(operand, Bit(n));
             this.F = SetBit(this.F, StatusBits.CF, carry);
         }
@@ -1093,33 +1103,33 @@ namespace LR35902
         {
             int updated = this.A;
 
-            if ((this.F & (byte)StatusBits.NF) != 0)
+            if (this.Subtracting() != 0)
             {
-                if ((this.F & (byte)StatusBits.HC) != 0)
+                if (this.HalfCarry() != 0)
                 {
                     updated = LowByte(updated - 6);
                 }
 
-                if ((this.F & (byte)StatusBits.CF) != 0)
+                if (this.Carry() != 0)
                 {
                     updated -= 0x60;
                 }
             }
             else
             {
-                if ((this.F & (byte)StatusBits.HC) != 0 || LowNibble((byte)updated) > 9)
+                if (this.HalfCarry() != 0 || LowNibble((byte)updated) > 9)
                 {
                     updated += 6;
                 }
 
-                if ((this.F & (byte)StatusBits.CF) != 0 || updated > 0x9F)
+                if (this.Carry() != 0 || updated > 0x9F)
                 {
                     updated += 0x60;
                 }
             }
 
             this.F = ClearBit(this.F, (byte)StatusBits.HC | (byte)StatusBits.ZF);
-            this.F = SetBit(this.F, StatusBits.CF, (this.F & (byte)StatusBits.CF) != 0 || (updated & (int)Bits.Bit8) != 0);
+            this.F = SetBit(this.F, StatusBits.CF, this.Carry() != 0 || (updated & (int)Bits.Bit8) != 0);
             this.A = LowByte(updated);
 
             this.F = AdjustZero(this.F, this.A);

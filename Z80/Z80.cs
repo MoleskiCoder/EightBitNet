@@ -1145,13 +1145,13 @@ namespace Z80
                                     this.Tick(3);
                                     break;
                                 case 3: // JR d
-                                    this.JumpRelative((sbyte)this.FetchByte());
+                                    this.JumpRelative(this.FetchByte());
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
                                 case 6:
                                 case 7:
-                                    this.JumpRelativeConditionalFlag(y - 4);
+                                    _ = this.JumpRelativeConditionalFlag(y - 4);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1467,7 +1467,7 @@ namespace Z80
                     switch (z)
                     {
                         case 0: // Conditional return
-                            this.ReturnConditionalFlag(y);
+                            _ = this.ReturnConditionalFlag(y);
                             break;
                         case 1: // POP & various ops
                             switch (q)
@@ -1501,7 +1501,7 @@ namespace Z80
 
                             break;
                         case 2: // Conditional jump
-                            this.JumpConditionalFlag(y);
+                            _ = this.JumpConditionalFlag(y);
                             break;
                         case 3: // Assorted operations
                             switch (y)
@@ -1551,7 +1551,7 @@ namespace Z80
 
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
-                            this.CallConditionalFlag(y);
+                            _ = this.CallConditionalFlag(y);
                             break;
                         case 5: // PUSH & various ops
                             switch (q)
@@ -1730,7 +1730,7 @@ namespace Z80
 
         private void RetI() => this.RetN();
 
-        private bool ConvertCondition(int flag) => flag switch
+        protected sealed override bool ConvertCondition(int flag) => flag switch
         {
             0 => this.Zero() == 0,
             1 => this.Zero() != 0,
@@ -1743,20 +1743,16 @@ namespace Z80
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
-        private void ReturnConditionalFlag(int flag)
+        protected sealed override bool ReturnConditionalFlag(int flag)
         {
-            if (this.ConvertCondition(flag))
+            var condition = this.ConvertCondition(flag);
+            if (condition)
             {
                 this.Tick();
                 this.Return();
             }
+            return condition;
         }
-
-        private void JumpRelativeConditionalFlag(int flag) => this.JumpRelativeConditional(this.ConvertCondition(flag));
-
-        private void JumpConditionalFlag(int flag) => this.JumpConditional(this.ConvertCondition(flag));
-
-        private void CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
 
         private Register16 SBC(Register16 operand, Register16 value)
         {

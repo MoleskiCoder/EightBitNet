@@ -101,6 +101,57 @@ namespace Intel8080
             --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
         }
 
+        private int Sign()
+
+        {
+            return SignTest(this.F);
+        }
+
+        private int Zero()
+        {
+            return ZeroTest(this.F);
+        }
+
+        private int AuxiliaryCarry()
+        {
+            return AuxiliaryCarryTest(this.F);
+        }
+
+        private int Parity()
+        {
+            return ParityTest(this.F);
+        }
+
+        private int Carry()
+        {
+            return CarryTest(this.F);
+        }
+
+        private static int SignTest(byte data)
+        {
+            return data & (byte)StatusBits.SF;
+        }
+
+        private static int ZeroTest(byte data)
+        {
+            return data & (byte)StatusBits.ZF;
+        }
+
+        private static int AuxiliaryCarryTest(byte data)
+        {
+            return data & (byte)StatusBits.AC;
+        }
+
+        private static int ParityTest(byte data)
+        {
+            return data & (byte)StatusBits.PF;
+        }
+
+        private static int CarryTest(byte data)
+        {
+            return data & (byte)StatusBits.CF;
+        }
+
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
         private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
@@ -111,7 +162,7 @@ namespace Intel8080
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
-        private static byte AdjustSign(byte input, byte value) => SetBit(input, StatusBits.SF, value & (byte)StatusBits.SF);
+        private static byte AdjustSign(byte input, byte value) => SetBit(input, StatusBits.SF, SignTest(value));
 
         private static byte AdjustZero(byte input, byte value) => ClearBit(input, StatusBits.ZF, value);
 
@@ -600,42 +651,16 @@ namespace Intel8080
             return operand;
         }
 
-        private bool JumpConditionalFlag(int flag) => flag switch
+        protected sealed override bool ConvertCondition(int flag) => flag switch
         {
-            0 => this.JumpConditional((this.F & (byte)StatusBits.ZF) == 0),     // NZ
-            1 => this.JumpConditional((this.F & (byte)StatusBits.ZF) != 0),     // Z
-            2 => this.JumpConditional((this.F & (byte)StatusBits.CF) == 0),     // NC
-            3 => this.JumpConditional((this.F & (byte)StatusBits.CF) != 0),     // C
-            4 => this.JumpConditional((this.F & (byte)StatusBits.PF) == 0),     // PO
-            5 => this.JumpConditional((this.F & (byte)StatusBits.PF) != 0),     // PE
-            6 => this.JumpConditional((this.F & (byte)StatusBits.SF) == 0),     // P
-            7 => this.JumpConditional((this.F & (byte)StatusBits.SF) != 0),     // M
-            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
-        };
-
-        private bool ReturnConditionalFlag(int flag) => flag switch
-        {
-            0 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) == 0),   // NZ
-            1 => this.ReturnConditional((this.F & (byte)StatusBits.ZF) != 0),   // Z
-            2 => this.ReturnConditional((this.F & (byte)StatusBits.CF) == 0),   // NC
-            3 => this.ReturnConditional((this.F & (byte)StatusBits.CF) != 0),   // C
-            4 => this.ReturnConditional((this.F & (byte)StatusBits.PF) == 0),   // PO
-            5 => this.ReturnConditional((this.F & (byte)StatusBits.PF) != 0),   // PE
-            6 => this.ReturnConditional((this.F & (byte)StatusBits.SF) == 0),   // P
-            7 => this.ReturnConditional((this.F & (byte)StatusBits.SF) != 0),   // M
-            _ => throw new ArgumentOutOfRangeException(nameof(flag)),
-        };
-
-        private bool CallConditionalFlag(int flag) => flag switch
-        {
-            0 => this.CallConditional((this.F & (byte)StatusBits.ZF) == 0),     // NZ
-            1 => this.CallConditional((this.F & (byte)StatusBits.ZF) != 0),     // Z
-            2 => this.CallConditional((this.F & (byte)StatusBits.CF) == 0),     // NC
-            3 => this.CallConditional((this.F & (byte)StatusBits.CF) != 0),     // C
-            4 => this.CallConditional((this.F & (byte)StatusBits.PF) == 0),     // PO
-            5 => this.CallConditional((this.F & (byte)StatusBits.PF) != 0),     // PE
-            6 => this.CallConditional((this.F & (byte)StatusBits.SF) == 0),     // P
-            7 => this.CallConditional((this.F & (byte)StatusBits.SF) != 0),     // M
+            0 => this.Zero() == 0,
+            1 => this.Zero() != 0,
+            2 => this.Carry() == 0,
+            3 => this.Carry() != 0,
+            4 => this.Parity() == 0,
+            5 => this.Parity() != 0,
+            6 => this.Sign() == 0,
+            7 => this.Sign() != 0,
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
@@ -654,11 +679,11 @@ namespace Intel8080
 
             this.A = this.MEMPTR.Low;
 
-            this.F = SetBit(this.F, StatusBits.CF, this.MEMPTR.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, CarryTest(this.MEMPTR.High));
             this.F = AdjustSZP(this.F, this.A);
         }
 
-        private void ADC(byte value) => this.Add(value, this.F & (byte)StatusBits.CF);
+        private void ADC(byte value) => this.Add(value, this.Carry());
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
@@ -668,7 +693,7 @@ namespace Intel8080
 
             var result = this.MEMPTR.Low;
 
-            this.F = SetBit(this.F, StatusBits.CF, this.MEMPTR.High & (byte)StatusBits.CF);
+            this.F = SetBit(this.F, StatusBits.CF, CarryTest(this.MEMPTR.High));
             this.F = AdjustSZP(this.F, result);
 
             return result;
@@ -676,7 +701,7 @@ namespace Intel8080
 
         private void SUB(byte value, int carry = 0) => this.A = this.Subtract(this.A, value, carry);
 
-        private void SBB(byte value) => this.SUB(value, this.F & (byte)StatusBits.CF);
+        private void SBB(byte value) => this.SUB(value, this.Carry());
 
         private void AndR(byte value)
         {
@@ -715,14 +740,14 @@ namespace Intel8080
 
         private byte RL(byte operand)
         {
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
             return (byte)((operand << 1) | carry);
         }
 
         private byte RR(byte operand)
         {
-            var carry = this.F & (byte)StatusBits.CF;
+            var carry = this.Carry();
             this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) | (carry << 7));
         }
@@ -730,14 +755,14 @@ namespace Intel8080
         private void DAA()
         {
             var before = this.A;
-            var carry = (this.F & (byte)StatusBits.CF) != 0;
+            var carry = this.Carry() != 0;
             byte addition = 0;
-            if ((this.F & (byte)StatusBits.AC) != 0 || LowNibble(before) > 9)
+            if (this.AuxiliaryCarry() != 0 || LowNibble(before  ) > 9)
             {
                 addition = 0x6;
             }
 
-            if ((this.F & (byte)StatusBits.CF) != 0 || HighNibble(before) > 9 || (HighNibble(before) >= 9 && LowNibble(before) > 9))
+            if (this.Carry() != 0 || HighNibble(before) > 9 || (HighNibble(before) >= 9 && LowNibble(before) > 9))
             {
                 addition |= 0x60;
                 carry = true;
@@ -751,7 +776,7 @@ namespace Intel8080
 
         private void STC() => this.F = SetBit(this.F, StatusBits.CF);
 
-        private void CMC() => this.F = ClearBit(this.F, StatusBits.CF, this.F & (byte)StatusBits.CF);
+        private void CMC() => this.F = ClearBit(this.F, StatusBits.CF, this.Carry());
 
         private void XHTL(Register16 exchange)
         {

@@ -205,14 +205,15 @@ namespace EightBit
             this.Jump(this.MEMPTR);
         }
 
+        protected void JumpRelative(byte offset) => this.JumpRelative((sbyte)offset);
+
         protected virtual bool JumpRelativeConditional(bool condition)
         {
             this.Intermediate.Assign(this.PC);
             ++this.PC.Word;
             if (condition)
             {
-                var offset = (sbyte)this.MemoryRead(this.Intermediate);
-                this.JumpRelative(offset);
+                this.JumpRelative(this.MemoryRead(this.Intermediate));
             }
 
             return condition;
@@ -223,5 +224,15 @@ namespace EightBit
             base.Return();
             this.MEMPTR.Assign(this.PC);
         }
+
+        protected abstract bool ConvertCondition(int flag);
+
+        protected virtual bool JumpConditionalFlag(int flag) => this.JumpConditional(this.ConvertCondition(flag));
+
+        protected virtual bool JumpRelativeConditionalFlag(int flag) => this.JumpRelativeConditional(this.ConvertCondition(flag));
+
+        protected virtual bool ReturnConditionalFlag(int flag) => this.ReturnConditional(this.ConvertCondition(flag));
+
+        protected virtual bool CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
     }
 }
