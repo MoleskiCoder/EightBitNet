@@ -102,7 +102,7 @@ namespace Z80
             _ => throw new ArgumentOutOfRangeException(nameof(which)),
         };
 
-        private string Disassemble(Z80 cpu, ushort pc)
+        public string Disassemble(Z80 cpu, ushort pc)
         {
             var opCode = this.Bus.Peek(pc);
 
