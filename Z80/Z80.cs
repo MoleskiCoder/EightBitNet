@@ -771,11 +771,19 @@ namespace Z80
                     {
                         this.Bus.Address.Assign(this.HL);
                     }
-                    if (access == AccessLevel.ReadOnly)
+
+                    switch (access)
                     {
-                        _ = this.MemoryRead();
+                        case AccessLevel.ReadOnly:
+                            this.MemoryRead();
+                            break;
+                        case AccessLevel.WriteOnly:
+                            this.Tick();
+                            break;
+                        default:
+                            throw new NotSupportedException("Invalid access level");
                     }
-                    this.Tick();
+
                     // Will need a post-MemoryWrite
                     return ref this.Bus.Data;
                 case 7:
