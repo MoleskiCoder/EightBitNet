@@ -271,7 +271,6 @@ namespace Z80
             {
                 RaisingM1?.Invoke(this, EventArgs.Empty);
                 this.M1.Raise();
-                ++this.REFRESH;
                 RaisedM1?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -314,6 +313,7 @@ namespace Z80
             {
                 RaisingRFSH?.Invoke(this, EventArgs.Empty);
                 this.RFSH.Raise();
+                ++this.REFRESH;
                 RaisedRFSH?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -492,12 +492,15 @@ namespace Z80
 
         protected override byte MemoryRead()
         {
+            this.Tick();
             this.LowerMREQ();
             this.LowerRD();
-            this.Tick(3);
+            this.Tick();
             var returned = base.MemoryRead();
             this.RaiseRD();
             this.RaiseMREQ();
+            if (this.M1.Raised())
+                this.Tick();
             return returned;
         }
 
@@ -1166,6 +1169,7 @@ namespace Z80
                                     break;
                                 case 1: // ADD HL,rp
                                     this.HL2().Assign(this.Add(this.HL2(), this.RP(p)));
+                                    this.Tick(7);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1255,7 +1259,7 @@ namespace Z80
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
-
+                            this.Tick(2);
                             break;
                         case 4: // 8-bit INC
                             {
@@ -1266,7 +1270,6 @@ namespace Z80
                                 }
 
                                 var original = this.R(y);
-                                this.Tick();
                                 this.R(y, this.Increment(original));
                                 break;
                             }
@@ -1280,7 +1283,6 @@ namespace Z80
                                 }
 
                                 var original = this.R(y);
-                                this.Tick();
                                 this.R(y, this.Decrement(original));
                                 break;
                             }
@@ -1672,17 +1674,17 @@ namespace Z80
         // instruction so that no other concurrent operation can be performed.
         private byte ReadInitialOpCode()
         {
-            this.Tick();
-
             this.LowerM1();
             var returned = this.MemoryRead(this.PC);
             this.RaiseM1();
 
             this.Bus.Address.Assign(this.REFRESH, this.IV);
             this.LowerRFSH();
+            this.Tick();
             this.LowerMREQ();
             this.RaiseMREQ();
             this.RaiseRFSH();
+            this.Tick();
 
             return returned;
         }
