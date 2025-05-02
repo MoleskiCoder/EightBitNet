@@ -171,6 +171,18 @@ namespace EightBit
             return condition;
         }
 
+        protected virtual bool JumpRelativeConditional(bool condition)
+        {
+            this.Intermediate.Assign(this.PC);
+            ++this.PC.Word;
+            if (condition)
+            {
+                this.JumpRelative(this.MemoryRead(this.Intermediate));
+            }
+
+            return condition;
+        }
+
         protected virtual bool ReturnConditional(bool condition)
         {
             if (condition)
@@ -206,18 +218,6 @@ namespace EightBit
         }
 
         protected void JumpRelative(byte offset) => this.JumpRelative((sbyte)offset);
-
-        protected virtual bool JumpRelativeConditional(bool condition)
-        {
-            this.Intermediate.Assign(this.PC);
-            ++this.PC.Word;
-            if (condition)
-            {
-                this.JumpRelative(this.MemoryRead(this.Intermediate));
-            }
-
-            return condition;
-        }
 
         protected override void Return()
         {
