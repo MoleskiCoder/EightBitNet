@@ -558,7 +558,6 @@ namespace Z80
 
         protected override bool JumpRelativeConditional(bool condition)
         {
-            this.Tick();
             var offset = this.FetchByte();
             if (condition)
             {
@@ -1156,6 +1155,7 @@ namespace Z80
                                     this.ExxAF();
                                     break;
                                 case 2: // DJNZ d
+                                    this.Tick();
                                     _ = this.JumpRelativeConditional(--this.B != 0);
                                     break;
                                 case 3: // JR d
