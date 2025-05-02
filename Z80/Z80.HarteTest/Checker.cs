@@ -64,7 +64,7 @@
                 this.Raise("SP", final.SP, cpu.SP);
 
                 this.Raise("A", final.A, cpu.A);
-                this.Raise("F", final.F, cpu.F);
+                this.RaiseFlags("F", final.F, cpu.F);
                 this.Raise("B", final.B, cpu.B);
                 this.Raise("C", final.C, cpu.C);
                 this.Raise("D", final.D, cpu.D);
@@ -307,6 +307,8 @@
         private void Raise(string what, byte expected, bool actual) => this.Raise(what, expected, (byte)(actual ? 1 : 0));
 
         private void Raise(string what, byte expected, byte actual) => this.Messages.Add($"{what}: expected: {expected:X2}, actual: {actual:X2}");
+
+        private void RaiseFlags(string what, byte expected, byte actual) => this.Messages.Add($"{what}: expected: {Disassembler.AsFlags(expected)}, actual: {Disassembler.AsFlags(actual)}");
 
         private void Raise(string what, ushort expected, Register16 actual) => this.Raise(what, expected, actual.Word);
 

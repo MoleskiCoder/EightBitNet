@@ -550,6 +550,23 @@ namespace Z80
             base.Call(destination);
         }
 
+        protected override void JumpRelative(sbyte offset)
+        {
+            base.JumpRelative(offset);
+            this.Tick(5);
+        }
+
+        protected override bool JumpRelativeConditional(bool condition)
+        {
+            this.Tick();
+            var offset = this.FetchByte();
+            if (condition)
+            {
+                this.JumpRelative(offset);
+            }
+            return condition;
+        }
+
         private int Zero()
         {
             return ZeroTest(this.F);
@@ -1139,13 +1156,7 @@ namespace Z80
                                     this.ExxAF();
                                     break;
                                 case 2: // DJNZ d
-                                    this.Tick();
-                                    if (this.JumpRelativeConditional(--this.B != 0))
-                                    {
-                                        this.Tick(2);
-                                    }
-
-                                    this.Tick(3);
+                                    _ = this.JumpRelativeConditional(--this.B != 0);
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative(this.FetchByte());
