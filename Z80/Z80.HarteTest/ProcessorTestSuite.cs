@@ -6,7 +6,10 @@
 
         public IEnumerable<OpcodeTestSuite> OpcodeTests()
         {
-            foreach (var filename in Directory.EnumerateFiles(this.Location, "0?.json"))
+            //var pattern = "fd 7e.json";
+            //var pattern = "7e.json";
+            var pattern = "*.json";
+            foreach (var filename in Directory.EnumerateFiles(this.Location, pattern))
             {
                 var fileInformation = new FileInfo(filename);
                 if (fileInformation.Length > 0)

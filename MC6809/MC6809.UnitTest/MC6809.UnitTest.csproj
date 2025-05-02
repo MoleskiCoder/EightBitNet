@@ -19,10 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest.TestFramework" Version="3.4.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\EightBit\EightBit.csproj" />
     <ProjectReference Include="..\MC6809.csproj" />
   </ItemGroup>

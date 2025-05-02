@@ -7,13 +7,13 @@ namespace LR35902
     using EightBit;
     using System.Globalization;
 
-    public enum IoRegister
-    {
-        Abbreviated,    // FF00 + dd
-        Absolute,       // FFdd
-        Register,       // C
-        Unused,         // Unused!
-    }
+    //public enum IoRegister
+    //{
+    //    Abbreviated,    // FF00 + dd
+    //    Absolute,       // FFdd
+    //    Register,       // C
+    //    Unused,         // Unused!
+    //}
 
     public sealed class Disassembler(Bus bus)
     {
@@ -120,56 +120,70 @@ namespace LR35902
         private static string IO(byte value) => value switch
         {
             // Port/Mode Registers
-            IoRegisters.P1 => "P1",
-            IoRegisters.SB => "SB",
-            IoRegisters.SC => "SC",
-            IoRegisters.DIV => "DIV",
-            IoRegisters.TIMA => "TIMA",
-            IoRegisters.TMA => "TMA",
-            IoRegisters.TAC => "TAC",
+            IoRegisters.P1 => "IO:P1",
+            IoRegisters.SB => "IO:SB",
+            IoRegisters.SC => "IO:SC",
+            IoRegisters.DIV => "IO:DIV",
+            IoRegisters.TIMA => "IO:TIMA",
+            IoRegisters.TMA => "IO:TMA",
+            IoRegisters.TAC => "IO:TAC",
             // Interrupt Flags
-            IoRegisters.IF => "IF",
-            IoRegisters.IE => "IE",
+            IoRegisters.IF => "IO:IF",
+            IoRegisters.IE => "IO:IE",
             // LCD Display Registers
-            IoRegisters.LCDC => "LCDC",
-            IoRegisters.STAT => "STAT",
-            IoRegisters.SCY => "SCY",
-            IoRegisters.SCX => "SCX",
-            IoRegisters.LY => "LY",
-            IoRegisters.LYC => "LYC",
-            IoRegisters.DMA => "DMA",
-            IoRegisters.BGP => "BGP",
-            IoRegisters.OBP0 => "OBP0",
-            IoRegisters.OBP1 => "OBP1",
-            IoRegisters.WY => "WY",
-            IoRegisters.WX => "WX",
+            IoRegisters.LCDC => "IO:LCDC",
+            IoRegisters.STAT => "IO:STAT",
+            IoRegisters.SCY => "IO:SCY",
+            IoRegisters.SCX => "IO:SCX",
+            IoRegisters.LY => "IO:LY",
+            IoRegisters.LYC => "IO:LYC",
+            IoRegisters.DMA => "IO:DMA",
+            IoRegisters.BGP => "IO:BGP",
+            IoRegisters.OBP0 => "IO:OBP0",
+            IoRegisters.OBP1 => "IO:OBP1",
+            IoRegisters.WY => "IO:WY",
+            IoRegisters.WX => "IO:WX",
             // Sound Registers
-            IoRegisters.NR10 => "NR10",
-            IoRegisters.NR11 => "NR11",
-            IoRegisters.NR12 => "NR12",
-            IoRegisters.NR13 => "NR13",
-            IoRegisters.NR14 => "NR14",
-            IoRegisters.NR21 => "NR21",
-            IoRegisters.NR22 => "NR22",
-            IoRegisters.NR23 => "NR23",
-            IoRegisters.NR24 => "NR24",
-            IoRegisters.NR30 => "NR30",
-            IoRegisters.NR31 => "NR31",
-            IoRegisters.NR32 => "NR32",
-            IoRegisters.NR33 => "NR33",
-            IoRegisters.NR34 => "NR34",
-            IoRegisters.NR41 => "NR41",
-            IoRegisters.NR42 => "NR42",
-            IoRegisters.NR43 => "NR43",
-            IoRegisters.NR44 => "NR44",
-            IoRegisters.NR50 => "NR50",
-            IoRegisters.NR51 => "NR51",
-            IoRegisters.NR52 => "NR52",
-            IoRegisters.WAVE_PATTERN_RAM_START => "WAVE_PATTERN_RAM_START",
-            IoRegisters.WAVE_PATTERN_RAM_END => "WAVE_PATTERN_RAM_END",
+            IoRegisters.NR10 => "IO:NR10",
+            IoRegisters.NR11 => "IO:NR11",
+            IoRegisters.NR12 => "IO:NR12",
+            IoRegisters.NR13 => "IO:NR13",
+            IoRegisters.NR14 => "IO:NR14",
+            IoRegisters.NR21 => "IO:NR21",
+            IoRegisters.NR22 => "IO:NR22",
+            IoRegisters.NR23 => "IO:NR23",
+            IoRegisters.NR24 => "IO:NR24",
+            IoRegisters.NR30 => "IO:NR30",
+            IoRegisters.NR31 => "IO:NR31",
+            IoRegisters.NR32 => "IO:NR32",
+            IoRegisters.NR33 => "IO:NR33",
+            IoRegisters.NR34 => "IO:NR34",
+            IoRegisters.NR41 => "IO:NR41",
+            IoRegisters.NR42 => "IO:NR42",
+            IoRegisters.NR43 => "IO:NR43",
+            IoRegisters.NR44 => "IO:NR44",
+            IoRegisters.NR50 => "IO:NR50",
+            IoRegisters.NR51 => "IO:NR51",
+            IoRegisters.NR52 => "IO:NR52",
+            IoRegisters.WAVE_PATTERN_RAM_START => $"IO:WAVE_PATTERN_RAM+0",
+            IoRegisters.WAVE_PATTERN_RAM_START + 1 => $"IO:WAVE_PATTERN_RAM+1",
+            IoRegisters.WAVE_PATTERN_RAM_START + 2 => $"IO:WAVE_PATTERN_RAM+2",
+            IoRegisters.WAVE_PATTERN_RAM_START + 3 => $"IO:WAVE_PATTERN_RAM+3",
+            IoRegisters.WAVE_PATTERN_RAM_START + 4 => $"IO:WAVE_PATTERN_RAM+4",
+            IoRegisters.WAVE_PATTERN_RAM_START + 5 => $"IO:WAVE_PATTERN_RAM+5",
+            IoRegisters.WAVE_PATTERN_RAM_START + 6 => $"IO:WAVE_PATTERN_RAM+6",
+            IoRegisters.WAVE_PATTERN_RAM_START + 7 => $"IO:WAVE_PATTERN_RAM+7",
+            IoRegisters.WAVE_PATTERN_RAM_START + 8 => $"IO:WAVE_PATTERN_RAM+8",
+            IoRegisters.WAVE_PATTERN_RAM_START + 9 => $"IO:WAVE_PATTERN_RAM+9",
+            IoRegisters.WAVE_PATTERN_RAM_START + 10 => $"IO:WAVE_PATTERN_RAM+A",
+            IoRegisters.WAVE_PATTERN_RAM_START + 11 => $"IO:WAVE_PATTERN_RAM+B",
+            IoRegisters.WAVE_PATTERN_RAM_START + 12 => $"IO:WAVE_PATTERN_RAM+C",
+            IoRegisters.WAVE_PATTERN_RAM_START + 13 => $"IO:WAVE_PATTERN_RAM+D",
+            IoRegisters.WAVE_PATTERN_RAM_START + 14 => $"IO:WAVE_PATTERN_RAM+E",
+            IoRegisters.WAVE_PATTERN_RAM_END => "IO:WAVE_PATTERN_RAM+F",
             // Boot rom control
-            IoRegisters.BOOT_DISABLE => "BOOT_DISABLE",
-            _ => $"{value:x2}",
+            IoRegisters.BOOT_DISABLE => "IO:BOOT_DISABLE",
+            _ => $"FF{value:x2}H",
         };
 
         private static string CC(int flag) => flag switch
@@ -271,7 +285,7 @@ namespace LR35902
             var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));
 
             var dumpCount = 0;
-            var ioRegister = IoRegister.Unused;
+            //var ioRegister = IoRegister.Unused;
 
             var output = $"{opCode:x2}";
 
@@ -282,7 +296,7 @@ namespace LR35902
             }
             else
             {
-                output += this.DisassembleOther(cpu, pc, ref specification, ref dumpCount, ref ioRegister, x, y, z, p, q);
+                output += this.DisassembleOther(cpu, pc, ref specification, ref dumpCount, /*ref ioRegister, */x, y, z, p, q);
             }
 
             for (var i = 0; i < dumpCount; ++i)
@@ -291,29 +305,29 @@ namespace LR35902
             }
 
             output += '\t';
-            output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
+            output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate, IO(immediate));
 
-            switch (ioRegister)
-            {
-                case IoRegister.Abbreviated:
-                    output += $"; register {IO(immediate)}";
-                    break;
-                case IoRegister.Absolute:
-                    output += "; register (Absolute)";
-                    break;
-                case IoRegister.Register:
-                    output += $"; register C:{IO(cpu.C)}";
-                    break;
-                case IoRegister.Unused:
-                    break;
-                default:
-                    break;
-            }
+            //switch (ioRegister)
+            //{
+            //    case IoRegister.Abbreviated:
+            //        output += $"; register {IO(immediate)}";
+            //        break;
+            //    case IoRegister.Absolute:
+            //        output += "; register (Absolute)";
+            //        break;
+            //    case IoRegister.Register:
+            //        output += $"; register C:{IO(cpu.C)}";
+            //        break;
+            //    case IoRegister.Unused:
+            //        break;
+            //    default:
+            //        break;
+            //}
 
             return output;
         }
 
-        private string DisassembleOther(LR35902 cpu, ushort pc, ref string specification, ref int dumpCount, ref IoRegister ioRegister, int x, int y, int z, int p, int q)
+        private string DisassembleOther(LR35902 cpu, ushort pc, ref string specification, ref int dumpCount, /*ref IoRegister ioRegister, */int x, int y, int z, int p, int q)
         {
             var output = string.Empty;
             switch (x)
@@ -496,8 +510,9 @@ namespace LR35902
                                     specification = $"RET {CC(y)}";
                                     break;
                                 case 4:
-                                    specification = "LD (FF00H+{0:X2}H),A";
-                                    ioRegister = IoRegister.Abbreviated;
+                                    //specification = "LD (FF00H+{0:X2}H),A";
+                                    specification = "LD ({5}),A";
+                                    //ioRegister = IoRegister.Abbreviated;
                                     dumpCount++;
                                     break;
                                 case 5:
@@ -505,8 +520,9 @@ namespace LR35902
                                     dumpCount++;
                                     break;
                                 case 6:
-                                    specification = "LD A,(FF00H+{0:X2}H)";
-                                    ioRegister = IoRegister.Abbreviated;
+                                    //specification = "LD A,(FF00H+{0:X2}H)";
+                                    specification = "LD A,({5})";
+                                    //ioRegister = IoRegister.Abbreviated;
                                     dumpCount++;
                                     break;
                                 case 7:
@@ -561,7 +577,7 @@ namespace LR35902
                                     break;
                                 case 4:
                                     specification = "LD (FF00H+C),A";
-                                    ioRegister = IoRegister.Register;
+                                    //ioRegister = IoRegister.Register;
                                     break;
                                 case 5:
                                     specification = "LD ({1:X4}H),A";
@@ -569,7 +585,7 @@ namespace LR35902
                                     break;
                                 case 6:
                                     specification = "LD A,(FF00H+C)";
-                                    ioRegister = IoRegister.Register;
+                                    //ioRegister = IoRegister.Register;
                                     break;
                                 case 7:
                                     specification = "LD A,({1:X4}H)";

@@ -90,12 +90,12 @@ namespace M6502
                 case 0x8f: this.AbsoluteAddress(); this.SAX(); break;	                                        // *SAX (absolute)
 
                 case 0x92: this.Jam(); break;                                                                   // *JAM
-                case 0x93: this.IndirectIndexedYAddress(); this.Fixup(); this.SHA(); break;                     // *SHA (indirect indexed, Y)
+                case 0x93: this.IndirectIndexedYAddress(); this.Fixup(); this.SHA(); break;                     // *SHA (indirect indexed, Y) (XXXX)
                 case 0x97: this.ZeroPageYAddress(); this.SAX(); break;                                          // *SAX (zero page, Y)
-                case 0x9b: this.AbsoluteYAddress(); this.Fixup(); this.TAS(); break;                            // *TAS (absolute, Y)
-                case 0x9c: this.AbsoluteXAddress(); this.Fixup(); this.SYA(); break;                            // *SYA (absolute, X)
-                case 0x9e: this.AbsoluteYAddress(); this.Fixup(); this.SXA(); break;                            // *SXA (absolute, Y)
-                case 0x9f: this.AbsoluteYAddress(); this.Fixup(); this.SHA(); break;                            // *SHA (absolute, Y)
+                case 0x9b: this.AbsoluteYAddress(); this.Fixup(); this.TAS(); break;                            // *TAS (absolute, Y) (XXXX)
+                case 0x9c: this.AbsoluteXAddress(); this.Fixup(); this.SYA(); break;                            // *SYA (absolute, X) (XXXX)
+                case 0x9e: this.AbsoluteYAddress(); this.Fixup(); this.SXA(); break;                            // *SXA (absolute, Y) (XXXX)
+                case 0x9f: this.AbsoluteYAddress(); this.Fixup(); this.SHA(); break;                            // *SHA (absolute, Y) (XXXX)
 
                 case 0xa3: this.IndexedIndirectXRead(); this.LAX(); break;                                      // *LAX (indexed indirect X)
                 case 0xa7: this.ZeroPageRead(); this.LAX(); break;                                              // *LAX (zero page)
@@ -239,13 +239,14 @@ namespace M6502
             if (this.Fixed)
             {
                 updated = (byte)(data & this.FixedPage);
-                this.Bus.Address.High = updated;
+                //this.Bus.Address.High = updated;
             }
             else
             {
                 updated = (byte)(data & this.UnfixedPage);
-                this.Bus.Address.High = updated;
+                //this.Bus.Address.High = updated;
             }
+            this.Bus.Address.High = updated;
             this.MemoryWrite(updated);
         }
 

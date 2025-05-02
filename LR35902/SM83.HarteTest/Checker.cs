@@ -308,7 +308,6 @@
             }
         }
 
-
         private void Runner_ReadByte(object? sender, EventArgs e) => this.AddActualCycle(this.Runner.Address, this.Runner.Data, "r-m");
 
         private void Runner_WrittenByte(object? sender, EventArgs e) => this.AddActualCycle(this.Runner.Address, this.Runner.Data, "-wm");

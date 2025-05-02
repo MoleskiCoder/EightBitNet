@@ -13,6 +13,8 @@ namespace LR35902
         {
             this.bus = bus;
             this.RaisedPOWER += this.LR35902_RaisedPOWER;
+            this.LoweringHALT += this.LR35902_LoweringHALT;
+            this.RaisedHALT += this.LR35902_RaisedHALT;
         }
 
         private void LR35902_RaisedPOWER(object? sender, EventArgs e)
@@ -20,6 +22,16 @@ namespace LR35902
             this.RaiseWR();
             this.RaiseRD();
             this.RaiseMWR();
+        }
+
+        private void LR35902_RaisedHALT(object? sender, EventArgs e)
+        {
+            ++this.PC.Word; // Release the PC from HALT instruction
+        }
+
+        private void LR35902_LoweringHALT(object? sender, EventArgs e)
+        {
+            --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
         }
 
         private readonly Bus bus;
@@ -677,8 +689,8 @@ namespace LR35902
                     if (z == 6 && y == 6)
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
-                        this.PC.Word++;
                         this.TickMachine(2);
+                        //this.PC.Word++;
                     }
                     else
                     {

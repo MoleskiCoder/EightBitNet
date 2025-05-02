@@ -861,6 +861,8 @@ namespace Z80
                 case 1: // BIT y, r[z]
                     this.BIT(y, operand);
                     this.F = AdjustXY(this.F, direct ? operand : this.MEMPTR.High);
+                    if (indirect)
+                        this.Tick();
                     break;
                 case 2: // RES y, r[z]
                     operand = RES(y, operand);
@@ -1437,12 +1439,8 @@ namespace Z80
 
                         if (normal)
                         {
-                            if (this._displaced)
-                            {
-                                this.Tick(5);
-                            }
-
-                            this.R(y, this.R(z));
+                            var value = this.R(z);
+                            this.R(y, value);
                         }
                     }
                     else
@@ -1456,7 +1454,7 @@ namespace Z80
                         if (memoryZ && this._displaced)
                         {
                             this.FetchDisplacement();
-                            this.Tick(5);
+                            this.Tick(4);
                         }
 
                         var value = this.R(z);
@@ -2262,12 +2260,14 @@ namespace Z80
 
         private void WritePort()
         {
-            this.Tick();
+            this.Tick(2);
             this.LowerIORQ();
             this.LowerWR();
             this._ports.Write(this.Bus.Address.Low, this.Bus.Data);
+            this.Tick();
             this.RaiseWR();
             this.RaiseIORQ();
+            this.Tick();
         }
 
         private void ReadPort(byte port)
