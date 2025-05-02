@@ -480,14 +480,19 @@ namespace Z80
 
         #endregion
 
-        protected override void MemoryWrite()
+        protected void MemoryUpdate(int ticks)
         {
             this.LowerMREQ();
             this.LowerWR();
-            this.Tick(3);
+            this.Tick(ticks);
             base.MemoryWrite();
             this.RaiseWR();
             this.RaiseMREQ();
+        }
+
+        protected override void MemoryWrite()
+        {
+            this.MemoryUpdate(3);
         }
 
         protected override byte MemoryRead()
@@ -760,6 +765,7 @@ namespace Z80
                     {
                         _ = this.MemoryRead();
                     }
+                    this.Tick();
                     // Will need a post-MemoryWrite
                     return ref this.Bus.Data;
                 case 7:
@@ -774,7 +780,8 @@ namespace Z80
             this.R(r, AccessLevel.WriteOnly) = value;
             if (r == 6)
             {
-                this.MemoryWrite();
+                this.MemoryUpdate(1);
+                this.Tick();
             }
         }
 
