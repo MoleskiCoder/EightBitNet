@@ -333,10 +333,10 @@
         private void InitialiseState(Test test)
         {
             var initial = test.Initial ?? throw new InvalidOperationException("Test cannot have an invalid initial state");
-            this.InitialiseState(initial);
+            this.InitialiseState(initial, test.AvailablePorts());
         }
 
-        private void InitialiseState(State state)
+        private void InitialiseState(State state, IEnumerable<Port> ports)
         {
             var runner = this.Runner;
             var cpu = runner.CPU;
@@ -389,6 +389,24 @@
                 var address = (ushort)entry[0];
                 var value = (byte)entry[1];
                 runner.Poke(address, value);
+            }
+
+            foreach (var port in ports)
+            {
+                var address = new Register16(port.Address).Low;
+                var value = port.Value;
+                if (port.Type == "r")
+                {
+                    cpu.Ports.WriteInputPort(address, value);
+                }
+                else if (port.Type == "w")
+                {
+                    cpu.Ports.WriteOutputPort(address, value);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unknown port action type: {port.Type}");
+                }
             }
         }
 

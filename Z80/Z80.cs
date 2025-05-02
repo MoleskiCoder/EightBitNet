@@ -19,6 +19,8 @@ namespace Z80
 
         private readonly InputOutput _ports;
 
+        public InputOutput Ports => this._ports;
+
         private readonly Register16[] _accumulatorFlags = [new Register16(), new Register16()];
         private readonly Register16[][] _registers =
         [
@@ -504,8 +506,16 @@ namespace Z80
             var returned = base.MemoryRead();
             this.RaiseRD();
             this.RaiseMREQ();
-            if (this.M1.Raised())
+            if (this.M1.Lowered())
+            {
+                this.Bus.Address.Assign(this.REFRESH, this.IV);
+                this.LowerRFSH();
                 this.Tick();
+                this.LowerMREQ();
+                this.RaiseMREQ();
+                this.RaiseRFSH();
+            }
+            this.Tick();
             return returned;
         }
 
@@ -1509,6 +1519,7 @@ namespace Z80
                                             break;
                                         case 3: // LD SP,HL
                                             this.SP.Assign(this.HL2());
+                                            this.Tick(2);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1695,15 +1706,6 @@ namespace Z80
             this.LowerM1();
             var returned = this.MemoryRead(this.PC);
             this.RaiseM1();
-
-            this.Bus.Address.Assign(this.REFRESH, this.IV);
-            this.LowerRFSH();
-            this.Tick();
-            this.LowerMREQ();
-            this.RaiseMREQ();
-            this.RaiseRFSH();
-            this.Tick();
-
             return returned;
         }
 
@@ -1766,9 +1768,9 @@ namespace Z80
         protected sealed override bool ReturnConditionalFlag(int flag)
         {
             var condition = this.ConvertCondition(flag);
+            this.Tick();
             if (condition)
             {
-                this.Tick();
                 this.Return();
             }
             return condition;
@@ -2029,11 +2031,18 @@ namespace Z80
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.MemoryRead();
             this.Tick();
-            this.MemoryWrite(exchange.High);
-            exchange.High = this.MEMPTR.High;
             --this.Bus.Address.Word;
-            this.MemoryWrite(exchange.Low);
+            this.Tick();
+            this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
+            this.MemoryUpdate(1);
+            this.Tick();
+            ++this.Bus.Address.Word;
+            this.Tick();
+            this.Bus.Data = exchange.High;
+            exchange.High = this.MEMPTR.High;
+            this.MemoryUpdate(1);
+            this.Tick(3);
         }
 
         private void BlockCompare(Register16 source, ushort counter)
@@ -2265,18 +2274,20 @@ namespace Z80
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
             this.MEMPTR.Assign(this.Bus.Address);
-            ++this.MEMPTR.Low;
+            ++this.MEMPTR.Word;
             this.ReadPort();
         }
 
         private void ReadPort()
         {
-            this.Tick();
+            this.Tick(2);
             this.LowerIORQ();
             this.LowerRD();
             this.Bus.Data = this._ports.Read(this.Bus.Address.Low);
+            this.Tick();
             this.RaiseRD();
             this.RaiseIORQ();
+            this.Tick();
         }
     }
 }

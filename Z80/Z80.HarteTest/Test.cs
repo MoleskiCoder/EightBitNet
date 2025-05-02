@@ -29,7 +29,7 @@
         {
             if (this.Ports is null)
             {
-                throw new InvalidOperationException("Ports have not been initialised");
+                yield break;
             }
 
             foreach (var port in this.Ports)
