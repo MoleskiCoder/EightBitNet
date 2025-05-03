@@ -2,7 +2,6 @@
 {
     using EightBit;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
 
     internal sealed class Checker
@@ -246,6 +245,9 @@
             var de_a_good = this.Check("'DE", final.DE_, cpu.DE);
             var hl_a_good = this.Check("'HL", final.HL_, cpu.HL);
 
+            cpu.ExxAF();
+            cpu.Exx();
+
             var i_good = this.Check("I", final.I, cpu.IV);
             var r_good = this.Check("R", final.R, cpu.REFRESH);
 
@@ -415,7 +417,7 @@
 
         private void AddActualCycle(ushort address, byte value, string action) => this.ActualCycles.Add(new Cycle(address, value, action));
 
-        private string ExpandCycle(string prefix, ushort address, byte? value, string? action)
+        private static string ExpandCycle(string prefix, ushort address, byte? value, string? action)
         {
             ArgumentNullException.ThrowIfNull(action);
             return value is null
@@ -423,7 +425,7 @@
                 : $"{prefix}: Address: {address:X4}, value: {value:X2}, action: {action}";
         }
 
-        private string ExpandCycle(string prefix, Cycle cycle) => this.ExpandCycle(prefix, cycle.Address, cycle.Value, cycle.Type);
+        private static string ExpandCycle(string prefix, Cycle cycle) => ExpandCycle(prefix, cycle.Address, cycle.Value, cycle.Type);
 
         private void DumpCycles(IEnumerable<Cycle> expected, IEnumerable<Cycle> actual)
         {
@@ -438,7 +440,7 @@
                 var message = "";
                 if (expectedCycle is not null)
                 {
-                    message += this.ExpandCycle("Expected", expectedCycle);
+                    message += ExpandCycle("Expected", expectedCycle);
                     message += "    ";
                 }
                 if (actualCycle is not null)
@@ -447,7 +449,7 @@
                     {
                         actualCycle.Value = null;
                     }
-                    var actualMessage = this.ExpandCycle("Actual  ", actualCycle);
+                    var actualMessage = ExpandCycle("Actual  ", actualCycle);
                     var messagePrefix = expectedCycle is null ? new string(' ', actualMessage.Length + 4) : string.Empty;
                     message += messagePrefix + actualMessage;
                 }
