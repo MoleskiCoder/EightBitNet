@@ -563,16 +563,6 @@ namespace Z80
             this.Tick(5);
         }
 
-        protected override bool JumpRelativeConditional(bool condition)
-        {
-            var offset = this.FetchByte();
-            if (condition)
-            {
-                this.JumpRelative(offset);
-            }
-            return condition;
-        }
-
         private int Zero()
         {
             return ZeroTest(this.F);

@@ -173,13 +173,11 @@ namespace EightBit
 
         protected virtual bool JumpRelativeConditional(bool condition)
         {
-            this.Intermediate.Assign(this.PC);
-            ++this.PC.Word;
+            var offset = this.FetchByte();
             if (condition)
             {
-                this.JumpRelative(this.MemoryRead(this.Intermediate));
+                this.JumpRelative(offset);
             }
-
             return condition;
         }
 

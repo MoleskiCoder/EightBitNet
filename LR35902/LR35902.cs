@@ -354,15 +354,6 @@ namespace LR35902
             return base.ReturnConditional(condition);
         }
 
-        protected override bool JumpRelativeConditional(bool condition)
-        {
-            if (!base.JumpRelativeConditional(condition))
-            {
-                this.MemoryRead(this.PC);
-            }
-            return condition;
-        }
-
         protected override void Return()
         {
             base.Return();
