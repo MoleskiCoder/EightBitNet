@@ -922,6 +922,7 @@ namespace Z80
                                 1 => this.ADC(this.HL2(), this.RP(p)), // ADC HL, rp[p]
                                 _ => throw new NotSupportedException("Invalid operation mode"),
                             });
+                            this.Tick(7);
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
                             this.FetchWordAddress();
