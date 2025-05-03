@@ -1021,9 +1021,9 @@ namespace Z80
                                 case 6: // LDIR
                                     if (this.LDIR())
                                     {
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                     }
 
                                     this.Tick(5);
@@ -1031,9 +1031,9 @@ namespace Z80
                                 case 7: // LDDR
                                     if (this.LDDR())
                                     {
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                     }
 
                                     this.Tick(5);
@@ -1055,9 +1055,9 @@ namespace Z80
                                 case 6: // CPIR
                                     if (this.CPIR())
                                     {
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                         this.Tick(5);
                                     }
 
@@ -1065,9 +1065,9 @@ namespace Z80
                                 case 7: // CPDR
                                     if (this.CPDR())
                                     {
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
-                                        --this.PC.Word;
+                                        this.DecrementPC();
                                         this.Tick(3);
                                     }
                                     else
@@ -1094,7 +1094,8 @@ namespace Z80
                                 case 6: // INIR
                                     if (this.INIR())
                                     {
-                                        this.PC.Word -= 2;
+                                        this.DecrementPC();
+                                        this.DecrementPC();
                                         this.Tick(5);
                                     }
 
@@ -1102,7 +1103,8 @@ namespace Z80
                                 case 7: // INDR
                                     if (this.INDR())
                                     {
-                                        this.PC.Word -= 2;
+                                        this.DecrementPC();
+                                        this.DecrementPC();
                                         this.Tick(5);
                                     }
 
@@ -1124,7 +1126,8 @@ namespace Z80
                                 case 6: // OTIR
                                     if (this.OTIR())
                                     {
-                                        this.PC.Word -= 2;
+                                        this.DecrementPC();
+                                        this.DecrementPC();
                                         this.Tick(5);
                                     }
 
@@ -1132,7 +1135,8 @@ namespace Z80
                                 case 7: // OTDR
                                     if (this.OTDR())
                                     {
-                                        this.PC.Word -= 2;
+                                        this.DecrementPC();
+                                        this.DecrementPC();
                                         this.Tick(5);
                                     }
 
@@ -1664,7 +1668,7 @@ namespace Z80
         private byte FetchInitialOpCode()
         {
             var returned = this.ReadInitialOpCode();
-            ++this.PC.Word;
+            this.IncrementPC();
             return returned;
         }
 

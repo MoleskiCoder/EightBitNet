@@ -13,8 +13,6 @@ namespace Intel8080
         : base(bus)
         {
             this.ports = ports;
-            this.LoweredHALT += this.Intel8080_LoweredHALT;
-            this.RaisedHALT += this.Intel8080_RaisedHALT;
         }
 
         private readonly Register16 af = new();
@@ -89,16 +87,6 @@ namespace Intel8080
                 this.Execute(this.Bus.Data);
                 this.Tick(3);
             }
-        }
-
-        private void Intel8080_RaisedHALT(object? sender, EventArgs e)
-        {
-            ++this.PC.Word; // Release the PC from HALT instruction
-        }
-
-        private void Intel8080_LoweredHALT(object? sender, EventArgs e)
-        {
-            --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
         }
 
         private int Sign()

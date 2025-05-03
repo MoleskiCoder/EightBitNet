@@ -161,13 +161,11 @@ namespace EightBit
 
         public void Halt()
         {
-            --this.PC.Word;
             this.LowerHALT();
         }
 
         public void Proceed()
         {
-            ++this.PC.Word;
             this.RaiseHALT();
         }
 

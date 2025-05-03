@@ -664,7 +664,7 @@ namespace M6502
         protected void ImmediateAddress()
         {
             this.Bus.Address.Assign(this.PC);
-            ++this.PC.Word;
+            this.IncrementPC();
         }
 
         protected void AbsoluteAddress() => this.FetchWordAddress();

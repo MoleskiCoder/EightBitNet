@@ -669,7 +669,6 @@ namespace LR35902
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                         this.TickMachine(2);
-                        //this.PC.Word++;
                     }
                     else
                     {
