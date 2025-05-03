@@ -13,8 +13,6 @@ namespace Z80
         {
             this._ports = ports;
             this.RaisedPOWER += this.Z80_RaisedPOWER;
-            this.LoweredHALT += this.Z80_LoweredHALT;
-            this.RaisedHALT += this.Z80_RaisedHALT;
         }
 
         private readonly InputOutput _ports;
@@ -192,16 +190,6 @@ namespace Z80
             base.ResetWorkingRegisters();
 
             this.ResetPrefixes();
-        }
-
-        private void Z80_RaisedHALT(object? sender, EventArgs e)
-        {
-            ++this.PC.Word; // Release the PC from HALT instruction
-        }
-
-        private void Z80_LoweredHALT(object? sender, EventArgs e)
-        {
-            --this.PC.Word; // Keep the PC on the HALT instruction (i.e. executing NOP)
         }
 
         private void ResetPrefixes()
@@ -494,11 +482,14 @@ namespace Z80
 
         protected override void MemoryWrite()
         {
+            this.OnWritingMemory();
             this.MemoryUpdate(3);
+            this.OnWroteMemory();
         }
 
         protected override byte MemoryRead()
         {
+            this.OnReadingMemory();
             this.Tick();
             this.LowerMREQ();
             this.LowerRD();
@@ -516,6 +507,7 @@ namespace Z80
                 this.RaiseRFSH();
             }
             this.Tick();
+            this.OnReadMemory();
             return returned;
         }
 
