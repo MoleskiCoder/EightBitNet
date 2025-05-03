@@ -2,6 +2,7 @@
 {
     using EightBit;
     using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
 
     internal sealed class Checker
@@ -446,7 +447,9 @@
                     {
                         actualCycle.Value = null;
                     }
-                    message += this.ExpandCycle("Actual  ", actualCycle);
+                    var actualMessage = this.ExpandCycle("Actual  ", actualCycle);
+                    var messagePrefix = expectedCycle is null ? new string(' ', actualMessage.Length + 4) : string.Empty;
+                    message += messagePrefix + actualMessage;
                 }
                 Debug.Assert(!string.IsNullOrEmpty(message), "Message should not be empty");
                 this.Messages.Add(message);

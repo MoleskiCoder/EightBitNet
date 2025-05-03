@@ -1377,6 +1377,7 @@ namespace Z80
                             if (memoryZ || memoryY)
                             {
                                 this.FetchDisplacement();
+                                this.Tick(5);
                             }
 
                             if (memoryZ)
