@@ -1432,7 +1432,7 @@ namespace Z80
                         if (memoryZ && this._displaced)
                         {
                             this.FetchDisplacement();
-                            this.Tick(4);
+                            this.Tick(5);
                         }
 
                         var value = this.R(z);
