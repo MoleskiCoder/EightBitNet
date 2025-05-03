@@ -1026,7 +1026,7 @@ namespace Z80
                                         --this.PC.Word;
                                     }
 
-                                    this.Tick(7);
+                                    this.Tick(5);
                                     break;
                                 case 7: // LDDR
                                     if (this.LDDR())
@@ -1036,7 +1036,7 @@ namespace Z80
                                         --this.PC.Word;
                                     }
 
-                                    this.Tick(7);
+                                    this.Tick(5);
                                     break;
                                 default:
                                     break;
@@ -1061,7 +1061,6 @@ namespace Z80
                                         this.Tick(5);
                                     }
 
-                                    this.Tick(5);
                                     break;
                                 case 7: // CPDR
                                     if (this.CPDR())
@@ -1076,7 +1075,7 @@ namespace Z80
                                         this.MEMPTR.Word = (ushort)(this.PC.Word - 2);
                                     }
 
-                                    this.Tick(7);
+                                    this.Tick(2);
                                     break;
                                 default:
                                     break;
@@ -1129,7 +1128,6 @@ namespace Z80
                                         this.Tick(5);
                                     }
 
-                                    this.Tick(3);
                                     break;
                                 case 7: // OTDR
                                     if (this.OTDR())
