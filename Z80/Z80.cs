@@ -793,11 +793,12 @@ namespace Z80
             }
         }
 
-        private void R(int r, byte value)
+        private void R(int r, byte value, int ticks = 0)
         {
             this.R(r, AccessLevel.WriteOnly) = value;
             if (r == 6)
             {
+                this.Tick(ticks);
                 this.MemoryUpdate(1);
                 this.Tick();
             }
@@ -1308,7 +1309,8 @@ namespace Z80
                                 }
 
                                 var original = this.R(y);
-                                this.R(y, this.Increment(original));
+                                var updated = this.Increment(original);
+                                this.R(y, updated, 1);
                                 break;
                             }
 
@@ -1321,7 +1323,8 @@ namespace Z80
                                 }
 
                                 var original = this.R(y);
-                                this.R(y, this.Decrement(original));
+                                var updated = this.Decrement(original);
+                                this.R(y, updated, 1);
                                 break;
                             }
 
