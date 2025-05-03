@@ -13,6 +13,14 @@ namespace EightBit
 
         #endregion
 
+        #region Instruction execution events
+
+        public event EventHandler<EventArgs>? ReadingMemory;
+        public event EventHandler<EventArgs>? ReadMemory;
+        public event EventHandler<EventArgs>? WritingMemory;
+        public event EventHandler<EventArgs>? WroteMemory;
+
+        #endregion
 
         private PinLevel _resetLine;
         private PinLevel _intLine;
@@ -141,6 +149,14 @@ namespace EightBit
         protected virtual void HandleRESET() => this.RaiseRESET();
 
         protected virtual void HandleINT() => this.RaiseINT();
+
+        protected void OnReadingMemory() => this.ReadingMemory?.Invoke(this, EventArgs.Empty);
+
+        protected void OnReadMemory() => this.ReadMemory?.Invoke(this, EventArgs.Empty);
+
+        protected void OnWritingMemory() => this.WritingMemory?.Invoke(this, EventArgs.Empty);
+
+        protected void OnWroteMemory() => this.WroteMemory?.Invoke(this, EventArgs.Empty);
 
         protected void MemoryWrite(byte low, byte high)
         {

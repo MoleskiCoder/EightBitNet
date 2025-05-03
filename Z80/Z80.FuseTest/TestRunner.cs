@@ -98,8 +98,8 @@ namespace Z80.FuseTest
 
         public override void Initialize()
         {
-            this.ReadByte += this.Event_ReadByte;
-            this.WrittenByte += this.Event_WrittenByte;
+            this.cpu.ReadMemory += this.Cpu_ReadMemory;
+            this.cpu.WroteMemory += this.Cpu_WroteMemory;
             this.ports.ReadPort += this.Ports_ReadPort;
             this.ports.WrittenPort += this.Ports_WrittenPort;
             this.cpu.ExecutedInstruction += this.Cpu_ExecutedInstruction;
@@ -107,8 +107,8 @@ namespace Z80.FuseTest
 
         private void Ports_ReadPort(object? sender, EventArgs e) => this.AddActualEvent("PR");
         private void Ports_WrittenPort(object? sender, EventArgs e) => this.AddActualEvent("PW");
-        private void Event_ReadByte(object? sender, EventArgs e) => this.AddActualEvent("MR");
-        private void Event_WrittenByte(object? sender, EventArgs e) => this.AddActualEvent("MW");
+        private void Cpu_ReadMemory(object? sender, EventArgs e) => this.AddActualEvent("MR");
+        private void Cpu_WroteMemory(object? sender, EventArgs e) => this.AddActualEvent("MW");
 
         private void AddActualEvent(string specifier)
         {
