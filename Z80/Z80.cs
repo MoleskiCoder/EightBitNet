@@ -877,9 +877,9 @@ namespace Z80
 
             if (update)
             {
-                this.Tick();
                 if (this._displaced)
                 {
+                    this.Tick();
                     this.MemoryWrite(operand);
                     if (!memoryZ)
                     {
@@ -888,6 +888,8 @@ namespace Z80
                 }
                 else
                 {
+                    if (memoryZ)
+                        this.Tick();
                     this.R(z, operand);
                 }
             }
