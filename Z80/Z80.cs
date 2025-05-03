@@ -1385,20 +1385,10 @@ namespace Z80
                                 switch (y)
                                 {
                                     case 4:
-                                        if (this._displaced)
-                                        {
-                                            this.Tick(5);
-                                        }
-
                                         this.H = this.R(z);
                                         normal = false;
                                         break;
                                     case 5:
-                                        if (this._displaced)
-                                        {
-                                            this.Tick(5);
-                                        }
-
                                         this.L = this.R(z);
                                         normal = false;
                                         break;
@@ -1412,20 +1402,10 @@ namespace Z80
                                 switch (z)
                                 {
                                     case 4:
-                                        if (this._displaced)
-                                        {
-                                            this.Tick(5);
-                                        }
-
                                         this.R(y, this.H);
                                         normal = false;
                                         break;
                                     case 5:
-                                        if (this._displaced)
-                                        {
-                                            this.Tick(5);
-                                        }
-
                                         this.R(y, this.L);
                                         normal = false;
                                         break;
