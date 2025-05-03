@@ -84,6 +84,14 @@ namespace EightBit
             }
         }
 
+        protected override void IncrementPC()
+        {
+            if (this.HALT.Raised())
+            {
+                base.IncrementPC();
+            }
+        }
+
         protected void ResetWorkingRegisters()
         {
             this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
