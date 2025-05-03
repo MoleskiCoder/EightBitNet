@@ -5,7 +5,6 @@
 namespace Z80
 {
     using EightBit;
-    using static System.Runtime.InteropServices.JavaScript.JSType;
 
     public class Z80 : IntelProcessor
     {
@@ -14,6 +13,7 @@ namespace Z80
         {
             this._ports = ports;
             this.RaisedPOWER += this.Z80_RaisedPOWER;
+            this.RaisedRFSH += this.Z80_RaisedRFSH;
         }
 
         private readonly InputOutput _ports;
@@ -193,6 +193,11 @@ namespace Z80
             this.ResetPrefixes();
         }
 
+        private void Z80_RaisedRFSH(object? sender, EventArgs e)
+        {
+            ++this.REFRESH;
+        }
+
         private void ResetPrefixes()
         {
             this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
@@ -304,7 +309,6 @@ namespace Z80
             {
                 RaisingRFSH?.Invoke(this, EventArgs.Empty);
                 this.RFSH.Raise();
-                ++this.REFRESH;
                 RaisedRFSH?.Invoke(this, EventArgs.Empty);
             }
         }
