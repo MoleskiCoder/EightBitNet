@@ -5,6 +5,7 @@
 namespace Z80
 {
     using EightBit;
+    using static System.Runtime.InteropServices.JavaScript.JSType;
 
     public class Z80 : IntelProcessor
     {
@@ -472,19 +473,19 @@ namespace Z80
 
         protected void MemoryUpdate(int ticks)
         {
+            this.OnWritingMemory();
             this.LowerMREQ();
             this.LowerWR();
             this.Tick(ticks);
             base.MemoryWrite();
             this.RaiseWR();
             this.RaiseMREQ();
+            this.OnWroteMemory();
         }
 
         protected override void MemoryWrite()
         {
-            this.OnWritingMemory();
             this.MemoryUpdate(3);
-            this.OnWroteMemory();
         }
 
         protected override byte MemoryRead()
@@ -968,19 +969,23 @@ namespace Z80
                             {
                                 case 0: // LD I,A
                                     this.IV = this.A;
+                                    this.Tick();
                                     break;
                                 case 1: // LD R,A
                                     this.REFRESH = this.A;
+                                    this.Tick();
                                     break;
                                 case 2: // LD A,I
                                     this.F = AdjustSZXY(this.F, this.A = this.IV);
                                     this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
+                                    this.Tick();
                                     break;
                                 case 3: // LD A,R
                                     this.F = AdjustSZXY(this.F, this.A = this.REFRESH);
                                     this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
                                     this.F = SetBit(this.F, StatusBits.PF, this.IFF2);
+                                    this.Tick();
                                     break;
                                 case 4: // RRD
                                     this.RRD();
@@ -1133,7 +1138,6 @@ namespace Z80
                                         this.Tick(5);
                                     }
 
-                                    this.Tick(3);
                                     break;
                                 default:
                                     break;
@@ -2037,6 +2041,8 @@ namespace Z80
 
             this.F = SetBit(this.F, StatusBits.YF, result & (byte)Bits.Bit1);
             this.F = SetBit(this.F, StatusBits.XF, result & (byte)Bits.Bit3);
+
+            this.Tick(5);
         }
 
         private void CPI()
@@ -2068,7 +2074,10 @@ namespace Z80
         private void BlockLoad(Register16 source, Register16 destination, ushort counter)
         {
             var value = this.MemoryRead(source);
-            this.MemoryWrite(destination);
+            this.Bus.Address.Assign(destination);
+            this.Tick();
+            this.MemoryUpdate(1);
+            this.Tick(3);
             var xy = this.A + value;
             this.F = SetBit(this.F, StatusBits.XF, xy & (int)Bits.Bit3);
             this.F = SetBit(this.F, StatusBits.YF, xy & (int)Bits.Bit1);
@@ -2104,14 +2113,15 @@ namespace Z80
 
         private void BlockIn(Register16 source, Register16 destination)
         {
+            this.Tick();
             this.Bus.Address.Assign(source);
             this.MEMPTR.Assign(this.Bus.Address);
-            this.Tick();
             this.ReadPort();
-            this.Tick(3);
-            this.MemoryWrite(destination);
+            this.Bus.Address.Assign(destination);
+            this.Tick();
+            this.MemoryUpdate(1);
+            this.Tick();
             source.High = this.Decrement(source.High);
-            this.F = SetBit(this.F, StatusBits.NF);
         }
 
         private void INI()
@@ -2209,8 +2219,10 @@ namespace Z80
             this.MEMPTR.Assign(this.Bus.Address);
             ++this.MEMPTR.Word;
             var memory = this.MemoryRead();
+            this.Tick(2);
+            this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
+            this.MemoryUpdate(1);
             this.Tick(4);
-            this.MemoryWrite((byte)(PromoteNibble(this.A) | HighNibble(memory)));
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
@@ -2222,8 +2234,10 @@ namespace Z80
             this.MEMPTR.Assign(this.Bus.Address);
             ++this.MEMPTR.Word;
             var memory = this.MemoryRead();
+            this.Tick(2);
+            this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
+            this.MemoryUpdate(1);
             this.Tick(4);
-            this.MemoryWrite((byte)(PromoteNibble(memory) | LowNibble(this.A)));
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.F = AdjustSZPXY(this.F, this.A);
             this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
