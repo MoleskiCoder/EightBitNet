@@ -1314,13 +1314,15 @@ namespace Z80
 
                         case 6: // 8-bit load immediate
                             {
-                                if (memoryY && this._displaced)
+                                var displacing = memoryY && this._displaced;
+                                if (displacing)
                                 {
                                     this.FetchDisplacement();
                                 }
 
                                 var value = this.FetchByte();
-                                if (this._displaced)
+
+                                if (displacing)
                                 {
                                     this.Tick(2);
                                 }
