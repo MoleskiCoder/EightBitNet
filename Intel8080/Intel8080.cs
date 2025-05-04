@@ -7,17 +7,11 @@ namespace Intel8080
 {
     using EightBit;
 
-    public class Intel8080 : IntelProcessor
+    public class Intel8080(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
-        public Intel8080(Bus bus, InputOutput ports)
-        : base(bus)
-        {
-            this.ports = ports;
-        }
-
         private readonly Register16 af = new();
 
-        private readonly InputOutput ports;
+        private readonly InputOutput ports = ports;
 
         private bool interruptEnable;
 
@@ -62,6 +56,7 @@ namespace Intel8080
             }
             else if (this.HALT.Lowered())
             {
+                _ = this.FetchByte();
                 this.Execute(0); // NOP
             }
             else
@@ -73,7 +68,6 @@ namespace Intel8080
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.DisableInterrupts();
             this.Tick(3);
         }
 
@@ -172,9 +166,9 @@ namespace Intel8080
 
         private static byte AdjustAuxiliaryCarrySub(byte input, byte before, byte value, int calculation) => ClearBit(input, StatusBits.AC, CalculateHalfCarrySub(before, value, calculation));
 
-        private void DisableInterrupts() => this.interruptEnable = false;
+        protected override void DisableInterrupts() => this.interruptEnable = false;
 
-        private void EnableInterrupts() => this.interruptEnable = true;
+        protected override void EnableInterrupts() => this.interruptEnable = true;
 
         private byte R(int r) => r switch
         {
@@ -489,7 +483,7 @@ namespace Intel8080
                                             this.Tick(10);
                                             break;
                                         case 2: // JP HL
-                                            this.Jump(this.HL.Word);
+                                            this.Jump(this.HL);
                                             this.Tick(4);
                                             break;
                                         case 3: // LD SP,HL

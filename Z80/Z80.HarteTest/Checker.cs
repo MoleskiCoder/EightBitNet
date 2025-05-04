@@ -228,8 +228,15 @@
             var pc_good = this.Check("PC", final.PC, cpu.PC);
             var sp_good = this.Check("SP", final.SP, cpu.SP);
 
-            var a_good = this.Check("A", final.A, cpu.A);
+            //byte xyMask = 0;
+            //unchecked
+            //{
+            //    xyMask = (byte)~(StatusBits.XF | StatusBits.YF);
+            //}
+            //var f_good = this.Check("F", (byte)(final.F & xyMask), (byte)(cpu.F & xyMask));
             var f_good = this.Check("F", final.F, cpu.F);
+
+            var a_good = this.Check("A", final.A, cpu.A);
             var b_good = this.Check("B", final.B, cpu.B);
             var c_good = this.Check("C", final.C, cpu.C);
             var d_good = this.Check("D", final.D, cpu.D);

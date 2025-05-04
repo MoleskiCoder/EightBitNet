@@ -238,7 +238,6 @@ namespace LR35902
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.DI();
             this.SP.Word = (ushort)(Mask.Sixteen - 1);
             this.TickMachine(4);
         }
@@ -247,7 +246,7 @@ namespace LR35902
         {
             base.HandleINT();
             this.RaiseHALT();
-            this.DI();
+            this.DisableInterrupts();
             this.Restart(this.Bus.Data);
         }
 
@@ -387,9 +386,9 @@ namespace LR35902
 
         private static byte Set(int n, byte operand) => SetBit(operand, Bit(n));
 
-        private void DI() => this.IME = false;
+        protected override void DisableInterrupts() => this.IME = false;
 
-        private void EI() => this.IME = true;
+        protected override void EnableInterrupts() => this.IME = true;
 
         private void Stop() => this.Stopped = true;
 
@@ -834,10 +833,10 @@ namespace LR35902
                                     this.Execute(this.FetchByte());
                                     break;
                                 case 6: // DI
-                                    this.DI();
+                                    this.DisableInterrupts();
                                     break;
                                 case 7: // EI
-                                    this.EI();
+                                    this.EnableInterrupts();
                                     break;
                                 default:
                                     break;
@@ -1147,7 +1146,7 @@ namespace LR35902
         private void RetI()
         {
             this.Return();
-            this.EI();
+            this.EnableInterrupts();
         }
     }
 }

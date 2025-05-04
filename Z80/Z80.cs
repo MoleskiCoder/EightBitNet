@@ -158,7 +158,7 @@ namespace Z80
                 // received from the memory is ignored and an NOP instruction is forced internally to the
                 // CPU.The HALT acknowledge signal is active during this time indicating that the processor
                 // is in the HALT state.
-                _ = this.ReadInitialOpCode();
+                _ = this.FetchInitialOpCode();
                 this.Execute(0); // NOP
                 handled = true;
             }
@@ -519,7 +519,6 @@ namespace Z80
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.DisableInterrupts();
             this.IV = this.REFRESH = 0;
             this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
             this.Tick(3);
@@ -708,9 +707,9 @@ namespace Z80
 
         private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
 
-        private void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
+        protected override void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
 
-        private void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
+        protected override void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
 
         private Register16 HL2() => this._prefixDD ? this.IX : this._prefixFD ? this.IY : this.HL;
 
@@ -1669,13 +1668,6 @@ namespace Z80
 
         private void FetchDisplacement() => this._displacement = (sbyte)this.FetchByte();
 
-        private byte FetchInitialOpCode()
-        {
-            var returned = this.ReadInitialOpCode();
-            this.IncrementPC();
-            return returned;
-        }
-
         // ** From the Z80 CPU User Manual
         // Figure 5 depicts the timing during an M1 (op code fetch) cycle. The Program Counter is
         // placed on the address bus at the beginning of the M1 cycle. One half clock cycle later, the
@@ -1688,10 +1680,10 @@ namespace Z80
         // before the RD signal becomes inactive. Clock states T3 and T4 of a fetch cycle are used to
         // _refresh dynamic memories. The CPU uses this time to decode and execute the fetched
         // instruction so that no other concurrent operation can be performed.
-        private byte ReadInitialOpCode()
+        private byte FetchInitialOpCode()
         {
             this.LowerM1();
-            var returned = this.MemoryRead(this.PC);
+            var returned = this.FetchByte();
             this.RaiseM1();
             return returned;
         }

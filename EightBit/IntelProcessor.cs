@@ -84,6 +84,10 @@ namespace EightBit
             }
         }
 
+        protected abstract void DisableInterrupts();
+
+        protected abstract void EnableInterrupts();
+
         protected override void IncrementPC()
         {
             if (this.HALT.Raised())
@@ -120,6 +124,7 @@ namespace EightBit
         protected override void HandleRESET()
         {
             base.HandleRESET();
+            this.DisableInterrupts();
             this.Jump(0);
         }
 

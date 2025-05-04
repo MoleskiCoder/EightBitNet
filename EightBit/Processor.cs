@@ -224,10 +224,15 @@ namespace EightBit
 
         protected virtual void DecrementPC() => --this.PC.Word;
 
-        protected virtual byte FetchByte()
+        protected virtual void ImmediateAddress()
         {
             this.Bus.Address.Assign(this.PC);
-            IncrementPC();
+            this.IncrementPC();
+        }
+
+        protected virtual byte FetchByte()
+        {
+            this.ImmediateAddress();
             return this.MemoryRead();
         }
 

@@ -24,7 +24,7 @@ namespace M6502
                 case 0x03: this.IndexedIndirectXRead(); this.SLO(); break;                                      // *SLO (indexed indirect X)
                 case 0x04: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
                 case 0x07: this.ZeroPageRead(); this.SLO(); break;                                              // *SLO (zero page)
-                case 0x0b: this.ImmediateRead(); this.ANC(); break;                                             // *ANC (immediate)
+                case 0x0b: this.FetchByte(); this.ANC(); break;                                                 // *ANC (immediate)
                 case 0x0c: this.AbsoluteRead(); break;                                                          // *NOP (absolute)
                 case 0x0f: this.AbsoluteRead(); this.SLO(); break;                                              // *SLO (absolute)
 
@@ -40,7 +40,7 @@ namespace M6502
                 case 0x22: this.Jam(); break;                                                                   // *JAM
                 case 0x23: this.IndexedIndirectXRead(); this.RLA(); ; break;                                    // *RLA (indexed indirect X)
                 case 0x27: this.ZeroPageRead(); this.RLA(); ; break;                                            // *RLA (zero page)
-                case 0x2b: this.ImmediateRead(); this.ANC(); break;                                             // *ANC (immediate)
+                case 0x2b: this.FetchByte(); this.ANC(); break;                                                 // *ANC (immediate)
                 case 0x2f: this.AbsoluteRead(); this.RLA(); break;                                              // *RLA (absolute)
 
                 case 0x32: this.Jam(); break;													                // *JAM
@@ -55,7 +55,7 @@ namespace M6502
                 case 0x42: this.Jam(); break;                                                                   // *JAM
                 case 0x43: this.IndexedIndirectXRead(); this.SRE(); break;                                      // *SRE (indexed indirect X)
                 case 0x47: this.ZeroPageRead(); this.SRE(); break;                                              // *SRE (zero page)
-                case 0x4b: this.ImmediateRead(); this.ASR(); break;                                             // *ASR (immediate)
+                case 0x4b: this.FetchByte(); this.ASR(); break;                                                 // *ASR (immediate)
                 case 0x4f: this.AbsoluteRead(); this.SRE(); break;                                              // *SRE (absolute)
 
                 case 0x52: this.Jam(); break;                                                                   // *JAM
@@ -70,7 +70,7 @@ namespace M6502
                 case 0x63: this.IndexedIndirectXRead(); this.RRA(); break;                                      // *RRA (indexed indirect X)
                 case 0x64: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
                 case 0x67: this.ZeroPageRead(); this.RRA(); break;                                              // *RRA (zero page)
-                case 0x6b: this.ImmediateRead(); this.ARR(); break;                                             // *ARR (immediate)
+                case 0x6b: this.FetchByte(); this.ARR(); break;                                                 // *ARR (immediate)
                 case 0x6f: this.AbsoluteRead(); this.RRA(); break;                                              // *RRA (absolute)
 
                 case 0x72: this.Jam(); break;                                                                   // *JAM
@@ -82,11 +82,11 @@ namespace M6502
                 case 0x7c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
                 case 0x7f: this.AbsoluteXAddress(); this.FixupRead(); this.RRA(); break;                        // *RRA (absolute, X)
 
-                case 0x80: this.ImmediateRead(); break;                                                         // *NOP (immediate)
+                case 0x80: this.FetchByte(); break;                                                             // *NOP (immediate)
                 case 0x83: this.IndexedIndirectXAddress(); this.SAX(); break;                                   // *SAX (indexed indirect X)
                 case 0x87: this.ZeroPageAddress(); this.SAX(); break;	                                        // *SAX (zero page)
-                case 0x89: this.ImmediateRead(); break;	                                                        // *NOP (immediate)
-                case 0x8b: this.ImmediateRead(); this.ANE(); break;	                                            // *ANE (immediate)
+                case 0x89: this.FetchByte(); break;	                                                            // *NOP (immediate)
+                case 0x8b: this.FetchByte(); this.ANE(); break;	                                                // *ANE (immediate)
                 case 0x8f: this.AbsoluteAddress(); this.SAX(); break;	                                        // *SAX (absolute)
 
                 case 0x92: this.Jam(); break;                                                                   // *JAM
@@ -99,7 +99,7 @@ namespace M6502
 
                 case 0xa3: this.IndexedIndirectXRead(); this.LAX(); break;                                      // *LAX (indexed indirect X)
                 case 0xa7: this.ZeroPageRead(); this.LAX(); break;                                              // *LAX (zero page)
-                case 0xab: this.ImmediateRead(); this.ATX(); break;                                             // *ATX (immediate)
+                case 0xab: this.FetchByte(); this.ATX(); break;                                                 // *ATX (immediate)
                 case 0xaf: this.AbsoluteRead(); this.LAX(); break;                                              // *LAX (absolute)
 
                 case 0xb2: this.Jam(); break;                                                                   // *JAM
@@ -110,7 +110,7 @@ namespace M6502
 
                 case 0xc3: this.IndexedIndirectXRead(); this.DCP(); break;                                      // *DCP (indexed indirect X)
                 case 0xc7: this.ZeroPageRead(); this.DCP(); break;                                              // *DCP (zero page)
-                case 0xcb: this.ImmediateRead(); this.AXS(); break;                                             // *AXS (immediate)
+                case 0xcb: this.FetchByte(); this.AXS(); break;                                                 // *AXS (immediate)
                 case 0xcf: this.AbsoluteRead(); this.DCP(); break;                                              // *DCP (absolute)
 
                 case 0xd2: this.Jam(); break;                                                                   // *JAM
@@ -123,7 +123,7 @@ namespace M6502
 
                 case 0xe3: this.IndexedIndirectXRead(); this.ISB(); break;                                      // *ISB (indexed indirect X)
                 case 0xe7: this.ZeroPageRead(); this.ISB(); break;                                              // *ISB (zero page)
-                case 0xeb: this.ImmediateRead(); this.SBC(); break;                                             // *SBC (immediate)
+                case 0xeb: this.FetchByte(); this.SBC(); break;                                                 // *SBC (immediate)
                 case 0xef: this.AbsoluteRead(); this.ISB(); break;                                              // *ISB (absolute)
 
                 case 0xf2: this.Jam(); break;                                                                   // *JAM
