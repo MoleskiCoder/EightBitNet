@@ -85,6 +85,8 @@
 
                 this.Raise("IM", final.IM, (ushort)cpu.IM);
 
+                this.Raise("Q", final.Q, cpu.Q);
+
                 this.Raise("IFF1", final.IFF1, cpu.IFF1);
                 this.Raise("IFF2", final.IFF2, cpu.IFF2);
 
@@ -260,6 +262,8 @@
 
             var im_good = this.Check("IM", final.IM, (byte)cpu.IM);
 
+            var q_good = this.Check("Q", final.Q, cpu.Q);
+
             var iff1_good = this.Check("IFF1", final.IFF1, cpu.IFF1);
             var iff2_good = this.Check("IFF2", final.IFF2, cpu.IFF2);
 
@@ -309,6 +313,7 @@
                 && hl_a_good
                 && i_good && r_good
                 && im_good
+                && q_good
                 && iff1_good && iff2_good
                 && wz_good
                 && ix_good && iy_good;
@@ -378,6 +383,8 @@
             cpu.REFRESH = state.R;
 
             cpu.IM = state.IM;
+
+            cpu.Q = state.Q;
 
             cpu.IFF1 = state.IFF1 != 0;
             cpu.IFF2 = state.IFF2 != 0;

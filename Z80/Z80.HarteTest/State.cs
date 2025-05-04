@@ -39,7 +39,7 @@
         public int P { get; set; }
 
         // Used to track if the last-modified opcode modified flag registers (with a few exceptions). This is important because CCF will behave differently depending on this
-        public int Q { get; set; }
+        public byte Q { get; set; }
 
         public byte IFF1 { get; set; }
         public byte IFF2 { get; set; }
