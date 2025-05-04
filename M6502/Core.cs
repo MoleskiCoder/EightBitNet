@@ -516,7 +516,7 @@ namespace M6502
 
             if (this.RDY.Raised())
             {
-                this.FetchInstruction();
+                this.OpCode = this.FetchInstruction();
                 if (this.RESET.Lowered())
                 {
                     this.HandleRESET();
@@ -536,17 +536,19 @@ namespace M6502
             }
         }
 
-        private void FetchInstruction()
+        protected override byte FetchInstruction()
         {
             this.LowerSYNC();
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "An extra cycle has occurred");
 
             // Can't use "FetchByte", since that would add an extra tick.
             this.ImmediateAddress();
-            this.OpCode = this.ReadFromBus();
+            var returned = this.ReadFromBus();
 
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
             this.RaiseSYNC();
+
+            return returned;
         }
 
         #endregion

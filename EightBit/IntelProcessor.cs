@@ -96,6 +96,13 @@ namespace EightBit
             }
         }
 
+        protected override byte FetchInstruction()
+        {
+            var read = this.FetchByte();
+            return this.HALT.Lowered() ? (byte)0 : read;
+        }
+
+
         protected void ResetWorkingRegisters()
         {
             this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;

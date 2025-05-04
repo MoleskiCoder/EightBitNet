@@ -224,14 +224,9 @@ namespace LR35902
             {
                 this.HandleINT();
             }
-            else if (this.HALT.Lowered())
-            {
-                _ = this.FetchByte();
-                this.Execute(0);  // NOP
-            }
             else
             {
-                this.Execute(this.FetchByte());
+                this.Execute(this.FetchInstruction());
             }
         }
 

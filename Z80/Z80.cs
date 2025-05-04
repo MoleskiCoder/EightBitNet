@@ -142,7 +142,8 @@ namespace Z80
                     handled = true;
                 }
             }
-            else if (this.HALT.Lowered())
+
+            if (!handled)
             {
                 // ** From the Z80 CPU User Manual
                 // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
@@ -158,14 +159,7 @@ namespace Z80
                 // received from the memory is ignored and an NOP instruction is forced internally to the
                 // CPU.The HALT acknowledge signal is active during this time indicating that the processor
                 // is in the HALT state.
-                _ = this.FetchInitialOpCode();
-                this.Execute(0); // NOP
-                handled = true;
-            }
-
-            if (!handled)
-            {
-                this.Execute(this.FetchInitialOpCode());
+                this.Execute(this.FetchInstruction());
             }
         }
 
@@ -1535,7 +1529,7 @@ namespace Z80
                                     }
                                     else
                                     {
-                                        this.Execute(this.FetchInitialOpCode());
+                                        this.Execute(this.FetchInstruction());
                                     }
 
                                     break;
@@ -1585,15 +1579,15 @@ namespace Z80
                                             break;
                                         case 1: // DD prefix
                                             this._displaced = this._prefixDD = true;
-                                            this.Execute(this.FetchInitialOpCode());
+                                            this.Execute(this.FetchInstruction());
                                             break;
                                         case 2: // ED prefix
                                             this._prefixED = true;
-                                            this.Execute(this.FetchInitialOpCode());
+                                            this.Execute(this.FetchInstruction());
                                             break;
                                         case 3: // FD prefix
                                             this._displaced = this._prefixFD = true;
-                                            this.Execute(this.FetchInitialOpCode());
+                                            this.Execute(this.FetchInstruction());
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1680,10 +1674,10 @@ namespace Z80
         // before the RD signal becomes inactive. Clock states T3 and T4 of a fetch cycle are used to
         // _refresh dynamic memories. The CPU uses this time to decode and execute the fetched
         // instruction so that no other concurrent operation can be performed.
-        private byte FetchInitialOpCode()
+        protected override byte FetchInstruction()
         {
             this.LowerM1();
-            var returned = this.FetchByte();
+            var returned = base.FetchInstruction();
             this.RaiseM1();
             return returned;
         }

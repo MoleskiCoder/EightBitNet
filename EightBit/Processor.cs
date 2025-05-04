@@ -92,6 +92,11 @@ namespace EightBit
             return current;
         }
 
+        protected virtual byte FetchInstruction()
+        {
+            return this.FetchByte();
+        }
+
         public void Execute(byte value)
         {
             this.OpCode = value;
