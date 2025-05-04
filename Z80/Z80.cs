@@ -1073,6 +1073,7 @@ namespace Z80
                                         this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
                                         this.DecrementPC();
+                                        this.AdjustXY(this.PC.High);
                                     }
 
                                     this.Tick(5);
@@ -1083,6 +1084,7 @@ namespace Z80
                                         this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
                                         this.DecrementPC();
+                                        this.AdjustXY(this.PC.High);
                                     }
 
                                     this.Tick(5);
@@ -1107,6 +1109,7 @@ namespace Z80
                                         this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
                                         this.DecrementPC();
+                                        this.AdjustXY(this.PC.High);
                                         this.Tick(5);
                                     }
 
@@ -1117,6 +1120,7 @@ namespace Z80
                                         this.DecrementPC();
                                         this.MEMPTR.Assign(this.PC);
                                         this.DecrementPC();
+                                        this.AdjustXY(this.PC.High);
                                         this.Tick(3);
                                     }
                                     else
