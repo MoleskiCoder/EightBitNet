@@ -226,7 +226,8 @@ namespace LR35902
             }
             else if (this.HALT.Lowered())
             {
-                //this.Execute(0);  // NOP
+                _ = this.FetchByte();
+                this.Execute(0);  // NOP
             }
             else
             {
