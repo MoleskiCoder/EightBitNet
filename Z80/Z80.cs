@@ -2141,7 +2141,7 @@ namespace Z80
         private bool LDIR()
         {
             this.LDI();
-            return this.Parity() != 0; // See LDI
+            return this.Parity() != 0; // See "BlockLoad"
         }
 
         private void LDD()
@@ -2154,7 +2154,21 @@ namespace Z80
         private bool LDDR()
         {
             this.LDD();
-            return this.Parity() != 0; // See LDD
+            return this.Parity() != 0; // See "BlockLoad"
+        }
+
+        private void AdjustBlockInFlagsIncrement(Register16 source)
+        {
+            var basis = (byte)(source.Low + 1) + this.Bus.Data;
+            this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
+            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ source.High));
+        }
+
+        private void AdjustBlockInFlagsDecrement(Register16 source)
+        {
+            var basis = (byte)(source.Low - 1) + this.Bus.Data;
+            this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
+            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ source.High));
         }
 
         private void BlockIn(Register16 source, Register16 destination)
@@ -2167,12 +2181,14 @@ namespace Z80
             this.Tick();
             this.MemoryUpdate(1);
             this.Tick();
-            source.High = this.Decrement(source.High);
+            this.AdjustSZXY(--source.High);
+            this.SetBit(StatusBits.NF, (this.Bus.Data & (byte)StatusBits.SF) != 0);
         }
 
         private void INI()
         {
             this.BlockIn(this.BC, this.HL);
+            this.AdjustBlockInFlagsIncrement(this.BC);
             ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
@@ -2180,12 +2196,13 @@ namespace Z80
         private bool INIR()
         {
             this.INI();
-            return this.Zero() == 0; // See INI
+            return this.Zero() == 0; // See "BlockIn"/"Decrement"
         }
 
         private void IND()
         {
             this.BlockIn(this.BC, this.HL);
+            this.AdjustBlockInFlagsDecrement(this.BC);
             --this.HL.Word;
             --this.MEMPTR.Word;
         }
@@ -2193,7 +2210,7 @@ namespace Z80
         private bool INDR()
         {
             this.IND();
-            return this.Zero() == 0; // See IND
+            return this.Zero() == 0; // See "BlockIn"/"Decrement"
         }
 
         private void BlockOut(Register16 source, Register16 destination)
