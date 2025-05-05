@@ -5,6 +5,7 @@
 namespace Z80
 {
     using EightBit;
+    using System.Diagnostics;
 
     public class Z80 : IntelProcessor
     {
@@ -570,80 +571,35 @@ namespace Z80
             this.Tick(5);
         }
 
-        private int Zero()
-        {
-            return ZeroTest(this.F);
-        }
+        private int Zero() => ZeroTest(this.F);
 
-        private int Carry()
-        {
-            return CarryTest(this.F);
-        }
+        private int Carry() => CarryTest(this.F);
 
-        private int Parity()
-        {
-            return ParityTest(this.F);
-        }
+        private int Parity() => ParityTest(this.F);
 
-        private int Sign()
-        {
-            return SignTest(this.F);
-        }
+        private int Sign() => SignTest(this.F);
 
-        private int HalfCarry()
-        {
-            return HalfCarryTest(this.F);
-        }
+        private int HalfCarry() => HalfCarryTest(this.F);
 
-        private int Subtracting()
-        {
-            return SubtractingTest(this.F);
-        }
+        private int Subtracting() => SubtractingTest(this.F);
 
-        private static int ZeroTest(byte data)
-        {
-            return data & (byte)StatusBits.ZF;
-        }
+        private static int ZeroTest(byte data) => data & (byte)StatusBits.ZF;
 
-        private static int CarryTest(byte data)
-        {
-            return data & (byte)StatusBits.CF;
-        }
+        private static int CarryTest(byte data) => data & (byte)StatusBits.CF;
 
-        private static int ParityTest(byte data)
-        {
-            return data & (byte)StatusBits.PF;
-        }
+        private static int ParityTest(byte data) => data & (byte)StatusBits.PF;
 
-        private static int SignTest(byte data)
-        {
-            return data & (byte)StatusBits.SF;
-        }
+        private static int SignTest(byte data) => data & (byte)StatusBits.SF;
 
-        private static int HalfCarryTest(byte data)
-        {
-            return data & (byte)StatusBits.HC;
-        }
+        private static int HalfCarryTest(byte data) => data & (byte)StatusBits.HC;
 
-        private static int SubtractingTest(byte data)
-        {
-            return data & (byte)StatusBits.NF;
-        }
+        private static int SubtractingTest(byte data) => data & (byte)StatusBits.NF;
 
-        private static int XTest(byte data)
-        {
-            return data & (byte)StatusBits.XF;
-        }
+        private static int XTest(byte data) => data & (byte)StatusBits.XF;
 
-        private static int YTest(byte data)
-        {
-            return data & (byte)StatusBits.YF;
-        }
+        private static int YTest(byte data) => data & (byte)StatusBits.YF;
 
-        private void AdjustStatusFlags(byte value)
-        {
-            this._modifiedF = this.F = value;
-        }
+        private void AdjustStatusFlags(byte value) => this._modifiedF = this.F = value;
 
         private void SetBit(StatusBits flag) => this.AdjustStatusFlags(SetBit(this.F, flag));
 
@@ -1068,26 +1024,10 @@ namespace Z80
                                     this.LDD();
                                     break;
                                 case 6: // LDIR
-                                    if (this.LDIR())
-                                    {
-                                        this.DecrementPC();
-                                        this.MEMPTR.Assign(this.PC);
-                                        this.DecrementPC();
-                                        this.AdjustXY(this.PC.High);
-                                    }
-
-                                    this.Tick(5);
+                                    this.LDIR();
                                     break;
                                 case 7: // LDDR
-                                    if (this.LDDR())
-                                    {
-                                        this.DecrementPC();
-                                        this.MEMPTR.Assign(this.PC);
-                                        this.DecrementPC();
-                                        this.AdjustXY(this.PC.High);
-                                    }
-
-                                    this.Tick(5);
+                                    this.LDDR();
                                     break;
                                 default:
                                     break;
@@ -1104,31 +1044,10 @@ namespace Z80
                                     this.CPD();
                                     break;
                                 case 6: // CPIR
-                                    if (this.CPIR())
-                                    {
-                                        this.DecrementPC();
-                                        this.MEMPTR.Assign(this.PC);
-                                        this.DecrementPC();
-                                        this.AdjustXY(this.PC.High);
-                                        this.Tick(5);
-                                    }
-
+                                    this.CPIR();
                                     break;
                                 case 7: // CPDR
-                                    if (this.CPDR())
-                                    {
-                                        this.DecrementPC();
-                                        this.MEMPTR.Assign(this.PC);
-                                        this.DecrementPC();
-                                        this.AdjustXY(this.PC.High);
-                                        this.Tick(3);
-                                    }
-                                    else
-                                    {
-                                        this.MEMPTR.Word = (ushort)(this.PC.Word - 2);
-                                    }
-
-                                    this.Tick(2);
+                                    this.CPDR();
                                     break;
                                 default:
                                     break;
@@ -1145,22 +1064,10 @@ namespace Z80
                                     this.IND();
                                     break;
                                 case 6: // INIR
-                                    if (this.INIR())
-                                    {
-                                        this.DecrementPC();
-                                        this.DecrementPC();
-                                        this.Tick(5);
-                                    }
-
+                                    this.INIR();
                                     break;
                                 case 7: // INDR
-                                    if (this.INDR())
-                                    {
-                                        this.DecrementPC();
-                                        this.DecrementPC();
-                                        this.Tick(5);
-                                    }
-
+                                    this.INDR();
                                     break;
                                 default:
                                     break;
@@ -1177,22 +1084,10 @@ namespace Z80
                                     this.OUTD();
                                     break;
                                 case 6: // OTIR
-                                    if (this.OTIR())
-                                    {
-                                        this.DecrementPC();
-                                        this.DecrementPC();
-                                        this.Tick(5);
-                                    }
-
+                                    this.OTIR();
                                     break;
                                 case 7: // OTDR
-                                    if (this.OTDR())
-                                    {
-                                        this.DecrementPC();
-                                        this.DecrementPC();
-                                        this.Tick(5);
-                                    }
-
+                                    this.OTDR();
                                     break;
                                 default:
                                     break;
@@ -1345,32 +1240,22 @@ namespace Z80
                             this.Tick(2);
                             break;
                         case 4: // 8-bit INC
+                            if (memoryY && this._displaced)
                             {
-                                if (memoryY && this._displaced)
-                                {
-                                    this.FetchDisplacement();
-                                    this.Tick(5);
-                                }
-
-                                var original = this.R(y);
-                                var updated = this.Increment(original);
-                                this.R(y, updated, 1);
-                                break;
+                                this.FetchDisplacement();
+                                this.Tick(5);
                             }
+                            this.R(y, this.Increment(this.R(y)), 1);
+                            break;
 
                         case 5: // 8-bit DEC
+                            if (memoryY && this._displaced)
                             {
-                                if (memoryY && this._displaced)
-                                {
-                                    this.FetchDisplacement();
-                                    this.Tick(5);
-                                }
-
-                                var original = this.R(y);
-                                var updated = this.Decrement(original);
-                                this.R(y, updated, 1);
-                                break;
+                                this.FetchDisplacement();
+                                this.Tick(5);
                             }
+                            this.R(y, this.Decrement(this.R(y)), 1);
+                            break;
 
                         case 6: // 8-bit load immediate
                             {
@@ -2076,15 +1961,23 @@ namespace Z80
             this.Tick(3);
         }
 
-        private void BlockCompare(Register16 source, ushort counter)
+        private void RepeatBlockInstruction()
         {
-            var value = this.MemoryRead(source);
-            var result = (byte)(this.A - value);
+            this.DecrementPC();
+            this.MEMPTR.Assign(this.PC);
+            this.DecrementPC();
+            this.AdjustXY(this.PC.High);
+        }
 
-            this.SetBit(StatusBits.PF, counter);
+        private void BlockCompare()
+        {
+            _ = this.MemoryRead(this.HL);
+            var result = (byte)(this.A - this.Bus.Data);
+
+            this.SetBit(StatusBits.PF, --this.BC.Word);
 
             this.AdjustSZ(result);
-            this.AdjustHalfCarrySub(this.A, value, result);
+            this.AdjustHalfCarrySub(this.A, this.Bus.Data, result);
             this.SetBit(StatusBits.NF);
 
             result -= (byte)(this.HalfCarry() >> 4);
@@ -2097,134 +1990,190 @@ namespace Z80
 
         private void CPI()
         {
-            this.BlockCompare(this.HL, --this.BC.Word);
+            this.BlockCompare();
             ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
 
-        private bool CPIR()
+        private void CPIR()
         {
             this.CPI();
-            return this.Parity() != 0 && this.Zero() == 0; // See CPI
+            if (this.Parity() != 0 && this.Zero() == 0)
+            {
+                this.RepeatBlockInstruction();
+                this.Tick(5);
+            }
         }
 
         private void CPD()
         {
-            this.BlockCompare(this.HL, --this.BC.Word);
+            this.BlockCompare();
             --this.HL.Word;
             --this.MEMPTR.Word;
         }
 
-        private bool CPDR()
+        private void CPDR()
         {
             this.CPD();
-            return this.Parity() != 0 && this.Zero() == 0; // See CPD
+            if (this.Parity() != 0 && this.Zero() == 0)
+            {
+                this.RepeatBlockInstruction();
+                this.Tick(5);
+            }
+            else
+            {
+                this.MEMPTR.Word = (ushort)(this.PC.Word - 2);
+                this.Tick(2);
+            }
         }
 
-        private void BlockLoad(Register16 source, Register16 destination, ushort counter)
+        private void BlockLoad()
         {
-            var value = this.MemoryRead(source);
-            this.Bus.Address.Assign(destination);
+            this.MemoryRead(this.HL);
+            this.Bus.Address.Assign(this.DE);
             this.Tick();
             this.MemoryUpdate(1);
             this.Tick(3);
-            var xy = this.A + value;
+            var xy = this.A + this.Bus.Data;
             this.SetBit(StatusBits.XF, xy & (int)Bits.Bit3);
             this.SetBit(StatusBits.YF, xy & (int)Bits.Bit1);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
-            this.SetBit(StatusBits.PF, counter);
+            this.SetBit(StatusBits.PF, --this.BC.Word);
         }
 
         private void LDI()
         {
-            this.BlockLoad(this.HL, this.DE, --this.BC.Word);
+            this.BlockLoad();
             ++this.HL.Word;
             ++this.DE.Word;
         }
 
-        private bool LDIR()
+        private void LDIR()
         {
             this.LDI();
-            return this.Parity() != 0; // See "BlockLoad"
+            if (this.Parity() != 0)
+            {
+                this.RepeatBlockInstruction();
+            }
+            this.Tick(5);
         }
 
         private void LDD()
         {
-            this.BlockLoad(this.HL, this.DE, --this.BC.Word);
+            this.BlockLoad();
             --this.HL.Word;
             --this.DE.Word;
         }
 
-        private bool LDDR()
+        private void LDDR()
         {
             this.LDD();
-            return this.Parity() != 0; // See "BlockLoad"
+            if (this.Parity() != 0)
+            {
+                this.RepeatBlockInstruction();
+            }
+            this.Tick(5);
         }
 
-        private void AdjustBlockInFlagsIncrement(Register16 source)
+        private void AdjustBlockRepeatFlagsIO()
         {
-            var basis = (byte)(source.Low + 1) + this.Bus.Data;
-            this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
-            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ source.High));
+            var previousParity = this.Parity() >> 2;
+            Debug.Assert(previousParity < 2);
+            if (this.Carry() != 0)
+            {
+                if (SignTest(this.Bus.Data) != 0)
+                {
+                    var parity = previousParity ^ (EvenParity((byte)((byte)(this.B - 1) & (byte)Mask.Three)) ? 1 : 0) ^ 1;
+                    this.SetBit(StatusBits.PF, parity != 0);
+                    this.SetBit(StatusBits.HC, (this.B & (byte)Mask.Four) == 0);
+                }
+                else
+                {
+                    var parity = previousParity ^ (EvenParity((byte)((byte)(this.B + 1) & (byte)Mask.Three)) ? 1 : 0) ^ 1;
+                    this.SetBit(StatusBits.PF, parity != 0);
+                    this.SetBit(StatusBits.HC, (this.B & (byte)Mask.Four) == (int)Mask.Four);
+                }
+            }
+            else
+            {
+                this.AdjustParity((byte)(this.B & (byte)Mask.Three));
+            }
         }
 
-        private void AdjustBlockInFlagsDecrement(Register16 source)
+        private void AdjustBlockInFlagsIncrement()
         {
-            var basis = (byte)(source.Low - 1) + this.Bus.Data;
+            var basis = (byte)(this.C + 1) + this.Bus.Data;
             this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
-            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ source.High));
+            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ this.B));
         }
 
-        private void BlockIn(Register16 source, Register16 destination)
+        private void AdjustBlockInFlagsDecrement()
+        {
+            var basis = (byte)(this.C - 1) + this.Bus.Data;
+            this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
+            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ this.B));
+        }
+
+        private void BlockIn()
         {
             this.Tick();
-            this.Bus.Address.Assign(source);
+            this.Bus.Address.Assign(this.BC);
             this.MEMPTR.Assign(this.Bus.Address);
             this.ReadPort();
-            this.Bus.Address.Assign(destination);
+            this.Bus.Address.Assign(this.HL);
             this.Tick();
             this.MemoryUpdate(1);
             this.Tick();
-            this.AdjustSZXY(--source.High);
+            this.AdjustSZXY(--this.B);
             this.SetBit(StatusBits.NF, (this.Bus.Data & (byte)StatusBits.SF) != 0);
         }
 
         private void INI()
         {
-            this.BlockIn(this.BC, this.HL);
-            this.AdjustBlockInFlagsIncrement(this.BC);
+            this.BlockIn();
+            this.AdjustBlockInFlagsIncrement();
             ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
 
-        private bool INIR()
+        private void INIR()
         {
             this.INI();
-            return this.Zero() == 0; // See "BlockIn"/"Decrement"
+            if (this.Zero() == 0)
+            {
+                this.RepeatBlockInstruction();
+                this.AdjustBlockRepeatFlagsIO();
+                this.Tick(5);
+            }
         }
 
         private void IND()
         {
-            this.BlockIn(this.BC, this.HL);
-            this.AdjustBlockInFlagsDecrement(this.BC);
+            this.BlockIn();
+            this.AdjustBlockInFlagsDecrement();
             --this.HL.Word;
             --this.MEMPTR.Word;
         }
 
-        private bool INDR()
+        private void INDR()
         {
             this.IND();
-            return this.Zero() == 0; // See "BlockIn"/"Decrement"
+            if (this.Zero() == 0)
+            {
+                this.RepeatBlockInstruction();
+                this.AdjustBlockRepeatFlagsIO();
+                this.Tick(5);
+            }
         }
 
-        private void BlockOut(Register16 source, Register16 destination)
+        private void BlockOut()
         {
             this.Tick();
-            _ = this.MemoryRead(source);
-            destination.High = this.Decrement(destination.High);
-            this.Bus.Address.Assign(destination);
+            _ = this.MemoryRead(this.HL);
+            this.B = this.Decrement(this.B);
+            this.Bus.Address.Assign(this.BC);
+            this.MEMPTR.Assign(this.Bus.Address);
             this.WritePort();
-            this.MEMPTR.Assign(destination);
         }
 
         private void AdjustBlockOutFlags()
@@ -2238,30 +2187,40 @@ namespace Z80
 
         private void OUTI()
         {
-            this.BlockOut(this.HL, this.BC);
+            this.BlockOut();
             ++this.HL.Word;
             this.AdjustBlockOutFlags();
             ++this.MEMPTR.Word;
         }
 
-        private bool OTIR()
+        private void OTIR()
         {
             this.OUTI();
-            return this.Zero() == 0; // See OUTI
+            if (this.Zero() == 0)
+            {
+                this.RepeatBlockInstruction();
+                this.AdjustBlockRepeatFlagsIO();
+                this.Tick(5);
+            }
         }
 
         private void OUTD()
         {
-            this.BlockOut(this.HL, this.BC);
+            this.BlockOut();
             --this.HL.Word;
             this.AdjustBlockOutFlags();
             --this.MEMPTR.Word;
         }
 
-        private bool OTDR()
+        private void OTDR()
         {
             this.OUTD();
-            return this.Zero() == 0; // See OUTD
+            if (this.Zero() == 0)
+            {
+                this.RepeatBlockInstruction();
+                this.AdjustBlockRepeatFlagsIO();
+                this.Tick(5);
+            }
         }
 
         private void NEG()

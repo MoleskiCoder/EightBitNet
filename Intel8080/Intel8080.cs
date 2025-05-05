@@ -173,7 +173,7 @@ namespace Intel8080
             3 => this.E,
             4 => this.H,
             5 => this.L,
-            6 => this.MemoryRead(this.HL.Word),
+            6 => this.MemoryRead(this.HL),
             7 => this.A,
             _ => throw new ArgumentOutOfRangeException(nameof(r)),
         };
@@ -201,7 +201,7 @@ namespace Intel8080
                     this.L = value;
                     break;
                 case 6:
-                    this.MemoryWrite(this.HL.Word, value);
+                    this.MemoryWrite(this.HL, value);
                     break;
                 case 7:
                     this.A = value;
@@ -251,7 +251,7 @@ namespace Intel8080
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    this.RP(p).Word = this.FetchWord().Word;
+                                    this.RP(p).Assign(this.FetchWord());
                                     this.Tick(10);
                                     break;
                                 case 1: // ADD HL,rp
@@ -278,12 +278,12 @@ namespace Intel8080
                                             this.Tick(7);
                                             break;
                                         case 2: // LD (nn),HL
-                                            this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.Bus.Address.Assign(this.FetchWord());
                                             this.SetWord(this.HL);
                                             this.Tick(16);
                                             break;
                                         case 3: // LD (nn),A
-                                            this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.Bus.Address.Assign(this.FetchWord());
                                             this.MemoryWrite(this.A);
                                             this.Tick(13);
                                             break;
@@ -304,12 +304,12 @@ namespace Intel8080
                                             this.Tick(7);
                                             break;
                                         case 2: // LD HL,(nn)
-                                            this.Bus.Address.Word = this.FetchWord().Word;
-                                            this.HL.Word = this.GetWord().Word;
+                                            this.Bus.Address.Assign(this.FetchWord());
+                                            this.HL.Assign(this.GetWord());
                                             this.Tick(16);
                                             break;
                                         case 3: // LD A,(nn)
-                                            this.Bus.Address.Word = this.FetchWord().Word;
+                                            this.Bus.Address.Assign(this.FetchWord());
                                             this.A = this.MemoryRead();
                                             this.Tick(13);
                                             break;
@@ -467,7 +467,7 @@ namespace Intel8080
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    this.RP2(p).Word = this.PopWord().Word;
+                                    this.RP2(p).Assign(this.PopWord());
                                     this.Tick(10);
                                     break;
                                 case 1:
@@ -482,7 +482,7 @@ namespace Intel8080
                                             this.Tick(4);
                                             break;
                                         case 3: // LD SP,HL
-                                            this.SP.Word = this.HL.Word;
+                                            this.SP.Assign(this.HL);
                                             this.Tick(4);
                                             break;
                                         default:

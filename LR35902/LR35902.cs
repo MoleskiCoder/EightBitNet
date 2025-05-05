@@ -301,6 +301,34 @@ namespace LR35902
             return data & (byte)StatusBits.NF;
         }
 
+        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
+
+        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
+
+        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
+
+        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
+
+        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
+
+        private static byte AdjustZero(byte input, byte value) => ClearBit(input, StatusBits.ZF, value);
+
+        private static byte AdjustHalfCarryAdd(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarryAdd(before, value, calculation));
+
+        private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
+
+        private static byte Res(int n, byte operand) => ClearBit(operand, Bit(n));
+
+        private static byte Set(int n, byte operand) => SetBit(operand, Bit(n));
+
+        protected override void DisableInterrupts() => this.IME = false;
+
+        protected override void EnableInterrupts() => this.IME = true;
+
+        private void Stop() => this.Stopped = true;
+
+        private void Start() => this.Stopped = false;
+
         protected override void MemoryWrite()
         {
             this.LowerMWR();
@@ -360,34 +388,6 @@ namespace LR35902
             base.JumpIndirect();
             this.TickMachine();
         }
-
-        private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
-
-        private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
-
-        private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
-
-        private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
-
-        private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
-
-        private static byte AdjustZero(byte input, byte value) => ClearBit(input, StatusBits.ZF, value);
-
-        private static byte AdjustHalfCarryAdd(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarryAdd(before, value, calculation));
-
-        private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
-
-        private static byte Res(int n, byte operand) => ClearBit(operand, Bit(n));
-
-        private static byte Set(int n, byte operand) => SetBit(operand, Bit(n));
-
-        protected override void DisableInterrupts() => this.IME = false;
-
-        protected override void EnableInterrupts() => this.IME = true;
-
-        private void Stop() => this.Stopped = true;
-
-        private void Start() => this.Stopped = false;
 
         private byte R(int r) => r switch
         {
