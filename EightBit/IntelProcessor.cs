@@ -116,10 +116,15 @@ namespace EightBit
             return HalfCarryTableSub[index & (int)Mask.Three];
         }
 
+        protected void ResetRegisterSet()
+        {
+            this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
+        }
+
         private void IntelProcessor_RaisedPOWER(object? sender, EventArgs e)
         {
             this.PC.Word = this.SP.Word = (ushort)Mask.Sixteen;
-            this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
+            this.ResetRegisterSet();
             this.RaiseHALT();
         }
 

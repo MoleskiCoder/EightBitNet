@@ -15,6 +15,8 @@ namespace Z80
             this._ports = ports;
             this.RaisedPOWER += this.Z80_RaisedPOWER;
             this.RaisedRFSH += this.Z80_RaisedRFSH;
+            this.ExecutingInstruction += this.Z80_ExecutingInstruction;
+            this.ExecutedInstruction += this.Z80_ExecutedInstruction;
         }
 
         private readonly InputOutput _ports;
@@ -124,11 +126,19 @@ namespace Z80
             }
         }
 
+        private void Z80_ExecutingInstruction(object? sender, EventArgs e)
+        {
+            this._modifiedF = 0;
+            this._displaced = this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
+        }
+
+        private void Z80_ExecutedInstruction(object? sender, EventArgs e)
+        {
+            this.Q = this._modifiedF;
+        }
+
         public override void PoweredStep()
         {
-            this._displaced = this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
-            this._modifiedF = 0;
-
             var handled = false;
             if (this.RESET.Lowered())
             {
@@ -169,8 +179,6 @@ namespace Z80
                 // is in the HALT state.
                 this.Execute(this.FetchInstruction());
             }
-
-            this.Q = this._modifiedF;
         }
 
         private void Z80_RaisedPOWER(object? sender, EventArgs e)
@@ -188,22 +196,19 @@ namespace Z80
             this.REFRESH = new(0);
             this.IV = (byte)Mask.Eight;
 
-            this.ExxAF();
-            this.Exx();
-
             this.IX.Word = this.IY.Word = (ushort)Mask.Sixteen;
 
-            this.ResetPrefixes();
+            // One of the register sets has been initialised
+            // (by the IntelProcessor base class)
+            // so now lets initialise the other register set.
+            this.Exx();
+            this.ExxAF();
+            this.ResetRegisterSet();
         }
 
         private void Z80_RaisedRFSH(object? sender, EventArgs e)
         {
             ++this.REFRESH;
-        }
-
-        private void ResetPrefixes()
-        {
-            this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
         }
 
         #region Z80 specific pins
