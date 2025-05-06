@@ -79,7 +79,6 @@ namespace Intel8080
         }
 
         private int Sign()
-
         {
             return SignTest(this.F);
         }
