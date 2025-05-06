@@ -916,9 +916,8 @@ namespace Z80
                     {
                         case 0: // Input from port with 16-bit address
                             this.Bus.Address.Assign(this.BC);
-                            this.MEMPTR.Assign(this.Bus.Address);
-                            this.MEMPTR.Word++;
                             this.ReadPort();
+                            this.MEMPTR.Word++;
                             if (y != 6)
                             {
                                 this.R(y, AccessLevel.WriteOnly) = this.Bus.Data; // IN r[y],(C)
@@ -2157,7 +2156,6 @@ namespace Z80
         {
             this.Tick();
             this.Bus.Address.Assign(this.BC);
-            this.MEMPTR.Assign(this.Bus.Address);
             this.ReadPort();
             this.Bus.Address.Assign(this.HL);
             this.Tick();
@@ -2360,13 +2358,13 @@ namespace Z80
         private void ReadPort(byte port)
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
-            this.MEMPTR.Assign(this.Bus.Address);
-            ++this.MEMPTR.Word;
             this.ReadPort();
+            ++this.MEMPTR.Word;
         }
 
         private void ReadPort()
         {
+            this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
             this.LowerIORQ();
             this.LowerRD();
