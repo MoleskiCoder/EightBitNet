@@ -928,11 +928,8 @@ namespace Z80
                             this.ClearBit(StatusBits.NF | StatusBits.HC);
                             break;
                         case 1: // Output to port with 16-bit address
-                            this.Bus.Address.Assign(this.BC);
-                            this.MEMPTR.Assign(this.Bus.Address);
+                            this.WritePort(this.BC, y == 6 ? (byte)0 : this.R(y));
                             this.MEMPTR.Word++;
-                            this.Bus.Data = y != 6 ? this.R(y) : (byte)0;
-                            this.WritePort();
                             break;
                         case 2: // 16-bit add/subtract with carry
                             this.HL2().Assign(q switch
@@ -2225,9 +2222,7 @@ namespace Z80
             this.Tick();
             _ = this.MemoryRead(this.HL);
             this.B = this.Decrement(this.B);
-            this.Bus.Address.Assign(this.BC);
-            this.MEMPTR.Assign(this.Bus.Address);
-            this.WritePort();
+            this.WritePort(this.BC);
         }
 
         #region Block output single
@@ -2333,17 +2328,29 @@ namespace Z80
         private void WritePort(byte port)
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
-            this.MEMPTR.Assign(this.Bus.Address);
             this.WritePort();
             ++this.MEMPTR.Low;
         }
 
+        private void WritePort(Register16 port, byte data)
+        {
+            this.Bus.Data = data;
+            this.WritePort(port);
+        }
+
+        private void WritePort(Register16 port)
+        {
+            this.Bus.Address.Assign(port);
+            this.WritePort();
+        }
+
         private void WritePort()
         {
+            this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
             this.LowerIORQ();
             this.LowerWR();
-            this._ports.Write(this.Bus.Address.Low, this.Bus.Data);
+            this.Ports.Write(this.Bus.Address.Low, this.Bus.Data);
             this.Tick();
             this.RaiseWR();
             this.RaiseIORQ();
@@ -2363,7 +2370,7 @@ namespace Z80
             this.Tick(2);
             this.LowerIORQ();
             this.LowerRD();
-            this.Bus.Data = this._ports.Read(this.Bus.Address.Low);
+            this.Bus.Data = this.Ports.Read(this.Bus.Address.Low);
             this.Tick();
             this.RaiseRD();
             this.RaiseIORQ();
