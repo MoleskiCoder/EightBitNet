@@ -5,7 +5,6 @@
 namespace Z80
 {
     using EightBit;
-    using System.Diagnostics;
 
     public class Z80 : IntelProcessor
     {
@@ -50,7 +49,6 @@ namespace Z80
         public bool IFF1 { get; set; }
 
         public bool IFF2 { get; set; }
-
 
         public byte Q { get; set; }     // Previously modified instruction status register
 
@@ -193,7 +191,7 @@ namespace Z80
             this.DisableInterrupts();
             this.IM = 0;
 
-            this.REFRESH = new(0);
+            this.REFRESH = 0;
             this.IV = (byte)Mask.Eight;
 
             this.IX.Word = this.IY.Word = (ushort)Mask.Sixteen;
@@ -306,9 +304,9 @@ namespace Z80
         // seven bits of the system’s address bus can be used as a _refresh address to the system’s
         // dynamic memories.
 
-        private PinLevel _rfshLine = PinLevel.Low;
+        private PinLevel _refreshLine = PinLevel.Low;
 
-        public ref PinLevel RFSH => ref this._rfshLine;
+        public ref PinLevel RFSH => ref this._refreshLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRFSH()
@@ -343,9 +341,9 @@ namespace Z80
 
         public event EventHandler<EventArgs>? LoweredMREQ;
 
-        private PinLevel _mreqLine = PinLevel.Low;
+        private PinLevel _memoryRequestLine = PinLevel.Low;
 
-        public ref PinLevel MREQ => ref this._mreqLine;
+        public ref PinLevel MREQ => ref this._memoryRequestLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseMREQ()
@@ -380,9 +378,9 @@ namespace Z80
 
         public event EventHandler<EventArgs>? LoweredIORQ;
 
-        private PinLevel _iorqLine = PinLevel.Low;
+        private PinLevel _ioRequestLine = PinLevel.Low;
 
-        public ref PinLevel IORQ => ref this._iorqLine;
+        public ref PinLevel IORQ => ref this._ioRequestLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseIORQ()
@@ -1928,7 +1926,6 @@ namespace Z80
             }
 
             this.AdjustStatusFlags((byte)((this.F & (byte)(StatusBits.CF | StatusBits.NF)) | (this.A > 0x99 ? (byte)StatusBits.CF : 0) | HalfCarryTest((byte)(this.A ^ updated))));
-
             this.AdjustSZPXY(this.A = updated);
         }
 
@@ -1976,6 +1973,8 @@ namespace Z80
             this.Tick(3);
         }
 
+        #region Block instructions
+
         private void RepeatBlockInstruction()
         {
             this.DecrementPC();
@@ -1983,6 +1982,8 @@ namespace Z80
             this.DecrementPC();
             this.AdjustXY(this.PC.High);
         }
+
+        #region Block compare
 
         private void BlockCompare()
         {
@@ -2003,12 +2004,25 @@ namespace Z80
             this.Tick(5);
         }
 
+        #region Block compare single
+
         private void CPI()
         {
             this.BlockCompare();
             ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
+
+        private void CPD()
+        {
+            this.BlockCompare();
+            --this.HL.Word;
+            --this.MEMPTR.Word;
+        }
+
+        #endregion
+
+        #region Block compare repeated
 
         private void CPIR()
         {
@@ -2018,13 +2032,6 @@ namespace Z80
                 this.RepeatBlockInstruction();
                 this.Tick(5);
             }
-        }
-
-        private void CPD()
-        {
-            this.BlockCompare();
-            --this.HL.Word;
-            --this.MEMPTR.Word;
         }
 
         private void CPDR()
@@ -2042,6 +2049,12 @@ namespace Z80
             }
         }
 
+        #endregion
+
+        #endregion
+
+        #region Block load
+
         private void BlockLoad()
         {
             this.MemoryRead(this.HL);
@@ -2056,12 +2069,25 @@ namespace Z80
             this.SetBit(StatusBits.PF, --this.BC.Word);
         }
 
+        #region Block load single
+
         private void LDI()
         {
             this.BlockLoad();
             ++this.HL.Word;
             ++this.DE.Word;
         }
+
+        private void LDD()
+        {
+            this.BlockLoad();
+            --this.HL.Word;
+            --this.DE.Word;
+        }
+
+        #endregion
+
+        #region Block load repeated
 
         private void LDIR()
         {
@@ -2071,13 +2097,6 @@ namespace Z80
                 this.RepeatBlockInstruction();
             }
             this.Tick(5);
-        }
-
-        private void LDD()
-        {
-            this.BlockLoad();
-            --this.HL.Word;
-            --this.DE.Word;
         }
 
         private void LDDR()
@@ -2090,24 +2109,21 @@ namespace Z80
             this.Tick(5);
         }
 
+        #endregion
+
+        #endregion
+
+        #region Block input/output
+
         private void AdjustBlockRepeatFlagsIO()
         {
-            var previousParity = this.Parity() >> 2;
-            Debug.Assert(previousParity < 2);
             if (this.Carry() != 0)
             {
-                if (SignTest(this.Bus.Data) != 0)
-                {
-                    var parity = previousParity ^ (EvenParity((byte)((byte)(this.B - 1) & (byte)Mask.Three)) ? 1 : 0) ^ 1;
-                    this.SetBit(StatusBits.PF, parity != 0);
-                    this.SetBit(StatusBits.HC, (this.B & (byte)Mask.Four) == 0);
-                }
-                else
-                {
-                    var parity = previousParity ^ (EvenParity((byte)((byte)(this.B + 1) & (byte)Mask.Three)) ? 1 : 0) ^ 1;
-                    this.SetBit(StatusBits.PF, parity != 0);
-                    this.SetBit(StatusBits.HC, (this.B & (byte)Mask.Four) == (int)Mask.Four);
-                }
+                var negative = SignTest(this.Bus.Data) != 0;
+                var direction = (byte)(this.B + (negative ? -1 : +1));
+                var parity = (this.Parity() >> 2) ^ (EvenParity((byte)(direction & (byte)Mask.Three)) ? 1 : 0) ^ 1;
+                this.SetBit(StatusBits.PF, parity != 0);
+                this.SetBit(StatusBits.HC, (this.B & (byte)Mask.Four) == (negative ? 0 : (int)Mask.Four));
             }
             else
             {
@@ -2115,19 +2131,30 @@ namespace Z80
             }
         }
 
+        private void AdjustBlockInputOutputFlags(int basis)
+        {
+            this.SetBit(StatusBits.HC | StatusBits.CF, basis > 0xff);
+            this.AdjustParity((byte)((basis & (int)Mask.Three) ^ this.B));
+        }
+
         private void AdjustBlockInFlagsIncrement()
         {
-            var basis = (byte)(this.C + 1) + this.Bus.Data;
-            this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
-            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ this.B));
+            AdjustBlockInputOutputFlags((byte)(this.C + 1) + this.Bus.Data);
         }
 
         private void AdjustBlockInFlagsDecrement()
         {
-            var basis = (byte)(this.C - 1) + this.Bus.Data;
-            this.SetBit(StatusBits.CF | StatusBits.HC, basis > 0xff);
-            this.AdjustParity((byte)(basis & (byte)Mask.Three ^ this.B));
+            AdjustBlockInputOutputFlags((byte)(this.C - 1) + this.Bus.Data);
         }
+
+        private void AdjustBlockOutFlags()
+        {
+            // HL needs to have been incremented or decremented prior to this call
+            this.SetBit(StatusBits.NF, SignTest(this.Bus.Data));
+            AdjustBlockInputOutputFlags(this.L + this.Bus.Data);
+        }
+
+        #region Block input
 
         private void BlockIn()
         {
@@ -2140,8 +2167,10 @@ namespace Z80
             this.MemoryUpdate(1);
             this.Tick();
             this.AdjustSZXY(--this.B);
-            this.SetBit(StatusBits.NF, (this.Bus.Data & (byte)StatusBits.SF) != 0);
+            this.SetBit(StatusBits.NF, this.Bus.Data & (byte)StatusBits.SF);
         }
+
+        #region Block input single
 
         private void INI()
         {
@@ -2150,6 +2179,18 @@ namespace Z80
             ++this.HL.Word;
             ++this.MEMPTR.Word;
         }
+
+        private void IND()
+        {
+            this.BlockIn();
+            this.AdjustBlockInFlagsDecrement();
+            --this.HL.Word;
+            --this.MEMPTR.Word;
+        }
+
+        #endregion
+
+        #region Block input repeated
 
         private void INIR()
         {
@@ -2160,14 +2201,6 @@ namespace Z80
                 this.AdjustBlockRepeatFlagsIO();
                 this.Tick(5);
             }
-        }
-
-        private void IND()
-        {
-            this.BlockIn();
-            this.AdjustBlockInFlagsDecrement();
-            --this.HL.Word;
-            --this.MEMPTR.Word;
         }
 
         private void INDR()
@@ -2181,6 +2214,12 @@ namespace Z80
             }
         }
 
+        #endregion
+
+        #endregion
+
+        #region Block output
+
         private void BlockOut()
         {
             this.Tick();
@@ -2191,14 +2230,7 @@ namespace Z80
             this.WritePort();
         }
 
-        private void AdjustBlockOutFlags()
-        {
-            // HL needs to have been incremented or decremented prior to this call
-            var value = this.Bus.Data;
-            this.SetBit(StatusBits.NF, value & (byte)Bits.Bit7);
-            this.SetBit(StatusBits.HC | StatusBits.CF, this.L + value > 0xff);
-            this.AdjustParity((byte)(((value + this.L) & (int)Mask.Three) ^ this.B));
-        }
+        #region Block output single
 
         private void OUTI()
         {
@@ -2207,6 +2239,18 @@ namespace Z80
             this.AdjustBlockOutFlags();
             ++this.MEMPTR.Word;
         }
+
+        private void OUTD()
+        {
+            this.BlockOut();
+            --this.HL.Word;
+            this.AdjustBlockOutFlags();
+            --this.MEMPTR.Word;
+        }
+
+        #endregion
+
+        #region Block output repeated
 
         private void OTIR()
         {
@@ -2219,14 +2263,6 @@ namespace Z80
             }
         }
 
-        private void OUTD()
-        {
-            this.BlockOut();
-            --this.HL.Word;
-            this.AdjustBlockOutFlags();
-            --this.MEMPTR.Word;
-        }
-
         private void OTDR()
         {
             this.OUTD();
@@ -2237,6 +2273,14 @@ namespace Z80
                 this.Tick(5);
             }
         }
+
+        #endregion
+
+        #endregion
+
+        #endregion
+
+        #endregion
 
         private void NEG()
         {
@@ -2284,6 +2328,8 @@ namespace Z80
             this.ClearBit(StatusBits.NF | StatusBits.HC);
         }
 
+        #region Input/output port control
+
         private void WritePort(byte port)
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
@@ -2323,5 +2369,7 @@ namespace Z80
             this.RaiseIORQ();
             this.Tick();
         }
+
+        #endregion
     }
 }
