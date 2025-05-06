@@ -192,7 +192,6 @@ namespace Z80
             this.Exx();
 
             this.IX.Word = this.IY.Word = (ushort)Mask.Sixteen;
-            base.ResetWorkingRegisters();
 
             this.ResetPrefixes();
         }
@@ -520,10 +519,21 @@ namespace Z80
             return returned;
         }
 
+        // From Zilog Z80 manual
+        // https://www.zilog.com/docs/z80/um0080.pdf
+        //
+        // RESET. Reset (input, active Low).
+        // _____
+        // RESET initializes the CPU as follows: it resets the
+        // interrupt enable flip-flop, clears the Program Counter and registers I and R, and sets the
+        // interrupt status to Mode 0. During reset time, the address and data bus enter a high-impedance
+        // state, and all control output signals enter an inactive state.RESET must be active for
+        // a minimum of three full clock cycles before a reset operation is complete.
         protected override void HandleRESET()
         {
             base.HandleRESET();
             this.IV = this.REFRESH = 0;
+            this.IM = 0;
             this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
             this.Tick(3);
         }
