@@ -1627,21 +1627,19 @@ namespace Z80
         private byte Increment(byte operand)
         {
             this.ClearBit(StatusBits.NF);
-            var result = ++operand;
-            this.AdjustSZXY(result);
-            this.SetBit(StatusBits.VF, result == (byte)Bits.Bit7);
-            this.ClearBit(StatusBits.HC, LowNibble(result));
-            return result;
+            this.AdjustSZXY(++operand);
+            this.SetBit(StatusBits.VF, operand == (byte)Bits.Bit7);
+            this.ClearBit(StatusBits.HC, LowNibble(operand));
+            return operand;
         }
 
         private byte Decrement(byte operand)
         {
             this.SetBit(StatusBits.NF);
             this.ClearBit(StatusBits.HC, LowNibble(operand));
-            var result = --operand;
-            this.AdjustSZXY(result);
-            this.SetBit(StatusBits.VF, result == (byte)Mask.Seven);
-            return result;
+            this.AdjustSZXY(--operand);
+            this.SetBit(StatusBits.VF, operand == (byte)Mask.Seven);
+            return operand;
         }
 
         private void RetN()
