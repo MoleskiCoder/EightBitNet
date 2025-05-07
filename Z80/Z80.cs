@@ -137,16 +137,15 @@ namespace Z80
 
         public override void PoweredStep()
         {
-            var handled = false;
             if (this.RESET.Lowered())
             {
                 this.HandleRESET();
-                handled = true;
+                return;
             }
             else if (this.NMI.Lowered())
             {
                 this.HandleNMI();
-                handled = true;
+                return;
             }
             else if (this.INT.Lowered())
             {
@@ -155,28 +154,25 @@ namespace Z80
                 if (this.IFF1)
                 {
                     this.HandleINT();
-                    handled = true;
+                    return;
                 }
             }
 
-            if (!handled)
-            {
-                // ** From the Z80 CPU User Manual
-                // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
-                // is received(either a nonmaskable or a maskable interrupt while the interrupt flip-flop is
-                // enabled). The two interrupt lines are sampled with the rising clock edge during each T4
-                // state as depicted in Figure 11.If a nonmaskable interrupt is received or a maskable interrupt
-                // is received and the interrupt enable flip-flop is set, then the HALT state is exited on
-                // the next rising clock edge.The following cycle is an interrupt acknowledge cycle corresponding
-                // to the type of interrupt that was received.If both are received at this time, then
-                // the nonmaskable interrupt is acknowledged because it is the highest priority.The purpose
-                // of executing NOP instructions while in the HALT state is to keep the memory _refresh signals
-                // active.Each cycle in the HALT state is a normal M1(fetch) cycle except that the data
-                // received from the memory is ignored and an NOP instruction is forced internally to the
-                // CPU.The HALT acknowledge signal is active during this time indicating that the processor
-                // is in the HALT state.
-                this.Execute(this.FetchInstruction());
-            }
+            // ** From the Z80 CPU User Manual
+            // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
+            // is received(either a nonmaskable or a maskable interrupt while the interrupt flip-flop is
+            // enabled). The two interrupt lines are sampled with the rising clock edge during each T4
+            // state as depicted in Figure 11.If a nonmaskable interrupt is received or a maskable interrupt
+            // is received and the interrupt enable flip-flop is set, then the HALT state is exited on
+            // the next rising clock edge.The following cycle is an interrupt acknowledge cycle corresponding
+            // to the type of interrupt that was received.If both are received at this time, then
+            // the nonmaskable interrupt is acknowledged because it is the highest priority.The purpose
+            // of executing NOP instructions while in the HALT state is to keep the memory _refresh signals
+            // active.Each cycle in the HALT state is a normal M1(fetch) cycle except that the data
+            // received from the memory is ignored and an NOP instruction is forced internally to the
+            // CPU.The HALT acknowledge signal is active during this time indicating that the processor
+            // is in the HALT state.
+            this.Execute(this.FetchInstruction());
         }
 
         private void Z80_RaisedPOWER(object? sender, EventArgs e)
@@ -1170,18 +1166,10 @@ namespace Z80
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.Bus.Address.Assign(this.BC);
-                                            this.MEMPTR.Assign(this.Bus.Address);
-                                            ++this.MEMPTR.Word;
-                                            this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.MemoryWrite();
+                                            WriteMemoryIndirect(this.BC, this.A);
                                             break;
                                         case 1: // LD (DE),A
-                                            this.Bus.Address.Assign(this.DE);
-                                            this.MEMPTR.Assign(this.Bus.Address);
-                                            ++this.MEMPTR.Word;
-                                            this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.MemoryWrite();
+                                            WriteMemoryIndirect(this.DE, this.A);
                                             break;
                                         case 2: // LD (nn),HL
                                             this.FetchWordAddress();
@@ -1189,10 +1177,7 @@ namespace Z80
                                             break;
                                         case 3: // LD (nn),A
                                             this.FetchWordMEMPTR();
-                                            this.Bus.Address.Assign(this.MEMPTR);
-                                            ++this.MEMPTR.Word;
-                                            this.MEMPTR.High = this.Bus.Data = this.A;
-                                            this.MemoryWrite();
+                                            WriteMemoryIndirect(this.A);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1203,16 +1188,10 @@ namespace Z80
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.Bus.Address.Assign(this.BC);
-                                            this.MEMPTR.Assign(this.Bus.Address);
-                                            ++this.MEMPTR.Word;
-                                            this.A = this.MemoryRead();
+                                            this.A = this.ReadMemoryIndirect(this.BC);
                                             break;
                                         case 1: // LD A,(DE)
-                                            this.Bus.Address.Assign(this.DE);
-                                            this.MEMPTR.Assign(this.Bus.Address);
-                                            ++this.MEMPTR.Word;
-                                            this.A = this.MemoryRead();
+                                            this.A = this.ReadMemoryIndirect(this.DE);
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.FetchWordAddress();
@@ -1220,9 +1199,7 @@ namespace Z80
                                             break;
                                         case 3: // LD A,(nn)
                                             this.FetchWordMEMPTR();
-                                            this.Bus.Address.Assign(this.MEMPTR);
-                                            ++this.MEMPTR.Word;
-                                            this.A = this.MemoryRead();
+                                            this.A = this.ReadMemoryIndirect();
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -2291,12 +2268,36 @@ namespace Z80
             this.AdjustSZXY(this.A);
         }
 
+        private byte ReadMemoryIndirect(Register16 via)
+        {
+            this.MEMPTR.Assign(via);
+            return this.ReadMemoryIndirect();
+        }
+
+        private byte ReadMemoryIndirect()
+        {
+            this.Bus.Address.Assign(this.MEMPTR);
+            ++this.MEMPTR.Word;
+            return this.MemoryRead();
+        }
+
+        private void WriteMemoryIndirect(Register16 via, byte data)
+        {
+            this.MEMPTR.Assign(via);
+            this.WriteMemoryIndirect(data);
+        }
+
+        private void WriteMemoryIndirect(byte data)
+        {
+            this.Bus.Address.Assign(this.MEMPTR);
+            ++this.MEMPTR.Word;
+            this.MEMPTR.High = this.Bus.Data = data;
+            this.MemoryWrite();
+        }
+
         private void RRD()
         {
-            this.Bus.Address.Assign(this.HL);
-            this.MEMPTR.Assign(this.Bus.Address);
-            ++this.MEMPTR.Word;
-            var memory = this.MemoryRead();
+            var memory = ReadMemoryIndirect(this.HL);
             this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
             this.MemoryUpdate(1);
@@ -2308,10 +2309,7 @@ namespace Z80
 
         private void RLD()
         {
-            this.Bus.Address.Assign(this.HL);
-            this.MEMPTR.Assign(this.Bus.Address);
-            ++this.MEMPTR.Word;
-            var memory = this.MemoryRead();
+            var memory = ReadMemoryIndirect(this.HL);
             this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
             this.MemoryUpdate(1);
