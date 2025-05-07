@@ -6,7 +6,7 @@ namespace Z80.FuseTest
 {
     using Fuse;
 
-    internal class TestSuite(string path)
+    internal sealed class TestSuite(string path)
     {
         private readonly Tests<RegisterState> tests = new(path + ".in");
         private readonly Results<RegisterState> results = new(path + ".expected");

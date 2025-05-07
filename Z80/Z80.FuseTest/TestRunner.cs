@@ -25,7 +25,7 @@ namespace Z80.FuseTest
         MEMPTR,
     }
 
-    internal class TestRunner : EightBit.Bus
+    internal sealed class TestRunner : EightBit.Bus
     {
         private readonly Test<RegisterState> test;
         private readonly Result<RegisterState> result;

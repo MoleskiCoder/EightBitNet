@@ -104,6 +104,8 @@ namespace Z80
 
         public string Disassemble(Z80 cpu, ushort pc)
         {
+            ArgumentNullException.ThrowIfNull(cpu);
+
             var opCode = this.Bus.Peek(pc);
 
             var decoded = cpu.GetDecodedOpCode(opCode);

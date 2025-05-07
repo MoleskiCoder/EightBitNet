@@ -7,7 +7,7 @@ namespace Z80.FuseTest
     using Fuse;
     using System.Globalization;
 
-    internal class RegisterState : AbstractRegisterState, IRegisterState
+    internal sealed class RegisterState : AbstractRegisterState, IRegisterState
     {
         public int I { get; private set; } = -1;
 

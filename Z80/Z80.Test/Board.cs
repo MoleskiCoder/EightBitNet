@@ -7,7 +7,7 @@ namespace Z80.Test
     using EightBit;
     using System.Globalization;
 
-    internal class Board : Bus
+    internal sealed class Board : Bus
     {
         private readonly Configuration configuration;
         private readonly Ram ram;
