@@ -4,13 +4,13 @@
 
 namespace EightBit
 {
-    using System.Diagnostics;
+    using System.Runtime.InteropServices;
 
-    [DebuggerDisplay("Word = {Word}")]
+    [StructLayout(LayoutKind.Explicit, Size = 2)]
     public sealed class Register16
     {
-        private byte _low;
-        private byte _high;
+        [FieldOffset(0)] private byte _low;
+        [FieldOffset(1)] private byte _high;
 
         public Register16(byte low, byte high)
         {
@@ -20,12 +20,10 @@ namespace EightBit
 
         public Register16(ushort value)
         {
-            this.Low = Chip.LowByte(value);
-            this.High = Chip.HighByte(value);
+            this.Assign(value);
         }
 
         public Register16()
-        : this((ushort)0)
         {
         }
 
@@ -52,23 +50,24 @@ namespace EightBit
 
         public ushort Word
         {
-            get => Chip.MakeWord(this.Low, this.High);
-
-            set
+            get
             {
-                this.Low = Chip.LowByte(value);
-                this.High = Chip.HighByte(value);
+                unsafe
+                {
+                    fixed (byte* bytes = &this._low)
+                    {
+                        return *(ushort*)bytes;
+                    }
+                }
             }
+            set => this.Assign(value);
         }
 
         public ref byte Low => ref this._low;
 
         public ref byte High => ref this._high;
 
-        public static bool operator ==(Register16 left, Register16 right)
-        {
-            return left.Equals(right);
-        }
+        public static bool operator ==(Register16 left, Register16 right) => left.Equals(right);
 
         public static bool operator !=(Register16 left, Register16 right) => !(left == right);
 
@@ -80,13 +79,24 @@ namespace EightBit
 
         public void Assign(byte low, byte high)
         {
-            this._low = low;
-            this._high = high;
+            this.Low = low;
+            this.High = high;
         }
 
         public void Assign(Register16 from)
         {
-            this.Assign(from._low, from._high);
+            this.Assign(from.Low, from.High);
+        }
+
+        public void Assign(ushort from)
+        {
+            unsafe
+            {
+                fixed (byte* bytes = &this._low)
+                {
+                    *(ushort*)bytes = from;
+                }
+            }
         }
     }
 }
