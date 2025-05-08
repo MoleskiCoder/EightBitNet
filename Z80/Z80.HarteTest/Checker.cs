@@ -205,8 +205,8 @@
                     var actualAddress = actualCycle.Address;
                     _ = this.Check("Cycle address", expectedAddress, actualAddress);
 
-                    var expectedValue = (byte)expectedCycle.Value;
-                    var actualValue = (byte)actualCycle.Value;
+                    var expectedValue = expectedCycle.Value ?? throw new InvalidOperationException("Expected cycle value cannot be null.");
+                    var actualValue = actualCycle.Value ?? throw new InvalidOperationException("Actual cycle value cannot be null.");
                     _ = this.Check("Cycle value", expectedValue, actualValue);
 
                     var expectedAction = expectedCycle.Type;
@@ -331,10 +331,7 @@
 
         private void Raise(string what, string expected, string actual) => this.Messages.Add($"{what}: expected: {expected}, actual: {actual}");
 
-        public void Initialise()
-        {
-            this.Runner.CPU.Ticked += this.CPU_Ticked;
-        }
+        public void Initialise() => this.Runner.CPU.Ticked += this.CPU_Ticked;
 
         private void CPU_Ticked(object? sender, EventArgs e)
         {
