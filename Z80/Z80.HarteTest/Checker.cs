@@ -410,15 +410,14 @@
 
             foreach (var port in ports)
             {
-                var address = new Register16(port.Address).Low;
                 var value = port.Value;
                 if (port.Type == "r")
                 {
-                    cpu.Ports.WriteInputPort(address, value);
+                    cpu.Ports.WriteInputPort(port.Address, value);
                 }
                 else if (port.Type == "w")
                 {
-                    cpu.Ports.WriteOutputPort(address, value);
+                    cpu.Ports.WriteOutputPort(port.Address, value);
                 }
                 else
                 {

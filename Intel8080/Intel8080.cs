@@ -773,7 +773,7 @@ namespace Intel8080
             this.WritePort();
         }
 
-        private void WritePort() => this.ports.Write(this.Bus.Address.Low, this.Bus.Data);
+        private void WritePort() => this.ports.Write(this.Bus.Address, this.Bus.Data);
 
         private byte ReadPort(byte port)
         {
@@ -781,6 +781,6 @@ namespace Intel8080
             return this.ReadPort();
         }
 
-        private byte ReadPort() => this.Bus.Data = this.ports.Read(this.Bus.Address.Low);
+        private byte ReadPort() => this.Bus.Data = this.ports.Read(this.Bus.Address);
     }
 }

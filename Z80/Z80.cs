@@ -2344,7 +2344,7 @@ namespace Z80
             this.Tick(2);
             this.LowerIORQ();
             this.LowerWR();
-            this.Ports.Write(this.Bus.Address.Low, this.Bus.Data);
+            this.Ports.Write(this.Bus.Address, this.Bus.Data);
             this.Tick();
             this.RaiseWR();
             this.RaiseIORQ();
@@ -2364,7 +2364,7 @@ namespace Z80
             this.Tick(2);
             this.LowerIORQ();
             this.LowerRD();
-            this.Bus.Data = this.Ports.Read(this.Bus.Address.Low);
+            this.Bus.Data = this.Ports.Read(this.Bus.Address);
             this.Tick();
             this.RaiseRD();
             this.RaiseIORQ();
