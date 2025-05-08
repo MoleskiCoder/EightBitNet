@@ -756,7 +756,7 @@ namespace Intel8080
 
         private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.MemoryRead(this.SP.Word);
+            this.MEMPTR.Low = this.MemoryRead(this.SP);
             ++this.Bus.Address.Word;
             this.MEMPTR.High = this.MemoryRead();
             this.MemoryWrite(exchange.High);
@@ -768,7 +768,7 @@ namespace Intel8080
 
         private void WritePort(byte port)
         {
-            this.Bus.Address.Word = new Register16(port, this.A).Word;
+            this.Bus.Address.Assign(port, this.A);
             this.Bus.Data = this.A;
             this.WritePort();
         }
@@ -777,7 +777,7 @@ namespace Intel8080
 
         private byte ReadPort(byte port)
         {
-            this.Bus.Address.Word = new Register16(port, this.A).Word;
+            this.Bus.Address.Assign(port, this.A);
             return this.ReadPort();
         }
 
