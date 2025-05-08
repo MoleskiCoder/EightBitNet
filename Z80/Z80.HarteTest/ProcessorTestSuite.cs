@@ -6,9 +6,6 @@
 
         public IEnumerable<OpcodeTestSuite> OpcodeTests()
         {
-            //var pattern = "ed b2.json";
-            //var pattern = "04.json";
-            //var pattern = "1?.json";
             var pattern = "*.json";
             foreach (var filename in Directory.EnumerateFiles(this.Location, pattern))
             {
