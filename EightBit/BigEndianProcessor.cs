@@ -28,7 +28,7 @@ namespace EightBit
         protected override Register16 GetWord()
         {
             this.Intermediate.High = this.MemoryRead();
-            ++this.Bus.Address.Word;
+            this.Bus.Address.Increment();
             this.Intermediate.Low = this.MemoryRead();
             return this.Intermediate;
         }
@@ -57,7 +57,7 @@ namespace EightBit
         protected override void SetWord(Register16 value)
         {
             this.MemoryWrite(value.High);
-            ++this.Bus.Address.Word;
+            this.Bus.Address.Increment();
             this.MemoryWrite(value.Low);
         }
 

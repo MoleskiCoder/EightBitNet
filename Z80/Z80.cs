@@ -913,7 +913,7 @@ namespace Z80
                         case 0: // Input from port with 16-bit address
                             this.Bus.Address.Assign(this.BC);
                             this.ReadPort();
-                            this.MEMPTR.Word++;
+                            this.MEMPTR.Increment();
                             if (y != 6)
                             {
                                 this.R(y, AccessLevel.WriteOnly) = this.Bus.Data; // IN r[y],(C)
@@ -924,7 +924,7 @@ namespace Z80
                             break;
                         case 1: // Output to port with 16-bit address
                             this.WritePort(this.BC, y == 6 ? (byte)0 : this.R(y));
-                            this.MEMPTR.Word++;
+                            this.MEMPTR.Increment();
                             break;
                         case 2: // 16-bit add/subtract with carry
                             this.HL2().Assign(q switch
@@ -1215,10 +1215,10 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    ++this.RP(p).Word;
+                                    this.RP(p).Increment();
                                     break;
                                 case 1: // DEC rp
-                                    --this.RP(p).Word;
+                                    this.RP(p).Decrement();
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1927,16 +1927,16 @@ namespace Z80
         private void XHTL(Register16 exchange)
         {
             this.MEMPTR.Low = this.MemoryRead(this.SP);
-            ++this.Bus.Address.Word;
+            this.Bus.Address.Increment();
             this.MEMPTR.High = this.MemoryRead();
             this.Tick();
-            --this.Bus.Address.Word;
+            this.Bus.Address.Decrement();
             this.Tick();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
             this.MemoryUpdate(1);
             this.Tick();
-            ++this.Bus.Address.Word;
+            this.Bus.Address.Increment();
             this.Tick();
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
@@ -1980,15 +1980,15 @@ namespace Z80
         private void CPI()
         {
             this.BlockCompare();
-            ++this.HL.Word;
-            ++this.MEMPTR.Word;
+            this.HL.Increment();
+            this.MEMPTR.Increment();
         }
 
         private void CPD()
         {
             this.BlockCompare();
-            --this.HL.Word;
-            --this.MEMPTR.Word;
+            this.HL.Decrement();
+            this.MEMPTR.Decrement();
         }
 
         #endregion
@@ -2045,15 +2045,15 @@ namespace Z80
         private void LDI()
         {
             this.BlockLoad();
-            ++this.HL.Word;
-            ++this.DE.Word;
+            this.HL.Increment();
+            this.DE.Increment();
         }
 
         private void LDD()
         {
             this.BlockLoad();
-            --this.HL.Word;
-            --this.DE.Word;
+            this.HL.Decrement();
+            this.DE.Decrement();
         }
 
         #endregion
@@ -2146,16 +2146,16 @@ namespace Z80
         {
             this.BlockIn();
             this.AdjustBlockInFlagsIncrement();
-            ++this.HL.Word;
-            ++this.MEMPTR.Word;
+            this.HL.Increment();
+            this.MEMPTR.Increment();
         }
 
         private void IND()
         {
             this.BlockIn();
             this.AdjustBlockInFlagsDecrement();
-            --this.HL.Word;
-            --this.MEMPTR.Word;
+            this.HL.Decrement();
+            this.MEMPTR.Decrement();
         }
 
         #endregion
@@ -2203,17 +2203,17 @@ namespace Z80
         private void OUTI()
         {
             this.BlockOut();
-            ++this.HL.Word;
+            this.HL.Increment();
             this.AdjustBlockOutFlags();
-            ++this.MEMPTR.Word;
+            this.MEMPTR.Increment();
         }
 
         private void OUTD()
         {
             this.BlockOut();
-            --this.HL.Word;
+            this.HL.Decrement();
             this.AdjustBlockOutFlags();
-            --this.MEMPTR.Word;
+            this.MEMPTR.Decrement();
         }
 
         #endregion
@@ -2275,7 +2275,7 @@ namespace Z80
         private byte ReadMemoryIndirect()
         {
             this.Bus.Address.Assign(this.MEMPTR);
-            ++this.MEMPTR.Word;
+            this.MEMPTR.Increment();
             return this.MemoryRead();
         }
 
@@ -2288,7 +2288,7 @@ namespace Z80
         private void WriteMemoryIndirect(byte data)
         {
             this.Bus.Address.Assign(this.MEMPTR);
-            ++this.MEMPTR.Word;
+            this.MEMPTR.Increment();
             this.MEMPTR.High = this.Bus.Data = data;
             this.MemoryWrite();
         }
@@ -2355,7 +2355,7 @@ namespace Z80
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
             this.ReadPort();
-            ++this.MEMPTR.Word;
+            this.MEMPTR.Increment();
         }
 
         private void ReadPort()

@@ -119,12 +119,7 @@ namespace EightBit
             return ref mapped.Memory.Reference(offset);
         }
 
-        protected ref byte Reference(Register16 absolute)
-        {
-            return ref this.Reference(absolute.Word);
-        }
-
-        protected ref byte Reference() => ref this.Reference(this.Address);
+        protected ref byte Reference() => ref this.Reference(this.Address.Word);
 
         protected void LoadHexFile(string path)
         {

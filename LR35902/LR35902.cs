@@ -561,11 +561,11 @@ namespace LR35902
                                             break;
 
                                         case 2: // GB: LDI (HL),A
-                                            this.MemoryWrite(this.HL.Word++, this.A);
+                                            this.MemoryWrite(this.HL.Increment(), this.A);
                                             break;
 
                                         case 3: // GB: LDD (HL),A
-                                            this.MemoryWrite(this.HL.Word--, this.A);
+                                            this.MemoryWrite(this.HL.Decrement(), this.A);
                                             break;
 
                                         default:
@@ -577,10 +577,10 @@ namespace LR35902
                                 case 1:
                                     this.A = p switch
                                     {
-                                        0 => this.MemoryRead(this.BC),          // LD A,(BC)
-                                        1 => this.MemoryRead(this.DE),          // LD A,(DE)
-                                        2 => this.MemoryRead(this.HL.Word++),   // GB: LDI A,(HL)
-                                        3 => this.MemoryRead(this.HL.Word--),   // GB: LDD A,(HL)
+                                        0 => this.MemoryRead(this.BC),              // LD A,(BC)
+                                        1 => this.MemoryRead(this.DE),              // LD A,(DE)
+                                        2 => this.MemoryRead(this.HL.Increment()),  // GB: LDI A,(HL)
+                                        3 => this.MemoryRead(this.HL.Decrement()),  // GB: LDD A,(HL)
                                         _ => throw new InvalidOperationException("Invalid operation mode"),
                                     };
                                     break;
@@ -595,11 +595,11 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    ++this.RP(p).Word;
+                                    this.RP(p).Increment();
                                     break;
 
                                 case 1: // DEC rp
-                                    --this.RP(p).Word;
+                                    this.RP(p).Decrement();
                                     break;
 
                                 default:

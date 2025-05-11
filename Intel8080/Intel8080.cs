@@ -326,10 +326,10 @@ namespace Intel8080
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    ++this.RP(p).Word;
+                                    this.RP(p).Increment();
                                     break;
                                 case 1: // DEC rp
-                                    --this.RP(p).Word;
+                                    this.RP(p).Decrement();
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -757,11 +757,11 @@ namespace Intel8080
         private void XHTL(Register16 exchange)
         {
             this.MEMPTR.Low = this.MemoryRead(this.SP);
-            ++this.Bus.Address.Word;
+            this.Bus.Address.Increment();
             this.MEMPTR.High = this.MemoryRead();
             this.MemoryWrite(exchange.High);
             exchange.High = this.MEMPTR.High;
-            --this.Bus.Address.Word;
+            this.Bus.Address.Decrement();
             this.MemoryWrite(exchange.Low);
             exchange.Low = this.MEMPTR.Low;
         }

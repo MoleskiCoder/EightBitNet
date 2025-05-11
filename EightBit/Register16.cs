@@ -98,5 +98,9 @@ namespace EightBit
                 }
             }
         }
+
+        public ushort Increment() => this.Word++;
+
+        public ushort Decrement() => this.Word--;
     }
 }

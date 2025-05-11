@@ -476,7 +476,11 @@ namespace EightBit
 
         private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
 
-        private void Push(Register16 stack, byte value) => this.MemoryWrite(--stack.Word, value);
+        private void Push(Register16 stack, byte value)
+        {
+            stack.Decrement();
+            this.MemoryWrite(stack, value);
+        }
 
         private void PushS(byte value) => this.Push(this.S, value);
 
@@ -486,7 +490,12 @@ namespace EightBit
             this.Push(stack, value.High);
         }
 
-        private byte Pop(Register16 stack) => this.MemoryRead(stack.Word++);
+        private byte Pop(Register16 stack)
+        {
+            var read = this.MemoryRead(stack);
+            stack.Increment();
+            return read;
+        }
 
         private byte PopS() => this.Pop(this.S);
 

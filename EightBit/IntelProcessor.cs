@@ -137,14 +137,14 @@ namespace EightBit
 
         protected sealed override void Push(byte value)
         {
-            --this.SP.Word;
+            this.SP.Decrement();
             this.MemoryWrite(this.SP, value);
         }
 
         protected sealed override byte Pop()
         {
             var returned = this.MemoryRead(this.SP);
-            this.SP.Word++;
+            this.SP.Increment();
             return returned;
         }
 

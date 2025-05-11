@@ -225,9 +225,9 @@ namespace EightBit
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected virtual void IncrementPC() => ++this.PC.Word;
+        protected virtual void IncrementPC() => this.PC.Increment();
 
-        protected virtual void DecrementPC() => --this.PC.Word;
+        protected virtual void DecrementPC() => this.PC.Decrement();
 
         protected virtual void ImmediateAddress()
         {
@@ -311,12 +311,9 @@ namespace EightBit
             this.SetWord(value);
         }
 
-        protected void Jump(ushort destination) => this.PC.Word = destination;
+        protected void Jump(ushort destination) => this.PC.Assign(destination);
 
-        protected void Jump(Register16 destination)
-        {
-            this.PC.Assign(destination);
-        }
+        protected void Jump(Register16 destination) => this.PC.Assign(destination);
 
         protected void Call(ushort destination)
         {
