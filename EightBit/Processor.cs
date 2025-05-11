@@ -311,7 +311,7 @@ namespace EightBit
             this.SetWord(value);
         }
 
-        protected void Jump(ushort destination) => this.PC.Assign(destination);
+        protected void Jump(ushort destination) => this.PC.Word = destination;
 
         protected void Jump(Register16 destination) => this.PC.Assign(destination);
 

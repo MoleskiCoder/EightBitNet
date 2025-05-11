@@ -4,6 +4,7 @@
 
 namespace EightBit
 {
+    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
 
     [StructLayout(LayoutKind.Explicit, Size = 2)]
@@ -20,7 +21,7 @@ namespace EightBit
 
         public Register16(ushort value)
         {
-            this.Assign(value);
+            this.Word = value;
         }
 
         public Register16()
@@ -48,19 +49,22 @@ namespace EightBit
             this.High = rhs.High;
         }
 
-        public ushort Word
+        public unsafe ushort Word
         {
             get
             {
-                unsafe
+                fixed (byte* bytes = &this._low)
                 {
-                    fixed (byte* bytes = &this._low)
-                    {
-                        return *(ushort*)bytes;
-                    }
+                    return *(ushort*)bytes;
                 }
             }
-            set => this.Assign(value);
+            set
+            {
+                fixed (byte* bytes = &this._low)
+                {
+                    *(ushort*)bytes = value;
+                }
+            }
         }
 
         public ref byte Low => ref this._low;
@@ -88,19 +92,10 @@ namespace EightBit
             this.Assign(from.Low, from.High);
         }
 
-        public void Assign(ushort from)
-        {
-            unsafe
-            {
-                fixed (byte* bytes = &this._low)
-                {
-                    *(ushort*)bytes = from;
-                }
-            }
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort Increment() => this.Word++;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort Decrement() => this.Word--;
     }
 }
