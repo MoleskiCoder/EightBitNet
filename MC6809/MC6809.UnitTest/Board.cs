@@ -1,20 +1,19 @@
 ﻿// <copyright file="Board.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
-namespace EightBit
+namespace MC6809.UnitTest
 {
-    using MC6809;
+    using EightBit;
 
-    public sealed class Board : EightBit.Bus
+    public sealed class Board : Bus
     {
-        private readonly Ram ram = new Ram(0x10000);  // 0000 - FFFF, 64K RAM
+        private readonly Ram ram = new(0x10000);  // 0000 - FFFF, 64K RAM
         private readonly MemoryMapping mapping;
 
         public Board()
         {
-            this.CPU = new MC6809(this);
-            this.mapping = new MemoryMapping(this.ram, 0x0000, 0xffff, EightBit.AccessLevel.ReadWrite);
+            this.CPU = new(this);
+            this.mapping = new(this.ram, 0x0000, 0xffff, AccessLevel.ReadWrite);
         }
 
         public MC6809 CPU { get; }

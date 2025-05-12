@@ -1,10 +1,9 @@
 ﻿// <copyright file="LsrTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
-namespace EightBit
+namespace MC6809.UnitTest
 {
-    using MC6809;
+    using EightBit;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -47,9 +46,9 @@ namespace EightBit
         public void TestLSR_a_two()
         {
             this.board.Poke(0xb00, 0x44);
-            this.cpu.CC = MC6809.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
-            this.cpu.CC = MC6809.SetBit(this.cpu.CC, (byte)StatusBits.VF);
-            this.cpu.CC = MC6809.SetBit(this.cpu.CC, (byte)StatusBits.NF);
+            this.cpu.CC = Chip.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
+            this.cpu.CC = Chip.SetBit(this.cpu.CC, (byte)StatusBits.VF);
+            this.cpu.CC = Chip.SetBit(this.cpu.CC, (byte)StatusBits.NF);
             this.cpu.A = 1;
             this.cpu.PC.Word = 0xb00;
 
@@ -66,8 +65,8 @@ namespace EightBit
         public void TestLSR_a_three()
         {
             this.board.Poke(0xb00, 0x44);
-            this.cpu.CC = MC6809.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
-            this.cpu.CC = MC6809.ClearBit(this.cpu.CC, (byte)StatusBits.VF);
+            this.cpu.CC = Chip.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
+            this.cpu.CC = Chip.ClearBit(this.cpu.CC, (byte)StatusBits.VF);
             this.cpu.A = 0xb8;
             this.cpu.PC.Word = 0xb00;
 

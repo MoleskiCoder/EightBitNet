@@ -1,10 +1,9 @@
 ﻿// <copyright file="RorTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
-namespace EightBit
+namespace MC6809.UnitTest
 {
-    using MC6809;
+    using EightBit;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -48,7 +47,7 @@ namespace EightBit
             this.board.Poke(0xb00, 0x56);
             this.cpu.B = 0x89;
             this.cpu.CC = 0;
-            this.cpu.CC = MC6809.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
+            this.cpu.CC = Chip.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
             this.cpu.PC.Word = 0xb00;
 
             this.cpu.Step();

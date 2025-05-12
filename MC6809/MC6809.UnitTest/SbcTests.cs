@@ -1,10 +1,8 @@
 ﻿// <copyright file="SbcTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
-namespace EightBit
+namespace MC6809.UnitTest
 {
-    using MC6809;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]

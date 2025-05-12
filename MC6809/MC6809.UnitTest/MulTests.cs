@@ -1,10 +1,9 @@
 ﻿// <copyright file="MulTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
-namespace EightBit
+namespace MC6809.UnitTest
 {
-    using MC6809;
+    using EightBit;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -55,8 +54,8 @@ namespace EightBit
         {
             this.board.Poke(0xb00, 0x3d);
             this.cpu.CC = 0;
-            this.cpu.CC = MC6809.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
-            this.cpu.CC = MC6809.SetBit(this.cpu.CC, (byte)StatusBits.ZF);
+            this.cpu.CC = Chip.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
+            this.cpu.CC = Chip.SetBit(this.cpu.CC, (byte)StatusBits.ZF);
             this.cpu.A = 0xc;
             this.cpu.B = 0x00;
             this.cpu.PC.Word = 0xb00;

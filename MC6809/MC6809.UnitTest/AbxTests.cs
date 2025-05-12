@@ -1,22 +1,19 @@
 ﻿// <copyright file="AbxTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-
-namespace EightBit
+namespace MC6809.UnitTest
 {
-    using MC6809;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class AbxTests
     {
-        private readonly Board board = new Board();
+        private readonly Board board = new();
         private readonly MC6809 cpu;
 
         public AbxTests()
         {
             this.cpu = this.board.CPU;
-
             this.board.Poke(0, 0x3a);
         }
 
