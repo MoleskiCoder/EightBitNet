@@ -13,9 +13,6 @@ namespace Z80
         {
             this._ports = ports;
             this.RaisedPOWER += this.Z80_RaisedPOWER;
-            this.RaisedRFSH += this.Z80_RaisedRFSH;
-            this.ExecutingInstruction += this.Z80_ExecutingInstruction;
-            this.ExecutedInstruction += this.Z80_ExecutedInstruction;
         }
 
         private readonly InputOutput _ports;
@@ -66,15 +63,7 @@ namespace Z80
 
         public Register16 IX { get; } = new(0xffff);
 
-        public byte IXH { get => this.IX.High; set => this.IX.High = value; }
-
-        public byte IXL { get => this.IX.Low; set => this.IX.Low = value; }
-
         public Register16 IY { get; } = new(0xffff);
-
-        public byte IYH { get => this.IY.High; set => this.IY.High = value; }
-
-        public byte IYL { get => this.IY.Low; set => this.IY.Low = value; }
 
         // ** From the Z80 CPU User Manual
         // Memory Refresh(R) Register.The Z80 CPU contains a memory _refresh counter,
@@ -124,19 +113,11 @@ namespace Z80
             }
         }
 
-        private void Z80_ExecutingInstruction(object? sender, EventArgs e)
+        public override void PoweredStep()
         {
             this._modifiedF = 0;
             this._displaced = this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
-        }
 
-        private void Z80_ExecutedInstruction(object? sender, EventArgs e)
-        {
-            this.Q = this._modifiedF;
-        }
-
-        public override void PoweredStep()
-        {
             if (this.RESET.Lowered())
             {
                 this.HandleRESET();
@@ -173,6 +154,8 @@ namespace Z80
             // CPU.The HALT acknowledge signal is active during this time indicating that the processor
             // is in the HALT state.
             this.Execute(this.FetchInstruction());
+
+            this.Q = this._modifiedF;
         }
 
         private void Z80_RaisedPOWER(object? sender, EventArgs e)
@@ -198,11 +181,6 @@ namespace Z80
             this.Exx();
             this.ExxAF();
             this.ResetRegisterSet();
-        }
-
-        private void Z80_RaisedRFSH(object? sender, EventArgs e)
-        {
-            ++this.REFRESH;
         }
 
         #region Z80 specific pins
@@ -311,6 +289,7 @@ namespace Z80
             {
                 RaisingRFSH?.Invoke(this, EventArgs.Empty);
                 this.RFSH.Raise();
+                ++this.REFRESH;
                 RaisedRFSH?.Invoke(this, EventArgs.Empty);
             }
         }
