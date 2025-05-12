@@ -4,6 +4,8 @@
 
 namespace EightBit
 {
+    using MC6809;
+
     public sealed class Board : EightBit.Bus
     {
         private readonly Ram ram = new Ram(0x10000);  // 0000 - FFFF, 64K RAM

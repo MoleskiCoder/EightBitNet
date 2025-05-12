@@ -1,14 +1,10 @@
 ﻿// <copyright file="ProfileEventArgs.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace MC6809
 {
-    using System;
-
-    public class ProfileEventArgs : EventArgs
+    public class ProfileEventArgs(string output) : EventArgs
     {
-        public ProfileEventArgs(string output) => this.Output = output;
-
-        public string Output { get; }
+        public string Output { get; } = output;
     }
 }

@@ -4,6 +4,7 @@
 
 namespace EightBit
 {
+    using MC6809;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]

@@ -1,35 +1,28 @@
 ﻿// <copyright file="Disassembler.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace MC6809
 {
-    using System;
-    using System.Collections.Generic;
+    using EightBit;
 
-    public sealed class Disassembler
+    public sealed class Disassembler(Bus bus, MC6809 targetProcessor)
     {
         private ushort address = 0xffff;
 
-        private bool prefix10 = false;
-        private bool prefix11 = false;
+        private bool prefix10;
+        private bool prefix11;
 
-        public Disassembler(Bus bus, MC6809 targetProcessor)
-        {
-            this.BUS = bus;
-            this.CPU = targetProcessor;
-        }
-
-        public bool Pause { get; set;  } = false;
+        public bool Pause { get; set; }
 
         public bool Ignore => this.CPU.HALT.Lowered()
                                 || this.CPU.RESET.Lowered()
                                 || this.CPU.NMI.Lowered()
-                                || (this.CPU.FIRQ.Lowered() && this.CPU.FastInterruptMasked == 0)
-                                || (this.CPU.INT.Lowered() && this.CPU.InterruptMasked == 0);
+                                || this.CPU.FIRQ.Lowered() && this.CPU.FastInterruptMasked == 0
+                                || this.CPU.INT.Lowered() && this.CPU.InterruptMasked == 0;
 
-        private Bus BUS { get; }
+        private Bus BUS { get; } = bus;
 
-        private MC6809 CPU { get; }
+        private MC6809 CPU { get; } = targetProcessor;
 
         public string Trace(ushort current)
         {
@@ -45,7 +38,11 @@ namespace EightBit
             return $"{current:x4}|{disassembled}\t\tcc={cc:x2} a={a:x2} b={b:x2} dp={dp:x2} x={x:x4} y={y:x4} u={u:x4} s={s:x4}";
         }
 
-        public string Trace(Register16 current) => this.Trace(current.Word);
+        public string Trace(Register16 current)
+        {
+            ArgumentNullException.ThrowIfNull(current, nameof(current));
+            return this.Trace(current.Word);
+        }
 
         public string Trace() => this.Trace(this.CPU.PC);
 
@@ -67,19 +64,14 @@ namespace EightBit
 
         private static string RR(int which)
         {
-            switch (which)
+            return which switch
             {
-                case 0b00:
-                    return "X";
-                case 0b01:
-                    return "Y";
-                case 0b10:
-                    return "U";
-                case 0b11:
-                    return "S";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(which), which, "Register specification is unknown");
-            }
+                0b00 => "X",
+                0b01 => "Y",
+                0b10 => "U",
+                0b11 => "S",
+                _ => throw new ArgumentOutOfRangeException(nameof(which), which, "Register specification is unknown"),
+            };
         }
 
         private static string WrapIndirect(string what, bool indirect)
@@ -91,40 +83,28 @@ namespace EightBit
 
         private static string ReferenceTransfer8(int specifier)
         {
-            switch (specifier)
+            return specifier switch
             {
-                case 0b1000:
-                    return "A";
-                case 0b1001:
-                    return "B";
-                case 0b1010:
-                    return "CC";
-                case 0b1011:
-                    return "DP";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "8bit register specification is unknown");
-            }
+                0b1000 => "A",
+                0b1001 => "B",
+                0b1010 => "CC",
+                0b1011 => "DP",
+                _ => throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "8bit register specification is unknown"),
+            };
         }
 
         private static string ReferenceTransfer16(int specifier)
         {
-            switch (specifier)
+            return specifier switch
             {
-                case 0b0000:
-                    return "D";
-                case 0b0001:
-                    return "X";
-                case 0b0010:
-                    return "Y";
-                case 0b0011:
-                    return "U";
-                case 0b0100:
-                    return "S";
-                case 0b0101:
-                    return "PC";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "16bit register specification is unknown");
-            }
+                0b0000 => "D",
+                0b0001 => "X",
+                0b0010 => "Y",
+                0b0011 => "U",
+                0b0100 => "S",
+                0b0101 => "PC",
+                _ => throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "16bit register specification is unknown"),
+            };
         }
 
         private string Disassemble(int current) => this.Disassemble((ushort)current);
@@ -609,66 +589,64 @@ namespace EightBit
 
         ////
 
-        private string Address_direct(string mnemomic)
+        private string Address_direct(string mnemonic)
         {
             var offset = this.GetByte(++this.address);
-            return $"{offset:x2}\t{mnemomic}\t${offset:x2}";
+            return $"{offset:x2}\t{mnemonic}\t${offset:x2}";
         }
 
-        private string Address_indexed(string mnemomic)
+        private string Address_indexed(string mnemonic)
         {
             var type = this.GetByte(++this.address);
             var r = RR((type & (byte)(Bits.Bit6 | Bits.Bit5)) >> 5);
-
-            byte byte8 = 0xff;
-            ushort word = 0xffff;
-
             var output = $"{type:x2}";
 
             if ((type & (byte)Bits.Bit7) != 0)
             {
                 var indirect = (type & (byte)Bits.Bit4) != 0;
+                ushort word;
+                byte byte8;
                 switch (type & (byte)Mask.Four)
                 {
                     case 0b0000: // ,R+
-                        output += $"\t{mnemomic}\t{WrapIndirect($",{r}+", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($",{r}+", indirect)}";
                         break;
                     case 0b0001: // ,R++
-                        output += $"\t{mnemomic}\t{WrapIndirect($",{r}++", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($",{r}++", indirect)}";
                         break;
                     case 0b0010: // ,-R
-                        output += $"\t{mnemomic}\t{WrapIndirect($",-{r}", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($",-{r}", indirect)}";
                         break;
                     case 0b0011: // ,--R
-                        output += $"\t{mnemomic}\t{WrapIndirect($",--{r}", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($",--{r}", indirect)}";
                         break;
                     case 0b0100: // ,R
-                        output += $"\t{mnemomic}\t{WrapIndirect($",{r}", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($",{r}", indirect)}";
                         break;
                     case 0b0101: // B,R
-                        output += $"\t{mnemomic}\t{WrapIndirect($"B,{r}", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($"B,{r}", indirect)}";
                         break;
                     case 0b0110: // A,R
-                        output += $"\t{mnemomic}\t{WrapIndirect($"A,{r}", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($"A,{r}", indirect)}";
                         break;
                     case 0b1000: // n,R (eight-bit)
                         byte8 = this.GetByte(++this.address);
-                        output += $"{byte8:x2}\t{mnemomic}\t{WrapIndirect($"{byte8:x2},{r}", indirect)}";
+                        output += $"{byte8:x2}\t{mnemonic}\t{WrapIndirect($"{byte8:x2},{r}", indirect)}";
                         break;
                     case 0b1001: // n,R (sixteen-bit)
                         word = this.GetWord(++this.address);
-                        output += $"{word:x4}\t{mnemomic}\t{WrapIndirect($"{word:x4},{r}", indirect)}";
+                        output += $"{word:x4}\t{mnemonic}\t{WrapIndirect($"{word:x4},{r}", indirect)}";
                         break;
                     case 0b1011: // D,R
-                        output += $"\t{mnemomic}\t{WrapIndirect($"D,{r}", indirect)}";
+                        output += $"\t{mnemonic}\t{WrapIndirect($"D,{r}", indirect)}";
                         break;
                     case 0b1100: // n,PCR (eight-bit)
                         byte8 = this.GetByte(++this.address);
-                        output += $"{byte8:x2}\t{mnemomic}\t{WrapIndirect("${(byte)byte8:D},PCR", indirect)}";
+                        output += $"{byte8:x2}\t{mnemonic}\t{WrapIndirect("${(byte)byte8:D},PCR", indirect)}";
                         break;
                     case 0b1101: // n,PCR (sixteen-bit)
                         word = this.GetWord(++this.address);
-                        output += $"{word:x4}\t{mnemomic}\t{WrapIndirect("${(short)word:D},PCR", indirect)}";
+                        output += $"{word:x4}\t{mnemonic}\t{WrapIndirect("${(short)word:D},PCR", indirect)}";
                         break;
                     case 0b1111: // [n]
                         if (!indirect)
@@ -677,7 +655,7 @@ namespace EightBit
                         }
 
                         word = this.GetWord(++this.address);
-                        output += $"{word:x4}\t{mnemomic}\t{WrapIndirect("${word:x4}", indirect)}";
+                        output += $"{word:x4}\t{mnemonic}\t{WrapIndirect("${word:x4}", indirect)}";
                         break;
                     default:
                         throw new InvalidOperationException("Invalid index specification used");
@@ -686,53 +664,53 @@ namespace EightBit
             else
             {
                 // EA = ,R + 5-bit offset
-                output += $"\t{mnemomic}\t{Processor.SignExtend(5, type & (byte)Mask.Five)},{r}";
+                output += $"\t{mnemonic}\t{Processor.SignExtend(5, type & (byte)Mask.Five)},{r}";
             }
 
             return output;
         }
 
-        private string Address_extended(string mnemomic)
+        private string Address_extended(string mnemonic)
         {
             var word = this.GetWord(++this.address);
-            return $"{word:x4}\t{mnemomic}\t${word:x4}";
+            return $"{word:x4}\t{mnemonic}\t${word:x4}";
         }
 
-        private string Address_relative_byte(string mnemomic)
+        private string Address_relative_byte(string mnemonic)
         {
             var byte8 = this.GetByte(++this.address);
-            return $"{byte8:x2}\t{mnemomic}\t${++this.address + (sbyte)byte8:x4}";
+            return $"{byte8:x2}\t{mnemonic}\t${++this.address + (sbyte)byte8:x4}";
         }
 
-        private string Address_relative_word(string mnemomic)
+        private string Address_relative_word(string mnemonic)
         {
             var word = this.GetWord(++this.address);
-            return $"{word:x4}\t{mnemomic}\t${++this.address + (short)word:x4}";
+            return $"{word:x4}\t{mnemonic}\t${++this.address + (short)word:x4}";
         }
 
-        private string AM_immediate_byte(string mnemomic)
+        private string AM_immediate_byte(string mnemonic)
         {
             var byte8 = this.GetByte(++this.address);
-            return $"{byte8:x2}\t{mnemomic}\t#${byte8:x2}";
+            return $"{byte8:x2}\t{mnemonic}\t#${byte8:x2}";
         }
 
-        private string AM_immediate_word(string mnemomic)
+        private string AM_immediate_word(string mnemonic)
         {
             var word = this.GetWord(++this.address);
-            return $"{word:x4}\t{mnemomic}\t#${word:x4}";
+            return $"{word:x4}\t{mnemonic}\t#${word:x4}";
         }
 
-        private string BranchShort(string mnemomic) => this.Address_relative_byte(mnemomic);
+        private string BranchShort(string mnemonic) => this.Address_relative_byte(mnemonic);
 
-        private string BranchLong(string mnemomic) => this.Address_relative_word(mnemomic);
+        private string BranchLong(string mnemonic) => this.Address_relative_word(mnemonic);
 
-        private string TFR(string mnemomic)
+        private string TFR(string mnemonic)
         {
             var data = this.GetByte(++this.address);
             var reg1 = Chip.HighNibble(data);
             var reg2 = Chip.LowNibble(data);
 
-            var output = $"{data:x2}\t{mnemomic}\t";
+            var output = $"{data:x2}\t{mnemonic}\t";
 
             var type8 = (reg1 & (byte)Bits.Bit3) != 0;   // 8 bit?
             return type8
@@ -750,10 +728,10 @@ namespace EightBit
 
         private string PshU() => this.PshX("PSHU", "S");
 
-        private string PulX(string mnemomic, string upon)
+        private string PulX(string mnemonic, string upon)
         {
             var data = this.GetByte(++this.address);
-            var output = $"{data:x2}\t{mnemomic}\t";
+            var output = $"{data:x2}\t{mnemonic}\t";
             var registers = new List<string>();
 
             if ((data & (byte)Bits.Bit0) != 0)
@@ -799,10 +777,10 @@ namespace EightBit
             return output + string.Join(",", registers);
         }
 
-        private string PshX(string mnemomic, string upon)
+        private string PshX(string mnemonic, string upon)
         {
             var data = this.GetByte(++this.address);
-            var output = $"{data:x2}\t{mnemomic}\t";
+            var output = $"{data:x2}\t{mnemonic}\t";
             var registers = new List<string>();
 
             if ((data & (byte)Bits.Bit7) != 0)

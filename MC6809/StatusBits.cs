@@ -2,12 +2,12 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace MC6809
 {
-    using System;
+    using EightBit;
 
     [Flags]
-    public enum StatusBits : byte
+    public enum StatusBits
     {
         None = 0,
 

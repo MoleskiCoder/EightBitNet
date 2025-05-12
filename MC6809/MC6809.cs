@@ -1,8 +1,10 @@
 ﻿// <copyright file="MC6809.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace MC6809
 {
+    using EightBit;
+
     // Uses some information from:
     // http://www.cpu-world.com/Arch/6809.html
     // http://atjs.mbnet.fi/mc6809/Information/6809.htm
@@ -73,6 +75,7 @@ namespace EightBit
 
         private void OnLoweredNMI() => this.LoweredNMI?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public void RaiseNMI()
         {
             if (this.NMI.Lowered())
@@ -117,6 +120,7 @@ namespace EightBit
 
         private void OnLoweredFIRQ() => this.LoweredFIRQ?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public void RaiseFIRQ()
         {
             if (this.FIRQ.Lowered())
@@ -163,6 +167,7 @@ namespace EightBit
 
         private void OnLoweredHALT() => this.LoweredHALT?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public void RaiseHALT()
         {
             if (this.HALT.Lowered())
@@ -219,6 +224,7 @@ namespace EightBit
 
         private void OnLoweredBA() => this.LoweredBA?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public void RaiseBA()
         {
             if (this.BA.Lowered())
@@ -261,6 +267,7 @@ namespace EightBit
 
         private void OnLoweredBS() => this.LoweredBS?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public void RaiseBS()
         {
             if (this.BS.Lowered())
@@ -305,6 +312,7 @@ namespace EightBit
 
         private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public void RaiseRW()
         {
             if (this.RW.Lowered())
@@ -369,15 +377,15 @@ namespace EightBit
 
         public int Carry => this.CC & (byte)StatusBits.CF;
 
-        private bool LS => (this.Carry != 0) || (this.Zero != 0);               // (C OR Z)
+        private bool LS => this.Carry != 0 || this.Zero != 0;               // (C OR Z)
 
         private bool HI => !this.LS;                                            // !(C OR Z)
 
-        private bool LT => ((this.Negative >> 3) ^ (this.Overflow >> 1)) != 0;  // (N XOR V)
+        private bool LT => (this.Negative >> 3 ^ this.Overflow >> 1) != 0;  // (N XOR V)
 
         private bool GE => !this.LT;                                            // !(N XOR V)
 
-        private bool LE => (this.Zero != 0) || this.LT;                         // (Z OR (N XOR V))
+        private bool LE => this.Zero != 0 || this.LT;                         // (Z OR (N XOR V))
 
         private bool GT => !this.LE;                                            // !(Z OR (N XOR V))
 
@@ -425,14 +433,14 @@ namespace EightBit
         {
             var lowAfter = after.Low;
             var highAfter = after.High;
-            return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 7)) & (int)Bits.Bit7);
+            return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ highAfter << 7) & (int)Bits.Bit7);
         }
 
         private byte AdjustOverflow(ushort before, ushort data, uint after)
         {
             var lowAfter = (ushort)(after & (uint)Mask.Sixteen);
             var highAfter = (ushort)(after >> 16);
-            return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ (highAfter << 15)) & (int)Bits.Bit15);
+            return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ highAfter << 15) & (int)Bits.Bit15);
         }
 
         private byte AdjustHalfCarry(byte before, byte data, byte after) => SetBit(this.CC, StatusBits.HF, (before ^ data ^ after) & (int)Bits.Bit4);
@@ -614,19 +622,14 @@ namespace EightBit
 
         private Register16 RR(int which)
         {
-            switch (which)
+            return which switch
             {
-                case 0b00:
-                    return this.X;
-                case 0b01:
-                    return this.Y;
-                case 0b10:
-                    return this.U;
-                case 0b11:
-                    return this.S;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(which), which, "Which does not specify a valid register");
-            }
+                0b00 => this.X,
+                0b01 => this.Y,
+                0b10 => this.U,
+                0b11 => this.S,
+                _ => throw new ArgumentOutOfRangeException(nameof(which), which, "Which does not specify a valid register"),
+            };
         }
 
         private Register16 Address_indexed()
@@ -811,7 +814,7 @@ namespace EightBit
                 this.Tick(2);
 
                 // Pushing to the S stack means we must be pushing U
-                this.PushWord(stack, object.ReferenceEquals(stack, this.S) ? this.U : this.S);
+                this.PushWord(stack, ReferenceEquals(stack, this.S) ? this.U : this.S);
             }
 
             if ((data & (byte)Bits.Bit5) != 0)
@@ -894,7 +897,7 @@ namespace EightBit
                 this.Tick(2);
 
                 // Pulling from the S stack means we must be pulling U
-                (object.ReferenceEquals(stack, this.S) ? this.U : this.S).Word = this.PopWord(stack).Word;
+                (ReferenceEquals(stack, this.S) ? this.U : this.S).Word = this.PopWord(stack).Word;
             }
 
             if ((data & (byte)Bits.Bit7) != 0)
@@ -941,10 +944,10 @@ namespace EightBit
 
         private void EXG(byte data)
         {
-            var leftSpecifier = Chip.HighNibble(data);
+            var leftSpecifier = HighNibble(data);
             var leftType = leftSpecifier & (int)Bits.Bit3;
 
-            var rightSpecifier = Chip.LowNibble(data);
+            var rightSpecifier = LowNibble(data);
             var rightType = rightSpecifier & (int)Bits.Bit3;
 
             if (leftType == 0)
@@ -981,10 +984,10 @@ namespace EightBit
 
         private void TFR(byte data)
         {
-            var sourceSpecifier = Chip.HighNibble(data);
+            var sourceSpecifier = HighNibble(data);
             var sourceType = sourceSpecifier & (int)Bits.Bit3;
 
-            var destinationSpecifier = Chip.LowNibble(data);
+            var destinationSpecifier = LowNibble(data);
             var destinationType = destinationSpecifier & (int)Bits.Bit3;
 
             if (sourceType == 0)
@@ -1037,11 +1040,11 @@ namespace EightBit
             {
                 this.HandleNMI();
             }
-            else if (this.FIRQ.Lowered() && (this.FastInterruptMasked == 0))
+            else if (this.FIRQ.Lowered() && this.FastInterruptMasked == 0)
             {
                 this.HandleFIRQ();
             }
-            else if (this.INT.Lowered() && (this.InterruptMasked == 0))
+            else if (this.INT.Lowered() && this.InterruptMasked == 0)
             {
                 this.HandleINT();
             }
@@ -1558,7 +1561,7 @@ namespace EightBit
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
             this.CC = this.AdjustNZ(operand <<= 1);
-            var overflow = this.Carry ^ (this.Negative >> 3);
+            var overflow = this.Carry ^ this.Negative >> 3;
             this.CC = SetBit(this.CC, StatusBits.VF, overflow);
             return operand;
         }
@@ -1566,7 +1569,7 @@ namespace EightBit
         private byte ASR(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
-            var result = (byte)((operand >> 1) | (int)Bits.Bit7);
+            var result = (byte)(operand >> 1 | (int)Bits.Bit7);
             this.CC = this.AdjustNZ(result);
             return result;
         }
@@ -1600,8 +1603,8 @@ namespace EightBit
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand > 0x99);
 
-            var lowAdjust = (this.HalfCarry != 0) || (Chip.LowNibble(operand) > 9);
-            var highAdjust = (this.Carry != 0) || (operand > 0x99);
+            var lowAdjust = this.HalfCarry != 0 || LowNibble(operand) > 9;
+            var highAdjust = this.Carry != 0 || operand > 0x99;
 
             if (lowAdjust)
             {
@@ -1670,8 +1673,8 @@ namespace EightBit
         {
             var carryIn = this.Carry;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
-            this.CC = SetBit(this.CC, StatusBits.VF, ((operand & (byte)Bits.Bit7) >> 7) ^ ((operand & (byte)Bits.Bit6) >> 6));
-            var result = (byte)((operand << 1) | carryIn);
+            this.CC = SetBit(this.CC, StatusBits.VF, (operand & (byte)Bits.Bit7) >> 7 ^ (operand & (byte)Bits.Bit6) >> 6);
+            var result = (byte)(operand << 1 | carryIn);
             this.CC = this.AdjustNZ(result);
             return result;
         }
@@ -1680,7 +1683,7 @@ namespace EightBit
         {
             var carryIn = this.Carry;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
-            var result = (byte)((operand >> 1) | (carryIn << 7));
+            var result = (byte)(operand >> 1 | carryIn << 7);
             this.CC = this.AdjustNZ(result);
             return result;
         }

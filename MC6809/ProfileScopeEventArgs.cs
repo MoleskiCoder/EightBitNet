@@ -1,23 +1,14 @@
 ﻿// <copyright file="ProfileScopeEventArgs.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace MC6809
 {
-    using System;
-
-    public class ProfileScopeEventArgs : EventArgs
+    public class ProfileScopeEventArgs(string scope, ulong cycles, ulong count) : EventArgs
     {
-        public ProfileScopeEventArgs(string scope, ulong cycles, ulong count)
-        {
-            this.Scope = scope;
-            this.Cycles = cycles;
-            this.Count = count;
-        }
+        public string Scope { get; } = scope;
 
-        public string Scope { get; }
+        public ulong Cycles { get; } = cycles;
 
-        public ulong Cycles { get; }
-
-        public ulong Count { get; }
+        public ulong Count { get; } = count;
     }
 }

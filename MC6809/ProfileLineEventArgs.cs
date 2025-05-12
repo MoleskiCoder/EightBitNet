@@ -1,20 +1,12 @@
 ﻿// <copyright file="ProfileLineEventArgs.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace EightBit
+namespace MC6809
 {
-    using System;
-
-    public class ProfileLineEventArgs : EventArgs
+    public class ProfileLineEventArgs(string source, ulong cycles) : EventArgs
     {
-        public ProfileLineEventArgs(string source, ulong cycles)
-        {
-            this.Source = source;
-            this.Cycles = cycles;
-        }
+        public string Source { get; } = source;
 
-        public string Source { get; }
-
-        public ulong Cycles { get; }
+        public ulong Cycles { get; } = cycles;
     }
 }

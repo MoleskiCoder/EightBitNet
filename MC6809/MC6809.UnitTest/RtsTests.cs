@@ -4,6 +4,7 @@
 
 namespace EightBit
 {
+    using MC6809;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     // https://github.com/sorenroug/osnine-java/blob/master/core/src/test/java/org/roug/osnine/BranchAndJumpTest.java
