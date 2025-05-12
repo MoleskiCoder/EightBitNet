@@ -3,8 +3,6 @@
 // </copyright>
 namespace EightBit
 {
-    using System;
-
     // Uses some information from:
     // http://www.cpu-world.com/Arch/6809.html
     // http://atjs.mbnet.fi/mc6809/Information/6809.htm
@@ -24,26 +22,19 @@ namespace EightBit
 
     public sealed class MC6809 : BigEndianProcessor
     {
-        private const byte RESETvector = 0xfe;      // RESET vector
-        private const byte NMIvector = 0xfc;        // NMI vector
-        private const byte SWIvector = 0xfa;        // SWI vector
-        private const byte IRQvector = 0xf8;        // IRQ vector
-        private const byte FIRQvector = 0xf6;       // FIRQ vector
-        private const byte SWI2vector = 0xf4;       // SWI2 vector
-        private const byte SWI3vector = 0xf2;       // SWI3 vector
+        private const byte RESET_vector = 0xfe; // RESET vector
+        private const byte NMI_vector = 0xfc;   // NMI vector
+        private const byte SWI_vector = 0xfa;   // SWI vector
+        private const byte IRQ_vector = 0xf8;   // IRQ vector
+        private const byte FIRQ_vector = 0xf6;  // FIRQ vector
+        private const byte SWI2_vector = 0xf4;  // SWI2 vector
+        private const byte SWI3_vector = 0xf2;  // SWI3 vector
 
-        private byte cc = 0;
-        private byte dp = 0;
+        private byte cc;
+        private byte dp;
 
-        private PinLevel nmiLine = PinLevel.Low;
-        private PinLevel firqLine = PinLevel.Low;
-        private PinLevel haltLine = PinLevel.Low;
-        private PinLevel baLine = PinLevel.Low;
-        private PinLevel bsLine = PinLevel.Low;
-        private PinLevel rwLine = PinLevel.Low;
-
-        private bool prefix10 = false;
-        private bool prefix11 = false;
+        private bool prefix10;
+        private bool prefix11;
 
         public MC6809(Bus bus)
         : base(bus)
@@ -51,85 +42,316 @@ namespace EightBit
             this.RaisedPOWER += this.MC6809_RaisedPOWER;
         }
 
-        public event EventHandler<EventArgs> RaisingNMI;
+        private void MC6809_RaisedPOWER(object? sender, EventArgs e)
+        {
+            this.LowerBA();
+            this.LowerBS();
+            this.LowerRW();
+        }
 
-        public event EventHandler<EventArgs> RaisedNMI;
+        #region Pin controls
 
-        public event EventHandler<EventArgs> LoweringNMI;
+        #region NMI pin
 
-        public event EventHandler<EventArgs> LoweredNMI;
+        private PinLevel nmiLine = PinLevel.Low;
 
-        public event EventHandler<EventArgs> RaisingFIRQ;
+        public ref PinLevel NMI => ref this.nmiLine;
 
-        public event EventHandler<EventArgs> RaisedFIRQ;
+        public event EventHandler<EventArgs>? RaisingNMI;
 
-        public event EventHandler<EventArgs> LoweringFIRQ;
+        public event EventHandler<EventArgs>? RaisedNMI;
 
-        public event EventHandler<EventArgs> LoweredFIRQ;
+        public event EventHandler<EventArgs>? LoweringNMI;
 
-        public event EventHandler<EventArgs> RaisingHALT;
+        public event EventHandler<EventArgs>? LoweredNMI;
 
-        public event EventHandler<EventArgs> RaisedHALT;
+        private void OnRaisingNMI() => this.RaisingNMI?.Invoke(this, EventArgs.Empty);
 
-        public event EventHandler<EventArgs> LoweringHALT;
+        private void OnRaisedNMI() => this.RaisedNMI?.Invoke(this, EventArgs.Empty);
 
-        public event EventHandler<EventArgs> LoweredHALT;
+        private void OnLoweringNMI() => this.LoweringNMI?.Invoke(this, EventArgs.Empty);
 
-        public event EventHandler<EventArgs> RaisingBA;
+        private void OnLoweredNMI() => this.LoweredNMI?.Invoke(this, EventArgs.Empty);
 
-        public event EventHandler<EventArgs> RaisedBA;
+        public void RaiseNMI()
+        {
+            if (this.NMI.Lowered())
+            {
+                this.OnRaisingNMI();
+                this.NMI.Raise();
+                this.OnRaisedNMI();
+            }
+        }
 
-        public event EventHandler<EventArgs> LoweringBA;
+        public void LowerNMI()
+        {
+            if (this.NMI.Raised())
+            {
+                this.OnLoweringNMI();
+                this.NMI.Lower();
+                this.OnLoweredNMI();
+            }
+        }
 
-        public event EventHandler<EventArgs> LoweredBA;
+        #endregion
 
-        public event EventHandler<EventArgs> RaisingBS;
+        #region FIRQ pin
 
-        public event EventHandler<EventArgs> RaisedBS;
+        private PinLevel firqLine = PinLevel.Low;
 
-        public event EventHandler<EventArgs> LoweringBS;
+        public ref PinLevel FIRQ => ref this.firqLine;
 
-        public event EventHandler<EventArgs> LoweredBS;
+        public event EventHandler<EventArgs>? RaisingFIRQ;
 
-        public event EventHandler<EventArgs> RaisingRW;
+        public event EventHandler<EventArgs>? RaisedFIRQ;
 
-        public event EventHandler<EventArgs> RaisedRW;
+        public event EventHandler<EventArgs>? LoweringFIRQ;
 
-        public event EventHandler<EventArgs> LoweringRW;
+        public event EventHandler<EventArgs>? LoweredFIRQ;
 
-        public event EventHandler<EventArgs> LoweredRW;
+        private void OnRaisingFIRQ() => this.RaisingFIRQ?.Invoke(this, EventArgs.Empty);
 
-        public Register16 D { get; } = new Register16();
+        private void OnRaisedFIRQ() => this.RaisedFIRQ?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringFIRQ() => this.LoweringFIRQ?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredFIRQ() => this.LoweredFIRQ?.Invoke(this, EventArgs.Empty);
+
+        public void RaiseFIRQ()
+        {
+            if (this.FIRQ.Lowered())
+            {
+                this.OnRaisingFIRQ();
+                this.FIRQ.Raise();
+                this.OnRaisedFIRQ();
+            }
+        }
+
+        public void LowerFIRQ()
+        {
+            if (this.FIRQ.Raised())
+            {
+                this.OnLoweringFIRQ();
+                this.FIRQ.Lower();
+                this.OnLoweredFIRQ();
+            }
+        }
+
+        #endregion
+
+        #region HALT pin
+
+        private PinLevel haltLine = PinLevel.Low;
+
+        public ref PinLevel HALT => ref this.haltLine;
+
+        public bool Halted => this.HALT.Lowered();
+
+        public event EventHandler<EventArgs>? RaisingHALT;
+
+        public event EventHandler<EventArgs>? RaisedHALT;
+
+        public event EventHandler<EventArgs>? LoweringHALT;
+
+        public event EventHandler<EventArgs>? LoweredHALT;
+
+        private void OnRaisingHALT() => this.RaisingHALT?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisedHALT() => this.RaisedHALT?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringHALT() => this.LoweringHALT?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredHALT() => this.LoweredHALT?.Invoke(this, EventArgs.Empty);
+
+        public void RaiseHALT()
+        {
+            if (this.HALT.Lowered())
+            {
+                this.OnRaisingHALT();
+                this.HALT.Raise();
+                this.OnRaisedHALT();
+            }
+        }
+
+        public void LowerHALT()
+        {
+            if (this.HALT.Raised())
+            {
+                this.OnLoweringHALT();
+                this.HALT.Lower();
+                this.OnLoweredHALT();
+            }
+        }
+
+        public void Halt()
+        {
+            this.LowerHALT();
+        }
+
+        public void Proceed()
+        {
+            this.RaiseHALT();
+        }
+
+        #endregion
+
+        #region BA pin
+
+        private PinLevel baLine = PinLevel.Low;
+
+        public ref PinLevel BA => ref this.baLine;
+
+        private PinLevel bsLine = PinLevel.Low;
+
+        public event EventHandler<EventArgs>? RaisingBA;
+
+        public event EventHandler<EventArgs>? RaisedBA;
+
+        public event EventHandler<EventArgs>? LoweringBA;
+
+        public event EventHandler<EventArgs>? LoweredBA;
+
+        private void OnRaisingBA() => this.RaisingBA?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisedBA() => this.RaisedBA?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringBA() => this.LoweringBA?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredBA() => this.LoweredBA?.Invoke(this, EventArgs.Empty);
+
+        public void RaiseBA()
+        {
+            if (this.BA.Lowered())
+            {
+                this.OnRaisingBA();
+                this.BA.Raise();
+                this.OnRaisedBA();
+            }
+        }
+
+        public void LowerBA()
+        {
+            if (this.BA.Raised())
+            {
+                this.OnLoweringBA();
+                this.BA.Lower();
+                this.OnLoweredBA();
+            }
+        }
+
+        #endregion
+
+        #region BS pin
+
+        public ref PinLevel BS => ref this.bsLine;
+
+        public event EventHandler<EventArgs>? RaisingBS;
+
+        public event EventHandler<EventArgs>? RaisedBS;
+
+        public event EventHandler<EventArgs>? LoweringBS;
+
+        public event EventHandler<EventArgs>? LoweredBS;
+
+        private void OnRaisingBS() => this.RaisingBS?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisedBS() => this.RaisedBS?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringBS() => this.LoweringBS?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredBS() => this.LoweredBS?.Invoke(this, EventArgs.Empty);
+
+        public void RaiseBS()
+        {
+            if (this.BS.Lowered())
+            {
+                this.OnRaisingBS();
+                this.BS.Raise();
+                this.OnRaisedBS();
+            }
+        }
+
+        public void LowerBS()
+        {
+            if (this.BS.Raised())
+            {
+                this.OnLoweringBS();
+                this.BS.Lower();
+                this.OnLoweredBS();
+            }
+        }
+
+        #endregion
+
+        #region RW pin
+
+        private PinLevel rwLine = PinLevel.Low;
+
+        public ref PinLevel RW => ref this.rwLine;
+
+        public event EventHandler<EventArgs>? RaisingRW;
+
+        public event EventHandler<EventArgs>? RaisedRW;
+
+        public event EventHandler<EventArgs>? LoweringRW;
+
+        public event EventHandler<EventArgs>? LoweredRW;
+
+        private void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
+
+        private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
+
+        public void RaiseRW()
+        {
+            if (this.RW.Lowered())
+            {
+                this.OnRaisingRW();
+                this.RW.Raise();
+                this.OnRaisedRW();
+            }
+        }
+
+        public void LowerRW()
+        {
+            if (this.RW.Raised())
+            {
+                this.OnLoweringRW();
+                this.RW.Lower();
+                this.OnLoweredRW();
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Registers
+
+        public Register16 D { get; } = new();
 
         public ref byte A => ref this.D.High;
 
         public ref byte B => ref this.D.Low;
 
-        public Register16 X { get; } = new Register16();
+        public Register16 X { get; } = new();
 
-        public Register16 Y { get; } = new Register16();
+        public Register16 Y { get; } = new();
 
-        public Register16 U { get; } = new Register16();
+        public Register16 U { get; } = new();
 
-        public Register16 S { get; } = new Register16();
+        public Register16 S { get; } = new();
 
         public ref byte DP => ref this.dp;
 
         public ref byte CC => ref this.cc;
 
-        public bool Halted => this.HALT.Lowered();
+        #endregion
 
-        public ref PinLevel NMI => ref this.nmiLine;
-
-        public ref PinLevel FIRQ => ref this.firqLine;
-
-        public ref PinLevel HALT => ref this.haltLine;
-
-        public ref PinLevel BA => ref this.baLine;
-
-        public ref PinLevel BS => ref this.bsLine;
-
-        public ref PinLevel RW => ref this.rwLine;
+        #region Status (etc.) bit twiddling
 
         public int EntireRegisterSet => this.CC & (byte)StatusBits.EF;
 
@@ -159,235 +381,6 @@ namespace EightBit
 
         private bool GT => !this.LE;                                            // !(Z OR (N XOR V))
 
-        public void Halt()
-        {
-            this.LowerHALT();
-        }
-
-        public void Proceed()
-        {
-            this.RaiseHALT();
-        }
-
-        public override void PoweredStep()
-        {
-            this.prefix10 = this.prefix11 = false;
-            if (this.Halted)
-            {
-                this.HandleHALT();
-            }
-            else if (this.RESET.Lowered())
-            {
-                this.HandleRESET();
-            }
-            else if (this.NMI.Lowered())
-            {
-                this.HandleNMI();
-            }
-            else if (this.FIRQ.Lowered() && (this.FastInterruptMasked == 0))
-            {
-                this.HandleFIRQ();
-            }
-            else if (this.INT.Lowered() && (this.InterruptMasked == 0))
-            {
-                this.HandleINT();
-            }
-            else
-            {
-                this.Execute(this.FetchByte());
-            }
-        }
-
-        public override void Execute()
-        {
-            this.LowerBA();
-            this.LowerBS();
-            var prefixed = this.prefix10 || this.prefix11;
-            var unprefixed = !prefixed;
-            if (unprefixed)
-            {
-                this.ExecuteUnprefixed();
-            }
-            else
-            {
-                if (this.prefix10)
-                {
-                    this.Execute10();
-                }
-                else
-                {
-                    this.Execute11();
-                }
-            }
-        }
-
-        public void RaiseNMI()
-        {
-            if (this.NMI.Lowered())
-            {
-                this.OnRaisingNMI();
-                this.NMI.Raise();
-                this.OnRaisedNMI();
-            }
-        }
-
-        public void LowerNMI()
-        {
-            if (this.NMI.Raised())
-            {
-                this.OnLoweringNMI();
-                this.NMI.Lower();
-                this.OnLoweredNMI();
-            }
-        }
-
-        public void RaiseFIRQ()
-        {
-            if (this.FIRQ.Lowered())
-            {
-                this.OnRaisingFIRQ();
-                this.FIRQ.Raise();
-                this.OnRaisedFIRQ();
-            }
-        }
-
-        public void LowerFIRQ()
-        {
-            if (this.FIRQ.Raised())
-            {
-                this.OnLoweringFIRQ();
-                this.FIRQ.Lower();
-                this.OnLoweredFIRQ();
-            }
-        }
-
-        public void RaiseHALT()
-        {
-            if (this.HALT.Lowered())
-            {
-                this.OnRaisingHALT();
-                this.HALT.Raise();
-                this.OnRaisedHALT();
-            }
-        }
-
-        public void LowerHALT()
-        {
-            if (this.HALT.Raised())
-            {
-                this.OnLoweringHALT();
-                this.HALT.Lower();
-                this.OnLoweredHALT();
-            }
-        }
-
-        public void RaiseBA()
-        {
-            if (this.BA.Lowered())
-            {
-                this.OnRaisingBA();
-                this.BA.Raise();
-                this.OnRaisedBA();
-            }
-        }
-
-        public void LowerBA()
-        {
-            if (this.BA.Raised())
-            {
-                this.OnLoweringBA();
-                this.BA.Lower();
-                this.OnLoweredBA();
-            }
-        }
-
-        public void RaiseBS()
-        {
-            if (this.BS.Lowered())
-            {
-                this.OnRaisingBS();
-                this.BS.Raise();
-                this.OnRaisedBS();
-            }
-        }
-
-        public void LowerBS()
-        {
-            if (this.BS.Raised())
-            {
-                this.OnLoweringBS();
-                this.BS.Lower();
-                this.OnLoweredBS();
-            }
-        }
-
-        public void RaiseRW()
-        {
-            if (this.RW.Lowered())
-            {
-                this.OnRaisingRW();
-                this.RW.Raise();
-                this.OnRaisedRW();
-            }
-        }
-
-        public void LowerRW()
-        {
-            if (this.RW.Raised())
-            {
-                this.OnLoweringRW();
-                this.RW.Lower();
-                this.OnLoweredRW();
-            }
-        }
-
-        private void MC6809_RaisedPOWER(object? sender, EventArgs e)
-        {
-            this.LowerBA();
-            this.LowerBS();
-            this.LowerRW();
-        }
-
-        protected override void HandleRESET()
-        {
-            base.HandleRESET();
-            this.RaiseNMI();
-            this.LowerBA();
-            this.RaiseBS();
-            this.DP = 0;
-            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, RESETvector));
-            this.Tick(10);
-        }
-
-        protected override void HandleINT()
-        {
-            base.HandleINT();
-            this.LowerBA();
-            this.RaiseBS();
-            this.SaveEntireRegisterState();
-            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.Jump(this.GetWordPaged(0xff, IRQvector));
-            this.Tick(12);
-        }
-
-        protected override byte Pop() => this.PopS();
-
-        protected override void Push(byte value) => this.PushS(value);
-
-        protected override void BusWrite()
-        {
-            this.LowerRW();
-            base.BusWrite();
-        }
-
-        protected override byte BusRead()
-        {
-            this.RaiseRW();
-            return base.BusRead();
-        }
-
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
         private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
@@ -397,247 +390,6 @@ namespace EightBit
         private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
-
-        private void HandleHALT()
-        {
-            this.RaiseBA();
-            this.RaiseBS();
-        }
-
-        private void HandleNMI()
-        {
-            this.RaiseNMI();
-            this.LowerBA();
-            this.RaiseBS();
-            this.SaveEntireRegisterState();
-            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, NMIvector));
-            this.Tick(12);
-        }
-
-        private void HandleFIRQ()
-        {
-            this.RaiseFIRQ();
-            this.LowerBA();
-            this.RaiseBS();
-            this.SavePartialRegisterState();
-            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, FIRQvector));
-            this.Tick(12);
-        }
-
-        private void OnRaisingNMI() => this.RaisingNMI?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisedNMI() => this.RaisedNMI?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweringNMI() => this.LoweringNMI?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweredNMI() => this.LoweredNMI?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisingFIRQ() => this.RaisingFIRQ?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisedFIRQ() => this.RaisedFIRQ?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweringFIRQ() => this.LoweringFIRQ?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweredFIRQ() => this.LoweredFIRQ?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisingHALT() => this.RaisingHALT?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisedHALT() => this.RaisedHALT?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweringHALT() => this.LoweringHALT?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweredHALT() => this.LoweredHALT?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisingBA() => this.RaisingBA?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisedBA() => this.RaisedBA?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweringBA() => this.LoweringBA?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweredBA() => this.LoweredBA?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisingBS() => this.RaisingBS?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisedBS() => this.RaisedBS?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweringBS() => this.LoweringBS?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweredBS() => this.LoweredBS?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisingRW() => this.RaisingRW?.Invoke(this, EventArgs.Empty);
-
-        private void OnRaisedRW() => this.RaisedRW?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweringRW() => this.LoweringRW?.Invoke(this, EventArgs.Empty);
-
-        private void OnLoweredRW() => this.LoweredRW?.Invoke(this, EventArgs.Empty);
-
-        private void Push(Register16 stack, byte value)
-        {
-            stack.Decrement();
-            this.MemoryWrite(stack, value);
-        }
-
-        private void PushS(byte value) => this.Push(this.S, value);
-
-        private void PushWord(Register16 stack, Register16 value)
-        {
-            this.Push(stack, value.Low);
-            this.Push(stack, value.High);
-        }
-
-        private byte Pop(Register16 stack)
-        {
-            var read = this.MemoryRead(stack);
-            stack.Increment();
-            return read;
-        }
-
-        private byte PopS() => this.Pop(this.S);
-
-        private Register16 PopWord(Register16 stack)
-        {
-            var high = this.Pop(stack);
-            var low = this.Pop(stack);
-            return new Register16(low, high);
-        }
-
-        private Register16 RR(int which)
-        {
-            switch (which)
-            {
-                case 0b00:
-                    return this.X;
-                case 0b01:
-                    return this.Y;
-                case 0b10:
-                    return this.U;
-                case 0b11:
-                    return this.S;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(which), which, "Which does not specify a valid register");
-            }
-        }
-
-        private Register16 Address_relative_byte()
-        {
-            var offset = (sbyte)this.FetchByte();
-            return new Register16(this.PC.Word + offset);
-        }
-
-        private Register16 Address_relative_word()
-        {
-            var offset = (short)this.FetchWord().Word;
-            return new Register16(this.PC.Word + offset);
-        }
-
-        private Register16 Address_direct() => new Register16(this.FetchByte(), this.DP);
-
-        private Register16 Address_extended() => this.FetchWord();
-
-        private Register16 Address_indexed()
-        {
-            var type = this.FetchByte();
-            var r = this.RR((type & (byte)(Bits.Bit6 | Bits.Bit5)) >> 5);
-
-            var address = new Register16();
-            if ((type & (byte)Bits.Bit7) != 0)
-            {
-                switch (type & (byte)Mask.Four)
-                {
-                    case 0b0000: // ,R+
-                        this.Tick(2);
-                        address.Word = r.Word++;
-                        break;
-                    case 0b0001: // ,R++
-                        this.Tick(3);
-                        address.Word = r.Word;
-                        r.Word += 2;
-                        break;
-                    case 0b0010: // ,-R
-                        this.Tick(2);
-                        address.Word = --r.Word;
-                        break;
-                    case 0b0011: // ,--R
-                        this.Tick(3);
-                        r.Word -= 2;
-                        address.Word = r.Word;
-                        break;
-                    case 0b0100: // ,R
-                        address.Word = r.Word;
-                        break;
-                    case 0b0101: // B,R
-                        this.Tick();
-                        address.Word = (ushort)(r.Word + (sbyte)this.B);
-                        break;
-                    case 0b0110: // A,R
-                        this.Tick();
-                        address.Word = (ushort)(r.Word + (sbyte)this.A);
-                        break;
-                    case 0b1000: // n,R (eight-bit)
-                        this.Tick();
-                        address.Word = (ushort)(r.Word + (sbyte)this.FetchByte());
-                        break;
-                    case 0b1001: // n,R (sixteen-bit)
-                        this.Tick(4);
-                        address.Word = (ushort)(r.Word + (short)this.FetchWord().Word);
-                        break;
-                    case 0b1011: // D,R
-                        this.Tick(4);
-                        address.Word = (ushort)(r.Word + this.D.Word);
-                        break;
-                    case 0b1100: // n,PCR (eight-bit)
-                        this.Tick();
-                        address.Word = this.Address_relative_byte().Word;
-                        break;
-                    case 0b1101: // n,PCR (sixteen-bit)
-                        this.Tick(2);
-                        address.Word = this.Address_relative_word().Word;
-                        break;
-                    case 0b1111: // [n]
-                        this.Tick(2);
-                        address.Word = this.Address_extended().Word;
-                        break;
-                    default:
-                        throw new InvalidOperationException("Invalid index type");
-                }
-
-                var indirect = type & (byte)Bits.Bit4;
-                if (indirect != 0)
-                {
-                    this.Tick(3);
-                    address.Word = this.GetWord(address).Word;
-                }
-            }
-            else
-            {
-                // EA = ,R + 5-bit offset
-                this.Tick();
-                address.Word = new Register16(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five))).Word;
-            }
-
-            return address;
-        }
-
-        private byte AM_immediate_byte() => this.FetchByte();
-
-        private byte AM_direct_byte() => this.MemoryRead(this.Address_direct());
-
-        private byte AM_indexed_byte() => this.MemoryRead(this.Address_indexed());
-
-        private byte AM_extended_byte() => this.MemoryRead(this.Address_extended());
-
-        private Register16 AM_immediate_word() => this.FetchWord();
-
-        private Register16 AM_direct_word() => this.GetWord(this.Address_direct());
-
-        private Register16 AM_indexed_word() => this.GetWord(this.Address_indexed());
-
-        private Register16 AM_extended_word() => this.GetWord(this.Address_extended());
 
         private byte AdjustZero(byte datum) => ClearBit(this.CC, StatusBits.ZF, datum);
 
@@ -696,8 +448,8 @@ namespace EightBit
 
         private byte AdjustAddition(ushort before, ushort data, uint after)
         {
-            var result = new Register16(after & (uint)Mask.Sixteen);
-            this.CC = this.AdjustNZ(result);
+            this.Intermediate.Word = (ushort)after;
+            this.CC = this.AdjustNZ(this.Intermediate.Word);
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
         }
@@ -714,13 +466,271 @@ namespace EightBit
 
         private byte AdjustSubtraction(ushort before, ushort data, uint after)
         {
-            var result = new Register16(after & (uint)Mask.Sixteen);
-            this.CC = this.AdjustNZ(result);
+            this.Intermediate.Word = (ushort)after;
+            this.CC = this.AdjustNZ(this.Intermediate.Word);
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
         }
 
         private byte AdjustSubtraction(Register16 before, Register16 data, uint after) => this.AdjustSubtraction(before.Word, data.Word, after);
+
+        #endregion
+
+        #region Interrupt etc. handlers
+
+        protected override void HandleRESET()
+        {
+            base.HandleRESET();
+            this.RaiseNMI();
+            this.LowerBA();
+            this.RaiseBS();
+            this.DP = 0;
+            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.Jump(this.GetWordPaged(0xff, RESET_vector));
+            this.Tick(10);
+        }
+
+        protected override void HandleINT()
+        {
+            base.HandleINT();
+            this.LowerBA();
+            this.RaiseBS();
+            this.SaveEntireRegisterState();
+            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
+            this.Jump(this.GetWordPaged(0xff, IRQ_vector));
+            this.Tick(12);
+        }
+
+        private void HandleHALT()
+        {
+            this.RaiseBA();
+            this.RaiseBS();
+        }
+
+        private void HandleNMI()
+        {
+            this.RaiseNMI();
+            this.LowerBA();
+            this.RaiseBS();
+            this.SaveEntireRegisterState();
+            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.Jump(this.GetWordPaged(0xff, NMI_vector));
+            this.Tick(12);
+        }
+
+        private void HandleFIRQ()
+        {
+            this.RaiseFIRQ();
+            this.LowerBA();
+            this.RaiseBS();
+            this.SavePartialRegisterState();
+            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
+            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.Jump(this.GetWordPaged(0xff, FIRQ_vector));
+            this.Tick(12);
+        }
+
+        #endregion
+
+        #region Bus control
+
+        protected override void BusWrite()
+        {
+            this.LowerRW();
+            base.BusWrite();
+        }
+
+        protected override byte BusRead()
+        {
+            this.RaiseRW();
+            return base.BusRead();
+        }
+
+        #endregion
+
+        #region Push/Pop
+
+        protected override byte Pop() => this.PopS();
+
+        protected override void Push(byte value) => this.PushS(value);
+
+        private void Push(Register16 stack, byte value)
+        {
+            stack.Decrement();
+            this.MemoryWrite(stack, value);
+        }
+
+        private void PushS(byte value) => this.Push(this.S, value);
+
+        private void PushWord(Register16 stack, Register16 value)
+        {
+            this.Push(stack, value.Low);
+            this.Push(stack, value.High);
+        }
+
+        private byte Pop(Register16 stack)
+        {
+            var read = this.MemoryRead(stack);
+            stack.Increment();
+            return read;
+        }
+
+        private byte PopS() => this.Pop(this.S);
+
+        private Register16 PopWord(Register16 stack)
+        {
+            this.Intermediate.High = this.Pop(stack);
+            this.Intermediate.Low = this.Pop(stack);
+            return this.Intermediate;
+        }
+
+        #endregion
+
+        #region Addressing modes
+
+        private Register16 Address_relative_byte()
+        {
+            var offset = (sbyte)this.FetchByte();
+            this.Intermediate.Word = (ushort)(this.PC.Word + offset);
+            return this.Intermediate;
+        }
+
+        private Register16 Address_relative_word()
+        {
+            var offset = (short)this.FetchWord().Word;
+            this.Intermediate.Word = (ushort)(this.PC.Word + offset);
+            return this.Intermediate;
+        }
+
+        private Register16 Address_direct()
+        {
+            this.Intermediate.Assign(this.FetchByte(), this.DP);
+            return this.Intermediate;
+        }
+
+        private Register16 Address_extended() => this.FetchWord();
+
+        private Register16 RR(int which)
+        {
+            switch (which)
+            {
+                case 0b00:
+                    return this.X;
+                case 0b01:
+                    return this.Y;
+                case 0b10:
+                    return this.U;
+                case 0b11:
+                    return this.S;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(which), which, "Which does not specify a valid register");
+            }
+        }
+
+        private Register16 Address_indexed()
+        {
+            var type = this.FetchByte();
+            var r = this.RR((type & (byte)(Bits.Bit6 | Bits.Bit5)) >> 5);
+
+            if ((type & (byte)Bits.Bit7) != 0)
+            {
+                switch (type & (byte)Mask.Four)
+                {
+                    case 0b0000: // ,R+
+                        this.Tick(2);
+                        this.Intermediate.Word = r.Word++;
+                        break;
+                    case 0b0001: // ,R++
+                        this.Tick(3);
+                        this.Intermediate.Word = r.Word;
+                        r.Word += 2;
+                        break;
+                    case 0b0010: // ,-R
+                        this.Tick(2);
+                        this.Intermediate.Word = --r.Word;
+                        break;
+                    case 0b0011: // ,--R
+                        this.Tick(3);
+                        r.Word -= 2;
+                        this.Intermediate.Word = r.Word;
+                        break;
+                    case 0b0100: // ,R
+                        this.Intermediate.Word = r.Word;
+                        break;
+                    case 0b0101: // B,R
+                        this.Tick();
+                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.B);
+                        break;
+                    case 0b0110: // A,R
+                        this.Tick();
+                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.A);
+                        break;
+                    case 0b1000: // n,R (eight-bit)
+                        this.Tick();
+                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.FetchByte());
+                        break;
+                    case 0b1001: // n,R (sixteen-bit)
+                        this.Tick(4);
+                        this.Intermediate.Word = (ushort)(r.Word + (short)this.FetchWord().Word);
+                        break;
+                    case 0b1011: // D,R
+                        this.Tick(4);
+                        this.Intermediate.Word = (ushort)(r.Word + this.D.Word);
+                        break;
+                    case 0b1100: // n,PCR (eight-bit)
+                        this.Tick();
+                        this.Intermediate.Word = this.Address_relative_byte().Word;
+                        break;
+                    case 0b1101: // n,PCR (sixteen-bit)
+                        this.Tick(2);
+                        this.Intermediate.Word = this.Address_relative_word().Word;
+                        break;
+                    case 0b1111: // [n]
+                        this.Tick(2);
+                        this.Intermediate.Word = this.Address_extended().Word;
+                        break;
+                    default:
+                        throw new InvalidOperationException("Invalid index type");
+                }
+
+                var indirect = type & (byte)Bits.Bit4;
+                if (indirect != 0)
+                {
+                    this.Tick(3);
+                    this.Intermediate.Word = this.GetWord(this.Intermediate).Word;
+                }
+            }
+            else
+            {
+                // EA = ,R + 5-bit offset
+                this.Tick();
+                this.Intermediate.Word = (ushort)(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five)));
+            }
+
+            return this.Intermediate;
+        }
+
+        private byte AM_immediate_byte() => this.FetchByte();
+
+        private byte AM_direct_byte() => this.MemoryRead(this.Address_direct());
+
+        private byte AM_indexed_byte() => this.MemoryRead(this.Address_indexed());
+
+        private byte AM_extended_byte() => this.MemoryRead(this.Address_extended());
+
+        private Register16 AM_immediate_word() => this.FetchWord();
+
+        private Register16 AM_direct_word() => this.GetWord(this.Address_direct());
+
+        private Register16 AM_indexed_word() => this.GetWord(this.Address_indexed());
+
+        private Register16 AM_extended_word() => this.GetWord(this.Address_extended());
+
+        #endregion
+
+        #region Load/store 8 or 16-bit data
 
         private byte Through(byte data)
         {
@@ -744,6 +754,10 @@ namespace EightBit
 
         private Register16 ST(Register16 data) => this.Through(data);
 
+        #endregion
+
+        #region Branching
+
         private bool Branch(Register16 destination, bool condition)
         {
             if (condition)
@@ -764,6 +778,10 @@ namespace EightBit
             }
         }
 
+        #endregion
+
+        #region Save/restore register state
+
         private void SaveEntireRegisterState()
         {
             this.CC = SetBit(this.CC, StatusBits.EF);
@@ -779,6 +797,116 @@ namespace EightBit
         private void SaveRegisterState() => this.PSH(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Eight : (byte)0b10000001);
 
         private void RestoreRegisterState() => this.PUL(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Eight : (byte)0b10000001);
+
+        private void PSH(Register16 stack, byte data)
+        {
+            if ((data & (byte)Bits.Bit7) != 0)
+            {
+                this.Tick(2);
+                this.PushWord(stack, this.PC);
+            }
+
+            if ((data & (byte)Bits.Bit6) != 0)
+            {
+                this.Tick(2);
+
+                // Pushing to the S stack means we must be pushing U
+                this.PushWord(stack, object.ReferenceEquals(stack, this.S) ? this.U : this.S);
+            }
+
+            if ((data & (byte)Bits.Bit5) != 0)
+            {
+                this.Tick(2);
+                this.PushWord(stack, this.Y);
+            }
+
+            if ((data & (byte)Bits.Bit4) != 0)
+            {
+                this.Tick(2);
+                this.PushWord(stack, this.X);
+            }
+
+            if ((data & (byte)Bits.Bit3) != 0)
+            {
+                this.Tick();
+                this.Push(stack, this.DP);
+            }
+
+            if ((data & (byte)Bits.Bit2) != 0)
+            {
+                this.Tick();
+                this.Push(stack, this.B);
+            }
+
+            if ((data & (byte)Bits.Bit1) != 0)
+            {
+                this.Tick();
+                this.Push(stack, this.A);
+            }
+
+            if ((data & (byte)Bits.Bit0) != 0)
+            {
+                this.Tick();
+                this.Push(stack, this.CC);
+            }
+        }
+
+        private void PUL(Register16 stack, byte data)
+        {
+            if ((data & (byte)Bits.Bit0) != 0)
+            {
+                this.Tick();
+                this.CC = this.Pop(stack);
+            }
+
+            if ((data & (byte)Bits.Bit1) != 0)
+            {
+                this.Tick();
+                this.A = this.Pop(stack);
+            }
+
+            if ((data & (byte)Bits.Bit2) != 0)
+            {
+                this.Tick();
+                this.B = this.Pop(stack);
+            }
+
+            if ((data & (byte)Bits.Bit3) != 0)
+            {
+                this.Tick();
+                this.DP = this.Pop(stack);
+            }
+
+            if ((data & (byte)Bits.Bit4) != 0)
+            {
+                this.Tick(2);
+                this.X.Word = this.PopWord(stack).Word;
+            }
+
+            if ((data & (byte)Bits.Bit5) != 0)
+            {
+                this.Tick(2);
+                this.Y.Word = this.PopWord(stack).Word;
+            }
+
+            if ((data & (byte)Bits.Bit6) != 0)
+            {
+                this.Tick(2);
+
+                // Pulling from the S stack means we must be pulling U
+                (object.ReferenceEquals(stack, this.S) ? this.U : this.S).Word = this.PopWord(stack).Word;
+            }
+
+            if ((data & (byte)Bits.Bit7) != 0)
+            {
+                this.Tick(2);
+                this.PC.Word = this.PopWord(stack).Word;
+            }
+        }
+
+        #endregion
+
+        #region 8-bit register transfers
 
         private ref byte ReferenceTransfer8(int specifier)
         {
@@ -799,24 +927,150 @@ namespace EightBit
 
         private Register16 ReferenceTransfer16(int specifier)
         {
-            switch (specifier)
+            return specifier switch
             {
-                case 0b0000:
-                    return this.D;
-                case 0b0001:
-                    return this.X;
-                case 0b0010:
-                    return this.Y;
-                case 0b0011:
-                    return this.U;
-                case 0b0100:
-                    return this.S;
-                case 0b0101:
-                    return this.PC;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "Invalid specifier");
+                0b0000 => this.D,
+                0b0001 => this.X,
+                0b0010 => this.Y,
+                0b0011 => this.U,
+                0b0100 => this.S,
+                0b0101 => this.PC,
+                _ => throw new ArgumentOutOfRangeException(nameof(specifier), specifier, "Invalid specifier"),
+            };
+        }
+
+        private void EXG(byte data)
+        {
+            var leftSpecifier = Chip.HighNibble(data);
+            var leftType = leftSpecifier & (int)Bits.Bit3;
+
+            var rightSpecifier = Chip.LowNibble(data);
+            var rightType = rightSpecifier & (int)Bits.Bit3;
+
+            if (leftType == 0)
+            {
+                var leftRegister = this.ReferenceTransfer16(leftSpecifier);
+                if (rightType == 0)
+                {
+                    var rightRegister = this.ReferenceTransfer16(rightSpecifier);
+                    (leftRegister.Word, rightRegister.Word) = (rightRegister.Word, leftRegister.Word);
+                }
+                else
+                {
+                    ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
+                    (leftRegister.Low, rightRegister) = (rightRegister, leftRegister.Low);
+                    leftRegister.High = (byte)Mask.Eight;
+                }
+            }
+            else
+            {
+                ref var leftRegister = ref this.ReferenceTransfer8(leftSpecifier);
+                if (rightType == 0)
+                {
+                    var rightRegister = this.ReferenceTransfer16(rightSpecifier);
+                    (leftRegister, rightRegister.Low) = (rightRegister.Low, leftRegister);
+                    rightRegister.High = (byte)Mask.Eight;
+                }
+                else
+                {
+                    ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
+                    (leftRegister, rightRegister) = (rightRegister, leftRegister);
+                }
             }
         }
+
+        private void TFR(byte data)
+        {
+            var sourceSpecifier = Chip.HighNibble(data);
+            var sourceType = sourceSpecifier & (int)Bits.Bit3;
+
+            var destinationSpecifier = Chip.LowNibble(data);
+            var destinationType = destinationSpecifier & (int)Bits.Bit3;
+
+            if (sourceType == 0)
+            {
+                var sourceRegister = this.ReferenceTransfer16(sourceSpecifier);
+                if (destinationType == 0)
+                {
+                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
+                    destinationRegister.Word = sourceRegister.Word;
+                }
+                else
+                {
+                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
+                    destinationRegister = sourceRegister.Low;
+                }
+            }
+            else
+            {
+                ref var sourceRegister = ref this.ReferenceTransfer8(sourceSpecifier);
+                if (destinationType == 0)
+                {
+                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
+                    destinationRegister.Low = sourceRegister;
+                    destinationRegister.High = (byte)Mask.Eight;
+                }
+                else
+                {
+                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
+                    destinationRegister = sourceRegister;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Instruction execution
+
+        public override void PoweredStep()
+        {
+            this.prefix10 = this.prefix11 = false;
+            if (this.Halted)
+            {
+                this.HandleHALT();
+            }
+            else if (this.RESET.Lowered())
+            {
+                this.HandleRESET();
+            }
+            else if (this.NMI.Lowered())
+            {
+                this.HandleNMI();
+            }
+            else if (this.FIRQ.Lowered() && (this.FastInterruptMasked == 0))
+            {
+                this.HandleFIRQ();
+            }
+            else if (this.INT.Lowered() && (this.InterruptMasked == 0))
+            {
+                this.HandleINT();
+            }
+            else
+            {
+                this.Execute(this.FetchByte());
+            }
+        }
+
+        public override void Execute()
+        {
+            this.LowerBA();
+            this.LowerBS();
+            if (this.prefix10)
+            {
+                this.Execute10();
+            }
+            else if (this.prefix11)
+            {
+                this.Execute11();
+            }
+            {
+                this.ExecuteUnprefixed();
+            }
+        }
+
+        #endregion
+
+        #region Instruction dispatching
 
         private void ExecuteUnprefixed()
         {
@@ -1277,20 +1531,25 @@ namespace EightBit
             }
         }
 
+        #endregion
+
+        #region Miscellaneous instruction implementations
+
         private byte ADC(byte operand, byte data) => this.ADD(operand, data, (byte)this.Carry);
 
         private byte ADD(byte operand, byte data, byte carry = 0)
         {
-            var addition = new Register16(operand + data + carry);
-            this.CC = this.AdjustAddition(operand, data, addition);
-            return addition.Low;
+            this.Intermediate.Word = (ushort)(operand + data + carry);
+            this.CC = this.AdjustAddition(operand, data, this.Intermediate);
+            return this.Intermediate.Low;
         }
 
         private Register16 ADD(Register16 operand, Register16 data)
         {
             var addition = (uint)(operand.Word + data.Word);
             this.CC = this.AdjustAddition(operand, data, addition);
-            return new Register16(addition & (uint)Mask.Sixteen);
+            this.Intermediate.Word = (ushort)(addition & (uint)Mask.Sixteen);
+            return this.Intermediate;
         }
 
         private byte AndR(byte operand, byte data) => this.Through((byte)(operand & data));
@@ -1359,61 +1618,21 @@ namespace EightBit
 
         private byte DEC(byte operand)
         {
-            var subtraction = new Register16(operand - 1);
-            var result = subtraction.Low;
+            this.Intermediate.Word = (ushort)(operand - 1);
+            var result = this.Intermediate.Low;
             this.CC = this.AdjustNZ(result);
-            this.CC = this.AdjustOverflow(operand, 1, subtraction);
+            this.CC = this.AdjustOverflow(operand, 1, this.Intermediate);
             return result;
         }
 
         private byte EorR(byte operand, byte data) => this.Through((byte)(operand ^ data));
 
-        private void EXG(byte data)
-        {
-            var leftSpecifier = Chip.HighNibble(data);
-            var leftType = leftSpecifier & (int)Bits.Bit3;
-
-            var rightSpecifier = Chip.LowNibble(data);
-            var rightType = rightSpecifier & (int)Bits.Bit3;
-
-            if (leftType == 0)
-            {
-                var leftRegister = this.ReferenceTransfer16(leftSpecifier);
-                if (rightType == 0)
-                {
-                    var rightRegister = this.ReferenceTransfer16(rightSpecifier);
-                    (leftRegister.Word, rightRegister.Word) = (rightRegister.Word, leftRegister.Word);
-                }
-                else
-                {
-                    ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
-                    (leftRegister.Low, rightRegister) = (rightRegister, leftRegister.Low);
-                    leftRegister.High = (byte)Mask.Eight;
-                }
-            }
-            else
-            {
-                ref var leftRegister = ref this.ReferenceTransfer8(leftSpecifier);
-                if (rightType == 0)
-                {
-                    var rightRegister = this.ReferenceTransfer16(rightSpecifier);
-                    (leftRegister, rightRegister.Low) = (rightRegister.Low, leftRegister);
-                    rightRegister.High =(byte)Mask.Eight;
-                }
-                else
-                {
-                    ref var rightRegister = ref this.ReferenceTransfer8(rightSpecifier);
-                    (leftRegister, rightRegister) = (rightRegister, leftRegister);
-                }
-            }
-        }
-
         private byte INC(byte operand)
         {
-            var addition = new Register16(operand + 1);
-            var result = addition.Low;
+            this.Intermediate.Word = (ushort)(operand + 1);
+            var result = this.Intermediate.Low;
             this.CC = this.AdjustNZ(result);
-            this.CC = this.AdjustOverflow(operand, 1, addition);
+            this.CC = this.AdjustOverflow(operand, 1, this.Intermediate);
             this.CC = this.AdjustHalfCarry(operand, 1, result);
             return result;
         }
@@ -1429,129 +1648,23 @@ namespace EightBit
 
         private Register16 MUL(byte first, byte second)
         {
-            var result = new Register16(first * second);
-            this.CC = this.AdjustZero(result);
-            this.CC = SetBit(this.CC, StatusBits.CF, result.Low & (byte)Bits.Bit7);
-            return result;
+            this.Intermediate.Word = (ushort)(first * second);
+            this.CC = this.AdjustZero(this.Intermediate);
+            this.CC = SetBit(this.CC, StatusBits.CF, this.Intermediate.Low & (byte)Bits.Bit7);
+            return this.Intermediate;
         }
 
         private byte NEG(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
-            var result = new Register16(0 - operand);
-            operand = result.Low;
+            this.Intermediate.Word = (ushort)(0 - operand);
+            operand = this.Intermediate.Low;
             this.CC = this.AdjustNZ(operand);
-            this.CC = this.AdjustCarry(result);
+            this.CC = this.AdjustCarry(this.Intermediate);
             return operand;
         }
 
         private byte OrR(byte operand, byte data) => this.Through((byte)(operand | data));
-
-        private void PSH(Register16 stack, byte data)
-        {
-            if ((data & (byte)Bits.Bit7) != 0)
-            {
-                this.Tick(2);
-                this.PushWord(stack, this.PC);
-            }
-
-            if ((data & (byte)Bits.Bit6) != 0)
-            {
-                this.Tick(2);
-
-                // Pushing to the S stack means we must be pushing U
-                this.PushWord(stack, object.ReferenceEquals(stack, this.S) ? this.U : this.S);
-            }
-
-            if ((data & (byte)Bits.Bit5) != 0)
-            {
-                this.Tick(2);
-                this.PushWord(stack, this.Y);
-            }
-
-            if ((data & (byte)Bits.Bit4) != 0)
-            {
-                this.Tick(2);
-                this.PushWord(stack, this.X);
-            }
-
-            if ((data & (byte)Bits.Bit3) != 0)
-            {
-                this.Tick();
-                this.Push(stack, this.DP);
-            }
-
-            if ((data & (byte)Bits.Bit2) != 0)
-            {
-                this.Tick();
-                this.Push(stack, this.B);
-            }
-
-            if ((data & (byte)Bits.Bit1) != 0)
-            {
-                this.Tick();
-                this.Push(stack, this.A);
-            }
-
-            if ((data & (byte)Bits.Bit0) != 0)
-            {
-                this.Tick();
-                this.Push(stack, this.CC);
-            }
-        }
-
-        private void PUL(Register16 stack, byte data)
-        {
-            if ((data & (byte)Bits.Bit0) != 0)
-            {
-                this.Tick();
-                this.CC = this.Pop(stack);
-            }
-
-            if ((data & (byte)Bits.Bit1) != 0)
-            {
-                this.Tick();
-                this.A = this.Pop(stack);
-            }
-
-            if ((data & (byte)Bits.Bit2) != 0)
-            {
-                this.Tick();
-                this.B = this.Pop(stack);
-            }
-
-            if ((data & (byte)Bits.Bit3) != 0)
-            {
-                this.Tick();
-                this.DP = this.Pop(stack);
-            }
-
-            if ((data & (byte)Bits.Bit4) != 0)
-            {
-                this.Tick(2);
-                this.X.Word = this.PopWord(stack).Word;
-            }
-
-            if ((data & (byte)Bits.Bit5) != 0)
-            {
-                this.Tick(2);
-                this.Y.Word = this.PopWord(stack).Word;
-            }
-
-            if ((data & (byte)Bits.Bit6) != 0)
-            {
-                this.Tick(2);
-
-                // Pulling from the S stack means we must be pulling U
-                (object.ReferenceEquals(stack, this.S) ? this.U : this.S).Word = this.PopWord(stack).Word;
-            }
-
-            if ((data & (byte)Bits.Bit7) != 0)
-            {
-                this.Tick(2);
-                this.PC.Word = this.PopWord(stack).Word;
-            }
-        }
 
         private byte ROL(byte operand)
         {
@@ -1580,16 +1693,16 @@ namespace EightBit
 
         private byte SUB(byte operand, byte data, byte carry = 0)
         {
-            var subtraction = new Register16(operand - data - carry);
-            this.CC = this.AdjustSubtraction(operand, data, subtraction);
-            return subtraction.Low;
+            this.Intermediate.Word = (ushort)(operand - data - carry);
+            this.CC = this.AdjustSubtraction(operand, data, this.Intermediate);
+            return this.Intermediate.Low;
         }
 
         private Register16 SUB(Register16 operand, Register16 data)
         {
             var subtraction = (uint)(operand.Word - data.Word);
             this.CC = this.AdjustSubtraction(operand, data, subtraction);
-            return new Register16(subtraction & (uint)Mask.Sixteen);
+            return this.Intermediate;
         }
 
         private byte SEX(byte from)
@@ -1603,60 +1716,23 @@ namespace EightBit
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, SWIvector));
+            this.Jump(this.GetWordPaged(0xff, SWI_vector));
         }
 
         private void SWI2()
         {
             this.SaveEntireRegisterState();
-            this.Jump(this.GetWordPaged(0xff, SWI2vector));
+            this.Jump(this.GetWordPaged(0xff, SWI2_vector));
         }
 
         private void SWI3()
         {
             this.SaveEntireRegisterState();
-            this.Jump(this.GetWordPaged(0xff, SWI3vector));
-        }
-
-        private void TFR(byte data)
-        {
-            var sourceSpecifier = Chip.HighNibble(data);
-            var sourceType = sourceSpecifier & (int)Bits.Bit3;
-
-            var destinationSpecifier = Chip.LowNibble(data);
-            var destinationType = destinationSpecifier & (int)Bits.Bit3;
-
-            if (sourceType == 0)
-            {
-                var sourceRegister = this.ReferenceTransfer16(sourceSpecifier);
-                if (destinationType == 0)
-                {
-                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
-                    destinationRegister.Word = sourceRegister.Word;
-                }
-                else
-                {
-                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
-                    destinationRegister = sourceRegister.Low;
-                }
-            }
-            else
-            {
-                ref var sourceRegister = ref this.ReferenceTransfer8(sourceSpecifier);
-                if (destinationType == 0)
-                {
-                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
-                    destinationRegister.Low = sourceRegister;
-                    destinationRegister.High = (byte)Mask.Eight;
-                }
-                else
-                {
-                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
-                    destinationRegister = sourceRegister;
-                }
-            }
+            this.Jump(this.GetWordPaged(0xff, SWI3_vector));
         }
 
         private void TST(byte data) => this.CMP(data, 0);
+
+        #endregion
     }
 }
