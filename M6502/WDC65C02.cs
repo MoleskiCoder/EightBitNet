@@ -53,36 +53,38 @@ namespace M6502
             var cycles = this.Cycles;
             switch (this.OpCode)
             {
-                case 0x02: this.SwallowFetch(); break;                                                         // NOP
-                case 0x03: break;                                                                               // null
-                case 0x04: this.ZeroPageRead(); this.TSB(); break;                                              // TSB zp
-                case 0x07: this.ZeroPageRead(); this.RMB(Bit(0)); break;                                   // RMB0 zp
-                case 0x0b: break;                                                                               // null
-                case 0x0c: this.AbsoluteRead(); this.TSB(); break;                                              // TSB a
-                case 0x0f: this.ZeroPageRead(); this.BBR(Bit(0)); break;                                   // BBR0 r
+                case 0x02: this.SwallowFetch(); break;                              // NOP
+                case 0x03: break;                                                   // null
+                case 0x04: this.ZeroPageRead(); this.TSB(); break;                  // TSB zp
+                case 0x07: this.ZeroPageRead(); this.RMB(Bit(0)); break;            // RMB0 zp
+                case 0x0b: break;                                                   // null
+                case 0x0c: this.AbsoluteRead(); this.TSB(); break;                  // TSB a
+                case 0x0f: this.ZeroPageRead(); this.BBR(Bit(0)); break;            // BBR0 r
 
-                case 0x12: this.ZeroPageIndirectAddress(); this.OrR(); break;                                   // ORA (zp),y
-                case 0x13: break;                                                                               // null
-                case 0x14: this.ZeroPageRead(); this.TRB(); break;                                              // TRB zp
-                case 0x17: this.ZeroPageRead(); this.RMB(Bit(1)); break;                                   // RMB1 zp
-                case 0x1a: this.SwallowRead(); this.A = this.INC(this.A); break;                                // INC A
-                case 0x1b: break;                                                                               // null
-                case 0x1c: this.AbsoluteRead(); this.TRB(); break;                                              // TRB a
-                case 0x1f: this.ZeroPageRead(); this.BBR(Bit(1)); break;                                   // BBR1 r
+                case 0x12: this.ZeroPageIndirectRead(); this.OrR(); break;          // ORA (zp),y
+                case 0x13: break;                                                   // null
+                case 0x14: this.ZeroPageRead(); this.TRB(); break;                  // TRB zp
+                case 0x17: this.ZeroPageRead(); this.RMB(Bit(1)); break;            // RMB1 zp
+                case 0x1a: this.SwallowRead(); this.A = this.INC(this.A); break;    // INC A
+                case 0x1b: break;                                                   // null
+                case 0x1c: this.AbsoluteRead(); this.TRB(); break;                  // TRB a
+                //case 0x1e: break; // ???
+                case 0x1f: this.ZeroPageRead(); this.BBR(Bit(1)); break;            // BBR1 r
 
-                case 0x22: this.SwallowFetch(); break;                                                          // NOP
-                case 0x23: break;                                                                               // null
-                case 0x27: this.ZeroPageRead(); this.RMB(Bit(2)); break;                                   // RMB2 zp
-                case 0x2b: break;                                                                               // null
-                case 0x2f: this.ZeroPageRead(); this.BBR(Bit(2)); break;                                   // BBR2 r
+                case 0x22: this.SwallowFetch(); break;                              // NOP
+                case 0x23: break;                                                   // null
+                case 0x27: this.ZeroPageRead(); this.RMB(Bit(2)); break;            // RMB2 zp
+                case 0x2b: break;                                                   // null
+                case 0x2f: this.ZeroPageRead(); this.BBR(Bit(2)); break;            // BBR2 r
 
-                case 0x32: this.ZeroPageIndirectRead(); this.AndR(); break;                                     // AND (zp)
-                case 0x33: break;                                                                               // null
-                case 0x34: break;                                                                               // BIT zp,x
-                case 0x37: this.ZeroPageRead(); this.RMB(Bit(3)); break;                                   // RMB3 zp
-                case 0x3a: this.SwallowRead(); this.A = this.DEC(this.A); break;                                // DEC A
-                case 0x3b: break;                                                                               // null
-                case 0x3c: break;                                                                               // BIT a,x
+                case 0x32: this.ZeroPageIndirectRead(); this.AndR(); break;         // AND (zp)
+                case 0x33: break;                                                   // null
+                case 0x34: ZeroPageXRead(); this.BIT(); break;                                                   // BIT zp,x
+                case 0x37: this.ZeroPageRead(); this.RMB(Bit(3)); break;            // RMB3 zp
+                case 0x3a: this.SwallowRead(); this.A = this.DEC(this.A); break;    // DEC A
+                case 0x3b: break;                                                   // null
+                case 0x3c: AbsoluteXRead(); BIT(); break;                           // BIT abs,x
+                //case 0x3e: break;// ????
                 case 0x3f: this.ZeroPageRead(); this.BBR(Bit(3)); break;                                   // BBR3 r
 
                 case 0x42: this.SwallowFetch(); break;                                                          // NOP
@@ -96,7 +98,8 @@ namespace M6502
                 case 0x57: this.ZeroPageRead(); this.RMB(Bit(5)); break;                                   // RMB5 zp
                 case 0x5a: this.SwallowRead(); this.Push(this.Y); break;                                        // PHY s
                 case 0x5b: break;                                                                               // null
-                case 0x5c: break;                                                                               // null
+                case 0x5c: this.SwallowFetch(); this.SwallowRead(); this.SwallowFetch();  break;                                                                               // ???
+                //case 0x5e: break;// ????
                 case 0x5f: this.ZeroPageRead(); this.BBR(Bit(5)); break;                                   // BBR5 r
 
                 case 0x62: this.SwallowFetch(); break;                                                          // *NOP
@@ -112,7 +115,7 @@ namespace M6502
                 case 0x77: this.ZeroPageRead(); this.RMB(Bit(7)); break;                                   // RMB7 zp
                 case 0x7a: this.SwallowRead(); this.SwallowPop(); this.Y = this.Through(this.Pop()); break;     // PLY s
                 case 0x7b: break;                                                                               // null
-                case 0x7c: break;                                                                               // JMP (a,x)
+                case 0x7c: this.AbsoluteXAddress(); this.Bus.Address.Assign(this.Intermediate); this.GetAddressPaged(); this.Jump(this.Bus.Address); break;                                                                               // JMP (a,x)
                 case 0x7f: this.ZeroPageRead(); this.BBR(Bit(7)); break;                                   // BBR7 r
 
                 case 0x80: this.Branch(true); break;                                                                 // BRA r
@@ -226,6 +229,7 @@ namespace M6502
             this.Bus.Address.Assign(fixingLow, this.FixedPage);
         }
 
+        // Not used by BBR/BBS, but used by other branch instructions
         protected override void FixupBranch(sbyte relative)
         {
             this.NoteFixedAddress(this.PC.Word + relative);
@@ -283,16 +287,33 @@ namespace M6502
             this.MemoryWrite();
         }
 
+
+        private void BranchBit(bool condition)
+        {
+            this.FetchByte();
+            if (condition)
+            {
+                var relative = (sbyte)this.Bus.Data;
+                this.SwallowRead();
+                this.NoteFixedAddress(this.PC.Word + relative);
+                if (this.Bus.Address.High != this.FixedPage)
+                {
+                    this.SwallowRead();
+                }
+                this.Jump(this.Intermediate);
+            }
+        }
+
         private void BBS(byte flag)
         {
             this.MemoryRead();
-            this.Branch(this.Bus.Data & flag);
+            this.BranchBit((this.Bus.Data & flag) != 0);
         }
 
         private void BBR(byte flag)
         {
             this.MemoryRead();
-            this.BranchNot(this.Bus.Data & flag);
+            this.BranchBit((this.Bus.Data & flag) == 0);
         }
 
         private void TSB()
