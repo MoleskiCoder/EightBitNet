@@ -33,8 +33,14 @@ namespace M6502
             if (this.NMI.Lowered())
             {
                 RaisingNMI?.Invoke(this, EventArgs.Empty);
-                this.NMI.Raise();
-                RaisedNMI?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.NMI.Raise();
+                }
+                finally
+                {
+                    RaisedNMI?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -43,8 +49,14 @@ namespace M6502
             if (this.NMI.Raised())
             {
                 LoweringNMI?.Invoke(this, EventArgs.Empty);
-                this.NMI.Lower();
-                LoweredNMI?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.NMI.Lower();
+                }
+                finally
+                {
+                    LoweredNMI?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -65,8 +77,14 @@ namespace M6502
             if (this.SO.Lowered())
             {
                 RaisingSO?.Invoke(this, EventArgs.Empty);
-                this.SO.Raise();
-                RaisedSO?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.SO.Raise();
+                }
+                finally
+                {
+                    RaisedSO?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -75,8 +93,14 @@ namespace M6502
             if (this.SO.Raised())
             {
                 LoweringSO?.Invoke(this, EventArgs.Empty);
-                this.SO.Lower();
-                LoweredSO?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.SO.Lower();
+                }
+                finally
+                {
+                    LoweredSO?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -97,8 +121,14 @@ namespace M6502
             if (this.SYNC.Lowered())
             {
                 RaisingSYNC?.Invoke(this, EventArgs.Empty);
-                this.SYNC.Raise();
-                RaisedSYNC?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.SYNC.Raise();
+                }
+                finally
+                {
+                    RaisedSYNC?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -107,8 +137,14 @@ namespace M6502
             if (this.SYNC.Raised())
             {
                 LoweringSYNC?.Invoke(this, EventArgs.Empty);
-                this.SYNC.Lower();
-                LoweredSYNC?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.SYNC.Lower();
+                }
+                finally
+                {
+                    LoweredSYNC?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -129,8 +165,14 @@ namespace M6502
             if (this.RDY.Lowered())
             {
                 RaisingRDY?.Invoke(this, EventArgs.Empty);
-                this.RDY.Raise();
-                RaisedRDY?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RDY.Raise();
+                }
+                finally
+                {
+                    RaisedRDY?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -139,8 +181,14 @@ namespace M6502
             if (this.RDY.Raised())
             {
                 LoweringRDY?.Invoke(this, EventArgs.Empty);
-                this.RDY.Lower();
-                LoweredRDY?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RDY.Lower();
+                }
+                finally
+                {
+                    LoweredRDY?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -161,8 +209,14 @@ namespace M6502
             if (this.RW.Lowered())
             {
                 RaisingRW?.Invoke(this, EventArgs.Empty);
-                this.RW.Raise();
-                RaisedRW?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RW.Raise();
+                }
+                finally
+                {
+                    RaisedRW?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -171,8 +225,14 @@ namespace M6502
             if (this.RW.Raised())
             {
                 LoweringRW?.Invoke(this, EventArgs.Empty);
-                this.RW.Lower();
-                LoweredRW?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RW.Lower();
+                }
+                finally
+                {
+                    LoweredRW?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 

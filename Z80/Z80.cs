@@ -205,8 +205,14 @@ namespace Z80
             if (this.NMI.Lowered())
             {
                 RaisingNMI?.Invoke(this, EventArgs.Empty);
-                this.NMI.Raise();
-                RaisedNMI?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.NMI.Raise();
+                }
+                finally
+                {
+                    RaisedNMI?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -215,8 +221,36 @@ namespace Z80
             if (this.NMI.Raised())
             {
                 LoweringNMI?.Invoke(this, EventArgs.Empty);
-                this.NMI.Lower();
-                LoweredNMI?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.NMI.Lower();
+                }
+                finally
+                {
+                    LoweredNMI?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        protected sealed class AutoNMI : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoNMI(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerNMI();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseNMI();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -246,8 +280,14 @@ namespace Z80
             if (this.M1.Lowered())
             {
                 RaisingM1?.Invoke(this, EventArgs.Empty);
-                this.M1.Raise();
-                RaisedM1?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.M1.Raise();
+                }
+                finally
+                {
+                    RaisedM1?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -256,8 +296,35 @@ namespace Z80
             if (this.M1.Raised())
             {
                 LoweringM1?.Invoke(this, EventArgs.Empty);
-                this.M1.Lower();
-                LoweredM1?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.M1.Lower();
+                }
+                finally
+                {
+                    LoweredM1?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+        protected sealed class AutoM1 : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoM1(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerM1();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseM1();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -288,9 +355,15 @@ namespace Z80
             if (this.RFSH.Lowered())
             {
                 RaisingRFSH?.Invoke(this, EventArgs.Empty);
-                this.RFSH.Raise();
-                ++this.REFRESH;
-                RaisedRFSH?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RFSH.Raise();
+                    ++this.REFRESH;
+                }
+                finally
+                {
+                    RaisedRFSH?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -299,8 +372,36 @@ namespace Z80
             if (this.RFSH.Raised())
             {
                 LoweringRFSH?.Invoke(this, EventArgs.Empty);
-                this.RFSH.Lower();
-                LoweredRFSH?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RFSH.Lower();
+                }
+                finally
+                {
+                    LoweredRFSH?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        protected sealed class AutoRFSH : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoRFSH(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerRFSH();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseRFSH();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -326,8 +427,14 @@ namespace Z80
             if (this.MREQ.Lowered())
             {
                 RaisingMREQ?.Invoke(this, EventArgs.Empty);
-                this.MREQ.Raise();
-                RaisedMREQ?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.MREQ.Raise();
+                }
+                finally
+                {
+                    RaisedMREQ?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -336,8 +443,36 @@ namespace Z80
             if (this.MREQ.Raised())
             {
                 LoweringMREQ?.Invoke(this, EventArgs.Empty);
-                this.MREQ.Lower();
-                LoweredMREQ?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.MREQ.Lower();
+                }
+                finally
+                {
+                    LoweredMREQ?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        protected sealed class AutoMREQ : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoMREQ(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerMREQ();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseMREQ();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -363,8 +498,14 @@ namespace Z80
             if (this.IORQ.Lowered())
             {
                 RaisingIORQ?.Invoke(this, EventArgs.Empty);
-                this.IORQ.Raise();
-                RaisedIORQ?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.IORQ.Raise();
+                }
+                finally
+                {
+                    RaisedIORQ?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -375,6 +516,28 @@ namespace Z80
                 LoweringIORQ?.Invoke(this, EventArgs.Empty);
                 this.IORQ.Lower();
                 LoweredIORQ?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        protected sealed class AutoIORQ : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoIORQ(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerIORQ();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseIORQ();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -400,8 +563,14 @@ namespace Z80
             if (this.RD.Lowered())
             {
                 RaisingRD?.Invoke(this, EventArgs.Empty);
-                this.RD.Raise();
-                RaisedRD?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RD.Raise();
+                }
+                finally
+                {
+                    RaisedRD?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -410,8 +579,36 @@ namespace Z80
             if (this.RD.Raised())
             {
                 LoweringRD?.Invoke(this, EventArgs.Empty);
-                this.RD.Lower();
-                LoweredRD?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RD.Lower();
+                }
+                finally
+                {
+                    LoweredRD?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        protected sealed class AutoRD : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoRD(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerRD();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseRD();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -437,8 +634,14 @@ namespace Z80
             if (this.WR.Lowered())
             {
                 RaisingWR?.Invoke(this, EventArgs.Empty);
-                this.WR.Raise();
-                RaisedWR?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.WR.Raise();
+                }
+                finally
+                {
+                    RaisedWR?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -447,8 +650,36 @@ namespace Z80
             if (this.WR.Raised())
             {
                 LoweringWR?.Invoke(this, EventArgs.Empty);
-                this.WR.Lower();
-                LoweredWR?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.WR.Lower();
+                }
+                finally
+                {
+                    LoweredWR?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        protected sealed class AutoWR : IDisposable
+        {
+            private readonly Z80 _cpu;
+            private bool _disposed;
+
+            public AutoWR(Z80 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerWR();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseWR();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -459,13 +690,17 @@ namespace Z80
         protected void MemoryUpdate(int ticks)
         {
             this.OnWritingMemory();
-            this.LowerMREQ();
-            this.LowerWR();
-            this.Tick(ticks);
-            base.MemoryWrite();
-            this.RaiseWR();
-            this.RaiseMREQ();
-            this.OnWroteMemory();
+            try
+            {
+                using var _ = new AutoMREQ(this);
+                using var __ = new AutoWR(this);
+                this.Tick(ticks);
+                base.MemoryWrite();
+            }
+            finally
+            {
+                this.OnWroteMemory();
+            }
         }
 
         protected override void MemoryWrite()
@@ -476,25 +711,32 @@ namespace Z80
         protected override byte MemoryRead()
         {
             this.OnReadingMemory();
-            this.Tick();
-            this.LowerMREQ();
-            this.LowerRD();
-            this.Tick();
-            var returned = base.MemoryRead();
-            this.RaiseRD();
-            this.RaiseMREQ();
-            if (this.M1.Lowered())
+            try
             {
-                this.Bus.Address.Assign(this.REFRESH, this.IV);
-                this.LowerRFSH();
                 this.Tick();
-                this.LowerMREQ();
-                this.RaiseMREQ();
-                this.RaiseRFSH();
+                try
+                {
+                    using var __ = new AutoMREQ(this);
+                    using var _ = new AutoRD(this);
+                    this.Tick();
+                    return base.MemoryRead();
+                }
+                finally
+                {
+                    if (this.M1.Lowered())
+                    {
+                        this.Bus.Address.Assign(this.REFRESH, this.IV);
+                        using var _ = new AutoRFSH(this);
+                        this.Tick();
+                        using var __ = new AutoMREQ(this);
+                    }
+                    this.Tick();
+                }
             }
-            this.Tick();
-            this.OnReadMemory();
-            return returned;
+            finally
+            {
+                this.OnReadMemory();
+            }
         }
 
         // From Zilog Z80 manual
@@ -516,15 +758,18 @@ namespace Z80
             this.Tick(3);
         }
 
+        private byte ReadDataUnderInterrupt()
+        {
+            using var _ = new AutoM1(this);
+            using var __ = new AutoIORQ(this);
+            return this.Bus.Data;
+        }
+
         protected override void HandleINT()
         {
             base.HandleINT();
 
-            this.LowerM1();
-            this.LowerIORQ();
-            var data = this.Bus.Data;
-            this.RaiseIORQ();
-            this.RaiseM1();
+            var data = this.ReadDataUnderInterrupt();
 
             this.DisableInterrupts();
             this.Tick(5);
@@ -1560,9 +1805,8 @@ namespace Z80
             this.RaiseHALT();
             this.IFF2 = this.IFF1;
             this.IFF1 = false;
-            this.LowerM1();
+            using var __ = new AutoM1(this);
             _ = this.Bus.Data;
-            this.RaiseM1();
             this.Restart(0x66);
         }
 
@@ -1582,10 +1826,8 @@ namespace Z80
         // instruction so that no other concurrent operation can be performed.
         protected override byte FetchInstruction()
         {
-            this.LowerM1();
-            var returned = base.FetchInstruction();
-            this.RaiseM1();
-            return returned;
+            using var _ = new AutoM1(this);
+            return base.FetchInstruction();
         }
 
         private byte Subtract(byte operand, byte value, int carry = 0)
@@ -2321,12 +2563,12 @@ namespace Z80
         {
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
-            this.LowerIORQ();
-            this.LowerWR();
-            this.Ports.Write(this.Bus.Address, this.Bus.Data);
-            this.Tick();
-            this.RaiseWR();
-            this.RaiseIORQ();
+            {
+                using var _ = new AutoIORQ(this);
+                using var __ = new AutoWR(this);
+                this.Ports.Write(this.Bus.Address, this.Bus.Data);
+                this.Tick();
+            }
             this.Tick();
         }
 
@@ -2341,12 +2583,12 @@ namespace Z80
         {
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
-            this.LowerIORQ();
-            this.LowerRD();
-            this.Bus.Data = this.Ports.Read(this.Bus.Address);
-            this.Tick();
-            this.RaiseRD();
-            this.RaiseIORQ();
+            {
+                using var _ = new AutoIORQ(this);
+                using var __ = new AutoRD(this);
+                this.Bus.Data = this.Ports.Read(this.Bus.Address);
+                this.Tick();
+            }
             this.Tick();
         }
 

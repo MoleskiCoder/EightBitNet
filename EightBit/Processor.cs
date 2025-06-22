@@ -69,11 +69,17 @@ namespace EightBit
         {
             this.ResetCycles();
             ExecutingInstruction?.Invoke(this, EventArgs.Empty);
-            if (this.Powered)
+            try
             {
-                this.PoweredStep();
+                if (this.Powered)
+                {
+                    this.PoweredStep();
+                }
             }
-            ExecutedInstruction?.Invoke(this, EventArgs.Empty);
+            finally
+            {
+                ExecutedInstruction?.Invoke(this, EventArgs.Empty);
+            }
             return this.Cycles;
         }
 
@@ -115,8 +121,14 @@ namespace EightBit
             if (this.RESET.Lowered())
             {
                 RaisingRESET?.Invoke(this, EventArgs.Empty);
-                this.RESET.Raise();
-                RaisedRESET?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RESET.Raise();
+                }
+                finally
+                {
+                    RaisedRESET?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -125,8 +137,14 @@ namespace EightBit
             if (this.RESET.Raised())
             {
                 LoweringRESET?.Invoke(this, EventArgs.Empty);
-                this.RESET.Lower();
-                LoweredRESET?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RESET.Lower();
+                }
+                finally
+                {
+                    LoweredRESET?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -136,8 +154,14 @@ namespace EightBit
             if (this.INT.Lowered())
             {
                 RaisingINT?.Invoke(this, EventArgs.Empty);
-                this.INT.Raise();
-                RaisedINT?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.INT.Raise();
+                }
+                finally
+                {
+                    RaisedINT?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -146,8 +170,14 @@ namespace EightBit
             if (this.INT.Raised())
             {
                 LoweringINT?.Invoke(this, EventArgs.Empty);
-                this.INT.Lower();
-                LoweredINT?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.INT.Lower();
+                }
+                finally
+                {
+                    LoweredINT?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
