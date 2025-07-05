@@ -725,7 +725,7 @@ namespace M6502
 
         protected void AbsoluteAddress() => this.FetchWordAddress();
 
-        protected void ZeroPageAddress() => this.Bus.Address.Assign(this.FetchByte(), 0);
+        protected void ZeroPageAddress() => this.Bus.Address.Assign(this.FetchByte());
 
         protected void ZeroPageIndirectAddress()
         {

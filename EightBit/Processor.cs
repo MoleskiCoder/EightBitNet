@@ -202,23 +202,28 @@ namespace EightBit
         protected void MemoryWrite(byte low, byte high, byte data)
         {
             this.Bus.Address.Assign(low, high);
-            this.MemoryWrite(data);
+            this.Bus.Data = data;
+            this.MemoryWrite();
         }
 
         protected void MemoryWrite(ushort address, byte data)
         {
             this.Bus.Address.Word = address;
-            this.MemoryWrite(data);
+            this.Bus.Data = data;
+            this.MemoryWrite();
         }
 
         protected void MemoryWrite(Register16 address, byte data)
         {
-            this.MemoryWrite(address.Low, address.High, data);
+            this.Bus.Address.Assign(address);
+            this.Bus.Data = data;
+            this.MemoryWrite();
         }
 
         protected void MemoryWrite(Register16 address)
         {
-            this.MemoryWrite(address.Low, address.High);
+            this.Bus.Address.Assign(address);
+            this.MemoryWrite();
         }
 
         protected void MemoryWrite(byte data)
@@ -245,7 +250,8 @@ namespace EightBit
 
         protected byte MemoryRead(Register16 address)
         {
-            return this.MemoryRead(address.Low, address.High);
+            this.Bus.Address.Assign(address);
+            return this.MemoryRead();
         }
 
         protected virtual byte MemoryRead()
@@ -279,7 +285,8 @@ namespace EightBit
 
         protected Register16 GetWordPaged(Register16 address)
         {
-            return this.GetWordPaged(address.High, address.Low);
+            this.Bus.Address.Assign(address);
+            return this.GetWordPaged();
         }
 
         protected Register16 GetWordPaged(byte page, byte offset)
@@ -292,7 +299,8 @@ namespace EightBit
 
         protected void SetWordPaged(Register16 address, Register16 value)
         {
-            this.SetWordPaged(address.High, address.Low, value);
+            this.Bus.Address.Assign(address);
+            this.SetWordPaged(value);
         }
 
         protected void SetWordPaged(byte page, byte offset, Register16 value)

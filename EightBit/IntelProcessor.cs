@@ -177,7 +177,7 @@ namespace EightBit
 
         protected void Restart(byte address)
         {
-            this.MEMPTR.Assign(address, 0);
+            this.MEMPTR.Assign(address);
             this.Call(this.MEMPTR);
         }
 

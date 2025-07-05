@@ -61,7 +61,8 @@ namespace EightBit
 
         public byte Read(Register16 absolute)
         {
-            return this.Read(absolute.Low, absolute.High);
+            this.Address.Assign(absolute);
+            return this.Read();
         }
 
         public byte Read(byte low, byte high)
@@ -92,18 +93,22 @@ namespace EightBit
         public void Write(ushort absolute, byte value)
         {
             this.Address.Word = absolute;
-            this.Write(value);
+            this.Data = value;
+            this.Write();
         }
 
         public void Write(Register16 absolute, byte value)
         {
-            this.Write(absolute.Low, absolute.High, value);
+            this.Address.Assign(absolute);
+            this.Data = value;
+            this.Write();
         }
 
         public void Write(byte low, byte high, byte value)
         {
             this.Address.Assign(low, high);
-            this.Write(value);
+            this.Data = value;
+            this.Write();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]

@@ -81,7 +81,7 @@ namespace EightBit
 
         public bool Equals(Register16? rhs) => ReferenceEquals(this, rhs) || (rhs is not null && rhs.Low == this.Low && rhs.High == this.High);
 
-        public void Assign(byte low, byte high)
+        public void Assign(byte low, byte high = 0)
         {
             this.Low = low;
             this.High = high;
@@ -93,9 +93,17 @@ namespace EightBit
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort Increment() => this.Word++;
+        public Register16 Increment()
+        {
+            this.Word++;
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort Decrement() => this.Word--;
+        public Register16 Decrement()
+        {
+            this.Word--;
+            return this;
+        }
     }
 }
