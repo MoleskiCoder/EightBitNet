@@ -2151,13 +2151,13 @@ namespace Z80
             this.Bus.Address.Increment();
             this.MEMPTR.High = this.MemoryRead();
             this.Tick();
-            this.Bus.Address.Decrement();
+            _ = this.Bus.Address.Decrement();
             this.Tick();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
             this.MemoryUpdate(1);
             this.Tick();
-            this.Bus.Address.Increment();
+            _ = this.Bus.Address.Increment();
             this.Tick();
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
@@ -2169,9 +2169,8 @@ namespace Z80
 
         private void RepeatBlockInstruction()
         {
-            this.DecrementPC();
-            this.MEMPTR.Assign(this.PC);
-            this.DecrementPC();
+            this.MEMPTR.Assign(this.DecrementPC());
+            _ = this.DecrementPC();
             this.AdjustXY(this.PC.High);
         }
 

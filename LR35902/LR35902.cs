@@ -553,36 +553,50 @@ namespace LR35902
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.MemoryWrite(this.BC, this.A);
+                                            this.Bus.Address.Assign(this.BC);
                                             break;
 
                                         case 1: // LD (DE),A
-                                            this.MemoryWrite(this.DE, this.A);
+                                            this.Bus.Address.Assign(this.DE);
                                             break;
 
                                         case 2: // GB: LDI (HL),A
-                                            this.MemoryWrite(this.HL.Increment(), this.A);
+                                            this.Bus.Address.Assign(this.HL);
+                                            _ = this.HL.Increment();
                                             break;
 
                                         case 3: // GB: LDD (HL),A
-                                            this.MemoryWrite(this.HL.Decrement(), this.A);
+                                            this.Bus.Address.Assign(this.HL);
+                                            _ = this.HL.Decrement();
                                             break;
 
                                         default:
                                             throw new InvalidOperationException("Invalid operation mode");
                                     }
-
+                                    this.MemoryWrite(this.A);
                                     break;
 
                                 case 1:
-                                    this.A = p switch
+                                    switch(p)
                                     {
-                                        0 => this.MemoryRead(this.BC),              // LD A,(BC)
-                                        1 => this.MemoryRead(this.DE),              // LD A,(DE)
-                                        2 => this.MemoryRead(this.HL.Increment()),  // GB: LDI A,(HL)
-                                        3 => this.MemoryRead(this.HL.Decrement()),  // GB: LDD A,(HL)
-                                        _ => throw new InvalidOperationException("Invalid operation mode"),
-                                    };
+                                        case 0:   // LD A,(BC)
+                                            this.Bus.Address.Assign(this.BC);
+                                            break;
+                                        case 1:   // LD A,(DE)
+                                            this.Bus.Address.Assign(this.DE);
+                                            break;
+                                        case 2:   // GB: LDI A,(HL)
+                                            this.Bus.Address.Assign(this.HL);
+                                            _ = this.HL.Increment();
+                                            break;
+                                        case 3:   // GB: LDD A,(HL)
+                                            this.Bus.Address.Assign(this.HL);
+                                            _ = this.HL.Decrement();
+                                            break;
+                                        default:
+                                            throw new InvalidOperationException("Invalid operation mode");
+                                    }
+                                    this.A = this.MemoryRead();
                                     break;
 
                                 default:
@@ -592,20 +606,14 @@ namespace LR35902
                             break;
 
                         case 3: // 16-bit INC/DEC
-                            switch (q)
+                            _ = q switch
                             {
-                                case 0: // INC rp
-                                    this.RP(p).Increment();
-                                    break;
-
-                                case 1: // DEC rp
-                                    this.RP(p).Decrement();
-                                    break;
-
-                                default:
-                                    throw new InvalidOperationException("Invalid operation mode");
-                            }
-
+                                // INC rp
+                                0 => this.RP(p).Increment(),
+                                // DEC rp
+                                1 => this.RP(p).Decrement(),
+                                _ => throw new InvalidOperationException("Invalid operation mode"),
+                            };
                             this.TickMachine();
                             break;
 

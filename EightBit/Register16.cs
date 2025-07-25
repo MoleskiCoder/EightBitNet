@@ -95,14 +95,14 @@ namespace EightBit
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Register16 Increment()
         {
-            this.Word++;
+            ++this.Word;
             return this;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Register16 Decrement()
         {
-            this.Word--;
+            --this.Word;
             return this;
         }
     }

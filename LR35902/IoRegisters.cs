@@ -150,7 +150,7 @@ namespace LR35902
 
         public void IncrementDIV()
         {
-            this.divCounter.Increment();
+            _ = this.divCounter.Increment();
             this.Poke(DIV, this.divCounter.High);
         }
 

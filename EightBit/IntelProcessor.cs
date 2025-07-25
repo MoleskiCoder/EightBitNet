@@ -100,12 +100,13 @@ namespace EightBit
 
         protected abstract void EnableInterrupts();
 
-        protected override void IncrementPC()
+        protected override Register16 IncrementPC()
         {
             if (this.HALT.Raised())
             {
-                base.IncrementPC();
+                return base.IncrementPC();
             }
+            return this.PC;
         }
 
         protected override byte FetchInstruction()
@@ -149,14 +150,13 @@ namespace EightBit
 
         protected sealed override void Push(byte value)
         {
-            this.SP.Decrement();
-            this.MemoryWrite(this.SP, value);
+            this.MemoryWrite(this.SP.Decrement(), value);
         }
 
         protected sealed override byte Pop()
         {
             var returned = this.MemoryRead(this.SP);
-            this.SP.Increment();
+            _ = this.SP.Increment();
             return returned;
         }
 

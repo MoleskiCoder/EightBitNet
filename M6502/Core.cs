@@ -599,16 +599,19 @@ namespace M6502
         protected override byte FetchInstruction()
         {
             this.LowerSYNC();
-            System.Diagnostics.Debug.Assert(this.Cycles == 1, "An extra cycle has occurred");
+            try
+            {
+                System.Diagnostics.Debug.Assert(this.Cycles == 1, "An extra cycle has occurred");
 
-            // Can't use "FetchByte", since that would add an extra tick.
-            this.ImmediateAddress();
-            var returned = this.ReadFromBus();
-
-            System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
-            this.RaiseSYNC();
-
-            return returned;
+                // Can't use "FetchByte", since that would add an extra tick.
+                this.ImmediateAddress();
+                return this.ReadFromBus();
+            }
+            finally
+            {
+                System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
+                this.RaiseSYNC();
+            }
         }
 
         #endregion
