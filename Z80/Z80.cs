@@ -6,7 +6,7 @@ namespace Z80
 {
     using EightBit;
 
-    public class Z80 : IntelProcessor
+    public sealed class Z80 : IntelProcessor
     {
         public Z80(Bus bus, InputOutput ports)
         : base(bus)
@@ -141,13 +141,13 @@ namespace Z80
 
             // ** From the Z80 CPU User Manual
             // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
-            // is received(either a nonmaskable or a maskable interrupt while the interrupt flip-flop is
+            // is received(either a non-maskable or a maskable interrupt while the interrupt flip-flop is
             // enabled). The two interrupt lines are sampled with the rising clock edge during each T4
-            // state as depicted in Figure 11.If a nonmaskable interrupt is received or a maskable interrupt
+            // state as depicted in Figure 11.If a non-maskable interrupt is received or a maskable interrupt
             // is received and the interrupt enable flip-flop is set, then the HALT state is exited on
             // the next rising clock edge.The following cycle is an interrupt acknowledge cycle corresponding
             // to the type of interrupt that was received.If both are received at this time, then
-            // the nonmaskable interrupt is acknowledged because it is the highest priority.The purpose
+            // the non-maskable interrupt is acknowledged because it is the highest priority.The purpose
             // of executing NOP instructions while in the HALT state is to keep the memory _refresh signals
             // active.Each cycle in the HALT state is a normal M1(fetch) cycle except that the data
             // received from the memory is ignored and an NOP instruction is forced internally to the
@@ -200,7 +200,7 @@ namespace Z80
         public ref PinLevel NMI => ref this._nmiLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseNMI()
+        public void RaiseNMI()
         {
             if (this.NMI.Lowered())
             {
@@ -216,7 +216,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerNMI()
+        public void LowerNMI()
         {
             if (this.NMI.Raised())
             {
@@ -232,7 +232,7 @@ namespace Z80
             }
         }
 
-        protected sealed class AutoNMI : IDisposable
+        private sealed class AutoNMI : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -270,12 +270,8 @@ namespace Z80
 
         public ref PinLevel M1 => ref this._m1Line;
 
-        protected virtual void OnLoweringM1() => LoweringM1?.Invoke(this, EventArgs.Empty);
-
-        protected virtual void OnLoweredM1() => LoweredM1?.Invoke(this, EventArgs.Empty);
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseM1()
+        public void RaiseM1()
         {
             if (this.M1.Lowered())
             {
@@ -291,7 +287,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerM1()
+        public void LowerM1()
         {
             if (this.M1.Raised())
             {
@@ -306,7 +302,7 @@ namespace Z80
                 }
             }
         }
-        protected sealed class AutoM1 : IDisposable
+        private sealed class AutoM1 : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -350,7 +346,7 @@ namespace Z80
         public ref PinLevel RFSH => ref this._refreshLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRFSH()
+        public void RaiseRFSH()
         {
             if (this.RFSH.Lowered())
             {
@@ -367,7 +363,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerRFSH()
+        public void LowerRFSH()
         {
             if (this.RFSH.Raised())
             {
@@ -383,7 +379,7 @@ namespace Z80
             }
         }
 
-        protected sealed class AutoRFSH : IDisposable
+        private sealed class AutoRFSH : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -422,7 +418,7 @@ namespace Z80
         public ref PinLevel MREQ => ref this._memoryRequestLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseMREQ()
+        public void RaiseMREQ()
         {
             if (this.MREQ.Lowered())
             {
@@ -438,7 +434,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerMREQ()
+        public void LowerMREQ()
         {
             if (this.MREQ.Raised())
             {
@@ -454,7 +450,7 @@ namespace Z80
             }
         }
 
-        protected sealed class AutoMREQ : IDisposable
+        private sealed class AutoMREQ : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -493,7 +489,7 @@ namespace Z80
         public ref PinLevel IORQ => ref this._ioRequestLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseIORQ()
+        public void RaiseIORQ()
         {
             if (this.IORQ.Lowered())
             {
@@ -509,7 +505,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerIORQ()
+        public void LowerIORQ()
         {
             if (this.IORQ.Raised())
             {
@@ -519,7 +515,7 @@ namespace Z80
             }
         }
 
-        protected sealed class AutoIORQ : IDisposable
+        private sealed class AutoIORQ : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -558,7 +554,7 @@ namespace Z80
         public ref PinLevel RD => ref this._rdLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRD()
+        public void RaiseRD()
         {
             if (this.RD.Lowered())
             {
@@ -574,7 +570,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerRD()
+        public void LowerRD()
         {
             if (this.RD.Raised())
             {
@@ -590,7 +586,7 @@ namespace Z80
             }
         }
 
-        protected sealed class AutoRD : IDisposable
+        private sealed class AutoRD : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -629,7 +625,7 @@ namespace Z80
         public ref PinLevel WR => ref this._wrLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseWR()
+        public void RaiseWR()
         {
             if (this.WR.Lowered())
             {
@@ -645,7 +641,7 @@ namespace Z80
             }
         }
 
-        public virtual void LowerWR()
+        public void LowerWR()
         {
             if (this.WR.Raised())
             {
@@ -661,7 +657,7 @@ namespace Z80
             }
         }
 
-        protected sealed class AutoWR : IDisposable
+        private sealed class AutoWR : IDisposable
         {
             private readonly Z80 _cpu;
             private bool _disposed;
@@ -687,7 +683,7 @@ namespace Z80
 
         #endregion
 
-        protected void MemoryUpdate(int ticks)
+        private void MemoryUpdate(int ticks)
         {
             this.OnWritingMemory();
             try
@@ -699,7 +695,7 @@ namespace Z80
             }
             finally
             {
-                this.OnWroteMemory();
+                this.OnWrittenMemory();
             }
         }
 
@@ -1695,11 +1691,8 @@ namespace Z80
                                     this.XHTL(this.HL2());
                                     break;
                                 case 5: // EX DE,HL
-                                    {
-                                        this.Intermediate.Assign(this.DE);
-                                        this.DE.Assign(this.HL);
-                                        this.HL.Assign(this.Intermediate);
-                                    }
+                                    (this.HL.Low, this.DE.Low) = (this.DE.Low, this.HL.Low);
+                                    (this.HL.High, this.DE.High) = (this.DE.High, this.HL.High);
                                     break;
                                 case 6: // DI
                                     this.DisableInterrupts();
