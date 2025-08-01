@@ -78,55 +78,25 @@ namespace Intel8080
             }
         }
 
-        private int Sign()
-        {
-            return SignTest(this.F);
-        }
+        private int Zero() => ZeroTest(this.F);
 
-        private int Zero()
-        {
-            return ZeroTest(this.F);
-        }
+        private int Carry() => CarryTest(this.F);
 
-        private int AuxiliaryCarry()
-        {
-            return AuxiliaryCarryTest(this.F);
-        }
+        private int Parity() => ParityTest(this.F);
 
-        private int Parity()
-        {
-            return ParityTest(this.F);
-        }
+        private int Sign() => SignTest(this.F);
 
-        private int Carry()
-        {
-            return CarryTest(this.F);
-        }
+        private int AuxiliaryCarry() => AuxiliaryCarryTest(this.F);
 
-        private static int SignTest(byte data)
-        {
-            return data & (byte)StatusBits.SF;
-        }
+        private static int ZeroTest(byte data) => data & (byte)StatusBits.ZF;
 
-        private static int ZeroTest(byte data)
-        {
-            return data & (byte)StatusBits.ZF;
-        }
+        private static int CarryTest(byte data) => data & (byte)StatusBits.CF;
 
-        private static int AuxiliaryCarryTest(byte data)
-        {
-            return data & (byte)StatusBits.AC;
-        }
+        private static int ParityTest(byte data) => data & (byte)StatusBits.PF;
 
-        private static int ParityTest(byte data)
-        {
-            return data & (byte)StatusBits.PF;
-        }
+        private static int SignTest(byte data) => data & (byte)StatusBits.SF;
 
-        private static int CarryTest(byte data)
-        {
-            return data & (byte)StatusBits.CF;
-        }
+        private static int AuxiliaryCarryTest(byte data) => data & (byte)StatusBits.AC;
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 

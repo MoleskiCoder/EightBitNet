@@ -15,13 +15,6 @@ namespace LR35902
             this.RaisedPOWER += this.LR35902_RaisedPOWER;
         }
 
-        private void LR35902_RaisedPOWER(object? sender, EventArgs e)
-        {
-            this.RaiseWR();
-            this.RaiseRD();
-            this.RaiseMWR();
-        }
-
         private readonly Bus bus;
         private readonly Register16 af = new((int)Mask.Sixteen);
         private bool prefixCB;
@@ -83,8 +76,14 @@ namespace LR35902
             if (this.MWR.Lowered())
             {
                 RaisingMWR?.Invoke(this, EventArgs.Empty);
-                this.MWR.Raise();
-                RaisedMWR?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.MWR.Raise();
+                }
+                finally
+                {
+                    RaisedMWR?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -93,8 +92,36 @@ namespace LR35902
             if (this.MWR.Raised())
             {
                 LoweringMWR?.Invoke(this, EventArgs.Empty);
-                this.MWR.Lower();
-                LoweredMWR?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.MWR.Lower();
+                }
+                finally
+                {
+                    LoweredMWR?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        private sealed class AutoMWR : IDisposable
+        {
+            private readonly LR35902 _cpu;
+            private bool _disposed;
+
+            public AutoMWR(LR35902 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerMWR();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseMWR();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -120,8 +147,14 @@ namespace LR35902
             if (this.RD.Lowered())
             {
                 RaisingRD?.Invoke(this, EventArgs.Empty);
-                this.RD.Raise();
-                RaisedRD?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RD.Raise();
+                }
+                finally
+                {
+                    RaisedRD?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -130,8 +163,36 @@ namespace LR35902
             if (this.RD.Raised())
             {
                 LoweringRD?.Invoke(this, EventArgs.Empty);
-                this.RD.Lower();
-                LoweredRD?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.RD.Lower();
+                }
+                finally
+                {
+                    LoweredRD?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        private sealed class AutoRD : IDisposable
+        {
+            private readonly LR35902 _cpu;
+            private bool _disposed;
+
+            public AutoRD(LR35902 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerRD();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseRD();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -157,8 +218,14 @@ namespace LR35902
             if (this.WR.Lowered())
             {
                 RaisingWR?.Invoke(this, EventArgs.Empty);
-                this.WR.Raise();
-                RaisedWR?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.WR.Raise();
+                }
+                finally
+                {
+                    RaisedWR?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -167,8 +234,36 @@ namespace LR35902
             if (this.WR.Raised())
             {
                 LoweringWR?.Invoke(this, EventArgs.Empty);
-                this.WR.Lower();
-                LoweredWR?.Invoke(this, EventArgs.Empty);
+                try
+                {
+                    this.WR.Lower();
+                }
+                finally
+                {
+                    LoweredWR?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        private sealed class AutoWR : IDisposable
+        {
+            private readonly LR35902 _cpu;
+            private bool _disposed;
+
+            public AutoWR(LR35902 cpu)
+            {
+                _cpu = cpu;
+                _cpu.LowerWR();
+            }
+
+            public void Dispose()
+            {
+                if (!_disposed)
+                {
+                    _cpu.RaiseWR();
+                    _disposed = true;
+                }
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -205,9 +300,9 @@ namespace LR35902
             {
                 if (this.IME)
                 {
+                    var index = FindFirstSet(this.MaskedInterrupts);
                     this.IF = 0;
                     this.LowerINT();
-                    var index = FindFirstSet(this.MaskedInterrupts);
                     this.Bus.Data = (byte)(0x38 + (index << 3));
                 }
                 else
@@ -228,6 +323,12 @@ namespace LR35902
             {
                 this.Execute(this.FetchInstruction());
             }
+        }
+        private void LR35902_RaisedPOWER(object? sender, EventArgs e)
+        {
+            this.RaiseWR();
+            this.RaiseRD();
+            this.RaiseMWR();
         }
 
         protected override void HandleRESET()
@@ -261,59 +362,53 @@ namespace LR35902
             MachineTicked?.Invoke(this, EventArgs.Empty);
         }
 
-        private int Zero()
-        {
-            return ZeroTest(this.F);
-        }
+        private int Zero() => ZeroTest(this.F);
 
-        private int Carry()
-        {
-            return CarryTest(this.F);
-        }
+        private int Carry() => CarryTest(this.F);
 
-        private int HalfCarry()
-        {
-            return HalfCarryTest(this.F);
-        }
+        private int HalfCarry() => HalfCarryTest(this.F);
 
-        private int Subtracting()
-        {
-            return SubtractingTest(this.F);
-        }
+        private int Subtracting() => SubtractingTest(this.F);
 
-        private static int ZeroTest(byte data)
-        {
-            return data & (byte)StatusBits.ZF;
-        }
+        private static int ZeroTest(byte data) => data & (byte)StatusBits.ZF;
 
-        private static int CarryTest(byte data)
-        {
-            return data & (byte)StatusBits.CF;
-        }
+        private static int CarryTest(byte data) => data & (byte)StatusBits.CF;
 
-        private static int HalfCarryTest(byte data)
-        {
-            return data & (byte)StatusBits.HC;
-        }
+        private static int HalfCarryTest(byte data) => data & (byte)StatusBits.HC;
 
-        private static int SubtractingTest(byte data)
-        {
-            return data & (byte)StatusBits.NF;
-        }
+        private static int SubtractingTest(byte data) => data & (byte)StatusBits.NF;
+
+        private void AdjustStatusFlags(byte value) => this.F = value;
+
+        private void SetBit(StatusBits flag) => this.AdjustStatusFlags(SetBit(this.F, flag));
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
+        private void SetBit(StatusBits flag, int condition) => this.AdjustStatusFlags(SetBit(this.F, flag, condition));
+
         private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
+
+        private void SetBit(StatusBits flag, bool condition) => this.AdjustStatusFlags(SetBit(this.F, flag, condition));
 
         private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
 
+        private void ClearBit(StatusBits flag) => this.AdjustStatusFlags(ClearBit(this.F, flag));
+
         private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
+
+        private void ClearBit(StatusBits flag, int condition) => this.AdjustStatusFlags(ClearBit(this.F, flag, condition));
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
+        private void AdjustZero(byte value) => this.AdjustStatusFlags(AdjustZero(this.F, value));
+
         private static byte AdjustZero(byte input, byte value) => ClearBit(input, StatusBits.ZF, value);
 
+        private void AdjustHalfCarryAdd(byte before, byte value, int calculation) => this.AdjustStatusFlags(AdjustHalfCarryAdd(this.F, before, value, calculation));
+
         private static byte AdjustHalfCarryAdd(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarryAdd(before, value, calculation));
+
+        private void AdjustHalfCarrySub(byte before, byte value, int calculation) => this.AdjustStatusFlags(AdjustHalfCarrySub(this.F, before, value, calculation));
 
         private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
 
@@ -331,23 +426,24 @@ namespace LR35902
 
         protected override void MemoryWrite()
         {
-            this.LowerMWR();
-            this.LowerWR();
+            using var _ = new AutoMWR(this);
+            using var __ = new AutoWR(this);
             base.MemoryWrite();
             this.TickMachine();
-            this.RaiseWR();
-            this.RaiseMWR();
         }
 
         protected override byte MemoryRead()
         {
-            this.LowerMWR();
-            this.LowerRD();
-            var returned = base.MemoryRead();
-            this.TickMachine();
-            this.RaiseRD();
-            this.RaiseMWR();
-            return returned;
+            using var _ = new AutoMWR(this);
+            using var __ = new AutoRD(this);
+            try
+            {
+                return base.MemoryRead();
+            }
+            finally
+            {
+                this.TickMachine();
+            }
         }
 
         protected override void PushWord(Register16 value)
@@ -473,7 +569,7 @@ namespace LR35902
                             _ => throw new InvalidOperationException("Unreachable code block reached"),
                         };
                         this.R(z, operand);
-                        this.F = AdjustZero(this.F, operand);
+                        this.AdjustZero(operand);
                     }
                     break;
 
@@ -735,9 +831,9 @@ namespace LR35902
                                         var result = before + value;
                                         this.SP.Word = (ushort)result;
                                         var carried = before ^ value ^ (result & (int)Mask.Sixteen);
-                                        this.F = ClearBit(this.F, StatusBits.ZF | StatusBits.NF);
-                                        this.F = SetBit(this.F, StatusBits.CF, carried & (int)Bits.Bit8);
-                                        this.F = SetBit(this.F, StatusBits.HC, carried & (int)Bits.Bit4);
+                                        this.ClearBit(StatusBits.ZF | StatusBits.NF);
+                                        this.SetBit(StatusBits.CF, carried & (int)Bits.Bit8);
+                                        this.SetBit(StatusBits.HC, carried & (int)Bits.Bit4);
                                     }
                                     break;
 
@@ -753,9 +849,9 @@ namespace LR35902
                                         var result = before + value;
                                         this.HL.Word = (ushort)result;
                                         var carried = before ^ value ^ (result & (int)Mask.Sixteen);
-                                        this.F = ClearBit(this.F, StatusBits.ZF | StatusBits.NF);
-                                        this.F = SetBit(this.F, StatusBits.CF, carried & (int)Bits.Bit8);
-                                        this.F = SetBit(this.F, StatusBits.HC, carried & (int)Bits.Bit4);
+                                        this.ClearBit(StatusBits.ZF | StatusBits.NF);
+                                        this.SetBit(StatusBits.CF, carried & (int)Bits.Bit8);
+                                        this.SetBit(StatusBits.HC, carried & (int)Bits.Bit4);
                                     }
                                     break;
 
@@ -924,17 +1020,17 @@ namespace LR35902
 
         private byte Increment(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = AdjustZero(this.F, ++operand);
-            this.F = ClearBit(this.F, StatusBits.HC, LowNibble(operand));
+            this.ClearBit(StatusBits.NF);
+            this.AdjustZero(++operand);
+            this.ClearBit(StatusBits.HC, LowNibble(operand));
             return operand;
         }
 
         private byte Decrement(byte operand)
         {
-            this.F = SetBit(this.F, StatusBits.NF);
-            this.F = ClearBit(this.F, StatusBits.HC, LowNibble(operand));
-            this.F = AdjustZero(this.F, --operand);
+            this.SetBit(StatusBits.NF);
+            this.ClearBit(StatusBits.HC, LowNibble(operand));
+            this.AdjustZero(--operand);
             return operand;
         }
 
@@ -957,22 +1053,22 @@ namespace LR35902
 
             operand.Word = (ushort)result;
 
-            this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, result & (int)Bits.Bit16);
-            this.F = AdjustHalfCarryAdd(this.F, this.MEMPTR.High, value.High, operand.High);
+            this.ClearBit(StatusBits.NF);
+            this.SetBit(StatusBits.CF, result & (int)Bits.Bit16);
+            this.AdjustHalfCarryAdd(this.MEMPTR.High, value.High, operand.High);
         }
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
             this.MEMPTR.Word = (ushort)(operand + value + carry);
 
-            this.F = AdjustHalfCarryAdd(this.F, operand, value, this.MEMPTR.Low);
+            this.AdjustHalfCarryAdd(operand, value, this.MEMPTR.Low);
 
             operand = this.MEMPTR.Low;
 
-            this.F = ClearBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, this.MEMPTR.Word & (ushort)Bits.Bit8);
-            this.F = AdjustZero(this.F, operand);
+            this.ClearBit(StatusBits.NF);
+            this.SetBit(StatusBits.CF, this.MEMPTR.Word & (ushort)Bits.Bit8);
+            this.AdjustZero(operand);
 
             return operand;
         }
@@ -983,62 +1079,53 @@ namespace LR35902
         {
             this.MEMPTR.Word = (ushort)(operand - value - carry);
 
-            this.F = AdjustHalfCarrySub(this.F, operand, value, this.MEMPTR.Low);
+            this.AdjustHalfCarrySub(operand, value, this.MEMPTR.Low);
 
             var result = operand = this.MEMPTR.Low;
 
-            this.F = SetBit(this.F, StatusBits.NF);
-            this.F = SetBit(this.F, StatusBits.CF, this.MEMPTR.High & (byte)Bits.Bit0);
-            this.F = AdjustZero(this.F, operand);
+            this.SetBit(StatusBits.NF);
+            this.SetBit(StatusBits.CF, this.MEMPTR.High & (byte)Bits.Bit0);
+            this.AdjustZero(operand);
 
             return result;
         }
 
         private byte SBC(byte operand, byte value) => this.Subtract(operand, value, this.Carry() >> 4);
 
-        private byte AndR(byte operand, byte value)
+        private void AndR(byte value)
         {
-            this.F = SetBit(this.F, StatusBits.HC);
-            this.F = ClearBit(this.F, StatusBits.CF | StatusBits.NF);
-            this.F = AdjustZero(this.F, operand &= value);
-            return operand;
+            this.SetBit(StatusBits.HC);
+            this.ClearBit(StatusBits.CF | StatusBits.NF);
+            this.AdjustZero(this.A &= value);
         }
 
-        private void AndR(byte value) => this.A = this.AndR(this.A, value);
-
-        private byte XorR(byte operand, byte value)
+        private void XorR(byte value)
         {
-            this.F = ClearBit(this.F, StatusBits.HC | StatusBits.CF | StatusBits.NF);
-            this.F = AdjustZero(this.F, operand ^= value);
-            return operand;
+            this.ClearBit(StatusBits.HC | StatusBits.CF | StatusBits.NF);
+            this.AdjustZero(this.A ^= value);
         }
 
-        private void XorR(byte value) => this.A = this.XorR(this.A, value);
-
-        private byte OrR(byte operand, byte value)
+        private void OrR(byte value)
         {
-            this.F = ClearBit(this.F, StatusBits.HC | StatusBits.CF | StatusBits.NF);
-            this.F = AdjustZero(this.F, operand |= value);
-            return operand;
+            this.ClearBit(StatusBits.HC | StatusBits.CF | StatusBits.NF);
+            this.AdjustZero(this.A |= value);
         }
-
-        private void OrR(byte value) => this.A = this.OrR(this.A, value);
 
         private void Compare(byte value) => this.Subtract(this.A, value);
 
         private byte RLC(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
             var carry = operand & (byte)Bits.Bit7;
-            this.F = SetBit(this.F, StatusBits.CF, carry);
+            this.SetBit(StatusBits.CF, carry);
             return (byte)((operand << 1) | (carry >> 7));
         }
 
         private byte RRC(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
             var carry = operand & (byte)Bits.Bit0;
-            this.F = SetBit(this.F, StatusBits.CF, carry);
+            this.SetBit(StatusBits.CF, carry);
             return (byte)((operand >> 1) | (carry << 7));
         }
 
@@ -1052,44 +1139,46 @@ namespace LR35902
 
         private byte RR(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
             var carry = this.Carry();
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) | (carry << 3));   // CF at Bit4
         }
 
         private byte SLA(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit7);
             return (byte)(operand << 1);
         }
 
         private byte SRA(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) | (operand & (byte)Bits.Bit7));
         }
 
         private byte Swap(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.CF);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.CF);
             return (byte)(PromoteNibble(operand) | DemoteNibble(operand));
         }
 
         private byte SRL(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) & ~(byte)Bits.Bit7);
         }
 
         private void Bit(int n, byte operand)
         {
             var carry = this.Carry();
-            _ = this.AndR(operand, Bit(n));
-            this.F = SetBit(this.F, StatusBits.CF, carry);
+            this.SetBit(StatusBits.HC);
+            this.ClearBit(StatusBits.CF | StatusBits.NF);
+            this.AdjustZero((byte)(operand & Bit(n)));
+            this.SetBit(StatusBits.CF, carry);
         }
 
         private void DAA()
@@ -1121,8 +1210,8 @@ namespace LR35902
                 }
             }
 
-            this.F = ClearBit(this.F, (byte)StatusBits.HC | (byte)StatusBits.ZF);
-            this.F = SetBit(this.F, StatusBits.CF, this.Carry() != 0 || (updated & (int)Bits.Bit8) != 0);
+            this.ClearBit(StatusBits.HC | StatusBits.ZF);
+            this.SetBit(StatusBits.CF, this.Carry() != 0 || (updated & (int)Bits.Bit8) != 0);
             this.A = LowByte(updated);
 
             this.F = AdjustZero(this.F, this.A);
@@ -1136,14 +1225,14 @@ namespace LR35902
 
         private void SCF()
         {
-            this.F = SetBit(this.F, StatusBits.CF);
-            this.F = ClearBit(this.F, StatusBits.HC | StatusBits.NF);
+            this.SetBit(StatusBits.CF);
+            this.ClearBit(StatusBits.HC | StatusBits.NF);
         }
 
         private void CCF()
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC);
-            this.F = ClearBit(this.F, StatusBits.CF, this.F & (byte)StatusBits.CF);
+            this.ClearBit(StatusBits.NF | StatusBits.HC);
+            this.ClearBit(StatusBits.CF, this.F & (byte)StatusBits.CF);
         }
 
         private void RetI()

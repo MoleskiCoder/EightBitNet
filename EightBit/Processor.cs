@@ -18,7 +18,7 @@ namespace EightBit
         public event EventHandler<EventArgs>? ReadingMemory;
         public event EventHandler<EventArgs>? ReadMemory;
         public event EventHandler<EventArgs>? WritingMemory;
-        public event EventHandler<EventArgs>? WroteMemory;
+        public event EventHandler<EventArgs>? WrittenMemory;
 
         #endregion
 
@@ -191,7 +191,7 @@ namespace EightBit
 
         protected void OnWritingMemory() => this.WritingMemory?.Invoke(this, EventArgs.Empty);
 
-        protected void OnWroteMemory() => this.WroteMemory?.Invoke(this, EventArgs.Empty);
+        protected void OnWrittenMemory() => this.WrittenMemory?.Invoke(this, EventArgs.Empty);
 
         protected void MemoryWrite(byte low, byte high)
         {
