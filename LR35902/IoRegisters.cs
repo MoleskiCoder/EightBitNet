@@ -90,12 +90,15 @@ namespace LR35902
         private bool p11 = true;  // left/b
         private bool p10 = true;  // right/a
 
-        public IoRegisters(Bus bus)
+        public IoRegisters(Bus bus, bool triggered = true)
         : base(0x80)
         {
             this.bus = bus;
-            this.bus.ReadingByte += this.Bus_ReadingByte;
-            this.bus.WrittenByte += this.Bus_WrittenByte;
+            if (triggered)
+            {
+                this.bus.ReadingByte += this.Bus_ReadingByte;
+                this.bus.WrittenByte += this.Bus_WrittenByte;
+            }
         }
 
         public event EventHandler<LcdStatusModeEventArgs>? DisplayStatusModeUpdated;

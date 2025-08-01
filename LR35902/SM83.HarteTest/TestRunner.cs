@@ -9,6 +9,7 @@
         public Ram RAM { get; } = new(0x10000);
 
         public TestRunner()
+            : base(false)
         {
             this._mapping = new(this.RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }

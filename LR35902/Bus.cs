@@ -37,9 +37,9 @@ namespace LR35902
 
         private int allowed = 0;
 
-        protected Bus()
+        protected Bus(bool ioTriggers = true)
         {
-            this.IO = new IoRegisters(this);
+            this.IO = new IoRegisters(this, ioTriggers);
             this.CPU = new LR35902(this);
             this.CPU.MachineTicked += this.CPU_MachineTicked;
             this.WrittenByte += this.Bus_WrittenByte;
