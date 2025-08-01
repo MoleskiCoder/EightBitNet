@@ -4,6 +4,7 @@
 
 namespace Z80.FuseTest
 {
+    using EightBit;
     using Fuse;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -99,7 +100,7 @@ namespace Z80.FuseTest
         public override void Initialize()
         {
             this.cpu.ReadMemory += this.Cpu_ReadMemory;
-            this.cpu.WroteMemory += this.Cpu_WroteMemory;
+            this.cpu.WrittenMemory += this.Cpu_WrittenMemory;
             this.ports.ReadPort += this.Ports_ReadPort;
             this.ports.WrittenPort += this.Ports_WrittenPort;
             this.cpu.ExecutedInstruction += this.Cpu_ExecutedInstruction;
@@ -108,7 +109,7 @@ namespace Z80.FuseTest
         private void Ports_ReadPort(object? sender, EventArgs e) => this.AddActualEvent("PR");
         private void Ports_WrittenPort(object? sender, EventArgs e) => this.AddActualEvent("PW");
         private void Cpu_ReadMemory(object? sender, EventArgs e) => this.AddActualEvent("MR");
-        private void Cpu_WroteMemory(object? sender, EventArgs e) => this.AddActualEvent("MW");
+        private void Cpu_WrittenMemory(object? sender, EventArgs e) => this.AddActualEvent("MW");
 
         private void AddActualEvent(string specifier)
         {
