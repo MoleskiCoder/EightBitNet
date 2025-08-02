@@ -1473,7 +1473,7 @@ namespace Z80
 
                                 var value = this.FetchByte();
 
-                                if (displacing)
+                                if (memoryY)
                                 {
                                     this.Tick(2);
                                 }
@@ -2143,17 +2143,15 @@ namespace Z80
             this.MEMPTR.Low = this.MemoryRead(this.SP);
             this.Bus.Address.Increment();
             this.MEMPTR.High = this.MemoryRead();
+            this.Tick(2);
+            this.Bus.Data = exchange.High;
+            exchange.High = this.MEMPTR.High;
+            this.MemoryUpdate(1);
             this.Tick();
             _ = this.Bus.Address.Decrement();
             this.Tick();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
-            this.MemoryUpdate(1);
-            this.Tick();
-            _ = this.Bus.Address.Increment();
-            this.Tick();
-            this.Bus.Data = exchange.High;
-            exchange.High = this.MEMPTR.High;
             this.MemoryUpdate(1);
             this.Tick(3);
         }
@@ -2511,8 +2509,9 @@ namespace Z80
             var memory = ReadMemoryIndirect(this.HL);
             this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
+            this.Tick(3);
             this.MemoryUpdate(1);
-            this.Tick(4);
+            this.Tick();
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.AdjustSZPXY(this.A);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
@@ -2523,8 +2522,9 @@ namespace Z80
             var memory = ReadMemoryIndirect(this.HL);
             this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
+            this.Tick(3);
             this.MemoryUpdate(1);
-            this.Tick(4);
+            this.Tick();
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.AdjustSZPXY(this.A);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
