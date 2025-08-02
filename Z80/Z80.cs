@@ -683,25 +683,27 @@ namespace Z80
 
         #endregion
 
-        private void MemoryUpdate(int ticks)
+        private void MemoryUpdate(int ticks = 0)
         {
             this.OnWritingMemory();
             try
             {
                 using var _ = new AutoMREQ(this);
-                using var __ = new AutoWR(this);
                 this.Tick(ticks);
+                using var __ = new AutoWR(this);
+                this.Tick();
                 base.MemoryWrite();
             }
             finally
             {
+                this.Tick();
                 this.OnWrittenMemory();
             }
         }
 
         protected override void MemoryWrite()
         {
-            this.MemoryUpdate(3);
+            this.MemoryUpdate(1);
         }
 
         protected override byte MemoryRead()
@@ -995,7 +997,6 @@ namespace Z80
                             this.MemoryRead();
                             break;
                         case AccessLevel.WriteOnly:
-                            this.Tick();
                             break;
                         default:
                             throw new NotSupportedException("Invalid access level");
@@ -1010,14 +1011,12 @@ namespace Z80
             }
         }
 
-        private void R(int r, byte value, int ticks = 0)
+        private void R(int r, byte value, int ticks = 1)
         {
             this.R(r, AccessLevel.WriteOnly) = value;
             if (r == 6)
             {
-                this.Tick(ticks);
-                this.MemoryUpdate(1);
-                this.Tick();
+                this.MemoryUpdate(ticks);
             }
         }
 
@@ -1113,9 +1112,7 @@ namespace Z80
                 }
                 else
                 {
-                    if (memoryZ)
-                        this.Tick();
-                    this.R(z, operand);
+                    this.R(z, operand, 2);
                 }
             }
         }
@@ -1451,7 +1448,7 @@ namespace Z80
                                 this.FetchDisplacement();
                                 this.Tick(5);
                             }
-                            this.R(y, this.Increment(this.R(y)), 1);
+                            this.R(y, this.Increment(this.R(y)), 2);
                             break;
 
                         case 5: // 8-bit DEC
@@ -1460,27 +1457,17 @@ namespace Z80
                                 this.FetchDisplacement();
                                 this.Tick(5);
                             }
-                            this.R(y, this.Decrement(this.R(y)), 1);
+                            this.R(y, this.Decrement(this.R(y)), 2);
                             break;
 
                         case 6: // 8-bit load immediate
+                            if (memoryY && this._displaced)
                             {
-                                var displacing = memoryY && this._displaced;
-                                if (displacing)
-                                {
-                                    this.FetchDisplacement();
-                                }
-
-                                var value = this.FetchByte();
-
-                                if (memoryY)
-                                {
-                                    this.Tick(2);
-                                }
-
-                                this.R(y, value);  // LD r,n
-                                break;
+                                this.FetchDisplacement();
                             }
+
+                            this.R(y, this.FetchByte(), 3);  // LD r,n
+                            break;
 
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
@@ -1569,7 +1556,7 @@ namespace Z80
                         if (normal)
                         {
                             var value = this.R(z);
-                            this.R(y, value);
+                            this.R(y, value, 1);
                         }
                     }
                     else
@@ -2146,14 +2133,13 @@ namespace Z80
             this.Tick(2);
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
             this.Tick();
             _ = this.Bus.Address.Decrement();
-            this.Tick();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
-            this.MemoryUpdate(1);
-            this.Tick(3);
+            this.MemoryUpdate();
+            this.Tick(2);
         }
 
         #region Block instructions
@@ -2242,8 +2228,8 @@ namespace Z80
             this.MemoryRead(this.HL);
             this.Bus.Address.Assign(this.DE);
             this.Tick();
-            this.MemoryUpdate(1);
-            this.Tick(3);
+            this.MemoryUpdate();
+            this.Tick(2);
             var xy = this.A + this.Bus.Data;
             this.SetBit(StatusBits.XF, xy & (int)Bits.Bit3);
             this.SetBit(StatusBits.YF, xy & (int)Bits.Bit1);
@@ -2345,8 +2331,7 @@ namespace Z80
             this.ReadPort();
             this.Bus.Address.Assign(this.HL);
             this.Tick();
-            this.MemoryUpdate(1);
-            this.Tick();
+            this.MemoryUpdate();
             this.AdjustSZXY(--this.B);
             this.SetBit(StatusBits.NF, this.Bus.Data & (byte)StatusBits.SF);
         }
@@ -2510,8 +2495,7 @@ namespace Z80
             this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
             this.Tick(3);
-            this.MemoryUpdate(1);
-            this.Tick();
+            this.MemoryUpdate();
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.AdjustSZPXY(this.A);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
@@ -2523,8 +2507,7 @@ namespace Z80
             this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
             this.Tick(3);
-            this.MemoryUpdate(1);
-            this.Tick();
+            this.MemoryUpdate();
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.AdjustSZPXY(this.A);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
