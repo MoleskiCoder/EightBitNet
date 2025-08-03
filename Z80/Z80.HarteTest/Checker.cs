@@ -208,11 +208,11 @@
                     var expectedValue = expectedCycle.Value ?? throw new InvalidOperationException("Expected cycle value cannot be null.");
                     var actualValue = actualCycle.Value ?? throw new InvalidOperationException("Actual cycle value cannot be null.");
                     _ = this.Check("Cycle value", expectedValue, actualValue);
-
-                    var expectedAction = expectedCycle.Type;
-                    var actualAction = actualCycle.Type;
-                    _ = this.Check("Cycle action", expectedAction, actualAction);
                 }
+
+                var expectedAction = expectedCycle.Type;
+                var actualAction = actualCycle.Type;
+                _ = this.Check("Cycle action", expectedAction, actualAction);
             }
 
             if (actualIDX < actualCycles.Count)
