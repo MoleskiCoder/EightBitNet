@@ -82,6 +82,7 @@ namespace Z80
         {
             var displacement = (this._prefixDD ? this.IX : this.IY).Word + this._displacement;
             this.MEMPTR.Word = (ushort)displacement;
+            this.Bus.Address.Assign(this.MEMPTR);
         }
 
         public void Exx() => this._registerSet ^= 1;
@@ -683,13 +684,13 @@ namespace Z80
 
         #endregion
 
-        private void MemoryUpdate(int ticks = 0)
+        private void MemoryUpdate(int ticks)
         {
             this.OnWritingMemory();
             try
             {
-                using var _ = new AutoMREQ(this);
                 this.Tick(ticks);
+                using var _ = new AutoMREQ(this);
                 using var __ = new AutoWR(this);
                 this.Tick();
                 base.MemoryWrite();
@@ -711,9 +712,9 @@ namespace Z80
             this.OnReadingMemory();
             try
             {
-                this.Tick();
                 try
                 {
+                    this.Tick();
                     using var __ = new AutoMREQ(this);
                     using var _ = new AutoRD(this);
                     this.Tick();
@@ -984,7 +985,6 @@ namespace Z80
                     if (this._displaced)
                     {
                         this.DisplaceAddress();
-                        this.Bus.Address.Assign(this.MEMPTR);
                     }
                     else
                     {
@@ -1058,7 +1058,7 @@ namespace Z80
             {
                 this.Tick(2);
                 this.DisplaceAddress();
-                operand = this.MemoryRead(this.MEMPTR);
+                operand = this.MemoryRead();
             }
             else
             {
@@ -2130,15 +2130,13 @@ namespace Z80
             this.MEMPTR.Low = this.MemoryRead(this.SP);
             this.Bus.Address.Increment();
             this.MEMPTR.High = this.MemoryRead();
-            this.Tick(2);
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
-            this.MemoryUpdate();
-            this.Tick();
+            this.MemoryUpdate(2);
             _ = this.Bus.Address.Decrement();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
-            this.MemoryUpdate();
+            this.MemoryUpdate(1);
             this.Tick(2);
         }
 
@@ -2227,8 +2225,7 @@ namespace Z80
         {
             this.MemoryRead(this.HL);
             this.Bus.Address.Assign(this.DE);
-            this.Tick();
-            this.MemoryUpdate();
+            this.MemoryUpdate(1);
             this.Tick(2);
             var xy = this.A + this.Bus.Data;
             this.SetBit(StatusBits.XF, xy & (int)Bits.Bit3);
@@ -2330,8 +2327,7 @@ namespace Z80
             this.Bus.Address.Assign(this.BC);
             this.ReadPort();
             this.Bus.Address.Assign(this.HL);
-            this.Tick();
-            this.MemoryUpdate();
+            this.MemoryUpdate(1);
             this.AdjustSZXY(--this.B);
             this.SetBit(StatusBits.NF, this.Bus.Data & (byte)StatusBits.SF);
         }
@@ -2492,10 +2488,8 @@ namespace Z80
         private void RRD()
         {
             var memory = ReadMemoryIndirect(this.HL);
-            this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
-            this.Tick(3);
-            this.MemoryUpdate();
+            this.MemoryUpdate(5);
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
             this.AdjustSZPXY(this.A);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
@@ -2504,10 +2498,8 @@ namespace Z80
         private void RLD()
         {
             var memory = ReadMemoryIndirect(this.HL);
-            this.Tick(2);
             this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
-            this.Tick(3);
-            this.MemoryUpdate();
+            this.MemoryUpdate(5);
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));
             this.AdjustSZPXY(this.A);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
@@ -2541,8 +2533,8 @@ namespace Z80
             {
                 using var _ = new AutoIORQ(this);
                 using var __ = new AutoWR(this);
-                this.Ports.Write(this.Bus.Address, this.Bus.Data);
                 this.Tick();
+                this.Ports.Write(this.Bus.Address, this.Bus.Data);
             }
             this.Tick();
         }
