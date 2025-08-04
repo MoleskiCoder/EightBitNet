@@ -92,7 +92,7 @@ namespace EightBit
         {
             if (this.HALT.Raised())
             {
-                return base.IncrementPC();
+                _ = base.IncrementPC();
             }
             return this.PC;
         }
@@ -143,16 +143,16 @@ namespace EightBit
 
         protected sealed override byte Pop()
         {
-            var returned = this.MemoryRead(this.SP);
+            _ = this.MemoryRead(this.SP);
             _ = this.SP.Increment();
-            return returned;
+            return this.Bus.Data;
         }
 
         protected sealed override Register16 GetWord()
         {
-            var returned = base.GetWord();
+            _ = base.GetWord();
             this.MEMPTR.Assign(this.Bus.Address);
-            return returned;
+            return this.Intermediate;
         }
 
         protected sealed override void SetWord(Register16 value)
