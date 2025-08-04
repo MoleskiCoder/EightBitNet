@@ -888,8 +888,7 @@ namespace Z80
                     switch (z)
                     {
                         case 0: // Input from port with 16-bit address
-                            this.Bus.Address.Assign(this.BC);
-                            this.ReadPort();
+                            this.ReadPort(this.BC);
                             this.MEMPTR.Increment();
                             if (y != 6)
                             {
@@ -2087,8 +2086,7 @@ namespace Z80
         private void BlockIn()
         {
             this.Tick();
-            this.Bus.Address.Assign(this.BC);
-            this.ReadPort();
+            this.ReadPort(this.BC);
             this.Bus.Address.Assign(this.HL);
             this.MemoryUpdate(1);
             this.AdjustSZXY(--this.B);
@@ -2307,6 +2305,12 @@ namespace Z80
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
             this.ReadPort();
             this.MEMPTR.Increment();
+        }
+
+        private void ReadPort(Register16 port)
+        {
+            this.Bus.Address.Assign(port);
+            this.ReadPort();
         }
 
         private void ReadPort()
