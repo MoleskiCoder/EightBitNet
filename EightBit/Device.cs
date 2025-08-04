@@ -26,14 +26,8 @@ namespace EightBit
             if (this.POWER.Lowered())
             {
                 RaisingPOWER?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.POWER.Raise();
-                }
-                finally
-                {
-                    RaisedPOWER?.Invoke(this, EventArgs.Empty);
-                }
+                this.POWER.Raise();
+                RaisedPOWER?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -42,14 +36,8 @@ namespace EightBit
             if (this.POWER.Raised())
             {
                 LoweringPOWER?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.POWER.Lower();
-                }
-                finally
-                {
-                    LoweredPOWER?.Invoke(this, EventArgs.Empty);
-                }
+                this.POWER.Lower();
+                LoweredPOWER?.Invoke(this, EventArgs.Empty);
             }
         }
     }

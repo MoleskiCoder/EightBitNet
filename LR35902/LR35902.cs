@@ -76,14 +76,8 @@ namespace LR35902
             if (this.MWR.Lowered())
             {
                 RaisingMWR?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.MWR.Raise();
-                }
-                finally
-                {
-                    RaisedMWR?.Invoke(this, EventArgs.Empty);
-                }
+                this.MWR.Raise();
+                RaisedMWR?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -92,36 +86,8 @@ namespace LR35902
             if (this.MWR.Raised())
             {
                 LoweringMWR?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.MWR.Lower();
-                }
-                finally
-                {
-                    LoweredMWR?.Invoke(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        private sealed class AutoMWR : IDisposable
-        {
-            private readonly LR35902 _cpu;
-            private bool _disposed;
-
-            public AutoMWR(LR35902 cpu)
-            {
-                _cpu = cpu;
-                _cpu.LowerMWR();
-            }
-
-            public void Dispose()
-            {
-                if (!_disposed)
-                {
-                    _cpu.RaiseMWR();
-                    _disposed = true;
-                }
-                GC.SuppressFinalize(this);
+                this.MWR.Lower();
+                LoweredMWR?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -147,14 +113,8 @@ namespace LR35902
             if (this.RD.Lowered())
             {
                 RaisingRD?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.RD.Raise();
-                }
-                finally
-                {
-                    RaisedRD?.Invoke(this, EventArgs.Empty);
-                }
+                this.RD.Raise();
+                RaisedRD?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -163,36 +123,8 @@ namespace LR35902
             if (this.RD.Raised())
             {
                 LoweringRD?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.RD.Lower();
-                }
-                finally
-                {
-                    LoweredRD?.Invoke(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        private sealed class AutoRD : IDisposable
-        {
-            private readonly LR35902 _cpu;
-            private bool _disposed;
-
-            public AutoRD(LR35902 cpu)
-            {
-                _cpu = cpu;
-                _cpu.LowerRD();
-            }
-
-            public void Dispose()
-            {
-                if (!_disposed)
-                {
-                    _cpu.RaiseRD();
-                    _disposed = true;
-                }
-                GC.SuppressFinalize(this);
+                this.RD.Lower();
+                LoweredRD?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -218,14 +150,8 @@ namespace LR35902
             if (this.WR.Lowered())
             {
                 RaisingWR?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.WR.Raise();
-                }
-                finally
-                {
-                    RaisedWR?.Invoke(this, EventArgs.Empty);
-                }
+                this.WR.Raise();
+                RaisedWR?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -234,36 +160,8 @@ namespace LR35902
             if (this.WR.Raised())
             {
                 LoweringWR?.Invoke(this, EventArgs.Empty);
-                try
-                {
-                    this.WR.Lower();
-                }
-                finally
-                {
-                    LoweredWR?.Invoke(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        private sealed class AutoWR : IDisposable
-        {
-            private readonly LR35902 _cpu;
-            private bool _disposed;
-
-            public AutoWR(LR35902 cpu)
-            {
-                _cpu = cpu;
-                _cpu.LowerWR();
-            }
-
-            public void Dispose()
-            {
-                if (!_disposed)
-                {
-                    _cpu.RaiseWR();
-                    _disposed = true;
-                }
-                GC.SuppressFinalize(this);
+                this.WR.Lower();
+                LoweredWR?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -426,24 +324,23 @@ namespace LR35902
 
         protected override void MemoryWrite()
         {
-            using var _ = new AutoMWR(this);
-            using var __ = new AutoWR(this);
+            this.LowerMWR();
+            this.LowerWR();
             base.MemoryWrite();
             this.TickMachine();
+            this.RaiseWR();
+            this.RaiseMWR();
         }
 
         protected override byte MemoryRead()
         {
-            using var _ = new AutoMWR(this);
-            using var __ = new AutoRD(this);
-            try
-            {
-                return base.MemoryRead();
-            }
-            finally
-            {
-                this.TickMachine();
-            }
+            this.LowerMWR();
+            this.LowerRD();
+            _ = base.MemoryRead();
+            this.TickMachine();
+            this.RaiseRD();
+            this.RaiseMWR();
+            return this.Bus.Data;
         }
 
         protected override void PushWord(Register16 value)

@@ -43,14 +43,9 @@ namespace EightBit
         public byte Read()
         {
             this.ReadingByte?.Invoke(this, EventArgs.Empty);
-            try
-            {
-                return this.Data = this.Reference();
-            }
-            finally
-            {
-                ReadByte?.Invoke(this, EventArgs.Empty);
-            }
+            this.Data = this.Reference();
+            ReadByte?.Invoke(this, EventArgs.Empty);
+            return this.Data;
         }
 
         public byte Read(ushort absolute)
@@ -74,14 +69,8 @@ namespace EightBit
         public void Write()
         {
             this.WritingByte?.Invoke(this, EventArgs.Empty);
-            try
-            {
-                this.Reference() = this.Data;
-            }
-            finally
-            {
-                this.WrittenByte?.Invoke(this, EventArgs.Empty);
-            }
+            this.Reference() = this.Data;
+            this.WrittenByte?.Invoke(this, EventArgs.Empty);
         }
 
         public void Write(byte value)

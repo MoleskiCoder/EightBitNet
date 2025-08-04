@@ -28,14 +28,9 @@ namespace EightBit
         public byte ReadInputPort(ushort port)
         {
             ReadingPort?.Invoke(this, new PortEventArgs(port));
-            try
-            {
-                return this._input[port];
-            }
-            finally
-            {
-                ReadPort?.Invoke(this, new PortEventArgs(port));
-            }
+            var value = this._input[port];
+            ReadPort?.Invoke(this, new PortEventArgs(port));
+            return value;
         }
 
         public void WriteInputPort(ushort port, byte value) => this._input[port] = value;
@@ -45,14 +40,8 @@ namespace EightBit
         public void WriteOutputPort(ushort port, byte value)
         {
             WritingPort?.Invoke(this, new PortEventArgs(port));
-            try
-            {
-                this._output[port] = value;
-            }
-            finally
-            {
-                WrittenPort?.Invoke(this, new PortEventArgs(port));
-            }
+            this._output[port] = value;
+            WrittenPort?.Invoke(this, new PortEventArgs(port));
         }
     }
 }
