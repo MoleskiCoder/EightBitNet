@@ -1225,7 +1225,14 @@ namespace Z80
                                 this.FetchDisplacement();
                             }
 
-                            this.R(y, this.FetchByte(), 3);  // LD r,n
+                            {
+                                var value = this.FetchByte();  // LD r,n
+                                if (memoryY)
+                                {
+                                    this.Tick(2);
+                                }
+                                this.R(y, value);
+                            }
                             break;
 
                         case 7: // Assorted operations on accumulator/flags
@@ -1315,7 +1322,7 @@ namespace Z80
                         if (normal)
                         {
                             var value = this.R(z);
-                            this.R(y, value, 1);
+                            this.R(y, value);
                         }
                     }
                     else

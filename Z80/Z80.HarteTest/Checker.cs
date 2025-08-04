@@ -201,14 +201,14 @@
                 var interestingCycleData = expectedCycle.Value is not null;
                 if (interestingCycleData)
                 {
-                    var expectedAddress = expectedCycle.Address;
-                    var actualAddress = actualCycle.Address;
-                    _ = this.Check("Cycle address", expectedAddress, actualAddress);
-
                     var expectedValue = expectedCycle.Value ?? throw new InvalidOperationException("Expected cycle value cannot be null.");
                     var actualValue = actualCycle.Value ?? throw new InvalidOperationException("Actual cycle value cannot be null.");
                     _ = this.Check("Cycle value", expectedValue, actualValue);
                 }
+
+                var expectedAddress = expectedCycle.Address;
+                var actualAddress = actualCycle.Address;
+                _ = this.Check("Cycle address", expectedAddress, actualAddress);
 
                 var expectedAction = expectedCycle.Type;
                 var actualAction = actualCycle.Type;
