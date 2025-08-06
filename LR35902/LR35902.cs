@@ -803,14 +803,14 @@ namespace LR35902
                                     this.MemoryWrite(this.C, IoRegisters.BasePage, this.A);
                                     break;
                                 case 5: // GB: LD (nn),A
-                                    this.MEMPTR.Assign(this.FetchWord());
+                                    this.FetchWordMEMPTR();
                                     this.MemoryWrite(this.MEMPTR, this.A);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
                                     this.A = this.MemoryRead(this.C, IoRegisters.BasePage);
                                     break;
                                 case 7: // GB: LD A,(nn)
-                                    this.MEMPTR.Assign(this.FetchWord());
+                                    this.FetchWordMEMPTR();
                                     this.A = this.MemoryRead(this.MEMPTR);
                                     break;
                                 default:
