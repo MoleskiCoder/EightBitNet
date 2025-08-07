@@ -472,6 +472,16 @@ namespace Z80
             this.MemoryUpdate(1);
         }
 
+        private void RefreshMemory()
+        {
+            this.Bus.Address.Assign(this.REFRESH, this.IV);
+            this.LowerRFSH();
+            this.Tick();
+            this.LowerMREQ();
+            this.RaiseMREQ();
+            this.RaiseRFSH();
+        }
+
         protected override byte MemoryRead()
         {
             this.OnReadingMemory();
@@ -484,12 +494,7 @@ namespace Z80
             this.RaiseMREQ();
             if (this.M1.Lowered())
             {
-                this.Bus.Address.Assign(this.REFRESH, this.IV);
-                this.LowerRFSH();
-                this.Tick();
-                this.LowerMREQ();
-                this.RaiseMREQ();
-                this.RaiseRFSH();
+                this.RefreshMemory();
             }
             this.Tick();
             this.OnReadMemory();
@@ -518,10 +523,16 @@ namespace Z80
         private byte ReadDataUnderInterrupt()
         {
             this.LowerM1();
+            this.Tick(2);
             this.LowerIORQ();
+            this.Tick();
+            var data = this.Bus.Data;
+            this.Tick();
             this.RaiseIORQ();
             this.RaiseM1();
-            return this.Bus.Data;
+            this.Tick();
+            this.RefreshMemory();
+            return data;
         }
 
         protected override void HandleINT()
@@ -530,8 +541,6 @@ namespace Z80
 
             var data = this.ReadDataUnderInterrupt();
 
-            this.DisableInterrupts();
-            this.Tick(5);
             switch (this.IM)
             {
                 case 0: // i8080 equivalent
@@ -542,9 +551,9 @@ namespace Z80
                     this.Restart(7 << 3);   // 7 cycles
                     break;
                 case 2:
-                    this.Tick(7);
+                    this.Tick();
                     this.MEMPTR.Assign(data, this.IV);
-                    this.Call(this.MEMPTR);
+                    this.Call();
                     break;
                 default:
                     throw new NotSupportedException("Invalid interrupt mode");
@@ -701,9 +710,15 @@ namespace Z80
 
         private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
 
-        protected override void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
+        protected override void DisableInterrupts()
+        {
+            this.IFF1 = this.IFF2 = false;
+        }
 
-        protected override void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
+        protected override void EnableInterrupts()
+        {
+            this.IFF1 = this.IFF2 = true;
+        }
 
         private Register16 HL2() => this._prefixDD ? this.IX : this._prefixFD ? this.IY : this.HL;
 
@@ -1547,10 +1562,9 @@ namespace Z80
 
         private void HandleNMI()
         {
+            this.IFF1 = false;
             this.RaiseNMI();
             this.RaiseHALT();
-            this.IFF2 = this.IFF1;
-            this.IFF1 = false;
             this.LowerM1();
             _ = this.Bus.Data;
             this.RaiseM1();
