@@ -539,6 +539,8 @@ namespace Z80
         {
             base.HandleINT();
 
+            this.DisableInterrupts();
+
             var data = this.ReadDataUnderInterrupt();
 
             switch (this.IM)
