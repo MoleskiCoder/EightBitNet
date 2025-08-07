@@ -239,21 +239,21 @@ namespace Intel8080
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.MemoryWrite(this.BC, this.A);
+                                            this.WriteMemoryIndirect(this.BC, this.A);
                                             this.Tick(7);
                                             break;
                                         case 1: // LD (DE),A
-                                            this.MemoryWrite(this.DE, this.A);
+                                            this.WriteMemoryIndirect(this.DE, this.A);
                                             this.Tick(7);
                                             break;
                                         case 2: // LD (nn),HL
-                                            this.Bus.Address.Assign(this.FetchWord());
+                                            this.FetchWordAddress();
                                             this.SetWord(this.HL);
                                             this.Tick(16);
                                             break;
                                         case 3: // LD (nn),A
-                                            this.Bus.Address.Assign(this.FetchWord());
-                                            this.MemoryWrite(this.A);
+                                            this.FetchWordMEMPTR();
+                                            this.WriteMemoryIndirect(this.A);
                                             this.Tick(13);
                                             break;
                                         default:
@@ -265,21 +265,21 @@ namespace Intel8080
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.A = this.MemoryRead(this.BC);
+                                            this.A = this.ReadMemoryIndirect(this.BC);
                                             this.Tick(7);
                                             break;
                                         case 1: // LD A,(DE)
-                                            this.A = this.MemoryRead(this.DE);
+                                            this.A = this.ReadMemoryIndirect(this.DE);
                                             this.Tick(7);
                                             break;
                                         case 2: // LD HL,(nn)
-                                            this.Bus.Address.Assign(this.FetchWord());
+                                            this.FetchWordAddress();
                                             this.HL.Assign(this.GetWord());
                                             this.Tick(16);
                                             break;
                                         case 3: // LD A,(nn)
-                                            this.Bus.Address.Assign(this.FetchWord());
-                                            this.A = this.MemoryRead();
+                                            this.FetchWordMEMPTR();
+                                            this.A = this.ReadMemoryIndirect();
                                             this.Tick(13);
                                             break;
                                         default:
@@ -734,6 +734,33 @@ namespace Intel8080
             _ = this.Bus.Address.Decrement();
             this.MemoryWrite(exchange.Low);
             exchange.Low = this.MEMPTR.Low;
+        }
+
+        private byte ReadMemoryIndirect(Register16 via)
+        {
+            this.MEMPTR.Assign(via);
+            return this.ReadMemoryIndirect();
+        }
+
+        private byte ReadMemoryIndirect()
+        {
+            this.Bus.Address.Assign(this.MEMPTR);
+            this.MEMPTR.Increment();
+            return this.MemoryRead();
+        }
+
+        private void WriteMemoryIndirect(Register16 via, byte data)
+        {
+            this.MEMPTR.Assign(via);
+            this.WriteMemoryIndirect(data);
+        }
+
+        private void WriteMemoryIndirect(byte data)
+        {
+            this.Bus.Address.Assign(this.MEMPTR);
+            this.MEMPTR.Increment();
+            this.MEMPTR.High = this.Bus.Data = data;
+            this.MemoryWrite();
         }
 
         private void WritePort(byte port)
