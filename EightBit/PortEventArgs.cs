@@ -4,8 +4,8 @@
 
 namespace EightBit
 {
-    public sealed class PortEventArgs(ushort value) : EventArgs
+    public sealed class PortEventArgs(Register16 value) : EventArgs
     {
-        public ushort Port { get; } = value;
+        public Register16 Port { get; } = value;
     }
 }

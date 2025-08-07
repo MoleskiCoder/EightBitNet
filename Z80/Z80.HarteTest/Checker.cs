@@ -407,14 +407,13 @@
 
             foreach (var port in ports)
             {
-                var value = port.Value;
                 if (port.Type == "r")
                 {
-                    cpu.Ports.WriteInputPort(port.Address, value);
+                    cpu.Ports.WriteInputPort(port.Address, port.Value);
                 }
                 else if (port.Type == "w")
                 {
-                    cpu.Ports.WriteOutputPort(port.Address, value);
+                    cpu.Ports.WriteOutputPort(new Register16(port.Address), port.Value);
                 }
                 else
                 {
