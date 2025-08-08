@@ -13,7 +13,14 @@ namespace Z80
         {
             this._ports = ports;
             this.RaisedPOWER += this.Z80_RaisedPOWER;
+            this.LoweredRESET += this.Z80_LoweredRESET;
+            this.LoweredNMI += this.Z80_LoweredNMI;
+            this.LoweredINT += this.Z80_LoweredINT;
         }
+
+        private bool _interruptPending;
+        private bool _nonMaskableInterruptPending;
+        private bool _resetPending;
 
         private readonly InputOutput _ports;
 
@@ -119,19 +126,21 @@ namespace Z80
             this._modifiedF = 0;
             this._displaced = this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
 
-            if (this.RESET.Lowered())
+            if (this._resetPending)
             {
+                this._resetPending = false;
                 this.HandleRESET();
                 return;
             }
-            else if (this.NMI.Lowered())
+            else if (this._nonMaskableInterruptPending)
             {
+                this._nonMaskableInterruptPending = false;
                 this.HandleNMI();
                 return;
             }
-            else if (this.INT.Lowered())
+            else if (this._interruptPending)
             {
-                this.RaiseINT();
+                this._interruptPending = false;
                 this.RaiseHALT();
                 if (this.IFF1)
                 {
@@ -182,6 +191,20 @@ namespace Z80
             this.Exx();
             this.ExxAF();
             this.ResetRegisterSet();
+        }
+        private void Z80_LoweredINT(object? sender, EventArgs e)
+        {
+            this._interruptPending = true;
+        }
+
+        private void Z80_LoweredNMI(object? sender, EventArgs e)
+        {
+            this._nonMaskableInterruptPending = true;
+        }
+
+        private void Z80_LoweredRESET(object? sender, EventArgs e)
+        {
+            this._resetPending = true;
         }
 
         #region Z80 specific pins
@@ -514,8 +537,8 @@ namespace Z80
         protected override void HandleRESET()
         {
             base.HandleRESET();
+            this.DisableInterrupts();
             this.IV = this.REFRESH = 0;
-            this.IM = 0;
             this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
             this.Tick(3);
         }
@@ -1564,9 +1587,10 @@ namespace Z80
 
         private void HandleNMI()
         {
-            this.IFF1 = false;
             this.RaiseNMI();
             this.RaiseHALT();
+            this.IFF2 = this.IFF1;
+            this.IFF1 = false;
             this.LowerM1();
             _ = this.Bus.Data;
             this.RaiseM1();
