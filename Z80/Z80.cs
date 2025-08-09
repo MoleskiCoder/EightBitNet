@@ -509,18 +509,18 @@ namespace Z80
         protected override byte MemoryRead()
         {
             this.OnReadingMemory();
-                this.Tick();
-                this.LowerMREQ();
-                    this.LowerRD();
-                        this.Tick();
-                        _ = base.MemoryRead();
-                    this.RaiseRD();
-                this.RaiseMREQ();
-                if (this.M1.Lowered())
-                {
-                    this.RefreshMemory();
-                }
-                this.Tick();
+            this.Tick();
+            this.LowerMREQ();
+            this.LowerRD();
+            this.Tick();
+            _ = base.MemoryRead();
+            this.RaiseRD();
+            this.RaiseMREQ();
+            if (this.M1.Lowered())
+            {
+                this.RefreshMemory();
+            }
+            this.Tick();
             this.OnReadMemory();
             return this.Bus.Data;
         }
@@ -582,7 +582,9 @@ namespace Z80
                     this.Tick();
                     this.PushWord(this.PC);
                     this.Bus.Address.Assign((byte)(data & ~1), this.IV);
+                    Debug.Assert(this.Bus.Address.Low % 2 == 0);
                     this.PC.Assign(this.GetWord());
+                    Debug.Assert(this.Bus.Address.Low % 2 == 1);
                     Debug.Assert(this.Cycles == 19);
                     break;
                 default:
