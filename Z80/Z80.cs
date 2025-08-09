@@ -5,6 +5,7 @@
 namespace Z80
 {
     using EightBit;
+    using System.Diagnostics;
 
     public sealed class Z80 : IntelProcessor
     {
@@ -508,18 +509,18 @@ namespace Z80
         protected override byte MemoryRead()
         {
             this.OnReadingMemory();
-            this.Tick();
-            this.LowerMREQ();
-            this.LowerRD();
-            this.Tick();
-            _ = base.MemoryRead();
-            this.RaiseRD();
-            this.RaiseMREQ();
-            if (this.M1.Lowered())
-            {
-                this.RefreshMemory();
-            }
-            this.Tick();
+                this.Tick();
+                this.LowerMREQ();
+                    this.LowerRD();
+                        this.Tick();
+                        _ = base.MemoryRead();
+                    this.RaiseRD();
+                this.RaiseMREQ();
+                if (this.M1.Lowered())
+                {
+                    this.RefreshMemory();
+                }
+                this.Tick();
             this.OnReadMemory();
             return this.Bus.Data;
         }
@@ -538,24 +539,24 @@ namespace Z80
         {
             base.HandleRESET();
             this.DisableInterrupts();
+            this.IM = 0;
             this.IV = this.REFRESH = 0;
             this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
-            this.Tick(3);
         }
 
         private byte ReadDataUnderInterrupt()
         {
             this.LowerM1();
-            this.Tick(2);
+            this.Tick(3);
             this.LowerIORQ();
             this.Tick();
-            var data = this.Bus.Data;
-            this.Tick();
+            _ = this.Bus.Data;
             this.RaiseIORQ();
             this.RaiseM1();
-            this.Tick();
+            Debug.Assert(this.Cycles == 4);
             this.RefreshMemory();
-            return data;
+            Debug.Assert(this.Cycles == 5);
+            return this.Bus.Data;
         }
 
         protected override void HandleINT()
@@ -565,6 +566,8 @@ namespace Z80
             this.DisableInterrupts();
 
             var data = this.ReadDataUnderInterrupt();
+            this.Tick();
+            Debug.Assert(this.Cycles == 6);
 
             switch (this.IM)
             {
@@ -572,13 +575,14 @@ namespace Z80
                     this.Execute(data);
                     break;
                 case 1:
-                    this.Tick();
                     this.Restart(7 << 3);   // 7 cycles
+                    Debug.Assert(this.Cycles == 13);
                     break;
                 case 2:
-                    this.Tick();
+                    this.Tick(6);
                     this.MEMPTR.Assign(data, this.IV);
                     this.Call();
+                    Debug.Assert(this.Cycles == 19);
                     break;
                 default:
                     throw new NotSupportedException("Invalid interrupt mode");
