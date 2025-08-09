@@ -579,9 +579,10 @@ namespace Z80
                     Debug.Assert(this.Cycles == 13);
                     break;
                 case 2:
-                    this.Tick(6);
-                    this.MEMPTR.Assign(data, this.IV);
-                    this.Call();
+                    this.Tick();
+                    this.PushWord(this.PC);
+                    this.Bus.Address.Assign((byte)(data & ~1), this.IV);
+                    this.PC.Assign(this.GetWord());
                     Debug.Assert(this.Cycles == 19);
                     break;
                 default:
