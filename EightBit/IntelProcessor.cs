@@ -138,6 +138,13 @@ namespace EightBit
             this.Jump(0);
         }
 
+        protected override void HandleINT()
+        {
+            base.HandleINT();
+            this.DisableInterrupts();
+            this.RaiseHALT();
+        }
+
         protected sealed override void Push(byte value)
         {
             this.MemoryWrite(this.SP.Decrement(), value);

@@ -52,7 +52,10 @@ namespace Intel8080
             }
             else if (this.INT.Lowered())
             {
-                this.HandleINT();
+                if (this.interruptEnable)
+                {
+                    this.HandleINT();
+                }
             }
             else
             {
@@ -69,13 +72,8 @@ namespace Intel8080
         protected override void HandleINT()
         {
             base.HandleINT();
-            this.RaiseHALT();
-            if (this.interruptEnable)
-            {
-                this.DisableInterrupts();
-                this.Execute(this.Bus.Data);
-                this.Tick(3);
-            }
+            this.Execute(this.Bus.Data);
+            this.Tick(3);
         }
 
         private int Zero() => ZeroTest(this.F);

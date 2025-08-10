@@ -142,7 +142,6 @@ namespace Z80
             else if (this._interruptPending)
             {
                 this._interruptPending = false;
-                this.RaiseHALT();
                 if (this.IFF1)
                 {
                     this.HandleINT();
@@ -610,8 +609,6 @@ namespace Z80
         protected override void HandleINT()
         {
             base.HandleINT();
-
-            this.DisableInterrupts();
 
             var data = this.ReadDataUnderInterrupt();
             this.Tick();

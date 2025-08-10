@@ -239,8 +239,6 @@ namespace LR35902
         protected override void HandleINT()
         {
             base.HandleINT();
-            this.RaiseHALT();
-            this.DisableInterrupts();
             this.Restart(this.Bus.Data);
         }
 
