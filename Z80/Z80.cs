@@ -479,9 +479,16 @@ namespace Z80
 
         private void MemoryUpdate(int ticks)
         {
+            Debug.Assert(ticks > 0, "Ticks must be greater than zero");
             this.OnWritingMemory();
+#if CYCLE_ACCURATE
+            this.Tick(ticks - 1);
+            this.LowerMREQ();
+            this.Tick();
+#else
             this.Tick(ticks);
             this.LowerMREQ();
+#endif
             this.LowerWR();
             this.Tick();
             base.MemoryWrite();
@@ -498,30 +505,71 @@ namespace Z80
 
         private void RefreshMemory()
         {
+            Debug.Assert(this.M1.Lowered(), "M1 must be lowered to refresh memory");
             this.Bus.Address.Assign(this.REFRESH, this.IV);
             this.LowerRFSH();
+#if CYCLE_ACCURATE
+            this.LowerMREQ();
+            this.Tick();
+#else
             this.Tick();
             this.LowerMREQ();
+#endif
             this.RaiseMREQ();
             this.RaiseRFSH();
+        }
+
+        private void SetMemoryRead()
+        {
+            this.LowerMREQ();
+            this.LowerRD();
+        }
+
+        private void ResetMemoryRead()
+        {
+            this.RaiseRD();
+            this.RaiseMREQ();
+        }
+        private void MemoryReadWithM1()
+        {
+            Debug.Assert(this.M1.Lowered());
+            this.Tick();
+            this.SetMemoryRead();
+            this.Tick();
+            _ = base.MemoryRead();
+            this.ResetMemoryRead();
+            this.RefreshMemory();
+        }
+
+        private void MemoryReadWithoutM1()
+        {
+            Debug.Assert(this.M1.Raised());
+#if CYCLE_ACCURATE
+            this.SetMemoryRead();
+            _ = base.MemoryRead();
+            this.Tick(2);
+#else
+            this.Tick();
+            this.SetMemoryRead();
+            this.Tick();
+            _ = base.MemoryRead();
+#endif
+            this.ResetMemoryRead();
         }
 
         protected override byte MemoryRead()
         {
             this.OnReadingMemory();
-            this.Tick();
-            this.LowerMREQ();
-            this.LowerRD();
-            this.Tick();
-            _ = base.MemoryRead();
-            this.RaiseRD();
-            this.RaiseMREQ();
             if (this.M1.Lowered())
             {
-                this.RefreshMemory();
+                this.MemoryReadWithM1();
             }
-            this.Tick();
+            else
+            {
+                this.MemoryReadWithoutM1();
+            }
             this.OnReadMemory();
+            this.Tick();
             return this.Bus.Data;
         }
 
@@ -1472,7 +1520,22 @@ namespace Z80
                                     if (this._displaced)
                                     {
                                         this.FetchDisplacement();
-                                        this.Execute(this.FetchByte());
+                                        {
+                                            this.ImmediateAddress();
+#if CYCLE_ACCURATE
+                                            this.OnReadingMemory();
+                                            this.Tick();
+                                            this.SetMemoryRead();
+                                            var instruction = base.MemoryRead();
+                                            this.Tick();
+                                            this.ResetMemoryRead();
+                                            this.Tick();
+                                            this.OnReadMemory();
+#else
+                                            var instruction = this.MemoryRead();
+#endif
+                                            this.Execute(instruction);
+                                        }
                                     }
                                     else
                                     {
@@ -1604,7 +1667,11 @@ namespace Z80
             this.Restart(0x66);
         }
 
-        private void FetchDisplacement() => this._displacement = (sbyte)this.FetchByte();
+        private void FetchDisplacement()
+        {
+            Debug.Assert(this.M1.Raised(), "Displacement cannot be fetched during an M1 cycle");
+            this._displacement = (sbyte)this.FetchByte();
+        }
 
         // ** From the Z80 CPU User Manual
         // Figure 5 depicts the timing during an M1 (op code fetch) cycle. The Program Counter is
@@ -2341,16 +2408,32 @@ namespace Z80
             this.WritePort();
         }
 
+        private void SetIOWrite()
+        {
+            this.LowerIORQ();
+            this.LowerWR();
+        }
+
+        private void ResetIOWrite()
+        {
+            this.RaiseWR();
+            this.RaiseIORQ();
+        }
+
         private void WritePort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
-            this.Tick(2);
-            this.LowerIORQ();
-            this.LowerWR();
+            this.Tick();
+#if CYCLE_ACCURATE
+            this.SetIOWrite();
+            this.Tick();
+#else
+            this.Tick();
+            this.SetIOWrite();
+#endif
             this.Tick();
             this.Ports.Write(this.Bus.Address, this.Bus.Data);
-            this.RaiseWR();
-            this.RaiseIORQ();
+            this.ResetIOWrite();
             this.Tick();
         }
 
@@ -2367,19 +2450,37 @@ namespace Z80
             this.ReadPort();
         }
 
+        private void SetIORead()
+        {
+            this.LowerIORQ();
+            this.LowerRD();
+        }
+
+        private void ResetIORead()
+        {
+            this.RaiseRD();
+            this.RaiseIORQ();
+
+        }
+
         private void ReadPort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
-            this.Tick(2);
-            this.LowerIORQ();
-            this.LowerRD();
+            this.Tick();
+#if CYCLE_ACCURATE
+            this.SetIORead();
             this.Bus.Data = this.Ports.Read(this.Bus.Address);
             this.Tick();
-            this.RaiseRD();
-            this.RaiseIORQ();
+#else
+            this.Tick();
+            this.SetIORead();
+            this.Bus.Data = this.Ports.Read(this.Bus.Address);
+#endif
+            this.Tick();
+            this.ResetIORead();
             this.Tick();
         }
 
-        #endregion
+#endregion
     }
 }
