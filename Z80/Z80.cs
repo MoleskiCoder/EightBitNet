@@ -599,10 +599,10 @@ namespace Z80
             this.Tick();
             _ = this.Bus.Data;
             this.RaiseIORQ();
-            this.RaiseM1();
             Debug.Assert(this.Cycles == 4);
             this.RefreshMemory();
             Debug.Assert(this.Cycles == 5);
+            this.RaiseM1();
             return this.Bus.Data;
         }
 
