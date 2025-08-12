@@ -626,10 +626,8 @@ namespace Z80
                 case 2:
                     this.Tick();
                     this.PushWord(this.PC);
-                    this.Bus.Address.Assign((byte)(data & ~1), this.IV);
-                    Debug.Assert(this.Bus.Address.Low % 2 == 0);
-                    this.PC.Assign(this.GetWord());
-                    Debug.Assert(this.Bus.Address.Low % 2 == 1);
+                    this.Bus.Address.Assign(data, this.IV);
+                    this.PC.Assign(this.GetWordPaged());
                     Debug.Assert(this.Cycles == 19);
                     break;
                 default:
