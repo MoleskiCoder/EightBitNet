@@ -4,7 +4,6 @@
 
 namespace Z80.FuseTest
 {
-    using EightBit;
     using Fuse;
     using System.Collections.Generic;
     using System.Diagnostics;
