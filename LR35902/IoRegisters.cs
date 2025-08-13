@@ -404,7 +404,6 @@ namespace LR35902
                         break;
                     case SCY:
                     case SCX:
-                    case LY:
                     case LYC:
                     case DMA:
                     case BGP:
@@ -412,6 +411,12 @@ namespace LR35902
                     case OBP1:
                     case WY:
                     case WX:
+                        break;
+
+                    case LY:
+#if GAMEBOY_DOCTOR
+                        this.Poke(port, 0x90);
+#endif
                         break;
 
                     default:
