@@ -219,6 +219,12 @@
                 ie_good = this.Check("IE", final.IE.Value, cpu.IE);
             }
 
+            var ei_good = true;
+            if (final.EI is not null)
+            {
+                ei_good = this.Check("EI", final.EI.Value, (byte)(cpu.EI ? 1 : 0));
+            }
+
             if (!f_good)
             {
                 this.Messages.Add($"Expected flags: {LR35902.Disassembler.AsFlags(final.F)}");
@@ -255,7 +261,7 @@
                 && d_good && e_good
                 && h_good && l_good
                 && ime_good
-                && ie_good;
+                && ie_good && ei_good;
         }
 
         private void Raise(string what, ushort expected, ushort actual) => this.Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");

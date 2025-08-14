@@ -56,7 +56,7 @@ namespace LR35902
 
         private bool Stopped { get; set; }
 
-        private bool _deferredInterruptEnable;
+        public bool EI { get; set; }
 
         #region MWR pin
 
@@ -196,10 +196,10 @@ namespace LR35902
         {
             this.prefixCB = false;
 
-            if ( this._deferredInterruptEnable)
+            if (this.EI)
             {
                 this.EnableInterrupts();
-                this._deferredInterruptEnable = false;
+                this.EI = false;
             }
 
             if (this.MaskedInterrupts != 0)
@@ -235,7 +235,7 @@ namespace LR35902
             this.RaiseWR();
             this.RaiseRD();
             this.RaiseMWR();
-            this._deferredInterruptEnable = false;
+            this.EI = false;
         }
 
         protected override void HandleRESET()
@@ -839,7 +839,7 @@ namespace LR35902
                                     this.DisableInterrupts();
                                     break;
                                 case 7: // EI
-                                    this._deferredInterruptEnable = true;
+                                    this.EI = true;
                                     break;
                                 default:
                                     break;
