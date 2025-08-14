@@ -70,6 +70,11 @@
                 this.Raise("L", final.L, cpu.L);
                 this.Raise("IME", final.IME, (byte)(cpu.IME ? 1 : 0));
 
+                if (final.IE is not null)
+                {
+                    this.Raise("IE", final.IE.Value, cpu.IE);
+                }
+
                 if (test.Cycles is null)
                 {
                     throw new InvalidOperationException("test cycles cannot be null");
@@ -206,10 +211,12 @@
             var e_good = this.Check("E", final.E, cpu.E);
             var h_good = this.Check("H", final.H, cpu.H);
             var l_good = this.Check("L", final.L, cpu.L);
-            var ime_good = true;
-            if (final.EI is not null)
+            var ime_good = this.Check("IME", final.IME, (byte)(cpu.IME ? 1 : 0));
+
+            var ie_good = true;
+            if (final.IE is not null)
             {
-                ime_good = this.Check("IME", final.EI.Value, (byte)(cpu.IME ? 1 : 0));
+                ie_good = this.Check("IE", final.IE.Value, cpu.IE);
             }
 
             if (!f_good)
@@ -247,7 +254,8 @@
                 && b_good && c_good
                 && d_good && e_good
                 && h_good && l_good
-                && ime_good;
+                && ime_good
+                && ie_good;
         }
 
         private void Raise(string what, ushort expected, ushort actual) => this.Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");
@@ -291,7 +299,12 @@
             cpu.H = state.H;
             cpu.L = state.L;
             cpu.IME = state.IME != 0;
-            cpu.IE = state.IE;
+
+            if (state.IE is not null)
+                cpu.IE = state.IE.Value;
+
+            if (state.EI is not null)
+                throw new InvalidOperationException("Initial EI state should be null");
 
             var initialRAM = state.RAM ?? throw new InvalidOperationException("Initial test state cannot have invalid RAM");
             foreach (var entry in initialRAM)

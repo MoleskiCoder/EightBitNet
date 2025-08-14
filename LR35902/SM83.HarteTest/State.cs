@@ -19,7 +19,7 @@
         public byte L { get; set; }
 
         public byte IME { get; set; }
-        public byte IE { get; set; }
+        public byte? IE { get; set; }
         public byte? EI { get; set; }
 
         public int[][]? RAM { get; set; }
