@@ -70,7 +70,6 @@ namespace EightBit
             {
                 RaisingHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Raise();
-                this.PC.Increment();
                 RaisedHALT?.Invoke(this, EventArgs.Empty);
             }
         }

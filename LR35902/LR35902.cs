@@ -13,6 +13,7 @@ namespace LR35902
         {
             this.bus = bus;
             this.RaisedPOWER += this.LR35902_RaisedPOWER;
+            this.RaisingHALT += this.LR35902_RaisingHALT;
         }
 
         private readonly Bus bus;
@@ -230,12 +231,18 @@ namespace LR35902
                 this.Execute(this.FetchInstruction());
             }
         }
+
         private void LR35902_RaisedPOWER(object? sender, EventArgs e)
         {
             this.RaiseWR();
             this.RaiseRD();
             this.RaiseMWR();
             this.EI = false;
+        }
+
+        private void LR35902_RaisingHALT(object? sender, EventArgs e)
+        {
+            this.PC.Increment();
         }
 
         protected override void HandleRESET()
