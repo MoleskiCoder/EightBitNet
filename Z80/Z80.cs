@@ -483,10 +483,10 @@ namespace Z80
             this.OnWritingMemory();
             this.Tick(ticks);
             this.LowerMREQ();
-            this.LowerWR();
-            this.Tick();
-            base.MemoryWrite();
-            this.RaiseWR();
+                this.LowerWR();
+                    this.Tick();
+                    base.MemoryWrite();
+                this.RaiseWR();
             this.RaiseMREQ();
             this.Tick();
             this.OnWrittenMemory();
@@ -502,54 +502,25 @@ namespace Z80
             Debug.Assert(this.M1.Lowered(), "M1 must be lowered to refresh memory");
             this.Bus.Address.Assign(this.REFRESH, this.IV);
             this.LowerRFSH();
-            this.Tick();
-            this.LowerMREQ();
-            this.RaiseMREQ();
+                this.Tick();
+                this.LowerMREQ();
+                this.RaiseMREQ();
             this.RaiseRFSH();
-        }
-
-        private void SetMemoryRead()
-        {
-            this.LowerMREQ();
-            this.LowerRD();
-        }
-
-        private void ResetMemoryRead()
-        {
-            this.RaiseRD();
-            this.RaiseMREQ();
-        }
-        private void MemoryReadWithM1()
-        {
-            Debug.Assert(this.M1.Lowered());
-            this.Tick();
-            this.SetMemoryRead();
-            this.Tick();
-            _ = base.MemoryRead();
-            this.ResetMemoryRead();
-            this.RefreshMemory();
-        }
-
-        private void MemoryReadWithoutM1()
-        {
-            Debug.Assert(this.M1.Raised());
-            this.Tick();
-            this.SetMemoryRead();
-            this.Tick();
-            _ = base.MemoryRead();
-            this.ResetMemoryRead();
         }
 
         protected override byte MemoryRead()
         {
             this.OnReadingMemory();
+            this.Tick();
+            this.LowerMREQ();
+                this.LowerRD();
+                    this.Tick();
+                    _ = base.MemoryRead();
+                this.RaiseRD();
+            this.RaiseMREQ();
             if (this.M1.Lowered())
             {
-                this.MemoryReadWithM1();
-            }
-            else
-            {
-                this.MemoryReadWithoutM1();
+                this.RefreshMemory();
             }
             this.OnReadMemory();
             this.Tick();
@@ -1626,7 +1597,7 @@ namespace Z80
             this.IFF2 = this.IFF1;
             this.IFF1 = false;
             this.LowerM1();
-            _ = this.Bus.Data;
+                _ = this.Bus.Data;
             this.RaiseM1();
             this.Restart(0x66);
         }
@@ -1652,7 +1623,7 @@ namespace Z80
         protected override byte FetchInstruction()
         {
             this.LowerM1();
-            _ = base.FetchInstruction();
+                _ = base.FetchInstruction();
             this.RaiseM1();
             return this.Bus.Data;
         }
@@ -2372,27 +2343,17 @@ namespace Z80
             this.WritePort();
         }
 
-        private void SetIOWrite()
-        {
-            this.LowerIORQ();
-            this.LowerWR();
-        }
-
-        private void ResetIOWrite()
-        {
-            this.RaiseWR();
-            this.RaiseIORQ();
-        }
-
         private void WritePort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick();
             this.Tick();
-            this.SetIOWrite();
-            this.Tick();
-            this.Ports.Write(this.Bus.Address, this.Bus.Data);
-            this.ResetIOWrite();
+            this.LowerIORQ();
+                this.LowerWR();
+                    this.Tick();
+                    this.Ports.Write(this.Bus.Address, this.Bus.Data);
+                this.RaiseWR();
+            this.RaiseIORQ();
             this.Tick();
         }
 
@@ -2409,27 +2370,16 @@ namespace Z80
             this.ReadPort();
         }
 
-        private void SetIORead()
-        {
-            this.LowerIORQ();
-            this.LowerRD();
-        }
-
-        private void ResetIORead()
-        {
-            this.RaiseRD();
-            this.RaiseIORQ();
-
-        }
-
         private void ReadPort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
-            this.SetIORead();
-            this.Bus.Data = this.Ports.Read(this.Bus.Address);
-            this.Tick();
-            this.ResetIORead();
+            this.LowerIORQ();
+                this.LowerRD();
+                    this.Bus.Data = this.Ports.Read(this.Bus.Address);
+                    this.Tick();
+                this.RaiseRD();
+            this.RaiseIORQ();
             this.Tick();
         }
 
