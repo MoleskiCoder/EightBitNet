@@ -4,6 +4,7 @@
 
 namespace EightBit
 {
+    using MC6809.Test;
     using System.Diagnostics;
 
     internal sealed class TestHarness(Configuration configuration)

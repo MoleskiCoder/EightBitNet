@@ -549,14 +549,14 @@ namespace Z80
         private byte ReadDataUnderInterrupt()
         {
             this.LowerM1();
-            this.Tick(3);
-            this.LowerIORQ();
-            this.Tick();
-            _ = this.Bus.Data;
-            this.RaiseIORQ();
-            Debug.Assert(this.Cycles == 4);
-            this.RefreshMemory();
-            Debug.Assert(this.Cycles == 5);
+                this.Tick(3);
+                this.LowerIORQ();
+                    this.Tick();
+                    _ = this.Bus.Data;
+                this.RaiseIORQ();
+                Debug.Assert(this.Cycles == 4);
+                this.RefreshMemory();
+                Debug.Assert(this.Cycles == 5);
             this.RaiseM1();
             return this.Bus.Data;
         }
@@ -933,7 +933,7 @@ namespace Z80
                     switch (z)
                     {
                         case 0: // Input from port with 16-bit address
-                            this.ReadPort(this.BC);
+                            _ = this.ReadPort(this.BC);
                             this.MEMPTR.Increment();
                             if (y != 6)
                             {
@@ -1149,7 +1149,7 @@ namespace Z80
                                     break;
                                 case 2: // DJNZ d
                                     this.Tick();
-                                    _ = this.JumpRelativeConditional(--this.B != 0);
+                                    this.JumpRelativeConditional(--this.B != 0);
                                     break;
                                 case 3: // JR d
                                     this.JumpRelative(this.FetchByte());
@@ -1158,7 +1158,7 @@ namespace Z80
                                 case 5:
                                 case 6:
                                 case 7:
-                                    _ = this.JumpRelativeConditionalFlag(y - 4);
+                                    this.JumpRelativeConditionalFlag(y - 4);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1197,7 +1197,7 @@ namespace Z80
                                             this.SetWord(this.HL2());
                                             break;
                                         case 3: // LD (nn),A
-                                            this.FetchWordMEMPTR();
+                                            this.FetchInto(this.MEMPTR);
                                             WriteMemoryIndirect(this.A);
                                             break;
                                         default:
@@ -1219,7 +1219,7 @@ namespace Z80
                                             this.HL2().Assign(this.GetWord());
                                             break;
                                         case 3: // LD A,(nn)
-                                            this.FetchWordMEMPTR();
+                                            this.FetchInto(this.MEMPTR);
                                             this.A = this.ReadMemoryIndirect();
                                             break;
                                         default:
@@ -1270,14 +1270,12 @@ namespace Z80
                                 this.FetchDisplacement();
                             }
 
+                            _ = this.FetchByte();  // LD r,n
+                            if (memoryY)
                             {
-                                var value = this.FetchByte();  // LD r,n
-                                if (memoryY)
-                                {
-                                    this.Tick(2);
-                                }
-                                this.R(y, value);
+                                this.Tick(2);
                             }
+                            this.R(y, this.Bus.Data);
                             break;
 
                         case 7: // Assorted operations on accumulator/flags
@@ -1422,13 +1420,13 @@ namespace Z80
                     switch (z)
                     {
                         case 0: // Conditional return
-                            _ = this.ReturnConditionalFlag(y);
+                            this.ReturnConditionalFlag(y);
                             break;
                         case 1: // POP & various ops
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    this.RP2(p).Assign(this.PopWord());
+                                    this.PopInto(this.RP2(p));
                                     break;
                                 case 1:
                                     switch (p)
@@ -1457,7 +1455,7 @@ namespace Z80
 
                             break;
                         case 2: // Conditional jump
-                            _ = this.JumpConditionalFlag(y);
+                            this.JumpConditionalFlag(y);
                             break;
                         case 3: // Assorted operations
                             switch (y)
@@ -1482,8 +1480,7 @@ namespace Z80
                                     this.WritePort(this.FetchByte());
                                     break;
                                 case 3: // IN A,(n)
-                                    this.ReadPort(this.FetchByte());
-                                    this.A = this.Bus.Data;
+                                    this.A = this.ReadPort(this.FetchByte());
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL2());
@@ -1504,7 +1501,7 @@ namespace Z80
 
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
-                            _ = this.CallConditionalFlag(y);
+                            this.CallConditionalFlag(y);
                             break;
                         case 5: // PUSH & various ops
                             switch (q)
@@ -1682,7 +1679,7 @@ namespace Z80
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
-        protected sealed override bool ReturnConditionalFlag(int flag)
+        protected sealed override void ReturnConditionalFlag(int flag)
         {
             var condition = this.ConvertCondition(flag);
             this.Tick();
@@ -1690,7 +1687,6 @@ namespace Z80
             {
                 this.Return();
             }
-            return condition;
         }
 
         private Register16 SBC(Register16 operand, Register16 value)
@@ -2041,7 +2037,7 @@ namespace Z80
 
         private void BlockLoad()
         {
-            this.MemoryRead(this.HL);
+            _ = this.MemoryRead(this.HL);
             this.Bus.Address.Assign(this.DE);
             this.MemoryUpdate(1);
             this.Tick(2);
@@ -2142,7 +2138,7 @@ namespace Z80
         private void BlockIn()
         {
             this.Tick();
-            this.ReadPort(this.BC);
+            _ = this.ReadPort(this.BC);
             this.Bus.Address.Assign(this.HL);
             this.MemoryUpdate(1);
             this.AdjustSZXY(--this.B);
@@ -2357,20 +2353,21 @@ namespace Z80
             this.Tick();
         }
 
-        private void ReadPort(byte port)
+        private byte ReadPort(byte port)
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
-            this.ReadPort();
+            _ = this.ReadPort();
             this.MEMPTR.Increment();
+            return this.Bus.Data;
         }
 
-        private void ReadPort(Register16 port)
+        private byte ReadPort(Register16 port)
         {
             this.Bus.Address.Assign(port);
-            this.ReadPort();
+            return this.ReadPort();
         }
 
-        private void ReadPort()
+        private byte ReadPort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
@@ -2381,6 +2378,7 @@ namespace Z80
                 this.RaiseRD();
             this.RaiseIORQ();
             this.Tick();
+            return this.Bus.Data;
         }
 
 #endregion

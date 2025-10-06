@@ -20,6 +20,12 @@ namespace Intel8080.Test
 
         public string RomDirectory { get; } = "roms";
 
-        public string Program { get; } = "8080EX1.COM";
+        //public string Program { get; } = "8080EX1.COM";
+        public string Program { get; } = "8080EXER.COM";
+        //public string Program { get; } = "8080EXM.COM";
+        //public string Program { get; } = "8080PRE.COM";
+        //public string Program { get; } = "CPUTEST.COM";
+        //public string Program { get; } = "TEST.COM";
+        //public string Program { get; } = "TST8080.COM";
     }
 }

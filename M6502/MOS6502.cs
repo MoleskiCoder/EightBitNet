@@ -323,7 +323,7 @@ namespace M6502
         private void RRA()
         {
             this.ModifyWrite(this.ROR());
-            this.ADC();
+            this.ADC(this.Bus.Data);
         }
 
         private void SLO()
@@ -341,7 +341,7 @@ namespace M6502
         private void DCP()
         {
             this.ModifyWrite(this.DEC());
-            this.CMP(this.A);
+            this.CMP(this.A, this.Bus.Data);
         }
 
         #endregion

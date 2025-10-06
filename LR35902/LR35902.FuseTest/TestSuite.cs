@@ -6,17 +6,11 @@ namespace LR35902.FuseTest
 {
     using Fuse;
 
-    public class TestSuite<T>
+    public class TestSuite<T>(string path)
         where T : IRegisterState, new()
     {
-        private readonly Tests<T> tests;
-        private readonly Results<T> results;
-
-        public TestSuite(string path)
-        {
-            this.tests = new Tests<T>(path + ".in");
-            this.results = new Results<T>(path + ".expected");
-        }
+        private readonly Tests<T> tests = new(path + ".in");
+        private readonly Results<T> results = new(path + ".expected");
 
         public void Read()
         {

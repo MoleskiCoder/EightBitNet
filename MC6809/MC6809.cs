@@ -580,17 +580,19 @@ namespace MC6809
 
         private byte Pop(Register16 stack)
         {
-            var read = this.MemoryRead(stack);
+            _ = this.MemoryRead(stack);
             stack.Increment();
-            return read;
+            return this.Bus.Data;
         }
 
         private byte PopS() => this.Pop(this.S);
 
         private Register16 PopWord(Register16 stack)
         {
-            this.Intermediate.High = this.Pop(stack);
-            this.Intermediate.Low = this.Pop(stack);
+            this.Pop(stack);
+            this.Intermediate.High = this.Bus.Data;
+            this.Pop(stack);
+            this.Intermediate.Low = this.Bus.Data;
             return this.Intermediate;
         }
 
@@ -600,7 +602,8 @@ namespace MC6809
 
         private Register16 Address_relative_byte()
         {
-            var offset = (sbyte)this.FetchByte();
+            this.FetchByte();
+            var offset = (sbyte)this.Bus.Data;
             this.Intermediate.Word = (ushort)(this.PC.Word + offset);
             return this.Intermediate;
         }
@@ -614,7 +617,8 @@ namespace MC6809
 
         private Register16 Address_direct()
         {
-            this.Intermediate.Assign(this.FetchByte(), this.DP);
+            this.FetchByte();
+            this.Intermediate.Assign(this.Bus.Data, this.DP);
             return this.Intermediate;
         }
 
@@ -634,7 +638,8 @@ namespace MC6809
 
         private Register16 Address_indexed()
         {
-            var type = this.FetchByte();
+            this.FetchByte();
+            var type = this.Bus.Data;
             var r = this.RR((type & (byte)(Bits.Bit6 | Bits.Bit5)) >> 5);
 
             if ((type & (byte)Bits.Bit7) != 0)
@@ -672,7 +677,8 @@ namespace MC6809
                         break;
                     case 0b1000: // n,R (eight-bit)
                         this.Tick();
-                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.FetchByte());
+                        this.FetchByte();
+                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.Bus.Data);
                         break;
                     case 0b1001: // n,R (sixteen-bit)
                         this.Tick(4);
@@ -715,13 +721,29 @@ namespace MC6809
             return this.Intermediate;
         }
 
-        private byte AM_immediate_byte() => this.FetchByte();
+        private byte AM_immediate_byte()
+        {
+            this.FetchByte();
+            return this.Bus.Data;
+        }
 
-        private byte AM_direct_byte() => this.MemoryRead(this.Address_direct());
+        private byte AM_direct_byte()
+        {
+            this.MemoryRead(this.Address_direct());
+            return this.Bus.Data;
+        }
 
-        private byte AM_indexed_byte() => this.MemoryRead(this.Address_indexed());
+        private byte AM_indexed_byte()
+        {
+            this.MemoryRead(this.Address_indexed());
+            return this.Bus.Data;
+        }
 
-        private byte AM_extended_byte() => this.MemoryRead(this.Address_extended());
+        private byte AM_extended_byte()
+        {
+            this.MemoryRead(this.Address_extended());
+            return this.Bus.Data;
+        }
 
         private Register16 AM_immediate_word() => this.FetchWord();
 
@@ -859,25 +881,29 @@ namespace MC6809
             if ((data & (byte)Bits.Bit0) != 0)
             {
                 this.Tick();
-                this.CC = this.Pop(stack);
+                this.Pop(stack);
+                this.CC = this.Bus.Data;
             }
 
             if ((data & (byte)Bits.Bit1) != 0)
             {
                 this.Tick();
-                this.A = this.Pop(stack);
+                this.Pop(stack);
+                this.A = this.Bus.Data;
             }
 
             if ((data & (byte)Bits.Bit2) != 0)
             {
                 this.Tick();
-                this.B = this.Pop(stack);
+                this.Pop(stack);
+                this.B = this.Bus.Data;
             }
 
             if ((data & (byte)Bits.Bit3) != 0)
             {
                 this.Tick();
-                this.DP = this.Pop(stack);
+                this.Pop(stack);
+                this.DP = this.Bus.Data;
             }
 
             if ((data & (byte)Bits.Bit4) != 0)
@@ -1050,7 +1076,8 @@ namespace MC6809
             }
             else
             {
-                this.Execute(this.FetchByte());
+                this.FetchByte();
+                this.Execute(this.Bus.Data);
             }
         }
 
@@ -1079,8 +1106,8 @@ namespace MC6809
         {
             switch (this.OpCode)
             {
-                case 0x10: this.prefix10 = true; this.Execute(this.FetchByte()); break;
-                case 0x11: this.prefix11 = true; this.Execute(this.FetchByte()); break;
+                case 0x10: this.prefix10 = true; this.FetchByte(); this.Execute(this.Bus.Data); break;
+                case 0x11: this.prefix11 = true; this.FetchByte(); this.Execute(this.Bus.Data); break;
 
                 // ABX
                 case 0x3a: this.Tick(3); this.X.Word += this.B; break;                                          // ABX (inherent)

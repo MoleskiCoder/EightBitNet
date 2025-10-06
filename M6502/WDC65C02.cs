@@ -61,7 +61,7 @@ namespace M6502
                 case 0x0c: this.AbsoluteRead(); this.TSB(); break;                  // TSB a
                 case 0x0f: this.ZeroPageRead(); this.BBR(Bit(0)); break;            // BBR0 r
 
-                case 0x12: this.ZeroPageIndirectRead(); this.OrR(); break;          // ORA (zp),y
+                case 0x12: this.OrR(this.ZeroPageIndirectRead()); break;            // ORA (zp),y
                 case 0x13: break;                                                   // null
                 case 0x14: this.ZeroPageRead(); this.TRB(); break;                  // TRB zp
                 case 0x17: this.ZeroPageRead(); this.RMB(Bit(1)); break;            // RMB1 zp
@@ -109,11 +109,11 @@ namespace M6502
                 case 0x6b: break;                                                                               // null
                 case 0x6f: this.ZeroPageRead(); this.BBR(Bit(6)); break;                                   // BBR6 r
 
-                case 0x72: this.ZeroPageIndirectRead(); this.ADC(); break;                                      // ADC (zp)
+                case 0x72: this.ADC(this.ZeroPageIndirectRead()); break;                                        // ADC (zp)
                 case 0x73: break;                                                                               // null
                 case 0x74: this.ZeroPageXAddress(); this.MemoryWrite(0); break;                                 // STZ zp,x
                 case 0x77: this.ZeroPageRead(); this.RMB(Bit(7)); break;                                   // RMB7 zp
-                case 0x7a: this.SwallowRead(); this.SwallowPop(); this.Y = this.Through(this.Pop()); break;     // PLY s
+                case 0x7a: this.SwallowRead(); this.SwallowPop(); this.Pop(); this.Y = this.Through(); break;     // PLY s
                 case 0x7b: break;                                                                               // null
                 case 0x7c: this.AbsoluteXAddress(); this.Bus.Address.Assign(this.Intermediate); this.GetAddressPaged(); this.Jump(this.Bus.Address); break;                                                                               // JMP (a,x)
                 case 0x7f: this.ZeroPageRead(); this.BBR(Bit(7)); break;                                   // BBR7 r
@@ -149,7 +149,7 @@ namespace M6502
                 case 0xcb: this.SwallowRead(); this.Waiting = true; break;                                      // WAI i
                 case 0xcf: this.ZeroPageRead(); this.BBS(Bit(4)); break;                                   // BBS4 r
 
-                case 0xd2: this.ZeroPageIndirectRead(); this.CMP(this.A); break;                                // CMP (zp)
+                case 0xd2: this.CMP(this.A, this.ZeroPageIndirectRead()); break;                                // CMP (zp)
                 case 0xd3: break;                                                                               // null
                 case 0xd7: this.ZeroPageRead(); this.SMB(Bit(5)); break;                                   // SMB5 zp
                 case 0xda: this.SwallowRead(); this.Push(this.X); break;                                        // PHX s
@@ -165,7 +165,7 @@ namespace M6502
                 case 0xf2: this.ZeroPageIndirectRead(); this.SBC(); break;                                      // SBC (zp)
                 case 0xf3: break;                                                                               // null
                 case 0xf7: this.ZeroPageRead(); this.SMB(Bit(7)); break;                                   // SMB7 zp
-                case 0xfa: this.SwallowRead(); this.SwallowPop(); this.X = this.Through(this.Pop()); break;     // PLX s
+                case 0xfa: this.SwallowRead(); this.SwallowPop(); this.Pop(); this.X = this.Through(); break;     // PLX s
                 case 0xfb: break;                                                                               // null
                 case 0xfc: break;                                                                               // null
                 case 0xff: this.ZeroPageRead(); this.BBS(Bit(7)); break;                                   // BBS7 r
@@ -263,10 +263,10 @@ namespace M6502
 
         #region Address and read
 
-        private void ZeroPageIndirectRead()
+        private byte ZeroPageIndirectRead()
         {
             this.ZeroPageIndirectAddress();
-            this.MemoryRead();
+            return this.MemoryRead();
         }
 
         #endregion
@@ -290,7 +290,7 @@ namespace M6502
 
         private void BranchBit(bool condition)
         {
-            this.FetchByte();
+            _ = this.FetchByte();
             if (condition)
             {
                 var relative = (sbyte)this.Bus.Data;

@@ -99,8 +99,8 @@ namespace EightBit
 
         protected override byte FetchInstruction()
         {
-            var read = this.FetchByte();
-            return this.HALT.Lowered() ? (byte)0 : read;
+            _ = this.FetchByte();
+            return this.HALT.Lowered() ? (byte)0 : this.Bus.Data;
         }
 
         protected static int BuildHalfCarryIndex(byte before, byte value, int calculation) => ((before & 0x88) >> 1) | ((value & 0x88) >> 2) | ((calculation & 0x88) >> 3);
@@ -176,57 +176,44 @@ namespace EightBit
             this.Call();
         }
 
-        protected bool CallConditional(bool condition)
+        protected void CallConditional(bool condition)
         {
-            this.FetchWordMEMPTR();
+            this.FetchInto(this.MEMPTR);
             if (condition)
             {
                 this.Call();
             }
-
-            return condition;
         }
 
-        protected virtual bool JumpConditional(bool condition)
+        protected virtual void JumpConditional(bool condition)
         {
-            this.FetchWordMEMPTR();
+            this.FetchInto(this.MEMPTR);
             if (condition)
             {
                 this.Jump();
             }
-
-            return condition;
         }
 
-        protected virtual bool JumpRelativeConditional(bool condition)
+        protected virtual void JumpRelativeConditional(bool condition)
         {
             var offset = this.FetchByte();
             if (condition)
             {
                 this.JumpRelative(offset);
             }
-            return condition;
         }
 
-        protected virtual bool ReturnConditional(bool condition)
+        protected virtual void ReturnConditional(bool condition)
         {
             if (condition)
             {
                 this.Return();
             }
-
-            return condition;
-        }
-
-        protected void FetchWordMEMPTR()
-        {
-            _ = this.FetchWord();
-            this.MEMPTR.Assign(this.Intermediate);
         }
 
         protected virtual void JumpIndirect()
         {
-            this.FetchWordMEMPTR();
+            this.FetchInto(this.MEMPTR);
             this.Jump();
         }
 
@@ -237,7 +224,7 @@ namespace EightBit
 
         protected void CallIndirect()
         {
-            this.FetchWordMEMPTR();
+            this.FetchInto(this.MEMPTR);
             this.Call();
         }
 
@@ -262,12 +249,12 @@ namespace EightBit
 
         protected abstract bool ConvertCondition(int flag);
 
-        protected virtual bool JumpConditionalFlag(int flag) => this.JumpConditional(this.ConvertCondition(flag));
+        protected virtual void JumpConditionalFlag(int flag) => this.JumpConditional(this.ConvertCondition(flag));
 
-        protected virtual bool JumpRelativeConditionalFlag(int flag) => this.JumpRelativeConditional(this.ConvertCondition(flag));
+        protected virtual void JumpRelativeConditionalFlag(int flag) => this.JumpRelativeConditional(this.ConvertCondition(flag));
 
-        protected virtual bool ReturnConditionalFlag(int flag) => this.ReturnConditional(this.ConvertCondition(flag));
+        protected virtual void ReturnConditionalFlag(int flag) => this.ReturnConditional(this.ConvertCondition(flag));
 
-        protected virtual bool CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
+        protected virtual void CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
     }
 }

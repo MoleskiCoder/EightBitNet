@@ -4,7 +4,7 @@
 
 namespace LR35902.BlarggTest
 {
-    internal class Computer(Configuration configuration)
+    internal sealed class Computer(Configuration configuration)
     {
         private readonly Board board = new(configuration);
 

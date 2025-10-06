@@ -4,7 +4,7 @@
 
 namespace LR35902.BlarggTest
 {
-    internal class Configuration
+    internal sealed class Configuration
     {
         public bool DebugMode { get; set; }
 

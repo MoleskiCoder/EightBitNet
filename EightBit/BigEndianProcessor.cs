@@ -18,19 +18,17 @@ namespace EightBit
             this.Bus.Poke(++address, value.Low);
         }
 
-        protected override Register16 FetchWord()
+        protected override void FetchInto(Register16 into)
         {
-            this.Intermediate.High = this.FetchByte();
-            this.Intermediate.Low = this.FetchByte();
-            return this.Intermediate;
+            into.High = this.FetchByte();
+            into.Low = this.FetchByte();
         }
 
-        protected override Register16 GetWord()
+        protected override void GetInto(Register16 into)
         {
-            this.Intermediate.High = this.MemoryRead();
+            into.High = this.MemoryRead();
             _ = this.Bus.Address.Increment();
-            this.Intermediate.Low = this.MemoryRead();
-            return this.Intermediate;
+            into.Low = this.MemoryRead();
         }
 
         protected override Register16 GetWordPaged()
@@ -41,11 +39,10 @@ namespace EightBit
             return this.Intermediate;
         }
 
-        protected override Register16 PopWord()
+        protected override void PopInto(Register16 into)
         {
-            this.Intermediate.High = this.Pop();
-            this.Intermediate.Low = this.Pop();
-            return this.Intermediate;
+            into.High = this.Pop();
+            into.Low = this.Pop();
         }
 
         protected override void PushWord(Register16 value)

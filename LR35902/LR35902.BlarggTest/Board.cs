@@ -6,7 +6,7 @@ namespace LR35902.BlarggTest
 {
     using System;
 
-    internal class Board : Bus
+    internal sealed class Board : Bus
     {
         private readonly Configuration configuration;
         private readonly Disassembler disassembler;

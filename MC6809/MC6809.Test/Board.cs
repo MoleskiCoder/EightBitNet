@@ -2,17 +2,18 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace EightBit
+namespace MC6809.Test
 {
+    using EightBit;
     using System;
 
     public sealed class Board : Bus
     {
         private readonly Configuration configuration;
-        private readonly Ram ram = new Ram(0x8000);                                 // 0000 - 7FFF, 32K RAM
-        private readonly UnusedMemory unused2000 = new UnusedMemory(0x2000, 0xff);  // 8000 - 9FFF, 8K unused
-        private readonly Ram io = new Ram(0x2000);                                  // A000 - BFFF, 8K serial interface, minimally decoded
-        private readonly Rom rom = new Rom(0x4000);                                 // C000 - FFFF, 16K ROM
+        private readonly Ram ram = new(0x8000);                                 // 0000 - 7FFF, 32K RAM
+        private readonly UnusedMemory unused2000 = new(0x2000, 0xff);  // 8000 - 9FFF, 8K unused
+        private readonly Ram io = new(0x2000);                                  // A000 - BFFF, 8K serial interface, minimally decoded
+        private readonly Rom rom = new(0x4000);                                 // C000 - FFFF, 16K ROM
 
         private readonly Disassembler disassembler;
         private readonly Profiler profiler;
@@ -27,9 +28,9 @@ namespace EightBit
         public Board(Configuration configuration)
         {
             this.configuration = configuration;
-            this.CPU = new MC6809(this);
-            this.disassembler = new Disassembler(this, this.CPU);
-            this.profiler = new Profiler(this, this.CPU, this.disassembler);
+            CPU = new MC6809(this);
+            disassembler = new Disassembler(this, CPU);
+            profiler = new Profiler(this, CPU, disassembler);
         }
 
         public MC6809 CPU { get; }
@@ -40,20 +41,20 @@ namespace EightBit
         {
             if (absolute < 0x8000)
             {
-                return new MemoryMapping(this.ram, 0x0000, Mask.Sixteen, AccessLevel.ReadWrite);
+                return new MemoryMapping(ram, 0x0000, Mask.Sixteen, AccessLevel.ReadWrite);
             }
 
             if (absolute < 0xa000)
             {
-                return new MemoryMapping(this.unused2000, 0x8000, Mask.Sixteen, AccessLevel.ReadOnly);
+                return new MemoryMapping(unused2000, 0x8000, Mask.Sixteen, AccessLevel.ReadOnly);
             }
 
             if (absolute < 0xc000)
             {
-                return new MemoryMapping(this.io, 0xa000, Mask.Sixteen, AccessLevel.ReadWrite);
+                return new MemoryMapping(io, 0xa000, Mask.Sixteen, AccessLevel.ReadWrite);
             }
 
-            return new MemoryMapping(this.rom, 0xc000, Mask.Sixteen, AccessLevel.ReadOnly);
+            return new MemoryMapping(rom, 0xc000, Mask.Sixteen, AccessLevel.ReadOnly);
         }
 
         public override void RaisePOWER()
@@ -61,166 +62,167 @@ namespace EightBit
             base.RaisePOWER();
 
             // Get the CPU ready for action
-            this.CPU.RaisePOWER();
-            this.CPU.LowerRESET();
-            this.CPU.RaiseINT();
-            this.CPU.RaiseNMI();
-            this.CPU.RaiseFIRQ();
-            this.CPU.RaiseHALT();
+            CPU.RaisePOWER();
+            CPU.LowerRESET();
+            CPU.RaiseINT();
+            CPU.RaiseNMI();
+            CPU.RaiseFIRQ();
+            CPU.RaiseHALT();
 
             // Get the ACIA ready for action
-            this.Address.Word = 0b1010000000000000;
-            this.Data = (byte)(MC6850.ControlRegister.CR0 | MC6850.ControlRegister.CR1);  // Master reset
-            this.ACIA.CTS.Lower();
-            this.ACIA.RW.Lower();
-            this.UpdateAciaPins();
-            this.ACIA.RaisePOWER();
-            this.AccessAcia();
+            Address.Word = 0b1010000000000000;
+            Data = (byte)(MC6850.ControlRegister.CR0 | MC6850.ControlRegister.CR1);  // Master reset
+            ACIA.CTS.Lower();
+            ACIA.RW.Lower();
+            UpdateAciaPins();
+            ACIA.RaisePOWER();
+            AccessAcia();
         }
 
         public override void LowerPOWER()
         {
             ////this.profiler.Generate();
 
-            this.ACIA.LowerPOWER();
-            this.CPU.LowerPOWER();
+            ACIA.LowerPOWER();
+            CPU.LowerPOWER();
             base.LowerPOWER();
         }
 
         public override void Initialize()
         {
-            System.Console.TreatControlCAsInput = true;
+            Console.TreatControlCAsInput = true;
 
             // Load our BASIC interpreter
-            var directory = this.configuration.RomDirectory + "\\";
-            this.LoadHexFile(directory + "ExBasROM.hex");
+            var directory = configuration.RomDirectory + "\\";
+            LoadHexFile(directory + "ExBasROM.hex");
 
             // Catch a byte being transmitted
-            this.ACIA.Transmitting += this.ACIA_Transmitting;
+            ACIA.Transmitting += ACIA_Transmitting;
 
             // Keyboard wiring, check for input once per frame
-            this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
+            CPU.ExecutedInstruction += CPU_ExecutedInstruction;
 
-            if (this.configuration.DebugMode)
+            // Marshal data from ACIA -> memory
+            this.ReadingByte += Board_ReadingByte;
+
+            // Marshal data from memory -> ACIA
+            this.WrittenByte += Board_WrittenByte;
+
+            if (configuration.DebugMode)
             {
                 // MC6809 disassembly wiring
-                this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction;
-                this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Debug;
+                CPU.ExecutingInstruction += CPU_ExecutingInstruction;
+                CPU.ExecutedInstruction += CPU_ExecutedInstruction_Debug;
             }
 
-            if (this.configuration.TerminatesEarly)
+            if (configuration.TerminatesEarly)
             {
                 // Early termination condition for CPU timing code
-                this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Termination;
+                CPU.ExecutedInstruction += CPU_ExecutedInstruction_Termination;
             }
 
             ////this.profiler.Enable();
             ////this.profiler.EmitLine += this.Profiler_EmitLine;
         }
 
-        // Marshal data from ACIA -> memory
-        protected override void OnReadingByte()
+        private void Board_ReadingByte(object? sender, EventArgs e)
         {
-            this.UpdateAciaPins();
-            this.ACIA.RW.Raise();
-            if (this.AccessAcia())
+            UpdateAciaPins();
+            ACIA.RW.Raise();
+            if (AccessAcia())
             {
-                this.Poke(this.ACIA.DATA);
-            }
-
-            base.OnReadingByte();
-        }
-
-        // Marshal data from memory -> ACIA
-        protected override void OnWrittenByte()
-        {
-            base.OnWrittenByte();
-            this.UpdateAciaPins();
-            if (this.ACIA.Selected)
-            {
-                this.ACIA.RW.Lower();
-                this.AccessAcia();
+                Poke(ACIA.DATA);
             }
         }
 
-        private void Profiler_EmitLine(object sender, ProfileLineEventArgs e)
+        private void Board_WrittenByte(object? sender, EventArgs e)
+        {
+            UpdateAciaPins();
+            if (ACIA.Selected)
+            {
+                ACIA.RW.Lower();
+                AccessAcia();
+            }
+        }
+
+        private void Profiler_EmitLine(object? sender, ProfileLineEventArgs e)
         {
             var cycles = e.Cycles;
             var disassembled = e.Source;
-            System.Console.Error.WriteLine(disassembled);
+            Console.Error.WriteLine(disassembled);
         }
 
-        private void CPU_ExecutedInstruction_Termination(object sender, EventArgs e)
+        private void CPU_ExecutedInstruction_Termination(object? sender, EventArgs e)
         {
-            this.totalCycleCount += (ulong)this.CPU.Cycles;
-            if (this.totalCycleCount > Configuration.TerminationCycles)
+            totalCycleCount += (ulong)CPU.Cycles;
+            if (totalCycleCount > Configuration.TerminationCycles)
             {
-                this.LowerPOWER();
+                LowerPOWER();
             }
         }
 
-        private void CPU_ExecutedInstruction_Debug(object sender, EventArgs e)
+        private void CPU_ExecutedInstruction_Debug(object? sender, EventArgs e)
         {
-            if (!this.ignoreDisassembly)
+            if (!ignoreDisassembly)
             {
-                var disassembled = $"{this.disassembler.Trace(this.disassembleAt)}\t{this.ACIA.DumpStatus()}";
-                System.Console.Error.WriteLine(disassembled);
+                var disassembled = $"{disassembler.Trace(disassembleAt)}\t{ACIA.DumpStatus()}";
+                Console.Error.WriteLine(disassembled);
             }
         }
 
-        private void CPU_ExecutingInstruction(object sender, EventArgs e)
+        private void CPU_ExecutingInstruction(object? sender, EventArgs e)
         {
-            this.disassembleAt = this.CPU.PC.Word;
-            this.ignoreDisassembly = this.disassembler.Ignore || this.disassembler.Pause;
+            disassembleAt = CPU.PC.Word;
+            ignoreDisassembly = disassembler.Ignore || disassembler.Pause;
         }
 
-        private void CPU_ExecutedInstruction(object sender, EventArgs e)
+        private void CPU_ExecutedInstruction(object? sender, EventArgs e)
         {
-            this.frameCycleCount -= this.CPU.Cycles;
-            if (this.frameCycleCount < 0)
+            frameCycleCount -= CPU.Cycles;
+            if (frameCycleCount < 0)
             {
-                if (System.Console.KeyAvailable)
+                if (Console.KeyAvailable)
                 {
-                    var key = System.Console.ReadKey(true);
+                    var key = Console.ReadKey(true);
                     if (key.Key == ConsoleKey.F12)
                     {
-                        this.LowerPOWER();
+                        LowerPOWER();
                     }
 
-                    this.ACIA.RDR = System.Convert.ToByte(key.KeyChar);
-                    this.ACIA.MarkReceiveStarting();
+                    ACIA.RDR = Convert.ToByte(key.KeyChar);
+                    ACIA.MarkReceiveStarting();
                 }
 
-                this.frameCycleCount = (long)Configuration.FrameCycleInterval;
+                frameCycleCount = (long)Configuration.FrameCycleInterval;
             }
         }
 
-        private void ACIA_Transmitting(object sender, EventArgs e)
+        private void ACIA_Transmitting(object? sender, EventArgs e)
         {
-            System.Console.Out.Write(Convert.ToChar(this.ACIA.TDR));
-            this.ACIA.MarkTransmitComplete();
+            Console.Out.Write(Convert.ToChar(ACIA.TDR));
+            ACIA.MarkTransmitComplete();
         }
 
         private void UpdateAciaPins()
         {
-            this.ACIA.DATA = this.Data;
-            this.ACIA.RS.Match(this.Address.Word & (ushort)Bits.Bit0);
-            this.ACIA.CS0.Match(this.Address.Word & (ushort)Bits.Bit15);
-            this.ACIA.CS1.Match(this.Address.Word & (ushort)Bits.Bit13);
-            this.ACIA.CS2.Match(this.Address.Word & (ushort)Bits.Bit14);
+            ACIA.DATA = Data;
+            ACIA.RS.Match(Address.Word & (ushort)Bits.Bit0);
+            ACIA.CS0.Match(Address.Word & (ushort)Bits.Bit15);
+            ACIA.CS1.Match(Address.Word & (ushort)Bits.Bit13);
+            ACIA.CS2.Match(Address.Word & (ushort)Bits.Bit14);
         }
 
         private bool AccessAcia()
         {
-            this.ACIA.E.Raise();
+            ACIA.E.Raise();
             try
             {
-                this.ACIA.Tick();
-                return this.ACIA.Activated;
+                ACIA.Tick();
+                return ACIA.Activated;
             }
             finally
             {
-                this.ACIA.E.Lower();
+                ACIA.E.Lower();
             }
         }
     }

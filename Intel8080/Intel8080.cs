@@ -6,6 +6,8 @@
 namespace Intel8080
 {
     using EightBit;
+    using System;
+    using System.Diagnostics;
 
     public class Intel8080(Bus bus, InputOutput ports) : IntelProcessor(bus)
     {
@@ -63,17 +65,62 @@ namespace Intel8080
             }
         }
 
+        private void MemoryUpdate(int ticks)
+        {
+            Debug.Assert(ticks > 0, "Ticks must be greater than zero");
+            this.OnWritingMemory();
+            this.Tick(ticks + 1);
+            base.MemoryWrite();
+            this.Tick();
+            this.OnWrittenMemory();
+        }
+
+        protected override void MemoryWrite()
+        {
+            this.MemoryUpdate(1);
+        }
+
+        protected override byte MemoryRead()
+        {
+            this.OnReadingMemory();
+            this.Tick(2);
+            base.MemoryRead();
+            this.OnReadMemory();
+            this.Tick(2);
+            return this.Bus.Data;
+        }
+
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.Tick(3);
+            this.DisableInterrupts();
+            this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
+        }
+
+        private byte ReadDataUnderInterrupt()
+        {
+            this.Tick(4);
+            return this.Bus.Data;
+        }
+
+        protected override void Call(Register16 destination)
+        {
+            this.Tick();
+            base.Call(destination);
+        }
+
+        protected override void JumpRelative(sbyte offset)
+        {
+            base.JumpRelative(offset);
+            this.Tick(5);
         }
 
         protected override void HandleINT()
         {
             base.HandleINT();
-            this.Execute(this.Bus.Data);
-            this.Tick(3);
+            var data = this.ReadDataUnderInterrupt();
+            this.Tick();
+            this.Execute(data);
         }
 
         private int Zero() => ZeroTest(this.F);
@@ -132,49 +179,50 @@ namespace Intel8080
 
         protected override void EnableInterrupts() => this.interruptEnable = true;
 
-        private byte R(int r) => r switch
-        {
-            0 => this.B,
-            1 => this.C,
-            2 => this.D,
-            3 => this.E,
-            4 => this.H,
-            5 => this.L,
-            6 => this.MemoryRead(this.HL),
-            7 => this.A,
-            _ => throw new ArgumentOutOfRangeException(nameof(r)),
-        };
-
-        private void R(int r, byte value)
+        private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
             switch (r)
             {
                 case 0:
-                    this.B = value;
-                    break;
+                    return ref this.B;
                 case 1:
-                    this.C = value;
-                    break;
+                    return ref this.C;
                 case 2:
-                    this.D = value;
-                    break;
+                    return ref this.D;
                 case 3:
-                    this.E = value;
-                    break;
+                    return ref this.E;
                 case 4:
-                    this.H = value;
-                    break;
+                    return ref this.H;
                 case 5:
-                    this.L = value;
-                    break;
+                    return ref this.L;
                 case 6:
-                    this.MemoryWrite(this.HL, value);
-                    break;
+                    this.Bus.Address.Assign(this.HL);
+                    switch (access)
+                    {
+                        case AccessLevel.ReadOnly:
+                            this.MemoryRead();
+                            break;
+                        case AccessLevel.WriteOnly:
+                            break;
+                        default:
+                            throw new NotSupportedException("Invalid access level");
+                    }
+
+                    // Will need a post-MemoryWrite
+                    return ref this.Bus.Data;
                 case 7:
-                    this.A = value;
-                    break;
+                    return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
+            }
+        }
+
+        private void R(int r, byte value, int ticks = 1)
+        {
+            this.R(r, AccessLevel.WriteOnly) = value;
+            if (r == 6)
+            {
+                this.MemoryUpdate(ticks);
             }
         }
 
@@ -198,6 +246,8 @@ namespace Intel8080
 
         private void Execute(int x, int y, int z, int p, int q)
         {
+            var memoryY = y == 6;
+            var memoryZ = z == 6;
             switch (x)
             {
                 case 0:
@@ -207,7 +257,6 @@ namespace Intel8080
                             switch (y)
                             {
                                 case 0: // NOP
-                                    this.Tick(4);
                                     break;
                                 default:
                                     break;
@@ -219,11 +268,10 @@ namespace Intel8080
                             {
                                 case 0: // LD rp,nn
                                     this.RP(p).Assign(this.FetchWord());
-                                    this.Tick(10);
                                     break;
                                 case 1: // ADD HL,rp
                                     this.Add(this.RP(p));
-                                    this.Tick(11);
+                                    this.Tick(7);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -238,21 +286,17 @@ namespace Intel8080
                                     {
                                         case 0: // LD (BC),A
                                             this.WriteMemoryIndirect(this.BC, this.A);
-                                            this.Tick(7);
                                             break;
                                         case 1: // LD (DE),A
                                             this.WriteMemoryIndirect(this.DE, this.A);
-                                            this.Tick(7);
                                             break;
                                         case 2: // LD (nn),HL
                                             this.FetchWordAddress();
                                             this.SetWord(this.HL);
-                                            this.Tick(16);
                                             break;
                                         case 3: // LD (nn),A
-                                            this.FetchWordMEMPTR();
+                                            this.FetchInto(this.MEMPTR);
                                             this.WriteMemoryIndirect(this.A);
-                                            this.Tick(13);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -264,21 +308,17 @@ namespace Intel8080
                                     {
                                         case 0: // LD A,(BC)
                                             this.A = this.ReadMemoryIndirect(this.BC);
-                                            this.Tick(7);
                                             break;
                                         case 1: // LD A,(DE)
                                             this.A = this.ReadMemoryIndirect(this.DE);
-                                            this.Tick(7);
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.FetchWordAddress();
-                                            this.HL.Assign(this.GetWord());
-                                            this.Tick(16);
+                                            this.GetInto(this.HL);
                                             break;
                                         case 3: // LD A,(nn)
-                                            this.FetchWordMEMPTR();
+                                            this.FetchInto(this.MEMPTR);
                                             this.A = this.ReadMemoryIndirect();
-                                            this.Tick(13);
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -291,41 +331,31 @@ namespace Intel8080
 
                             break;
                         case 3: // 16-bit INC/DEC
-                            switch (q)
+                            _ = q switch
                             {
-                                case 0: // INC rp
-                                    _ = this.RP(p).Increment();
-                                    break;
-                                case 1: // DEC rp
-                                    _  = this.RP(p).Decrement();
-                                    break;
-                                default:
-                                    throw new NotSupportedException("Invalid operation mode");
-                            }
-
-                            this.Tick(6);
+                                // INC rp
+                                0 => this.RP(p).Increment(),
+                                // DEC rp
+                                1 => this.RP(p).Decrement(),
+                                _ => throw new NotSupportedException("Invalid operation mode"),
+                            };
+                            this.Tick(2);
                             break;
                         case 4: // 8-bit INC
-                            this.R(y, this.Increment(this.R(y)));
-                            this.Tick(4);
+                            this.R(y, this.Increment(this.R(y)), 2);
                             break;
                         case 5: // 8-bit DEC
-                            this.R(y, this.Decrement(this.R(y)));
-                            this.Tick(4);
-                            if (y == 6)
-                            {
-                                this.Tick(7);
-                            }
-
+                            this.R(y, this.Decrement(this.R(y)), 2);
                             break;
                         case 6: // 8-bit load immediate
-                            this.R(y, this.FetchByte());
-                            this.Tick(7);
-                            if (y == 6)
                             {
-                                this.Tick(3);
+                                _ = this.FetchByte();  // LD r,n
+                                if (memoryY)
+                                {
+                                    this.Tick(2);
+                                }
+                                this.R(y, this.Bus.Data);
                             }
-
                             break;
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
@@ -357,8 +387,6 @@ namespace Intel8080
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
-
-                            this.Tick(4);
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
@@ -366,20 +394,14 @@ namespace Intel8080
 
                     break;
                 case 1: // 8-bit loading
-                    if (z == 6 && y == 6)
+                    if (memoryZ && memoryY)
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                     }
                     else
                     {
                         this.R(y, this.R(z));
-                        if (y == 6 || z == 6)
-                        {
-                            this.Tick(3); // M operations
-                        }
                     }
-
-                    this.Tick(4);
                     break;
                 case 2: // Operate on accumulator and register/memory location
                     switch (y)
@@ -411,46 +433,31 @@ namespace Intel8080
                         default:
                             throw new NotSupportedException("Invalid operation mode");
                     }
-
-                    this.Tick(4);
-                    if (z == 6)
-                    {
-                        this.Tick(3);
-                    }
-
                     break;
                 case 3:
                     switch (z)
                     {
                         case 0: // Conditional return
-                            if (this.ReturnConditionalFlag(y))
-                            {
-                                this.Tick(6);
-                            }
-
-                            this.Tick(5);
+                            this.ReturnConditionalFlag(y);
                             break;
                         case 1: // POP & various ops
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    this.RP2(p).Assign(this.PopWord());
-                                    this.Tick(10);
+                                    this.PopInto(this.RP2(p));
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // RET
                                             this.Return();
-                                            this.Tick(10);
                                             break;
                                         case 2: // JP HL
                                             this.Jump(this.HL);
-                                            this.Tick(4);
                                             break;
                                         case 3: // LD SP,HL
                                             this.SP.Assign(this.HL);
-                                            this.Tick(4);
+                                            this.Tick(2);
                                             break;
                                         default:
                                             break;
@@ -463,39 +470,32 @@ namespace Intel8080
 
                             break;
                         case 2: // Conditional jump
-                            _ = this.JumpConditionalFlag(y);
-                            this.Tick(10);
+                            this.JumpConditionalFlag(y);
                             break;
                         case 3: // Assorted operations
                             switch (y)
                             {
                                 case 0: // JP nn
                                     this.JumpIndirect();
-                                    this.Tick(10);
                                     break;
                                 case 2: // OUT (n),A
                                     this.WritePort(this.FetchByte());
-                                    this.Tick(11);
                                     break;
                                 case 3: // IN A,(n)
                                     this.A = this.ReadPort(this.FetchByte());
-                                    this.Tick(11);
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL);
-                                    this.Tick(19);
                                     break;
                                 case 5: // EX DE,HL
-                                    (this.DE.Word, this.HL.Word) = (this.HL.Word, this.DE.Word);
-                                    this.Tick(4);
+                                    (this.HL.Low, this.DE.Low) = (this.DE.Low, this.HL.Low);
+                                    (this.HL.High, this.DE.High) = (this.DE.High, this.HL.High);
                                     break;
                                 case 6: // DI
                                     this.DisableInterrupts();
-                                    this.Tick(4);
                                     break;
                                 case 7: // EI
                                     this.EnableInterrupts();
-                                    this.Tick(4);
                                     break;
                                 default:
                                     break;
@@ -503,26 +503,20 @@ namespace Intel8080
 
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
-                            if (this.CallConditionalFlag(y))
-                            {
-                                this.Tick(7);
-                            }
-
-                            this.Tick(10);
+                            this.CallConditionalFlag(y);
                             break;
                         case 5: // PUSH & various ops
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
+                                    this.Tick();
                                     this.PushWord(this.RP2(p));
-                                    this.Tick(11);
                                     break;
                                 case 1:
                                     switch (p)
                                     {
                                         case 0: // CALL nn
                                             this.CallIndirect();
-                                            this.Tick(17);
                                             break;
                                         default:
                                             break;
@@ -535,41 +529,39 @@ namespace Intel8080
 
                             break;
                         case 6: // Operate on accumulator and immediate operand: alu[y] n
+                            _ = this.FetchByte();
                             switch (y)
                             {
                                 case 0: // ADD A,n
-                                    this.Add(this.FetchByte());
+                                    this.Add(this.Bus.Data);
                                     break;
                                 case 1: // ADC A,n
-                                    this.ADC(this.FetchByte());
+                                    this.ADC(this.Bus.Data);
                                     break;
                                 case 2: // SUB n
-                                    this.SUB(this.FetchByte());
+                                    this.SUB(this.Bus.Data);
                                     break;
                                 case 3: // SBC A,n
-                                    this.SBB(this.FetchByte());
+                                    this.SBB(this.Bus.Data);
                                     break;
                                 case 4: // AND n
-                                    this.AndR(this.FetchByte());
+                                    this.AndR(this.Bus.Data);
                                     break;
                                 case 5: // XOR n
-                                    this.XorR(this.FetchByte());
+                                    this.XorR(this.Bus.Data);
                                     break;
                                 case 6: // OR n
-                                    this.OrR(this.FetchByte());
+                                    this.OrR(this.Bus.Data);
                                     break;
                                 case 7: // CP n
-                                    this.Compare(this.FetchByte());
+                                    this.Compare(this.Bus.Data);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
                             }
-
-                            this.Tick(7);
                             break;
                         case 7: // Restart: RST y * 8
                             this.Restart((byte)(y << 3));
-                            this.Tick(11);
                             break;
                         default:
                             throw new NotSupportedException("Invalid operation mode");
@@ -607,6 +599,16 @@ namespace Intel8080
             7 => this.Sign() != 0,
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
+
+        protected sealed override void ReturnConditionalFlag(int flag)
+        {
+            var condition = this.ConvertCondition(flag);
+            this.Tick();
+            if (condition)
+            {
+                this.Return();
+            }
+        }
 
         private void Add(Register16 value)
         {
@@ -725,13 +727,16 @@ namespace Intel8080
         private void XHTL(Register16 exchange)
         {
             this.MEMPTR.Low = this.MemoryRead(this.SP);
-            _ = this.Bus.Address.Increment();
+            this.Bus.Address.Increment();
             this.MEMPTR.High = this.MemoryRead();
-            this.MemoryWrite(exchange.High);
+            this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
+            this.MemoryUpdate(2);
             _ = this.Bus.Address.Decrement();
-            this.MemoryWrite(exchange.Low);
+            this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
+            this.MemoryUpdate(1);
+            this.Tick(2);
         }
 
         private byte ReadMemoryIndirect(Register16 via)
@@ -768,7 +773,12 @@ namespace Intel8080
             this.WritePort();
         }
 
-        private void WritePort() => this.ports.Write(this.Bus.Address, this.Bus.Data);
+        private void WritePort()
+        {
+            this.Tick(3);
+            this.ports.Write(this.Bus.Address, this.Bus.Data);
+            this.Tick(1);
+        }
 
         private byte ReadPort(byte port)
         {
@@ -776,6 +786,12 @@ namespace Intel8080
             return this.ReadPort();
         }
 
-        private byte ReadPort() => this.Bus.Data = this.ports.Read(this.Bus.Address);
+        private byte ReadPort()
+        {
+            this.Tick(2);
+            this.Bus.Data = this.ports.Read(this.Bus.Address);
+            this.Tick(2);
+            return this.Bus.Data;
+        }
     }
 }

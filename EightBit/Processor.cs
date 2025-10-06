@@ -224,10 +224,7 @@ namespace EightBit
             return this.MemoryRead();
         }
 
-        protected virtual byte MemoryRead()
-        {
-            return this.BusRead();
-        }
+        protected virtual byte MemoryRead() => this.BusRead();
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
@@ -247,17 +244,17 @@ namespace EightBit
             return this.MemoryRead();
         }
 
-        protected abstract Register16 GetWord();
+        protected abstract void GetInto(Register16 into);
+
+        protected virtual Register16 GetWord()
+        {
+            this.GetInto(this.Intermediate);
+            return this.Intermediate;
+        }
 
         protected abstract void SetWord(Register16 value);
 
         protected abstract Register16 GetWordPaged();
-
-        protected Register16 GetWordPaged(Register16 address)
-        {
-            this.Bus.Address.Assign(address);
-            return this.GetWordPaged();
-        }
 
         protected Register16 GetWordPaged(byte page, byte offset)
         {
@@ -279,13 +276,15 @@ namespace EightBit
             this.SetWordPaged(value);
         }
 
-        protected abstract Register16 FetchWord();
+        protected abstract void FetchInto(Register16 into);
 
-        protected void FetchWordAddress()
+        protected Register16 FetchWord()
         {
-            _ = this.FetchWord();
-            this.Bus.Address.Assign(this.Intermediate);
+            this.FetchInto(this.Intermediate);
+            return this.Intermediate;
         }
+
+        protected void FetchWordAddress() => this.Bus.Address.Assign(this.FetchWord());
 
         protected abstract void Push(byte value);
 
@@ -293,24 +292,12 @@ namespace EightBit
 
         protected abstract void PushWord(Register16 value);
 
-        protected abstract Register16 PopWord();
-
-        protected Register16 GetWord(ushort address)
-        {
-            this.Bus.Address.Word = address;
-            return this.GetWord();
-        }
+        protected abstract void PopInto(Register16 into);
 
         protected Register16 GetWord(Register16 address)
         {
             this.Bus.Address.Assign(address);
             return this.GetWord();
-        }
-
-        protected void SetWord(ushort address, Register16 value)
-        {
-            this.Bus.Address.Word = address;
-            this.SetWord(value);
         }
 
         protected void SetWord(Register16 address, Register16 value)
@@ -323,12 +310,6 @@ namespace EightBit
 
         protected void Jump(Register16 destination) => this.PC.Assign(destination);
 
-        protected void Call(ushort destination)
-        {
-            this.Intermediate.Word = destination;
-            this.Call(this.Intermediate);
-        }
-
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
         protected virtual void Call(Register16 destination)
         {
@@ -337,6 +318,6 @@ namespace EightBit
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
-        protected virtual void Return() => this.Jump(this.PopWord());
+        protected virtual void Return() => this.PopInto(this.PC);
     }
 }

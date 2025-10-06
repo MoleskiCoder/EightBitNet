@@ -369,19 +369,19 @@ namespace LR35902
             this.TickMachine();
         }
 
-        protected override bool JumpConditional(bool condition)
+        protected override void JumpConditional(bool condition)
         {
-            if (base.JumpConditional(condition))
+            base.JumpConditional(condition);
+            if (condition)
             {
                 this.TickMachine();
             }
-            return condition;
         }
 
-        protected override bool ReturnConditional(bool condition)
+        protected override void ReturnConditional(bool condition)
         {
             this.TickMachine();
-            return base.ReturnConditional(condition);
+            base.ReturnConditional(condition);
         }
 
         protected override void Return()
@@ -528,7 +528,7 @@ namespace LR35902
                                 case 5:
                                 case 6:
                                 case 7:
-                                    _ = this.JumpRelativeConditionalFlag(y - 4);
+                                    this.JumpRelativeConditionalFlag(y - 4);
                                     break;
                                 default:
                                     throw new InvalidOperationException("Unreachable code block reached");
@@ -727,7 +727,7 @@ namespace LR35902
                                 case 1:
                                 case 2:
                                 case 3:
-                                    _ = this.ReturnConditionalFlag(y);
+                                    this.ReturnConditionalFlag(y);
                                     break;
 
                                 case 4: // GB: LD (FF00 + n),A
@@ -775,7 +775,7 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    this.RP2(p).Assign(this.PopWord());
+                                    this.PopInto(this.RP2(p));
                                     break;
                                 case 1:
                                     switch (p)
@@ -811,20 +811,20 @@ namespace LR35902
                                 case 1:
                                 case 2:
                                 case 3:
-                                    _ = this.JumpConditionalFlag(y);
+                                    this.JumpConditionalFlag(y);
                                     break;
                                 case 4: // GB: LD (FF00 + C),A
                                     this.MemoryWrite(this.C, IoRegisters.BasePage, this.A);
                                     break;
                                 case 5: // GB: LD (nn),A
-                                    this.FetchWordMEMPTR();
+                                    this.FetchInto(this.MEMPTR);
                                     this.MemoryWrite(this.MEMPTR, this.A);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
                                     this.A = this.MemoryRead(this.C, IoRegisters.BasePage);
                                     break;
                                 case 7: // GB: LD A,(nn)
-                                    this.FetchWordMEMPTR();
+                                    this.FetchInto(this.MEMPTR);                                   
                                     this.A = this.MemoryRead(this.MEMPTR);
                                     break;
                                 default:
@@ -855,7 +855,7 @@ namespace LR35902
                             break;
 
                         case 4: // Conditional call: CALL cc[y], nn
-                            _ = this.CallConditionalFlag(y);
+                            this.CallConditionalFlag(y);
                             break;
 
                         case 5: // PUSH & various ops
@@ -884,31 +884,32 @@ namespace LR35902
                             break;
 
                         case 6: // Operate on accumulator and immediate operand: alu[y] n
+                            _ = this.FetchByte();
                             switch (y)
                             {
                                 case 0: // ADD A,n
-                                    this.A = this.Add(this.A, this.FetchByte());
+                                    this.A = this.Add(this.A, this.Bus.Data);
                                     break;
                                 case 1: // ADC A,n
-                                    this.A = this.ADC(this.A, this.FetchByte());
+                                    this.A = this.ADC(this.A, this.Bus.Data);
                                     break;
                                 case 2: // SUB n
-                                    this.A = this.Subtract(this.A, this.FetchByte());
+                                    this.A = this.Subtract(this.A, this.Bus.Data);
                                     break;
                                 case 3: // SBC A,n
-                                    this.A = this.SBC(this.A, this.FetchByte());
+                                    this.A = this.SBC(this.A, this.Bus.Data);
                                     break;
                                 case 4: // AND n
-                                    this.AndR(this.FetchByte());
+                                    this.AndR(this.Bus.Data);
                                     break;
                                 case 5: // XOR n
-                                    this.XorR(this.FetchByte());
+                                    this.XorR(this.Bus.Data);
                                     break;
                                 case 6: // OR n
-                                    this.OrR(this.FetchByte());
+                                    this.OrR(this.Bus.Data);
                                     break;
                                 case 7: // CP n
-                                    this.Compare(this.FetchByte());
+                                    this.Compare(this.Bus.Data);
                                     break;
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
