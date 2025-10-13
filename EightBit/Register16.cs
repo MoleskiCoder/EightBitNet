@@ -89,7 +89,8 @@ namespace EightBit
 
         public void Assign(Register16 from)
         {
-            this.Assign(from.Low, from.High);
+            this.Low = from.Low;
+            this.High = from.High;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

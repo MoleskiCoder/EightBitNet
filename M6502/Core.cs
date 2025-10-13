@@ -972,11 +972,11 @@ namespace M6502
 
         private void JSR()
         {
-            this.Intermediate.Low = this.FetchByte();
+            var low = this.FetchByte();
             this.SwallowPop();
             this.PushWord(this.PC);
-            this.PC.High = this.FetchByte();
-            this.PC.Low = this.Intermediate.Low;
+            var high = this.FetchByte();
+            this.PC.Assign(low, high);
         }
 
         private void PHP() => this.Push(SetBit(this.P, StatusBits.BF));
