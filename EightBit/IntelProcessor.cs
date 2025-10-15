@@ -170,6 +170,35 @@ namespace EightBit
 
         ////
 
+        protected byte ReadMemoryIndirect(Register16 via)
+        {
+            this.MEMPTR.Assign(via);
+            return this.ReadMemoryIndirect();
+        }
+
+        protected byte ReadMemoryIndirect()
+        {
+            this.Bus.Address.Assign(this.MEMPTR);
+            this.MEMPTR.Increment();
+            return this.MemoryRead();
+        }
+
+        protected void WriteMemoryIndirect(Register16 via, byte data)
+        {
+            this.MEMPTR.Assign(via);
+            this.WriteMemoryIndirect(data);
+        }
+
+        protected void WriteMemoryIndirect(byte data)
+        {
+            this.Bus.Address.Assign(this.MEMPTR);
+            this.MEMPTR.Increment();
+            this.MEMPTR.High = this.Bus.Data = data;
+            this.MemoryWrite();
+        }
+
+        ////
+
         protected void Restart(byte address)
         {
             this.MEMPTR.Assign(address);

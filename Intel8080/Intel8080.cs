@@ -739,33 +739,6 @@ namespace Intel8080
             this.Tick(2);
         }
 
-        private byte ReadMemoryIndirect(Register16 via)
-        {
-            this.MEMPTR.Assign(via);
-            return this.ReadMemoryIndirect();
-        }
-
-        private byte ReadMemoryIndirect()
-        {
-            this.Bus.Address.Assign(this.MEMPTR);
-            this.MEMPTR.Increment();
-            return this.MemoryRead();
-        }
-
-        private void WriteMemoryIndirect(Register16 via, byte data)
-        {
-            this.MEMPTR.Assign(via);
-            this.WriteMemoryIndirect(data);
-        }
-
-        private void WriteMemoryIndirect(byte data)
-        {
-            this.Bus.Address.Assign(this.MEMPTR);
-            this.MEMPTR.Increment();
-            this.MEMPTR.High = this.Bus.Data = data;
-            this.MemoryWrite();
-        }
-
         private void WritePort(byte port)
         {
             this.Bus.Address.Assign(port, this.A);

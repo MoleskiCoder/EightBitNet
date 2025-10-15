@@ -560,50 +560,53 @@ namespace LR35902
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.Bus.Address.Assign(this.BC);
+                                            this.WriteMemoryIndirect(this.BC, A);
                                             break;
 
                                         case 1: // LD (DE),A
-                                            this.Bus.Address.Assign(this.DE);
+                                            this.WriteMemoryIndirect(this.DE, A);
+
                                             break;
 
                                         case 2: // GB: LDI (HL),A
                                             this.Bus.Address.Assign(this.HL);
                                             _ = this.HL.Increment();
+                                            this.MemoryWrite(this.A);
                                             break;
 
                                         case 3: // GB: LDD (HL),A
                                             this.Bus.Address.Assign(this.HL);
                                             _ = this.HL.Decrement();
+                                            this.MemoryWrite(this.A);
                                             break;
 
                                         default:
                                             throw new InvalidOperationException("Invalid operation mode");
                                     }
-                                    this.MemoryWrite(this.A);
                                     break;
 
                                 case 1:
                                     switch(p)
                                     {
                                         case 0:   // LD A,(BC)
-                                            this.Bus.Address.Assign(this.BC);
+                                            this.A = this.ReadMemoryIndirect(this.BC);
                                             break;
                                         case 1:   // LD A,(DE)
-                                            this.Bus.Address.Assign(this.DE);
+                                            this.A = this.ReadMemoryIndirect(this.DE);
                                             break;
                                         case 2:   // GB: LDI A,(HL)
                                             this.Bus.Address.Assign(this.HL);
                                             _ = this.HL.Increment();
+                                            this.A = this.MemoryRead();
                                             break;
                                         case 3:   // GB: LDD A,(HL)
                                             this.Bus.Address.Assign(this.HL);
                                             _ = this.HL.Decrement();
+                                            this.A = this.MemoryRead();
                                             break;
                                         default:
                                             throw new InvalidOperationException("Invalid operation mode");
                                     }
-                                    this.A = this.MemoryRead();
                                     break;
 
                                 default:
