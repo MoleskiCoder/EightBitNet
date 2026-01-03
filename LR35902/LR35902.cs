@@ -324,9 +324,9 @@ namespace LR35902
 
         private static byte AdjustHalfCarrySub(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.HC, CalculateHalfCarrySub(before, value, calculation));
 
-        private static byte Res(int n, byte operand) => ClearBit(operand, Bit(n));
+        private static byte RES(int n, byte operand) => ClearBit(operand, Bit(n));
 
-        private static byte Set(int n, byte operand) => SetBit(operand, Bit(n));
+        private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
 
         protected override void DisableInterrupts() => this.IME = false;
 
@@ -336,23 +336,28 @@ namespace LR35902
 
         private void Start() => this.Stopped = false;
 
-        protected override void MemoryWrite()
+        private void MemoryUpdate(int ticks)
         {
             this.LowerMWR();
-            this.LowerWR();
-            base.MemoryWrite();
-            this.TickMachine();
-            this.RaiseWR();
+                this.LowerWR();
+                    base.MemoryWrite();
+                    this.TickMachine(ticks);
+                this.RaiseWR();
             this.RaiseMWR();
+        }
+
+        protected override void MemoryWrite()
+        {
+            this.MemoryUpdate(1);
         }
 
         protected override byte MemoryRead()
         {
             this.LowerMWR();
-            this.LowerRD();
-            _ = base.MemoryRead();
-            this.TickMachine();
-            this.RaiseRD();
+                this.LowerRD();
+                    _ = base.MemoryRead();
+                    this.TickMachine();
+                this.RaiseRD();
             this.RaiseMWR();
             return this.Bus.Data;
         }
@@ -396,49 +401,50 @@ namespace LR35902
             this.TickMachine();
         }
 
-        private byte R(int r) => r switch
-        {
-            0 => this.B,
-            1 => this.C,
-            2 => this.D,
-            3 => this.E,
-            4 => this.H,
-            5 => this.L,
-            6 => this.MemoryRead(this.HL),
-            7 => this.A,
-            _ => throw new ArgumentOutOfRangeException(nameof(r)),
-        };
-
-        private void R(int r, byte value)
+        private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
             switch (r)
             {
                 case 0:
-                    this.B = value;
-                    break;
+                    return ref this.B;
                 case 1:
-                    this.C = value;
-                    break;
+                    return ref this.C;
                 case 2:
-                    this.D = value;
-                    break;
+                    return ref this.D;
                 case 3:
-                    this.E = value;
-                    break;
+                    return ref this.E;
                 case 4:
-                    this.H = value;
-                    break;
+                    return ref this.H;
                 case 5:
-                    this.L = value;
-                    break;
+                    return ref this.L;
                 case 6:
-                    this.MemoryWrite(this.HL, value);
-                    break;
+                    this.Bus.Address.Assign(this.HL);
+                    switch (access)
+                    {
+                        case AccessLevel.ReadOnly:
+                            this.MemoryRead();
+                            break;
+                        case AccessLevel.WriteOnly:
+                            break;
+                        default:
+                            throw new NotSupportedException("Invalid access level");
+                    }
+
+                    // Will need a post-MemoryWrite
+                    return ref this.Bus.Data;
                 case 7:
-                    this.A = value;
-                    break;
+                    return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
+            }
+        }
+
+        private void R(int r, byte value, int ticks = 1)
+        {
+            this.R(r, AccessLevel.WriteOnly) = value;
+            if (r == 6)
+            {
+                this.MemoryUpdate(ticks);
             }
         }
 
@@ -462,11 +468,12 @@ namespace LR35902
 
         private void ExecuteCB(int x, int y, int z)
         {
+            var operand = this.R(z);
+            var update = x != 1; // BIT does not update
             switch (x)
             {
                 case 0: // rot[y] r[z]
                     {
-                        var operand = this.R(z);
                         operand = y switch
                         {
                             0 => this.RLC(operand),
@@ -479,30 +486,36 @@ namespace LR35902
                             7 => this.SRL(operand),
                             _ => throw new InvalidOperationException("Unreachable code block reached"),
                         };
-                        this.R(z, operand);
                         this.AdjustZero(operand);
                     }
                     break;
 
                 case 1: // BIT y, r[z]
-                    this.Bit(y, this.R(z));
+                    this.Bit(y, operand);
                     break;
 
                 case 2: // RES y, r[z]
-                    this.R(z, Res(y, this.R(z)));
+                    operand = RES(y, operand);
                     break;
 
                 case 3: // SET y, r[z]
-                    this.R(z, Set(y, this.R(z)));
+                    operand = SET(y, operand);
                     break;
 
                 default:
                     throw new InvalidOperationException("Unreachable code block reached");
             }
+
+            if (update)
+            {
+                this.R(z, operand);
+            }
         }
 
         private void ExecuteOther(int x, int y, int z, int p, int q)
         {
+            var memoryY = y == 6;
+            var memoryZ = z == 6;
             switch (x)
             {
                 case 0:
@@ -544,7 +557,8 @@ namespace LR35902
                                     break;
 
                                 case 1: // ADD HL,rp
-                                    this.Add(this.HL, this.RP(p));
+                                    this.Add(this.RP(p));
+                                    this.TickMachine();
                                     break;
 
                                 default:
@@ -616,14 +630,18 @@ namespace LR35902
                             break;
 
                         case 3: // 16-bit INC/DEC
-                            _ = q switch
+                            switch (q)
                             {
-                                // INC rp
-                                0 => this.RP(p).Increment(),
-                                // DEC rp
-                                1 => this.RP(p).Decrement(),
-                                _ => throw new InvalidOperationException("Invalid operation mode"),
-                            };
+                                case 0: // INC rp
+                                    this.RP(p).Increment();
+                                    break;
+                                
+                                case 1: // DEC rp
+                                    this.RP(p).Decrement();
+                                    break;
+                                default:
+                                    throw new InvalidOperationException("Invalid operation mode");
+                            }
                             this.TickMachine();
                             break;
 
@@ -678,48 +696,51 @@ namespace LR35902
                     break;
 
                 case 1: // 8-bit loading
-                    if (z == 6 && y == 6)
+                    if (!(memoryZ && memoryY))
+                    {
+                        this.R(y, this.R(z));
+                    }
+                    else
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                         this.TickMachine(2);
                     }
-                    else
-                    {
-                        this.R(y, this.R(z));
-                    }
                     break;
 
-                case 2: // Operate on accumulator and register/memory location
-                    switch (y)
-                    {
-                        case 0: // ADD A,r
-                            this.A = this.Add(this.A, this.R(z));
-                            break;
-                        case 1: // ADC A,r
-                            this.A = this.ADC(this.A, this.R(z));
-                            break;
-                        case 2: // SUB r
-                            this.A = this.Subtract(this.A, this.R(z));
-                            break;
-                        case 3: // SBC A,r
-                            this.A = this.SBC(this.A, this.R(z));
-                            break;
-                        case 4: // AND r
-                            this.AndR(this.R(z));
-                            break;
-                        case 5: // XOR r
-                            this.XorR(this.R(z));
-                            break;
-                        case 6: // OR r
-                            this.OrR(this.R(z));
-                            break;
-                        case 7: // CP r
-                            this.Compare(this.R(z));
-                            break;
-                        default:
-                            throw new InvalidOperationException("Invalid operation mode");
+                case 2:
+                    { // Operate on accumulator and register/memory location
+                        var value = this.R(z);
+                        switch (y)
+                        {
+                            case 0: // ADD A,r
+                                this.A = this.Add(this.A, value);
+                                break;
+                            case 1: // ADC A,r
+                                this.A = this.ADC(this.A, value);
+                                break;
+                            case 2: // SUB r
+                                this.A = this.Subtract(this.A, value);
+                                break;
+                            case 3: // SBC A,r
+                                this.A = this.SBC(this.A, value);
+                                break;
+                            case 4: // AND r
+                                this.AndR(value);
+                                break;
+                            case 5: // XOR r
+                                this.XorR(value);
+                                break;
+                            case 6: // OR r
+                                this.OrR(value);
+                                break;
+                            case 7: // CP r
+                                this.Compare(value);
+                                break;
+                            default:
+                                throw new InvalidOperationException("Invalid operation mode");
+                        }
+                        break;
                     }
-                    break;
                 case 3:
                     switch (z)
                     {
@@ -886,38 +907,40 @@ namespace LR35902
 
                             break;
 
-                        case 6: // Operate on accumulator and immediate operand: alu[y] n
-                            _ = this.FetchByte();
-                            switch (y)
-                            {
-                                case 0: // ADD A,n
-                                    this.A = this.Add(this.A, this.Bus.Data);
-                                    break;
-                                case 1: // ADC A,n
-                                    this.A = this.ADC(this.A, this.Bus.Data);
-                                    break;
-                                case 2: // SUB n
-                                    this.A = this.Subtract(this.A, this.Bus.Data);
-                                    break;
-                                case 3: // SBC A,n
-                                    this.A = this.SBC(this.A, this.Bus.Data);
-                                    break;
-                                case 4: // AND n
-                                    this.AndR(this.Bus.Data);
-                                    break;
-                                case 5: // XOR n
-                                    this.XorR(this.Bus.Data);
-                                    break;
-                                case 6: // OR n
-                                    this.OrR(this.Bus.Data);
-                                    break;
-                                case 7: // CP n
-                                    this.Compare(this.Bus.Data);
-                                    break;
-                                default:
-                                    throw new InvalidOperationException("Invalid operation mode");
+                        case 6:
+                            { // Operate on accumulator and immediate operand: alu[y] n
+                                var operand = this.FetchByte();
+                                switch (y)
+                                {
+                                    case 0: // ADD A,n
+                                        this.A = this.Add(this.A, operand);
+                                        break;
+                                    case 1: // ADC A,n
+                                        this.A = this.ADC(this.A, operand);
+                                        break;
+                                    case 2: // SUB n
+                                        this.A = this.Subtract(this.A, operand);
+                                        break;
+                                    case 3: // SBC A,n
+                                        this.A = this.SBC(this.A, operand);
+                                        break;
+                                    case 4: // AND n
+                                        this.AndR(operand);
+                                        break;
+                                    case 5: // XOR n
+                                        this.XorR(operand);
+                                        break;
+                                    case 6: // OR n
+                                        this.OrR(operand);
+                                        break;
+                                    case 7: // CP n
+                                        this.Compare(operand);
+                                        break;
+                                    default:
+                                        throw new InvalidOperationException("Invalid operation mode");
+                                }
+                                break;
                             }
-                            break;
 
                         case 7: // Restart: RST y * 8
                             this.Restart((byte)(y << 3));
@@ -936,17 +959,19 @@ namespace LR35902
         private byte Increment(byte operand)
         {
             this.ClearBit(StatusBits.NF);
-            this.AdjustZero(++operand);
-            this.ClearBit(StatusBits.HC, LowNibble(operand));
-            return operand;
+            var result = operand; ++result;
+            this.AdjustZero(result);
+            this.ClearBit(StatusBits.HC, LowNibble(result));
+            return result;
         }
 
         private byte Decrement(byte operand)
         {
             this.SetBit(StatusBits.NF);
             this.ClearBit(StatusBits.HC, LowNibble(operand));
-            this.AdjustZero(--operand);
-            return operand;
+            var result = operand; --result;
+            this.AdjustZero(result);
+            return result;
         }
 
         protected sealed override bool ConvertCondition(int flag) => flag switch
@@ -958,49 +983,42 @@ namespace LR35902
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
 
-        private void Add(Register16 operand, Register16 value)
+        private void Add(Register16 value)
         {
-            this.TickMachine();
-
-            this.MEMPTR.Assign(operand);
-
-            var result = this.MEMPTR.Word + value.Word;
-
-            operand.Word = (ushort)result;
-
+            this.Intermediate.Assign(this.HL);
+            var result = this.HL.Word + value.Word;
+            this.HL.Word = (ushort)result;
             this.ClearBit(StatusBits.NF);
             this.SetBit(StatusBits.CF, result & (int)Bits.Bit16);
-            this.AdjustHalfCarryAdd(this.MEMPTR.High, value.High, operand.High);
+            this.AdjustHalfCarryAdd(this.Intermediate.High, value.High, this.HL.High);
         }
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.MEMPTR.Word = (ushort)(operand + value + carry);
+            this.Intermediate.Word = (ushort)(operand + value + carry);
+            var result = this.Intermediate.Low;
 
-            this.AdjustHalfCarryAdd(operand, value, this.MEMPTR.Low);
-
-            operand = this.MEMPTR.Low;
+            this.AdjustHalfCarryAdd(operand, value, result);
 
             this.ClearBit(StatusBits.NF);
-            this.SetBit(StatusBits.CF, this.MEMPTR.Word & (ushort)Bits.Bit8);
-            this.AdjustZero(operand);
+            this.SetBit(StatusBits.CF, this.Intermediate.High & (byte)Bits.Bit0);
+            this.AdjustZero(result);
 
-            return operand;
+            return result;
         }
 
         private byte ADC(byte operand, byte value) => this.Add(operand, value, this.Carry() >> 4);
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            this.MEMPTR.Word = (ushort)(operand - value - carry);
+            this.Intermediate.Word = (ushort)(operand - value - carry);
+            var result = this.Intermediate.Low;
 
-            this.AdjustHalfCarrySub(operand, value, this.MEMPTR.Low);
-
-            var result = operand = this.MEMPTR.Low;
+            this.AdjustHalfCarrySub(operand, value, result);
 
             this.SetBit(StatusBits.NF);
-            this.SetBit(StatusBits.CF, this.MEMPTR.High & (byte)Bits.Bit0);
-            this.AdjustZero(operand);
+            this.SetBit(StatusBits.CF, this.Intermediate.High & (byte)Bits.Bit0);
+            this.AdjustZero(result);
 
             return result;
         }

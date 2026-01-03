@@ -933,7 +933,7 @@ namespace Z80
                     switch (z)
                     {
                         case 0: // Input from port with 16-bit address
-                            _ = this.ReadPort(this.BC);
+                            this.ReadPort(this.BC);
                             this.MEMPTR.Increment();
                             if (y != 6)
                             {
@@ -1480,7 +1480,8 @@ namespace Z80
                                     this.WritePort(this.FetchByte());
                                     break;
                                 case 3: // IN A,(n)
-                                    this.A = this.ReadPort(this.FetchByte());
+                                    this.ReadPort(this.FetchByte());
+                                    this.A = this.Bus.Data;
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL2());
@@ -2138,7 +2139,7 @@ namespace Z80
         private void BlockIn()
         {
             this.Tick();
-            _ = this.ReadPort(this.BC);
+            this.ReadPort(this.BC);
             this.Bus.Address.Assign(this.HL);
             this.MemoryUpdate(1);
             this.AdjustSZXY(--this.B);
@@ -2293,17 +2294,17 @@ namespace Z80
 
         #region Input/output port control
 
+        private void WritePort(Register16 port, byte data)
+        {
+            this.Bus.Data = data;
+            this.WritePort(port);
+        }
+
         private void WritePort(byte port)
         {
             this.Bus.Address.Assign(port, this.Bus.Data = this.A);
             this.WritePort();
             ++this.MEMPTR.Low;
-        }
-
-        private void WritePort(Register16 port, byte data)
-        {
-            this.Bus.Data = data;
-            this.WritePort(port);
         }
 
         private void WritePort(Register16 port)
@@ -2315,8 +2316,7 @@ namespace Z80
         private void WritePort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
-            this.Tick();
-            this.Tick();
+            this.Tick(2);
             this.LowerIORQ();
                 this.LowerWR();
                     this.Tick();
@@ -2326,21 +2326,20 @@ namespace Z80
             this.Tick();
         }
 
-        private byte ReadPort(byte port)
-        {
-            this.Bus.Address.Assign(port, this.Bus.Data = this.A);
-            _ = this.ReadPort();
-            this.MEMPTR.Increment();
-            return this.Bus.Data;
-        }
-
-        private byte ReadPort(Register16 port)
+        private void ReadPort(Register16 port)
         {
             this.Bus.Address.Assign(port);
-            return this.ReadPort();
+            this.ReadPort();
         }
 
-        private byte ReadPort()
+        private void ReadPort(byte port)
+        {
+            this.Bus.Address.Assign(port, this.Bus.Data = this.A);
+            this.ReadPort();
+            this.MEMPTR.Increment();
+        }
+
+        private void ReadPort()
         {
             this.MEMPTR.Assign(this.Bus.Address);
             this.Tick(2);
@@ -2351,7 +2350,6 @@ namespace Z80
                 this.RaiseRD();
             this.RaiseIORQ();
             this.Tick();
-            return this.Bus.Data;
         }
 
 #endregion

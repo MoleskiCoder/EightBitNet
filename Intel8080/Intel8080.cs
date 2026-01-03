@@ -85,8 +85,9 @@ namespace Intel8080
             this.OnReadingMemory();
             this.Tick(2);
             base.MemoryRead();
+            this.Tick();
             this.OnReadMemory();
-            this.Tick(2);
+            this.Tick();
             return this.Bus.Data;
         }
 
@@ -103,6 +104,14 @@ namespace Intel8080
             return this.Bus.Data;
         }
 
+        protected override void HandleINT()
+        {
+            base.HandleINT();
+            var data = this.ReadDataUnderInterrupt();
+            this.Tick();
+            this.Execute(data);
+        }
+
         protected override void Call(Register16 destination)
         {
             this.Tick();
@@ -113,14 +122,6 @@ namespace Intel8080
         {
             base.JumpRelative(offset);
             this.Tick(5);
-        }
-
-        protected override void HandleINT()
-        {
-            base.HandleINT();
-            var data = this.ReadDataUnderInterrupt();
-            this.Tick();
-            this.Execute(data);
         }
 
         private int Zero() => ZeroTest(this.F);
@@ -145,13 +146,23 @@ namespace Intel8080
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
+        private void SetBit(StatusBits flag) => this.F = SetBit(this.F, flag);
+
         private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
+
+        private void SetBit(StatusBits flag, int condition) => this.F = SetBit(this.F, flag, condition);
 
         private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
 
+        private void SetBit(StatusBits flag, bool condition) => this.F = SetBit(this.F, flag, condition);
+
         private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
 
+        private void ClearBit(StatusBits flag) => this.F = ClearBit(this.F, flag);
+
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
+
+        private void ClearBit(StatusBits flag, int condition) => this.F = ClearBit(this.F, flag, condition);
 
         private static byte AdjustSign(byte input, byte value) => SetBit(input, StatusBits.SF, SignTest(value));
 
@@ -171,13 +182,37 @@ namespace Intel8080
             return AdjustParity(input, value);
         }
 
+        private void AdjustSZP(byte value) => this.F = AdjustSZP(this.F, value);
+
         private static byte AdjustAuxiliaryCarryAdd(byte input, byte before, byte value, int calculation) => SetBit(input, StatusBits.AC, CalculateHalfCarryAdd(before, value, calculation));
 
+        private void AdjustAuxiliaryCarryAdd(byte before, byte value, int calculation) => this.F = AdjustAuxiliaryCarryAdd(this.F, before, value, calculation);
+
         private static byte AdjustAuxiliaryCarrySub(byte input, byte before, byte value, int calculation) => ClearBit(input, StatusBits.AC, CalculateHalfCarrySub(before, value, calculation));
+
+        private void AdjustAuxiliaryCarrySub(byte before, byte value, int calculation) => this.F = AdjustAuxiliaryCarrySub(this.F, before, value, calculation);
 
         protected override void DisableInterrupts() => this.interruptEnable = false;
 
         protected override void EnableInterrupts() => this.interruptEnable = true;
+
+        private Register16 RP(int rp) => rp switch
+        {
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL,
+            3 => this.SP,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
+
+        private Register16 RP2(int rp) => rp switch
+        {
+            0 => this.BC,
+            1 => this.DE,
+            2 => this.HL,
+            3 => this.AF,
+            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
+        };
 
         private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
@@ -225,24 +260,6 @@ namespace Intel8080
                 this.MemoryUpdate(ticks);
             }
         }
-
-        private Register16 RP(int rp) => rp switch
-        {
-            0 => this.BC,
-            1 => this.DE,
-            2 => this.HL,
-            3 => this.SP,
-            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
-        };
-
-        private Register16 RP2(int rp) => rp switch
-        {
-            0 => this.BC,
-            1 => this.DE,
-            2 => this.HL,
-            3 => this.AF,
-            _ => throw new ArgumentOutOfRangeException(nameof(rp)),
-        };
 
         private void Execute(int x, int y, int z, int p, int q)
         {
@@ -403,37 +420,40 @@ namespace Intel8080
                         this.R(y, this.R(z));
                     }
                     break;
-                case 2: // Operate on accumulator and register/memory location
-                    switch (y)
-                    {
-                        case 0: // ADD A,r
-                            this.Add(this.R(z));
-                            break;
-                        case 1: // ADC A,r
-                            this.ADC(this.R(z));
-                            break;
-                        case 2: // SUB r
-                            this.SUB(this.R(z));
-                            break;
-                        case 3: // SBC A,r
-                            this.SBB(this.R(z));
-                            break;
-                        case 4: // AND r
-                            this.AndR(this.R(z));
-                            break;
-                        case 5: // XOR r
-                            this.XorR(this.R(z));
-                            break;
-                        case 6: // OR r
-                            this.OrR(this.R(z));
-                            break;
-                        case 7: // CP r
-                            this.Compare(this.R(z));
-                            break;
-                        default:
-                            throw new NotSupportedException("Invalid operation mode");
+                case 2:
+                    { // Operate on accumulator and register/memory location
+                        var value = this.R(z);
+                        switch (y)
+                        {
+                            case 0: // ADD A,r
+                                this.A = this.Add(this.A, value);
+                                break;
+                            case 1: // ADC A,r
+                                this.A = this.ADC(this.A, value);
+                                break;
+                            case 2: // SUB r
+                                this.A = this.SUB(this.A, value);
+                                break;
+                            case 3: // SBC A,r
+                                this.A = this.SBC(this.A, value);
+                                break;
+                            case 4: // AND r
+                                this.AndR(value);
+                                break;
+                            case 5: // XOR r
+                                this.XorR(value);
+                                break;
+                            case 6: // OR r
+                                this.OrR(value);
+                                break;
+                            case 7: // CP r
+                                this.Compare(value);
+                                break;
+                            default:
+                                throw new NotSupportedException("Invalid operation mode");
+                        }
+                        break;
                     }
-                    break;
                 case 3:
                     switch (z)
                     {
@@ -528,38 +548,40 @@ namespace Intel8080
                             }
 
                             break;
-                        case 6: // Operate on accumulator and immediate operand: alu[y] n
-                            _ = this.FetchByte();
-                            switch (y)
-                            {
-                                case 0: // ADD A,n
-                                    this.Add(this.Bus.Data);
-                                    break;
-                                case 1: // ADC A,n
-                                    this.ADC(this.Bus.Data);
-                                    break;
-                                case 2: // SUB n
-                                    this.SUB(this.Bus.Data);
-                                    break;
-                                case 3: // SBC A,n
-                                    this.SBB(this.Bus.Data);
-                                    break;
-                                case 4: // AND n
-                                    this.AndR(this.Bus.Data);
-                                    break;
-                                case 5: // XOR n
-                                    this.XorR(this.Bus.Data);
-                                    break;
-                                case 6: // OR n
-                                    this.OrR(this.Bus.Data);
-                                    break;
-                                case 7: // CP n
-                                    this.Compare(this.Bus.Data);
-                                    break;
-                                default:
-                                    throw new NotSupportedException("Invalid operation mode");
+                        case 6:
+                            { // Operate on accumulator and immediate operand: alu[y] n
+                                var operand = this.FetchByte();
+                                switch (y)
+                                {
+                                    case 0: // ADD A,n
+                                        this.A = this.Add(this.A, operand);
+                                        break;
+                                    case 1: // ADC A,n
+                                        this.A = this.ADC(this.A, operand);
+                                        break;
+                                    case 2: // SUB n
+                                        this.A = this.SUB(this.A, operand);
+                                        break;
+                                    case 3: // SBC A,n
+                                        this.A = this.SBC(this.A, operand);
+                                        break;
+                                    case 4: // AND n
+                                        this.AndR(operand);
+                                        break;
+                                    case 5: // XOR n
+                                        this.XorR(operand);
+                                        break;
+                                    case 6: // OR n
+                                        this.OrR(operand);
+                                        break;
+                                    case 7: // CP n
+                                        this.Compare(operand);
+                                        break;
+                                    default:
+                                        throw new NotSupportedException("Invalid operation mode");
+                                }
+                                break;
                             }
-                            break;
                         case 7: // Restart: RST y * 8
                             this.Restart((byte)(y << 3));
                             break;
@@ -575,16 +597,18 @@ namespace Intel8080
 
         private byte Increment(byte operand)
         {
-            this.F = AdjustSZP(this.F, ++operand);
-            this.F = ClearBit(this.F, StatusBits.AC, LowNibble(operand));
-            return operand;
+            var result = operand; ++operand;
+            AdjustSZP(result);
+            ClearBit(StatusBits.AC, LowNibble(result));
+            return result;
         }
 
         private byte Decrement(byte operand)
         {
-            this.F = AdjustSZP(this.F, --operand);
-            this.F = SetBit(this.F, StatusBits.AC, LowNibble(operand) != (byte)Mask.Four);
-            return operand;
+            var result = operand; --operand;
+            AdjustSZP(result);
+            SetBit(StatusBits.AC, LowNibble(result) != (byte)Mask.Four);
+            return result;
         }
 
         protected sealed override bool ConvertCondition(int flag) => flag switch
@@ -614,58 +638,58 @@ namespace Intel8080
         {
             var result = this.HL.Word + value.Word;
             this.HL.Word = (ushort)result;
-            this.F = SetBit(this.F, StatusBits.CF, result & (int)Bits.Bit16);
+            SetBit(StatusBits.CF, result & (int)Bits.Bit16);
         }
 
-        private void Add(byte value, int carry = 0)
+        private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.MEMPTR.Word = (ushort)(this.A + value + carry);
+            this.Intermediate.Word = (ushort)(operand + value + carry);
+            var result = this.Intermediate.Low;
 
-            this.F = AdjustAuxiliaryCarryAdd(this.F, this.A, value, this.MEMPTR.Low);
+            AdjustAuxiliaryCarryAdd(operand, value, result);
 
-            this.A = this.MEMPTR.Low;
-
-            this.F = SetBit(this.F, StatusBits.CF, CarryTest(this.MEMPTR.High));
-            this.F = AdjustSZP(this.F, this.A);
-        }
-
-        private void ADC(byte value) => this.Add(value, this.Carry());
-
-        private byte Subtract(byte operand, byte value, int carry = 0)
-        {
-            this.MEMPTR.Word = (ushort)(operand - value - carry);
-
-            this.F = AdjustAuxiliaryCarrySub(this.F, operand, value, this.MEMPTR.Word);
-
-            var result = this.MEMPTR.Low;
-
-            this.F = SetBit(this.F, StatusBits.CF, CarryTest(this.MEMPTR.High));
-            this.F = AdjustSZP(this.F, result);
+            SetBit(StatusBits.CF, CarryTest(this.Intermediate.High));
+            AdjustSZP(result);
 
             return result;
         }
 
-        private void SUB(byte value, int carry = 0) => this.A = this.Subtract(this.A, value, carry);
+        private byte ADC(byte operand, byte value) => this.Add(operand, value, this.Carry());
 
-        private void SBB(byte value) => this.SUB(value, this.Carry());
+        private byte Subtract(byte operand, byte value, int carry = 0)
+        {
+            this.Intermediate.Word = (ushort)(operand - value - carry);
+            var result = this.Intermediate.Low;
+
+            AdjustAuxiliaryCarrySub(operand, value, this.Intermediate.Word);
+
+            SetBit(StatusBits.CF, CarryTest(this.Intermediate.High));
+            AdjustSZP(result);
+
+            return result;
+        }
+
+        private byte SUB(byte operand, byte value, int carry = 0) => this.Subtract(operand, value, carry);
+
+        private byte SBC(byte operand, byte value) => this.SUB(operand, value, this.Carry());
 
         private void AndR(byte value)
         {
-            this.F = SetBit(this.F, StatusBits.AC, (this.A | value) & (int)Bits.Bit3);
-            this.F = ClearBit(this.F, StatusBits.CF);
-            this.F = AdjustSZP(this.F, this.A &= value);
+            SetBit(StatusBits.AC, (this.A | value) & (int)Bits.Bit3);
+            ClearBit(StatusBits.CF);
+            AdjustSZP(this.A &= value);
         }
 
         private void XorR(byte value)
         {
-            this.F = ClearBit(this.F, StatusBits.AC | StatusBits.CF);
-            this.F = AdjustSZP(this.F, this.A ^= value);
+            ClearBit(StatusBits.AC | StatusBits.CF);
+            AdjustSZP(this.A ^= value);
         }
 
         private void OrR(byte value)
         {
-            this.F = ClearBit(this.F, StatusBits.AC | StatusBits.CF);
-            this.F = AdjustSZP(this.F, this.A |= value);
+            ClearBit(StatusBits.AC | StatusBits.CF);
+            AdjustSZP(this.A |= value);
         }
 
         private void Compare(byte value) => this.Subtract(this.A, value);
@@ -673,28 +697,28 @@ namespace Intel8080
         private byte RLC(byte operand)
         {
             var carry = operand & (byte)Bits.Bit7;
-            this.F = SetBit(this.F, StatusBits.CF, carry);
+            SetBit(StatusBits.CF, carry);
             return (byte)((operand << 1) | (carry >> 7));
         }
 
         private byte RRC(byte operand)
         {
             var carry = operand & (byte)Bits.Bit0;
-            this.F = SetBit(this.F, StatusBits.CF, carry);
+            SetBit(StatusBits.CF, carry);
             return (byte)((operand >> 1) | (carry << 7));
         }
 
         private byte RL(byte operand)
         {
             var carry = this.Carry();
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            SetBit(StatusBits.CF, operand & (byte)Bits.Bit7);
             return (byte)((operand << 1) | carry);
         }
 
         private byte RR(byte operand)
         {
             var carry = this.Carry();
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit0);
+            SetBit(StatusBits.CF, operand & (byte)Bits.Bit0);
             return (byte)((operand >> 1) | (carry << 7));
         }
 
@@ -714,15 +738,15 @@ namespace Intel8080
                 carry = true;
             }
 
-            this.Add(addition);
-            this.F = SetBit(this.F, StatusBits.CF, carry);
+            this.A = this.Add(this.A, addition);
+            SetBit(StatusBits.CF, carry);
         }
 
         private void CMA() => this.A = (byte)~this.A;
 
-        private void STC() => this.F = SetBit(this.F, StatusBits.CF);
+        private void STC() => SetBit(StatusBits.CF);
 
-        private void CMC() => this.F = ClearBit(this.F, StatusBits.CF, this.Carry());
+        private void CMC() => ClearBit(StatusBits.CF, this.Carry());
 
         private void XHTL(Register16 exchange)
         {
