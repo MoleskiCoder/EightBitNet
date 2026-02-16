@@ -45,6 +45,7 @@ namespace EightBit
 
         public Register16(Register16 rhs)
         {
+            ArgumentNullException.ThrowIfNull(rhs);
             this.Low = rhs.Low;
             this.High = rhs.High;
         }
@@ -71,7 +72,11 @@ namespace EightBit
 
         public ref byte High => ref this._high;
 
-        public static bool operator ==(Register16 left, Register16 right) => left.Equals(right);
+        public static bool operator ==(Register16 left, Register16 right)
+        {
+            ArgumentNullException.ThrowIfNull(left);
+            return left.Equals(right);
+        }
 
         public static bool operator !=(Register16 left, Register16 right) => !(left == right);
 
@@ -89,6 +94,7 @@ namespace EightBit
 
         public void Assign(Register16 from)
         {
+            ArgumentNullException.ThrowIfNull(from);
             this.Low = from.Low;
             this.High = from.High;
         }

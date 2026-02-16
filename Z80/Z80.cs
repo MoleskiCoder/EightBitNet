@@ -522,8 +522,8 @@ namespace Z80
             {
                 this.RefreshMemory();
             }
-            this.OnReadMemory();
             this.Tick();
+            this.OnReadMemory();
             return this.Bus.Data;
         }
 
@@ -1169,7 +1169,7 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    this.RP(p).Assign(this.FetchWord());
+                                    this.FetchInto(this.RP(p));
                                     break;
                                 case 1: // ADD HL,rp
                                     this.HL2().Assign(this.Add(this.HL2(), this.RP(p)));
@@ -1816,20 +1816,20 @@ namespace Z80
 
         private byte RL(byte operand)
         {
-            this.ClearBit(StatusBits.NF | StatusBits.HC);
             var carry = this.Carry();
             this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit7);
             var result = (byte)((operand << 1) | carry);
+            this.ClearBit(StatusBits.NF | StatusBits.HC);
             this.AdjustXY(result);
             return result;
         }
 
         private byte RR(byte operand)
         {
-            this.ClearBit(StatusBits.NF | StatusBits.HC);
             var carry = this.Carry();
             this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)((operand >> 1) | (carry << 7));
+            this.ClearBit(StatusBits.NF | StatusBits.HC);
             this.AdjustXY(result);
             return result;
         }
@@ -1934,10 +1934,11 @@ namespace Z80
             this.AdjustXY((byte)((this.Q ^ this.F) | this.A));
         }
 
-        private void CPL()
+        protected override void CPL()
         {
+            base.CPL();
             this.SetBit(StatusBits.HC | StatusBits.NF);
-            this.AdjustXY(this.A = (byte)~this.A);
+            this.AdjustXY(this.A);
         }
 
         private void XHTL(Register16 exchange)

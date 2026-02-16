@@ -285,5 +285,8 @@ namespace EightBit
         protected virtual void ReturnConditionalFlag(int flag) => this.ReturnConditional(this.ConvertCondition(flag));
 
         protected virtual void CallConditionalFlag(int flag) => this.CallConditional(this.ConvertCondition(flag));
+
+        protected virtual void CPL() => this.A = (byte)~this.A;
+
     }
 }

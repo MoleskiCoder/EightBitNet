@@ -553,7 +553,7 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    this.RP(p).Assign(this.FetchWord());
+                                    this.FetchInto(this.RP(p));
                                     break;
 
                                 case 1: // ADD HL,rp
@@ -676,7 +676,7 @@ namespace LR35902
                                     this.DAA();
                                     break;
                                 case 5:
-                                    this.Cpl();
+                                    this.CPL();
                                     break;
                                 case 6:
                                     this.SCF();
@@ -1150,10 +1150,10 @@ namespace LR35902
             this.F = AdjustZero(this.F, this.A);
         }
 
-        private void Cpl()
+        protected override void CPL()
         {
+            base.CPL();
             this.F = SetBit(this.F, StatusBits.HC | StatusBits.NF);
-            this.A = (byte)~this.A;
         }
 
         private void SCF()

@@ -22,6 +22,7 @@ namespace EightBit
 
         public byte ReadInputPort(Register16 port)
         {
+            ArgumentNullException.ThrowIfNull(port);
             ReadingPort?.Invoke(this, new PortEventArgs(port));
             var value = this._input[port.Word];
             ReadPort?.Invoke(this, new PortEventArgs(port));
@@ -30,12 +31,17 @@ namespace EightBit
 
         public void WriteInputPort(ushort port, byte value) => this._input[port] = value;
 
-        public void WriteInputPort(Register16 port, byte value) => this.WriteInputPort(port.Word, value);
+        public void WriteInputPort(Register16 port, byte value)
+        {
+            ArgumentNullException.ThrowIfNull(port);
+            this.WriteInputPort(port.Word, value);
+        }
 
         public void Write(Register16 port, byte value) => this.WriteOutputPort(port, value);
 
         public void WriteOutputPort(Register16 port, byte value)
         {
+            ArgumentNullException.ThrowIfNull(port);
             WritingPort?.Invoke(this, new PortEventArgs(port));
             this._output[port.Word] = value;
             WrittenPort?.Invoke(this, new PortEventArgs(port));
@@ -43,6 +49,10 @@ namespace EightBit
 
         public byte ReadOutputPort(ushort port) => this._output[port];
 
-        public byte ReadOutputPort(Register16 port) => this.ReadOutputPort(port.Word);
+        public byte ReadOutputPort(Register16 port)
+        {
+            ArgumentNullException.ThrowIfNull(port);
+            return this.ReadOutputPort(port.Word);
+        }
     }
 }

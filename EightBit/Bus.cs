@@ -24,13 +24,21 @@ namespace EightBit
 
         public byte Peek(ushort absolute) => this.Reference(absolute);
 
-        public byte Peek(Register16 absolute) => this.Peek(absolute.Word);
+        public byte Peek(Register16 absolute)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            return this.Peek(absolute.Word);
+        }
 
         public void Poke(byte value) => this.Reference() = value;
 
         public void Poke(ushort absolute, byte value) => this.Reference(absolute) = value;
 
-        public void Poke(Register16 absolute, byte value) => this.Poke(absolute.Word, value);
+        public void Poke(Register16 absolute, byte value)
+        {
+            ArgumentNullException.ThrowIfNull(absolute);
+            this.Poke(absolute.Word, value);
+        }
 
         public byte Read()
         {
