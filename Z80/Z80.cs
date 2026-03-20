@@ -580,9 +580,8 @@ namespace Z80
                     break;
                 case 2:
                     this.Tick();
-                    this.PushWord(this.PC);
-                    this.Bus.Address.Assign(data, this.IV);
-                    this.PC.Assign(this.GetWordPaged());
+                    this.MEMPTR.Assign(this.GetWordPaged(data, this.IV));
+                    this.Call(this.MEMPTR);
                     Debug.Assert(this.Cycles == 19);
                     break;
                 default:
