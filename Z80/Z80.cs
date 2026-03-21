@@ -1315,7 +1315,11 @@ namespace Z80
 
                     break;
                 case 1: // 8-bit loading
-                    if (!(memoryZ && memoryY))
+                    if (memoryZ && memoryY)
+                    {
+                        this.LowerHALT(); // Exception (replaces LD (HL), (HL))
+                    }
+                    else
                     {
                         var normal = true;
                         if (this._displaced)
@@ -1366,10 +1370,6 @@ namespace Z80
                             var value = this.R(z);
                             this.R(y, value);
                         }
-                    }
-                    else
-                    {
-                        this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                     }
 
                     break;
@@ -2334,7 +2334,7 @@ namespace Z80
 
         private void ReadPort(byte port)
         {
-            this.Bus.Address.Assign(port, this.Bus.Data = this.A);
+            this.Bus.Address.Assign(port, this.A);
             this.ReadPort();
             this.MEMPTR.Increment();
         }
