@@ -11,14 +11,14 @@ namespace LR35902
         public LR35902(Bus bus)
         : base(bus)
         {
-            this.bus = bus;
+            this._bus = bus;
             this.RaisedPOWER += this.LR35902_RaisedPOWER;
             this.RaisingHALT += this.LR35902_RaisingHALT;
         }
 
-        private readonly Bus bus;
-        private readonly Register16 af = new((int)Mask.Sixteen);
-        private bool prefixCB;
+        private readonly Bus _bus;
+        private readonly Register16 _af = new((int)Mask.Sixteen);
+        private bool _prefixCB;
 
         public int MachineCycles => this.Cycles / 4;
 
@@ -26,8 +26,8 @@ namespace LR35902
         {
             get
             {
-                this.af.Low = (byte)HigherNibble(this.af.Low);
-                return this.af;
+                this._af.Low = (byte)HigherNibble(this._af.Low);
+                return this._af;
             }
         }
 
@@ -49,8 +49,8 @@ namespace LR35902
 
         public byte IF
         {
-            get => this.bus.IO.Peek(IoRegisters.IF);
-            set => this.bus.IO.Poke(IoRegisters.IF, value);
+            get => this._bus.IO.Peek(IoRegisters.IF);
+            set => this._bus.IO.Poke(IoRegisters.IF, value);
         }
 
         public byte MaskedInterrupts => (byte)(this.IE & this.IF);
@@ -181,7 +181,7 @@ namespace LR35902
             var p = decoded.P;
             var q = decoded.Q;
 
-            if (this.prefixCB)
+            if (this._prefixCB)
             {
                 this.ExecuteCB(x, y, z);
             }
@@ -190,12 +190,12 @@ namespace LR35902
                 this.ExecuteOther(x, y, z, p, q);
             }
 
-            System.Diagnostics.Debug.Assert(this.Cycles > 0, $"No timing associated with instruction (CB prefixed? {this.prefixCB}) 0x{this.OpCode:X2}");
+            System.Diagnostics.Debug.Assert(this.Cycles > 0, $"No timing associated with instruction (CB prefixed? {this._prefixCB}) 0x{this.OpCode:X2}");
         }
 
         public override void PoweredStep()
         {
-            this.prefixCB = false;
+            this._prefixCB = false;
 
             if (this.EI)
             {
@@ -579,7 +579,6 @@ namespace LR35902
 
                                         case 1: // LD (DE),A
                                             this.WriteMemoryIndirect(this.DE, A);
-
                                             break;
 
                                         case 2: // GB: LDI (HL),A
@@ -696,14 +695,14 @@ namespace LR35902
                     break;
 
                 case 1: // 8-bit loading
-                    if (!(memoryZ && memoryY))
-                    {
-                        this.R(y, this.R(z));
-                    }
-                    else
+                    if (memoryZ && memoryY)
                     {
                         this.LowerHALT(); // Exception (replaces LD (HL), (HL))
                         this.TickMachine(2);
+                    }
+                    else
+                    {
+                        this.R(y, this.R(z));
                     }
                     break;
 
@@ -863,7 +862,7 @@ namespace LR35902
                                     this.JumpIndirect();
                                     break;
                                 case 1: // CB prefix
-                                    this.prefixCB = true;
+                                    this._prefixCB = true;
                                     this.Execute(this.FetchByte());
                                     break;
                                 case 6: // DI
