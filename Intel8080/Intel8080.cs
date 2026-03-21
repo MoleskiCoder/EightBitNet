@@ -9,20 +9,34 @@ namespace Intel8080
     using System;
     using System.Diagnostics;
 
-    public class Intel8080(Bus bus, InputOutput ports) : IntelProcessor(bus)
+    public class Intel8080 : IntelProcessor
     {
-        private readonly Register16 af = new();
+        public Intel8080(Bus bus, InputOutput ports)
+        : base(bus)
+        {
+            this._ports = ports;
+            this.RaisedPOWER += this.Intel8080_RaisedPOWER;
+            this.LoweredRESET += this.Intel8080_LoweredRESET;
+            this.LoweredINT += this.Intel8080_LoweredINT;
+        }
 
-        private readonly InputOutput ports = ports;
+        private bool _interruptPending;
+        private bool _resetPending;
 
-        private bool interruptEnable;
+        private readonly InputOutput _ports;
+
+        public InputOutput Ports => this._ports;
+
+        private readonly Register16 _af = new();
+
+        private bool _interruptEnable;
 
         public override Register16 AF
         {
             get
             {
-                this.af.Low = (byte)((this.af.Low | (byte)Bits.Bit1) & (int)~(Bits.Bit5 | Bits.Bit3));
-                return this.af;
+                this._af.Low = (byte)((this._af.Low | (byte)Bits.Bit1) & (int)~(Bits.Bit5 | Bits.Bit3));
+                return this._af;
             }
         }
 
@@ -48,21 +62,39 @@ namespace Intel8080
 
         public override void PoweredStep()
         {
-            if (this.RESET.Lowered())
+            if (this._resetPending)
             {
+                this._resetPending = false;
                 this.HandleRESET();
+                return;
             }
-            else if (this.INT.Lowered())
+            else if (this._interruptPending)
             {
-                if (this.interruptEnable)
+                this._interruptPending = false;
+                if (this._interruptEnable)
                 {
                     this.HandleINT();
+                    return;
                 }
             }
-            else
-            {
-                this.Execute(this.FetchInstruction());
-            }
+
+            this.Execute(this.FetchInstruction());
+        }
+
+        private void Intel8080_RaisedPOWER(object? sender, EventArgs e)
+        {
+            this.DisableInterrupts();
+            this.ResetRegisterSet();
+        }
+
+        private void Intel8080_LoweredINT(object? sender, EventArgs e)
+        {
+            this._interruptPending = true;
+        }
+
+        private void Intel8080_LoweredRESET(object? sender, EventArgs e)
+        {
+            this._resetPending = true;
         }
 
         private void MemoryUpdate(int ticks)
@@ -192,9 +224,9 @@ namespace Intel8080
 
         private void AdjustAuxiliaryCarrySub(byte before, byte value, int calculation) => this.F = AdjustAuxiliaryCarrySub(this.F, before, value, calculation);
 
-        protected override void DisableInterrupts() => this.interruptEnable = false;
+        protected override void DisableInterrupts() => this._interruptEnable = false;
 
-        protected override void EnableInterrupts() => this.interruptEnable = true;
+        protected override void EnableInterrupts() => this._interruptEnable = true;
 
         private Register16 RP(int rp) => rp switch
         {
@@ -284,10 +316,10 @@ namespace Intel8080
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    this.RP(p).Assign(this.FetchWord());
+                                    this.FetchInto(this.RP(p));
                                     break;
                                 case 1: // ADD HL,rp
-                                    this.Add(this.RP(p));
+                                    this.HL.Assign(this.Add(this.HL, this.RP(p)));
                                     this.Tick(7);
                                     break;
                                 default:
@@ -302,7 +334,7 @@ namespace Intel8080
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.WriteMemoryIndirect(this.BC, this.A);
+                                            this.WriteMemoryIndirect(this.BC, this.A);  //xxxx
                                             break;
                                         case 1: // LD (DE),A
                                             this.WriteMemoryIndirect(this.DE, this.A);
@@ -365,14 +397,7 @@ namespace Intel8080
                             this.R(y, this.Decrement(this.R(y)), 2);
                             break;
                         case 6: // 8-bit load immediate
-                            {
-                                _ = this.FetchByte();  // LD r,n
-                                if (memoryY)
-                                {
-                                    this.Tick(2);
-                                }
-                                this.R(y, this.Bus.Data);
-                            }
+                            this.R(y, this.FetchByte(), 2);// LD r,n
                             break;
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
@@ -393,7 +418,7 @@ namespace Intel8080
                                     this.DAA();
                                     break;
                                 case 5:
-                                    this.CMA();
+                                    this.CPL();
                                     break;
                                 case 6:
                                     this.STC();
@@ -502,7 +527,8 @@ namespace Intel8080
                                     this.WritePort(this.FetchByte());
                                     break;
                                 case 3: // IN A,(n)
-                                    this.A = this.ReadPort(this.FetchByte());
+                                    this.ReadPort(this.FetchByte());
+                                    this.A = this.Bus.Data;
                                     break;
                                 case 4: // EX (SP),HL
                                     this.XHTL(this.HL);
@@ -597,7 +623,7 @@ namespace Intel8080
 
         private byte Increment(byte operand)
         {
-            var result = operand; ++operand;
+            var result = ++operand;
             AdjustSZP(result);
             ClearBit(StatusBits.AC, LowNibble(result));
             return result;
@@ -605,7 +631,7 @@ namespace Intel8080
 
         private byte Decrement(byte operand)
         {
-            var result = operand; --operand;
+            var result = --operand;
             AdjustSZP(result);
             SetBit(StatusBits.AC, LowNibble(result) != (byte)Mask.Four);
             return result;
@@ -634,11 +660,14 @@ namespace Intel8080
             }
         }
 
-        private void Add(Register16 value)
+        private Register16 Add(Register16 operand, Register16 value)
         {
-            var result = this.HL.Word + value.Word;
-            this.HL.Word = (ushort)result;
-            SetBit(StatusBits.CF, result & (int)Bits.Bit16);
+            var addition = operand.Word + value.Word;
+            this.Intermediate.Word = (ushort)addition;
+
+            SetBit(StatusBits.CF, addition & (int)Bits.Bit16);
+
+            return this.Intermediate;
         }
 
         private byte Add(byte operand, byte value, int carry = 0)
@@ -742,8 +771,6 @@ namespace Intel8080
             SetBit(StatusBits.CF, carry);
         }
 
-        private void CMA() => this.A = (byte)~this.A;
-
         private void STC() => SetBit(StatusBits.CF);
 
         private void CMC() => ClearBit(StatusBits.CF, this.Carry());
@@ -763,32 +790,47 @@ namespace Intel8080
             this.Tick(2);
         }
 
+        #region Input/output port control
+
+        private void WritePort(Register16 port, byte data)
+        {
+            this.Bus.Data = data;
+            this.WritePort(port);
+        }
+
         private void WritePort(byte port)
         {
-            this.Bus.Address.Assign(port, this.A);
-            this.Bus.Data = this.A;
+            this.Bus.Address.Assign(port, this.Bus.Data = this.A);
             this.WritePort();
         }
 
         private void WritePort()
         {
             this.Tick(3);
-            this.ports.Write(this.Bus.Address, this.Bus.Data);
+            this.Ports.Write(this.Bus.Address, this.Bus.Data);
             this.Tick(1);
         }
 
-        private byte ReadPort(byte port)
+        private void WritePort(Register16 port)
         {
-            this.Bus.Address.Assign(port, this.A);
-            return this.ReadPort();
+            this.Bus.Address.Assign(port);
+            this.WritePort();
         }
 
-        private byte ReadPort()
+        private void ReadPort(byte port)
+        {
+            this.Bus.Address.Assign(port, this.A);
+            this.ReadPort();
+        }
+
+        private void ReadPort()
         {
             this.Tick(2);
-            this.Bus.Data = this.ports.Read(this.Bus.Address);
+            this.Bus.Data = this.Ports.Read(this.Bus.Address);
             this.Tick(2);
-            return this.Bus.Data;
         }
+
+        #endregion
+
     }
 }
