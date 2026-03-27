@@ -13,7 +13,7 @@ namespace EightBit
 
         #endregion
 
-        #region Instruction execution events
+        #region Memory events
 
         public event EventHandler<EventArgs>? ReadingMemory;
         public event EventHandler<EventArgs>? ReadMemory;
