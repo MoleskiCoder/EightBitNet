@@ -477,7 +477,7 @@ namespace Z80
 
         #endregion
 
-        private void MemoryUpdate(int ticks)
+        private void MemoryUpdate(int ticks = 1)
         {
             Debug.Assert(ticks > 0, "Ticks must be greater than zero");
             this.OnWritingMemory();
@@ -494,7 +494,7 @@ namespace Z80
 
         protected override void MemoryWrite()
         {
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
         }
 
         private void RefreshMemory()
@@ -1951,7 +1951,7 @@ namespace Z80
             _ = this.Bus.Address.Decrement();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
             this.Tick(2);
         }
 
@@ -2040,7 +2040,7 @@ namespace Z80
         {
             _ = this.MemoryRead(this.HL);
             this.Bus.Address.Assign(this.DE);
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
             this.Tick(2);
             var xy = this.A + this.Bus.Data;
             this.SetBit(StatusBits.XF, xy & (int)Bits.Bit3);
@@ -2141,7 +2141,7 @@ namespace Z80
             this.Tick();
             this.ReadPort(this.BC);
             this.Bus.Address.Assign(this.HL);
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
             this.AdjustSZXY(--this.B);
             this.SetBit(StatusBits.NF, this.Bus.Data & (byte)StatusBits.SF);
         }
