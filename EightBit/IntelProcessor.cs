@@ -205,7 +205,7 @@ namespace EightBit
             this.Call();
         }
 
-        protected void CallConditional(bool condition)
+        protected virtual void CallConditional(bool condition)
         {
             this.FetchInto(this.MEMPTR);
             if (condition)

@@ -97,7 +97,7 @@ namespace Intel8080
             this._resetPending = true;
         }
 
-        private void MemoryUpdate(int ticks)
+        private void MemoryUpdate(int ticks = 1)
         {
             Debug.Assert(ticks > 0, "Ticks must be greater than zero");
             this.OnWritingMemory();
@@ -109,7 +109,7 @@ namespace Intel8080
 
         protected override void MemoryWrite()
         {
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
         }
 
         protected override byte MemoryRead()
@@ -132,7 +132,7 @@ namespace Intel8080
 
         private byte ReadDataUnderInterrupt()
         {
-            this.Tick(4);
+            this.Tick(5);
             return this.Bus.Data;
         }
 
@@ -320,7 +320,7 @@ namespace Intel8080
                                     break;
                                 case 1: // ADD HL,rp
                                     this.HL.Assign(this.Add(this.HL, this.RP(p)));
-                                    this.Tick(7);
+                                    this.Tick(6);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -388,13 +388,15 @@ namespace Intel8080
                                 1 => this.RP(p).Decrement(),
                                 _ => throw new NotSupportedException("Invalid operation mode"),
                             };
-                            this.Tick(2);
+                            this.Tick();
                             break;
                         case 4: // 8-bit INC
                             this.R(y, this.Increment(this.R(y)), 2);
+                            this.Tick();
                             break;
                         case 5: // 8-bit DEC
                             this.R(y, this.Decrement(this.R(y)), 2);
+                            this.Tick();
                             break;
                         case 6: // 8-bit load immediate
                             this.R(y, this.FetchByte(), 2);// LD r,n
@@ -443,6 +445,7 @@ namespace Intel8080
                     else
                     {
                         this.R(y, this.R(z));
+                        this.Tick();
                     }
                     break;
                 case 2:
@@ -499,6 +502,7 @@ namespace Intel8080
                                             break;
                                         case 2: // JP HL
                                             this.Jump(this.HL);
+                                            this.Tick();
                                             break;
                                         case 3: // LD SP,HL
                                             this.SP.Assign(this.HL);
@@ -536,6 +540,7 @@ namespace Intel8080
                                 case 5: // EX DE,HL
                                     (this.HL.Low, this.DE.Low) = (this.DE.Low, this.HL.Low);
                                     (this.HL.High, this.DE.High) = (this.DE.High, this.HL.High);
+                                    this.Tick();
                                     break;
                                 case 6: // DI
                                     this.DisableInterrupts();
@@ -649,6 +654,19 @@ namespace Intel8080
             7 => this.Sign() != 0,
             _ => throw new ArgumentOutOfRangeException(nameof(flag)),
         };
+
+        protected sealed override void CallConditional(bool condition)
+        {
+            this.FetchInto(this.MEMPTR);
+            if (condition)
+            {
+                this.Call();
+            }
+            else
+            {
+                this.Tick();
+            }
+        }
 
         protected sealed override void ReturnConditionalFlag(int flag)
         {
@@ -786,7 +804,7 @@ namespace Intel8080
             _ = this.Bus.Address.Decrement();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
             this.Tick(2);
         }
 
