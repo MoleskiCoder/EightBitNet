@@ -4,7 +4,6 @@
 
 namespace EightBit
 {
-    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
 
     [StructLayout(LayoutKind.Explicit, Size = 2)]
@@ -99,14 +98,12 @@ namespace EightBit
             this.High = from.High;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Register16 Increment()
         {
             ++this.Word;
             return this;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Register16 Decrement()
         {
             --this.Word;
