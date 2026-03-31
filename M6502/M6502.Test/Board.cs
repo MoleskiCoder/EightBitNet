@@ -17,7 +17,7 @@ namespace M6502.Test
         private readonly Ram ram = new(0x10000);
         private readonly Symbols.Parser symbols = new();
         private readonly Disassembler disassembler;
-        private readonly Profiler profiler;
+        private readonly Profiler<MOS6502> profiler;
         private readonly MemoryMapping mapping;
 
         private readonly Register16 oldPC = new((ushort)Mask.Sixteen);

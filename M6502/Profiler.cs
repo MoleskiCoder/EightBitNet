@@ -2,14 +2,14 @@
 {
     using System.Diagnostics;
 
-    public sealed class Profiler
+    public sealed class Profiler<TProcessor> where TProcessor : Core
     {
         private readonly long[] instructionCounts = new long[0x100];
         private readonly long[] instructionCycles = new long[0x100];
         private readonly Dictionary<int, long>[] addressCycleDistributions = new Dictionary<int, long>[0x10000];  // Addresses -> cycles -> counts
         private readonly Dictionary<int, long> scopeCycles = []; // ID -> Cycles
 
-        private readonly MOS6502 processor;
+        private readonly TProcessor processor;
         private readonly Disassembler disassembler;
         private readonly Symbols.Parser symbols;
 
@@ -19,7 +19,7 @@
         private long totalCycles = -1;
         private bool totalCyclesValid;
 
-        public Profiler(MOS6502 processor, Disassembler disassembler, Symbols.Parser symbols, bool activate)
+        public Profiler(TProcessor processor, Disassembler disassembler, Symbols.Parser symbols, bool activate)
         {
             ArgumentNullException.ThrowIfNull(processor);
             ArgumentNullException.ThrowIfNull(disassembler);
