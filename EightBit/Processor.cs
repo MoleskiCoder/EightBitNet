@@ -163,37 +163,16 @@ namespace EightBit
 
         protected void OnWrittenMemory() => this.WrittenMemory?.Invoke(this, EventArgs.Empty);
 
-        protected void MemoryWrite(byte low, byte high)
-        {
-            this.Bus.Address.Assign(low, high);
-            this.MemoryWrite();
-        }
-
         protected void MemoryWrite(byte low, byte high, byte data)
         {
             this.Bus.Address.Assign(low, high);
-            this.Bus.Data = data;
-            this.MemoryWrite();
-        }
-
-        protected void MemoryWrite(ushort address, byte data)
-        {
-            this.Bus.Address.Word = address;
-            this.Bus.Data = data;
-            this.MemoryWrite();
+            this.MemoryWrite(data);
         }
 
         protected void MemoryWrite(Register16 address, byte data)
         {
             this.Bus.Address.Assign(address);
-            this.Bus.Data = data;
-            this.MemoryWrite();
-        }
-
-        protected void MemoryWrite(Register16 address)
-        {
-            this.Bus.Address.Assign(address);
-            this.MemoryWrite();
+            this.MemoryWrite(data);
         }
 
         protected void MemoryWrite(byte data)
@@ -209,12 +188,6 @@ namespace EightBit
         protected byte MemoryRead(byte low, byte high)
         {
             this.Bus.Address.Assign(low, high);
-            return this.MemoryRead();
-        }
-
-        protected byte MemoryRead(ushort address)
-        {
-            this.Bus.Address.Word = address;
             return this.MemoryRead();
         }
 

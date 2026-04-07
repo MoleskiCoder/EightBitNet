@@ -628,7 +628,7 @@ namespace Intel8080
 
         private byte Increment(byte operand)
         {
-            var result = ++operand;
+            var result = operand; ++result;
             AdjustSZP(result);
             ClearBit(StatusBits.AC, LowNibble(result));
             return result;
@@ -636,7 +636,7 @@ namespace Intel8080
 
         private byte Decrement(byte operand)
         {
-            var result = --operand;
+            var result = operand; --result;
             AdjustSZP(result);
             SetBit(StatusBits.AC, LowNibble(result) != (byte)Mask.Four);
             return result;
@@ -657,12 +657,8 @@ namespace Intel8080
 
         protected sealed override void CallConditional(bool condition)
         {
-            this.FetchInto(this.MEMPTR);
-            if (condition)
-            {
-                this.Call();
-            }
-            else
+            base.CallConditional(condition);
+            if (!condition)
             {
                 this.Tick();
             }
@@ -670,12 +666,8 @@ namespace Intel8080
 
         protected sealed override void ReturnConditionalFlag(int flag)
         {
-            var condition = this.ConvertCondition(flag);
             this.Tick();
-            if (condition)
-            {
-                this.Return();
-            }
+            base.ReturnConditionalFlag(flag);
         }
 
         private Register16 Add(Register16 operand, Register16 value)

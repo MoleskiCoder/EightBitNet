@@ -5,6 +5,7 @@
 namespace LR35902
 {
     using EightBit;
+    using System.Diagnostics;
 
     public sealed class LR35902 : IntelProcessor
     {
@@ -336,29 +337,34 @@ namespace LR35902
 
         private void Start() => this.Stopped = false;
 
-        private void MemoryUpdate(int ticks)
+        private void MemoryUpdate(int ticks = 1)
         {
+            Debug.Assert(ticks > 0, "Ticks must be greater than zero");
+            this.OnWritingMemory();
             this.LowerMWR();
                 this.LowerWR();
                     base.MemoryWrite();
                     this.TickMachine(ticks);
                 this.RaiseWR();
             this.RaiseMWR();
+            this.OnWrittenMemory();
         }
 
         protected override void MemoryWrite()
         {
-            this.MemoryUpdate(1);
+            this.MemoryUpdate();
         }
 
         protected override byte MemoryRead()
         {
+            this.OnReadingMemory();
             this.LowerMWR();
                 this.LowerRD();
                     _ = base.MemoryRead();
                     this.TickMachine();
                 this.RaiseRD();
             this.RaiseMWR();
+            this.OnReadMemory();
             return this.Bus.Data;
         }
 
@@ -863,7 +869,7 @@ namespace LR35902
                                     break;
                                 case 1: // CB prefix
                                     this._prefixCB = true;
-                                    this.Execute(this.FetchByte());
+                                    this.Execute(this.FetchInstruction());
                                     break;
                                 case 6: // DI
                                     this.DisableInterrupts();
@@ -1063,9 +1069,9 @@ namespace LR35902
 
         private byte RL(byte operand)
         {
-            this.F = ClearBit(this.F, StatusBits.NF | StatusBits.HC | StatusBits.ZF);
+            this.ClearBit(StatusBits.NF | StatusBits.HC | StatusBits.ZF);
             var carry = this.Carry();
-            this.F = SetBit(this.F, StatusBits.CF, operand & (byte)Bits.Bit7);
+            this.SetBit(StatusBits.CF, operand & (byte)Bits.Bit7);
             return (byte)((operand << 1) | (carry >> 4));   // CF at Bit4
         }
 
@@ -1146,13 +1152,13 @@ namespace LR35902
             this.SetBit(StatusBits.CF, this.Carry() != 0 || (updated & (int)Bits.Bit8) != 0);
             this.A = LowByte(updated);
 
-            this.F = AdjustZero(this.F, this.A);
+            this.AdjustZero(this.A);
         }
 
         protected override void CPL()
         {
             base.CPL();
-            this.F = SetBit(this.F, StatusBits.HC | StatusBits.NF);
+            this.SetBit(StatusBits.HC | StatusBits.NF);
         }
 
         private void SCF()
@@ -1164,7 +1170,7 @@ namespace LR35902
         private void CCF()
         {
             this.ClearBit(StatusBits.NF | StatusBits.HC);
-            this.ClearBit(StatusBits.CF, this.F & (byte)StatusBits.CF);
+            this.ClearBit(StatusBits.CF, this.Carry());
         }
 
         private void RetI()

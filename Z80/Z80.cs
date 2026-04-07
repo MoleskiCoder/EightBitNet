@@ -1643,19 +1643,21 @@ namespace Z80
         private byte Increment(byte operand)
         {
             this.ClearBit(StatusBits.NF);
-            this.AdjustSZXY(++operand);
-            this.SetBit(StatusBits.VF, operand == (byte)Bits.Bit7);
-            this.ClearBit(StatusBits.HC, LowNibble(operand));
-            return operand;
+            var result = operand; ++result;
+            this.AdjustSZXY(result);
+            this.SetBit(StatusBits.VF, result == (byte)Bits.Bit7);
+            this.ClearBit(StatusBits.HC, LowNibble(result));
+            return result;
         }
 
         private byte Decrement(byte operand)
         {
             this.SetBit(StatusBits.NF);
             this.ClearBit(StatusBits.HC, LowNibble(operand));
-            this.AdjustSZXY(--operand);
-            this.SetBit(StatusBits.VF, operand == (byte)Mask.Seven);
-            return operand;
+            var result = operand; --result;
+            this.AdjustSZXY(result);
+            this.SetBit(StatusBits.VF, result == (byte)Mask.Seven);
+            return result;
         }
 
         private void RetN()
@@ -1681,12 +1683,8 @@ namespace Z80
 
         protected sealed override void ReturnConditionalFlag(int flag)
         {
-            var condition = this.ConvertCondition(flag);
             this.Tick();
-            if (condition)
-            {
-                this.Return();
-            }
+            base.ReturnConditionalFlag(flag);
         }
 
         private Register16 SBC(Register16 operand, Register16 value)
