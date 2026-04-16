@@ -580,8 +580,8 @@ namespace Z80
                     break;
                 case 2:
                     this.Tick();
-                    this.MEMPTR.Assign(this.GetWordPaged(data, this.IV));
-                    this.Call(this.MEMPTR);
+                    this.GetPagedInto(data, this.IV, this.MEMPTR);
+                    base.Call();
                     Debug.Assert(this.Cycles == 19);
                     break;
                 default:
@@ -963,7 +963,8 @@ namespace Z80
                                     this.SetWord(this.RP(p));
                                     break;
                                 case 1: // LD rp[p], (nn)
-                                    this.RP(p).Assign(this.GetWord());
+                                    this.GetWord();
+                                    this.RP(p).Assign(this.Intermediate);
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1215,7 +1216,8 @@ namespace Z80
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.FetchWordAddress();
-                                            this.HL2().Assign(this.GetWord());
+                                            this.GetWord();
+                                            this.HL2().Assign(this.Intermediate);
                                             break;
                                         case 3: // LD A,(nn)
                                             this.FetchInto(this.MEMPTR);
@@ -1940,9 +1942,8 @@ namespace Z80
 
         private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.MemoryRead(this.SP);
-            this.Bus.Address.Increment();
-            this.MEMPTR.High = this.MemoryRead();
+            this.Bus.Address.Assign(this.SP);
+            this.GetInto(this.MEMPTR);
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
             this.MemoryUpdate(2);

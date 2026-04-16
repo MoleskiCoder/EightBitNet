@@ -533,7 +533,8 @@ namespace LR35902
                                 case 0: // NOP
                                     break;
                                 case 1: // GB: LD (nn),SP
-                                    this.Bus.Address.Assign(this.FetchWord());
+                                    this.FetchWord();
+                                    this.Bus.Address.Assign(this.Intermediate);
                                     this.SetWord(this.SP);
                                     break;
                                 case 2: // GB: STOP

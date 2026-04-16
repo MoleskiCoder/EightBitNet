@@ -219,45 +219,59 @@ namespace EightBit
 
         protected abstract void GetInto(Register16 into);
 
-        protected virtual Register16 GetWord()
+        protected virtual void GetWord()
         {
             this.GetInto(this.Intermediate);
-            return this.Intermediate;
         }
 
         protected abstract void SetWord(Register16 value);
 
-        protected abstract Register16 GetWordPaged();
+        protected abstract void GetPagedInto(Register16 into);
 
-        protected Register16 GetWordPaged(byte page, byte offset)
+        protected virtual void GetWordPaged()
         {
-            this.Bus.Address.Assign(offset, page);
-            return this.GetWordPaged();
+            this.GetPagedInto(this.Intermediate);
         }
 
-        protected abstract void SetWordPaged(Register16 value);
+        protected void GetWordPaged(byte page, byte offset)
+        {
+            this.Bus.Address.Assign(offset, page);
+            this.GetWordPaged();
+        }
 
-        protected void SetWordPaged(Register16 address, Register16 value)
+        protected void GetPagedInto(byte page, byte offset, Register16 into)
+        {
+            ArgumentNullException.ThrowIfNull(into);
+            this.Bus.Address.Assign(offset, page);
+            this.GetPagedInto(into);
+        }
+
+        protected abstract void SetPaged(Register16 value);
+
+        protected void SetPaged(Register16 address, Register16 value)
         {
             this.Bus.Address.Assign(address);
-            this.SetWordPaged(value);
+            this.SetPaged(value);
         }
 
-        protected void SetWordPaged(byte page, byte offset, Register16 value)
+        protected void SetPaged(byte page, byte offset, Register16 value)
         {
             this.Bus.Address.Assign(offset, page);
-            this.SetWordPaged(value);
+            this.SetPaged(value);
         }
 
         protected abstract void FetchInto(Register16 into);
 
-        protected Register16 FetchWord()
+        protected void FetchWord()
         {
             this.FetchInto(this.Intermediate);
-            return this.Intermediate;
         }
 
-        protected void FetchWordAddress() => this.Bus.Address.Assign(this.FetchWord());
+        protected void FetchWordAddress()
+        {
+            this.FetchWord();
+            this.Bus.Address.Assign(this.Intermediate);
+        }
 
         protected abstract void Push(byte value);
 
@@ -267,10 +281,10 @@ namespace EightBit
 
         protected abstract void PopInto(Register16 into);
 
-        protected Register16 GetWord(Register16 address)
+        protected void GetWord(Register16 address)
         {
             this.Bus.Address.Assign(address);
-            return this.GetWord();
+            this.GetWord();
         }
 
         protected void SetWord(Register16 address, Register16 value)

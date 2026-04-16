@@ -34,12 +34,12 @@ namespace EightBit
             into.Low = this.MemoryRead();
         }
 
-        protected override Register16 GetWordPaged()
+        protected override void GetPagedInto(Register16 into)
         {
-            this.Intermediate.High = this.MemoryRead();
+            ArgumentNullException.ThrowIfNull(into);
+            into.High = this.MemoryRead();
             ++this.Bus.Address.Low;
-            this.Intermediate.Low = this.MemoryRead();
-            return this.Intermediate;
+            into.Low = this.MemoryRead();
         }
 
         protected override void PopInto(Register16 into)
@@ -64,7 +64,7 @@ namespace EightBit
             this.MemoryWrite(value.Low);
         }
 
-        protected override void SetWordPaged(Register16 value)
+        protected override void SetPaged(Register16 value)
         {
             ArgumentNullException.ThrowIfNull(value);
             this.MemoryWrite(value.High);

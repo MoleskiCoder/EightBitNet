@@ -215,7 +215,8 @@ namespace M6502
                 this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
             }
             this.SetFlag(StatusBits.IF);   // Disable IRQ
-            this.Jump(this.GetWordPaged(0xff, vector));
+            this.GetWordPaged(0xff, vector);
+            this.Jump(this.Intermediate);
         }
 
         #region Interrupt etc. handlers
@@ -659,7 +660,7 @@ namespace M6502
 
         protected void GetAddressPaged()
         {
-            _ = this.GetWordPaged();
+            this.GetWordPaged();
             this.Bus.Address.Assign(this.Intermediate);
         }
 

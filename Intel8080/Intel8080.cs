@@ -787,9 +787,8 @@ namespace Intel8080
 
         private void XHTL(Register16 exchange)
         {
-            this.MEMPTR.Low = this.MemoryRead(this.SP);
-            this.Bus.Address.Increment();
-            this.MEMPTR.High = this.MemoryRead();
+            this.Bus.Address.Assign(this.SP);
+            this.GetInto(this.MEMPTR);
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
             this.MemoryUpdate(2);

@@ -9,6 +9,14 @@
 	<AnalysisLevel>latest-all</AnalysisLevel>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\EightBit\EightBit.csproj" />
 		<ProjectReference Include="..\LR35902.csproj" />

@@ -495,7 +495,8 @@ namespace MC6809
             this.DP = 0;
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, RESET_vector));
+            this.GetWordPaged(0xff, RESET_vector);
+            this.Jump(this.Intermediate);
             this.Tick(10);
         }
 
@@ -506,7 +507,8 @@ namespace MC6809
             this.RaiseBS();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.Jump(this.GetWordPaged(0xff, IRQ_vector));
+            this.GetWordPaged(0xff, IRQ_vector);
+            this.Jump(this.Intermediate);
             this.Tick(12);
         }
 
@@ -524,7 +526,8 @@ namespace MC6809
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, NMI_vector));
+            this.GetWordPaged(0xff, NMI_vector);
+            this.Jump(this.Intermediate);
             this.Tick(12);
         }
 
@@ -536,7 +539,8 @@ namespace MC6809
             this.SavePartialRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, FIRQ_vector));
+            this.GetWordPaged(0xff, FIRQ_vector);
+            this.Jump(this.Intermediate);
             this.Tick(12);
         }
 
@@ -610,7 +614,8 @@ namespace MC6809
 
         private Register16 Address_relative_word()
         {
-            var offset = (short)this.FetchWord().Word;
+            this.FetchWord();
+            var offset = (short)this.Intermediate.Word;
             this.Intermediate.Word = (ushort)(this.PC.Word + offset);
             return this.Intermediate;
         }
@@ -622,7 +627,11 @@ namespace MC6809
             return this.Intermediate;
         }
 
-        private Register16 Address_extended() => this.FetchWord();
+        private Register16 Address_extended()
+        {
+            this.FetchWord();
+            return this.Intermediate;
+        }
 
         private Register16 RR(int which)
         {
@@ -682,7 +691,8 @@ namespace MC6809
                         break;
                     case 0b1001: // n,R (sixteen-bit)
                         this.Tick(4);
-                        this.Intermediate.Word = (ushort)(r.Word + (short)this.FetchWord().Word);
+                        this.FetchWord();
+                        this.Intermediate.Word += r.Word;
                         break;
                     case 0b1011: // D,R
                         this.Tick(4);
@@ -708,7 +718,8 @@ namespace MC6809
                 if (indirect != 0)
                 {
                     this.Tick(3);
-                    this.Intermediate.Word = this.GetWord(this.Intermediate).Word;
+                    var address = this.Intermediate;
+                    this.GetWord(address);
                 }
             }
             else
@@ -745,13 +756,29 @@ namespace MC6809
             return this.Bus.Data;
         }
 
-        private Register16 AM_immediate_word() => this.FetchWord();
+        private Register16 AM_immediate_word()
+        {
+            this.FetchWord();
+            return this.Intermediate;
+        }
 
-        private Register16 AM_direct_word() => this.GetWord(this.Address_direct());
+        private Register16 AM_direct_word()
+        {
+            this.GetWord(this.Address_direct());
+            return this.Intermediate;
+        }
 
-        private Register16 AM_indexed_word() => this.GetWord(this.Address_indexed());
+        private Register16 AM_indexed_word()
+        {
+            this.GetWord(this.Address_indexed());
+            return this.Intermediate;
+        }
 
-        private Register16 AM_extended_word() => this.GetWord(this.Address_extended());
+        private Register16 AM_extended_word()
+        {
+            this.GetWord(this.Address_extended());
+            return this.Intermediate;
+        }
 
         #endregion
 
@@ -1746,19 +1773,22 @@ namespace MC6809
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Jump(this.GetWordPaged(0xff, SWI_vector));
+            this.GetWordPaged(0xff, SWI_vector);
+            this.Jump(this.Intermediate);
         }
 
         private void SWI2()
         {
             this.SaveEntireRegisterState();
-            this.Jump(this.GetWordPaged(0xff, SWI2_vector));
+            this.GetWordPaged(0xff, SWI2_vector);
+            this.Jump(this.Intermediate);
         }
 
         private void SWI3()
         {
             this.SaveEntireRegisterState();
-            this.Jump(this.GetWordPaged(0xff, SWI3_vector));
+            this.GetWordPaged(0xff, SWI3_vector);
+            this.Jump(this.Intermediate);
         }
 
         private void TST(byte data) => this.CMP(data, 0);

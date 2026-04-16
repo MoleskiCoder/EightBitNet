@@ -155,11 +155,10 @@ namespace EightBit
             return this.Bus.Data;
         }
 
-        protected sealed override Register16 GetWord()
+        protected sealed override void GetWord()
         {
-            _ = base.GetWord();
+            base.GetWord();
             this.MEMPTR.Assign(this.Bus.Address);
-            return this.Intermediate;
         }
 
         protected sealed override void SetWord(Register16 value)
