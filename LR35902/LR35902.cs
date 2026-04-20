@@ -243,7 +243,7 @@ namespace LR35902
 
         private void LR35902_RaisingHALT(object? sender, EventArgs e)
         {
-            this.PC.Increment();
+            _ = this.PC.Increment();
         }
 
         protected override void HandleRESET()
@@ -639,11 +639,11 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    this.RP(p).Increment();
+                                    _ = this.RP(p).Increment();
                                     break;
                                 
                                 case 1: // DEC rp
-                                    this.RP(p).Decrement();
+                                    _ = this.RP(p).Decrement();
                                     break;
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");

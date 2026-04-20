@@ -585,7 +585,7 @@ namespace MC6809
         private byte Pop(Register16 stack)
         {
             _ = this.MemoryRead(stack);
-            stack.Increment();
+            _ = stack.Increment();
             return this.Bus.Data;
         }
 

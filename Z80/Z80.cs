@@ -933,7 +933,7 @@ namespace Z80
                     {
                         case 0: // Input from port with 16-bit address
                             this.ReadPort(this.BC);
-                            this.MEMPTR.Increment();
+                            _ = this.MEMPTR.Increment();
                             if (y != 6)
                             {
                                 this.R(y, AccessLevel.WriteOnly) = this.Bus.Data; // IN r[y],(C)
@@ -944,7 +944,7 @@ namespace Z80
                             break;
                         case 1: // Output to port with 16-bit address
                             this.WritePort(this.BC, y == 6 ? (byte)0 : this.R(y));
-                            this.MEMPTR.Increment();
+                            _ = this.MEMPTR.Increment();
                             break;
                         case 2: // 16-bit add/subtract with carry
                             this.HL2().Assign(q switch
@@ -1237,10 +1237,10 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    this.RP(p).Increment();
+                                    _ = this.RP(p).Increment();
                                     break;
                                 case 1: // DEC rp
-                                    this.RP(p).Decrement();
+                                    _ = this.RP(p).Decrement();
                                     break;
                                 default:
                                     throw new NotSupportedException("Invalid operation mode");
@@ -1248,35 +1248,15 @@ namespace Z80
                             this.Tick(2);
                             break;
                         case 4: // 8-bit INC
-                            if (memoryY && this._displaced)
-                            {
-                                this.FetchDisplacement();
-                                this.Tick(5);
-                            }
-                            this.R(y, this.Increment(this.R(y)), 2);
+                            this.Increment(y);
                             break;
 
                         case 5: // 8-bit DEC
-                            if (memoryY && this._displaced)
-                            {
-                                this.FetchDisplacement();
-                                this.Tick(5);
-                            }
-                            this.R(y, this.Decrement(this.R(y)), 2);
+                            this.Decrement(y);
                             break;
 
                         case 6: // 8-bit load immediate
-                            if (memoryY && this._displaced)
-                            {
-                                this.FetchDisplacement();
-                            }
-
-                            _ = this.FetchByte();  // LD r,n
-                            if (memoryY)
-                            {
-                                this.Tick(2);
-                            }
-                            this.R(y, this.Bus.Data);
+                            this.LoadImmediate(y);
                             break;
 
                         case 7: // Assorted operations on accumulator/flags
@@ -1323,55 +1303,7 @@ namespace Z80
                     }
                     else
                     {
-                        var normal = true;
-                        if (this._displaced)
-                        {
-                            if (memoryZ || memoryY)
-                            {
-                                this.FetchDisplacement();
-                                this.Tick(5);
-                            }
-
-                            if (memoryZ)
-                            {
-                                switch (y)
-                                {
-                                    case 4:
-                                        this.H = this.R(z);
-                                        normal = false;
-                                        break;
-                                    case 5:
-                                        this.L = this.R(z);
-                                        normal = false;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-
-                            if (memoryY)
-                            {
-                                switch (z)
-                                {
-                                    case 4:
-                                        this.R(y, this.H);
-                                        normal = false;
-                                        break;
-                                    case 5:
-                                        this.R(y, this.L);
-                                        normal = false;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                        }
-
-                        if (normal)
-                        {
-                            var value = this.R(z);
-                            this.R(y, value);
-                        }
+                        this.Load(y, z);
                     }
 
                     break;
@@ -1427,7 +1359,7 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // POP rp2[p]
-                                    this.PopInto(this.RP2(p));
+                                    this.PopRegisterPair(p);
                                     break;
                                 case 1:
                                     switch (p)
@@ -1465,17 +1397,7 @@ namespace Z80
                                     this.JumpIndirect();
                                     break;
                                 case 1: // CB prefix
-                                    this._prefixCB = true;
-                                    if (this._displaced)
-                                    {
-                                        this.FetchDisplacement();
-                                        this.Execute(this.FetchByte());
-                                    }
-                                    else
-                                    {
-                                        this.Execute(this.FetchInstruction());
-                                    }
-
+                                    this.PrefixCB();
                                     break;
                                 case 2: // OUT (n),A
                                     this.WritePort(this.FetchByte());
@@ -1509,8 +1431,7 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
-                                    this.Tick();
-                                    this.PushWord(this.RP2(p));
+                                    PushRegisterPair(p);
                                     break;
                                 case 1:
                                     switch (p)
@@ -1519,16 +1440,13 @@ namespace Z80
                                             this.CallIndirect();
                                             break;
                                         case 1: // DD prefix
-                                            this._displaced = this._prefixDD = true;
-                                            this.Execute(this.FetchInstruction());
+                                            this.PrefixDD();
                                             break;
                                         case 2: // ED prefix
-                                            this._prefixED = true;
-                                            this.Execute(this.FetchInstruction());
+                                            this.PrefixED();
                                             break;
                                         case 3: // FD prefix
-                                            this._displaced = this._prefixFD = true;
-                                            this.Execute(this.FetchInstruction());
+                                            this.PrefixFD();
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1587,6 +1505,134 @@ namespace Z80
                 default:
                     break;
             }
+        }
+
+        private void Load(int y, int z)
+        {
+            var memoryY = y == 6;
+            var memoryZ = z == 6;
+            if (this._displaced)
+            {
+                if (memoryZ || memoryY)
+                {
+                    this.FetchDisplacement();
+                    this.Tick(5);
+                }
+
+                if (memoryZ)
+                {
+                    switch (y)
+                    {
+                        case 4:
+                            this.H = this.R(z);
+                            return;
+                        case 5:
+                            this.L = this.R(z);
+                            return;
+                        default:
+                            break;
+                    }
+                }
+
+                if (memoryY)
+                {
+                    switch (z)
+                    {
+                        case 4:
+                            this.R(y, this.H);
+                            return;
+                        case 5:
+                            this.R(y, this.L);
+                            return;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            var value = this.R(z);
+            this.R(y, value);
+        }
+
+        private void LoadImmediate(int y)
+        {
+            var memoryY = y == 6;
+            if (memoryY && this._displaced)
+            {
+                this.FetchDisplacement();
+            }
+
+            _ = this.FetchByte();  // LD r,n
+            if (memoryY)
+            {
+                this.Tick(2);
+            }
+            this.R(y, this.Bus.Data);
+        }
+
+        private void Decrement(int y)
+        {
+            var memoryY = y == 6;
+            if (memoryY && this._displaced)
+            {
+                this.FetchDisplacement();
+                this.Tick(5);
+            }
+            this.R(y, this.Decrement(this.R(y)), 2);
+        }
+
+        private void Increment(int y)
+        {
+            var memoryY = y == 6;
+            if (memoryY && this._displaced)
+            {
+                this.FetchDisplacement();
+                this.Tick(5);
+            }
+            this.R(y, this.Increment(this.R(y)), 2);
+        }
+
+        private void PushRegisterPair(int p)
+        {
+            this.Tick();
+            this.PushWord(this.RP2(p));
+        }
+
+        private void PopRegisterPair(int p)
+        {
+            this.PopInto(this.RP2(p));
+        }
+
+        private void PrefixCB()
+        {
+            this._prefixCB = true;
+            if (this._displaced)
+            {
+                this.FetchDisplacement();
+                this.Execute(this.FetchByte());
+            }
+            else
+            {
+                this.Execute(this.FetchInstruction());
+            }
+        }
+
+        private void PrefixFD()
+        {
+            this._displaced = this._prefixFD = true;
+            this.Execute(this.FetchInstruction());
+        }
+
+        private void PrefixED()
+        {
+            this._prefixED = true;
+            this.Execute(this.FetchInstruction());
+        }
+
+        private void PrefixDD()
+        {
+            this._displaced = this._prefixDD = true;
+            this.Execute(this.FetchInstruction());
         }
 
         private void HandleNMI()
@@ -1989,15 +2035,15 @@ namespace Z80
         private void CPI()
         {
             this.BlockCompare();
-            this.HL.Increment();
-            this.MEMPTR.Increment();
+            _ = this.HL.Increment();
+            _ = this.MEMPTR.Increment();
         }
 
         private void CPD()
         {
             this.BlockCompare();
-            this.HL.Decrement();
-            this.MEMPTR.Decrement();
+            _ = this.HL.Decrement();
+            _ = this.MEMPTR.Decrement();
         }
 
         #endregion
@@ -2053,15 +2099,15 @@ namespace Z80
         private void LDI()
         {
             this.BlockLoad();
-            this.HL.Increment();
-            this.DE.Increment();
+            _ = this.HL.Increment();
+            _ = this.DE.Increment();
         }
 
         private void LDD()
         {
             this.BlockLoad();
-            this.HL.Decrement();
-            this.DE.Decrement();
+            _ = this.HL.Decrement();
+            _ = this.DE.Decrement();
         }
 
         #endregion
@@ -2151,16 +2197,16 @@ namespace Z80
         {
             this.BlockIn();
             this.AdjustBlockInFlagsIncrement();
-            this.HL.Increment();
-            this.MEMPTR.Increment();
+            _ = this.HL.Increment();
+            _ = this.MEMPTR.Increment();
         }
 
         private void IND()
         {
             this.BlockIn();
             this.AdjustBlockInFlagsDecrement();
-            this.HL.Decrement();
-            this.MEMPTR.Decrement();
+            _ = this.HL.Decrement();
+            _ = this.MEMPTR.Decrement();
         }
 
         #endregion
@@ -2208,17 +2254,17 @@ namespace Z80
         private void OUTI()
         {
             this.BlockOut();
-            this.HL.Increment();
+            _ = this.HL.Increment();
             this.AdjustBlockOutFlags();
-            this.MEMPTR.Increment();
+            _ = this.MEMPTR.Increment();
         }
 
         private void OUTD()
         {
             this.BlockOut();
-            this.HL.Decrement();
+            _ = this.HL.Decrement();
             this.AdjustBlockOutFlags();
-            this.MEMPTR.Decrement();
+            _ = this.MEMPTR.Decrement();
         }
 
         #endregion
@@ -2335,7 +2381,7 @@ namespace Z80
         {
             this.Bus.Address.Assign(port, this.A);
             this.ReadPort();
-            this.MEMPTR.Increment();
+            _ = this.MEMPTR.Increment();
         }
 
         private void ReadPort()

@@ -178,7 +178,7 @@ namespace EightBit
         protected byte ReadMemoryIndirect()
         {
             this.Bus.Address.Assign(this.MEMPTR);
-            this.MEMPTR.Increment();
+            _ = this.MEMPTR.Increment();
             return this.MemoryRead();
         }
 
@@ -191,7 +191,7 @@ namespace EightBit
         protected void WriteMemoryIndirect(byte data)
         {
             this.Bus.Address.Assign(this.MEMPTR);
-            this.MEMPTR.Increment();
+            _ = this.MEMPTR.Increment();
             this.MEMPTR.High = this.Bus.Data = data;
             this.MemoryWrite();
         }
