@@ -328,14 +328,9 @@
 
         private async Task ParseAsync(StreamReader reader)
         {
-            while (!reader.EndOfStream)
+            string? line;
+            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) is not null)
             {
-                var line = await reader.ReadLineAsync().ConfigureAwait(false);
-                if (line is null)
-                {
-                    break;
-                }
-
                 this.ParseLine(line.Split(' ', '\t'));
             }
         }
