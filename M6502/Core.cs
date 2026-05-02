@@ -349,7 +349,7 @@ namespace M6502
                 case 0x25: this.ZeroPage(); this.AND(); break;                              // AND (zero page)
                 case 0x26: this.ZeroPage(); this.ROL(); break;                              // ROL (zero page)
                 case 0x28: this.PLP(); break;                                               // PLP (implied)
-                case 0x29: this.FetchByte(); this.AND(); break;                             // AND (immediate)
+                case 0x29: this.Immediate(); this.AND(); break;                             // AND (immediate)
                 case 0x2a: this.ROLA(); break;                                              // ROL A (implied)
                 case 0x2c: this.Absolute(); this.BIT(); break;                              // BIT (absolute)
                 case 0x2d: this.Absolute(); this.AND(); break;                              // AND (absolute)
@@ -710,54 +710,54 @@ namespace M6502
 
         #region Address and read
 
-        protected byte Immediate() => this.FetchByte();
+        protected void Immediate() => this.FetchByte();
 
-        protected byte Absolute()
+        protected void Absolute()
         {
             this.AbsoluteAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte ZeroPage()
+        protected void ZeroPage()
         {
             this.ZeroPageAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte ZeroPageX()
+        protected void ZeroPageX()
         {
             this.ZeroPageXAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte ZeroPageY()
+        protected void ZeroPageY()
         {
             this.ZeroPageYAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte IndexedIndirectX()
+        protected void IndexedIndirectX()
         {
             this.IndexedIndirectXAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte AbsoluteX()
+        protected void AbsoluteX()
         {
             this.AbsoluteXAddress();
-            return this.MaybeFixupRead();
+            this.MaybeFixupRead();
         }
 
-        protected byte AbsoluteY()
+        protected void AbsoluteY()
         {
             this.AbsoluteYAddress();
-            return this.MaybeFixupRead();
+            this.MaybeFixupRead();
         }
 
-        protected byte IndirectIndexedY()
+        protected void IndirectIndexedY()
         {
             this.IndirectIndexedYAddress();
-            return this.MaybeFixupRead();
+            this.MaybeFixupRead();
         }
 
         #endregion

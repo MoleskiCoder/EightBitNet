@@ -4,7 +4,7 @@
 
 namespace Z80.HarteTest
 {
-    public static class Program
+    internal static class Program
     {
         public static async Task Main(string[] _)
         {

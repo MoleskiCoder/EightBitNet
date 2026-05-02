@@ -6,7 +6,7 @@ namespace M6502.Test
 {
     using EightBit;
 
-    internal class Configuration
+    internal sealed class Configuration
     {
         public bool DebugMode { get; set; }
 

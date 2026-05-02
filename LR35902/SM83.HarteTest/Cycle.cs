@@ -1,4 +1,6 @@
-﻿namespace SM83.HarteTest
+﻿using System.Diagnostics;
+
+namespace SM83.HarteTest
 {
     internal sealed class Cycle
     {
@@ -26,7 +28,10 @@
 
             this.Address = AsElement(input[0]).GetUInt16();
             this.Value = AsElement(input[1]).GetByte();
-            this.Type = AsElement(input[2]).GetString();
+
+            var possibleType = AsElement(input[2]).GetString();
+            Debug.Assert(possibleType != null);
+            this.Type = possibleType;
         }
 
         private static System.Text.Json.JsonElement AsElement(object part) => (System.Text.Json.JsonElement)part;

@@ -95,6 +95,7 @@ namespace M6502
 
                 case 0x52: this.ZeroPageIndirect(); this.EOR(); break;              // EOR (zp)
                 case 0x53: break;                                                   // null
+                case 0x54: this.ZeroPageX(); break;                                 // zp,x NOP
                 case 0x57: this.ZeroPage(); this.RMB5(); break;                     // RMB5 zp
                 case 0x5a: this.PHY(); break;                                       // PHY s
                 case 0x5b: break;                                                   // null
@@ -121,7 +122,7 @@ namespace M6502
                 case 0x80: this.BRA(); break;                                       // BRA r
                 case 0x83: break;                                                                               // null
                 case 0x87: this.ZeroPage(); this.SMB0(); break;                     // SMB0 zp
-                case 0x89: break;                                                   // BIT # (TBC)
+                case 0x89: this.Immediate(); this.BIT_immediate(); break;                                                   // BIT # (TBC)
                 case 0x8b: break;                                                   // null
                 case 0x8f: this.ZeroPage(); this.BBS0(); break;                     // BBS0 r
 
@@ -130,7 +131,7 @@ namespace M6502
                 case 0x97: this.ZeroPage(); this.SMB1(); break;                     // SMB1 zp
                 case 0x9b: break;                                                   // null
                 case 0x9c: this.AbsoluteAddress(); this.STZ(); break;               // STZ a
-                case 0x9e: this.AbsoluteXAddress(); this.STZ(); break;              // STZ a,x
+                case 0x9e: this.AbsoluteXAddress(); this.Fixup(); this.STZ(); break;              // STZ a,x
                 case 0x9f: this.ZeroPage(); this.BBS1(); break;                     // BBS1 r
 
                 case 0xa3: break;                                                                               // null
@@ -151,10 +152,11 @@ namespace M6502
 
                 case 0xd2: this.ZeroPageIndirect(); this.CMP(); break;              // CMP (zp)
                 case 0xd3: break;                                                                               // null
+                case 0xd4: this.ZeroPageX(); break;                                 // zp,x NOP
                 case 0xd7: this.ZeroPage(); this.SMB5(); break;                     // SMB5 zp
                 case 0xda: this.PHX(); break;                                       // PHX s
                 case 0xdb: this.STP(); break;                                       // STP i
-                case 0xdc: this.SwallowRead(); break;                               // null
+                case 0xdc: this.Absolute(); break;                               // null
                 case 0xdf: this.ZeroPage(); this.BBS5(); break;                     // BBS5 r
 
                 case 0xe3: break;                                                   // null
@@ -164,6 +166,7 @@ namespace M6502
 
                 case 0xf2: this.ZeroPageIndirect(); this.SBC(); break;              // SBC (zp)
                 case 0xf3: break;                                                   // null
+                case 0xf4: this.ZeroPageX(); break;                                 // zp,x NOP
                 case 0xf7: this.ZeroPage(); this.SMB7(); break;                     // SMB7 zp
                 case 0xfa: this.PLX(); break;                                       // PLX s
                 case 0xfb: break;                                                   // null
@@ -272,6 +275,11 @@ namespace M6502
         #endregion
 
         #endregion
+
+        private void BIT_immediate()
+        {
+            this.AdjustZero((byte)(this.A & this.Bus.Data));
+        }
 
         private void INCA()
         {
