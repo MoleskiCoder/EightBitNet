@@ -20,119 +20,119 @@ namespace M6502
             var cycles = this.Cycles;
             switch (this.OpCode)
             {
-                case 0x02: this.Jam(); break;                                                                   // *JAM
-                case 0x03: this.IndexedIndirectXRead(); this.SLO(); break;                                      // *SLO (indexed indirect X)
-                case 0x04: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
-                case 0x07: this.ZeroPageRead(); this.SLO(); break;                                              // *SLO (zero page)
-                case 0x0b: this.FetchByte(); this.ANC(); break;                                                 // *ANC (immediate)
-                case 0x0c: this.AbsoluteRead(); break;                                                          // *NOP (absolute)
-                case 0x0f: this.AbsoluteRead(); this.SLO(); break;                                              // *SLO (absolute)
+                case 0x02: this.JAM(); break;                                                               // *JAM
+                case 0x03: this.IndexedIndirectX(); this.SLO(); break;                                      // *SLO (indexed indirect X)
+                case 0x04: this.ZeroPage(); break;                                                          // *NOP (zero page)
+                case 0x07: this.ZeroPage(); this.SLO(); break;                                              // *SLO (zero page)
+                case 0x0b: this.FetchByte(); this.ANC(); break;                                             // *ANC (immediate)
+                case 0x0c: this.Absolute(); break;                                                          // *NOP (absolute)
+                case 0x0f: this.Absolute(); this.SLO(); break;                                              // *SLO (absolute)
 
-                case 0x12: this.Jam(); break;                                                                   // *JAM
-                case 0x13: this.IndirectIndexedYAddress(); this.FixupRead(); this.SLO(); break;                 // *SLO (indirect indexed Y)
-                case 0x14: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
-                case 0x17: this.ZeroPageXRead(); this.SLO(); break;                                             // *SLO (zero page, X)
-                case 0x1a: this.SwallowRead(); break;                                                           // *NOP (implied)
-                case 0x1b: this.AbsoluteYAddress(); this.FixupRead(); this.SLO(); break;                        // *SLO (absolute, Y)
-                case 0x1c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
-                case 0x1f: this.AbsoluteXAddress(); this.FixupRead(); this.SLO(); break;                        // *SLO (absolute, X)
+                case 0x12: this.JAM(); break;                                                               // *JAM
+                case 0x13: this.IndirectIndexedYAddress(); this.FixupRead(); this.SLO(); break;             // *SLO (indirect indexed Y)
+                case 0x14: this.ZeroPageX(); break;                                                         // *NOP (zero page, X)
+                case 0x17: this.ZeroPageX(); this.SLO(); break;                                             // *SLO (zero page, X)
+                case 0x1a: this.SwallowRead(); break;                                                       // *NOP (implied)
+                case 0x1b: this.AbsoluteYAddress(); this.FixupRead(); this.SLO(); break;                    // *SLO (absolute, Y)
+                case 0x1c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)
+                case 0x1f: this.AbsoluteXAddress(); this.FixupRead(); this.SLO(); break;                    // *SLO (absolute, X)
 
-                case 0x22: this.Jam(); break;                                                                   // *JAM
-                case 0x23: this.IndexedIndirectXRead(); this.RLA(); ; break;                                    // *RLA (indexed indirect X)
-                case 0x27: this.ZeroPageRead(); this.RLA(); ; break;                                            // *RLA (zero page)
-                case 0x2b: this.FetchByte(); this.ANC(); break;                                                 // *ANC (immediate)
-                case 0x2f: this.AbsoluteRead(); this.RLA(); break;                                              // *RLA (absolute)
+                case 0x22: this.JAM(); break;                                                               // *JAM
+                case 0x23: this.IndexedIndirectX(); this.RLA(); ; break;                                    // *RLA (indexed indirect X)
+                case 0x27: this.ZeroPage(); this.RLA(); ; break;                                            // *RLA (zero page)
+                case 0x2b: this.FetchByte(); this.ANC(); break;                                             // *ANC (immediate)
+                case 0x2f: this.Absolute(); this.RLA(); break;                                              // *RLA (absolute)
 
-                case 0x32: this.Jam(); break;													                // *JAM
-                case 0x33: this.IndirectIndexedYAddress(); this.FixupRead(); this.RLA(); break;                 // *RLA (indirect indexed Y)
-                case 0x34: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
-                case 0x37: this.ZeroPageXRead(); this.RLA(); ; break;                                           // *RLA (zero page, X)
-                case 0x3a: this.SwallowRead(); break;                                                           // *NOP (implied)
-                case 0x3b: this.AbsoluteYAddress(); this.FixupRead(); this.RLA(); break;                        // *RLA (absolute, Y)
-                case 0x3c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
-                case 0x3f: this.AbsoluteXAddress(); this.FixupRead(); this.RLA(); break;                        // *RLA (absolute, X)
+                case 0x32: this.JAM(); break;													            // *JAM
+                case 0x33: this.IndirectIndexedYAddress(); this.FixupRead(); this.RLA(); break;             // *RLA (indirect indexed Y)
+                case 0x34: this.ZeroPageX(); break;                                                         // *NOP (zero page, X)
+                case 0x37: this.ZeroPageX(); this.RLA(); ; break;                                           // *RLA (zero page, X)
+                case 0x3a: this.SwallowRead(); break;                                                       // *NOP (implied)
+                case 0x3b: this.AbsoluteYAddress(); this.FixupRead(); this.RLA(); break;                    // *RLA (absolute, Y)
+                case 0x3c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)
+                case 0x3f: this.AbsoluteXAddress(); this.FixupRead(); this.RLA(); break;                    // *RLA (absolute, X)
 
-                case 0x42: this.Jam(); break;                                                                   // *JAM
-                case 0x43: this.IndexedIndirectXRead(); this.SRE(); break;                                      // *SRE (indexed indirect X)
-                case 0x47: this.ZeroPageRead(); this.SRE(); break;                                              // *SRE (zero page)
-                case 0x4b: this.FetchByte(); this.ASR(); break;                                                 // *ASR (immediate)
-                case 0x4f: this.AbsoluteRead(); this.SRE(); break;                                              // *SRE (absolute)
+                case 0x42: this.JAM(); break;                                                               // *JAM
+                case 0x43: this.IndexedIndirectX(); this.SRE(); break;                                      // *SRE (indexed indirect X)
+                case 0x47: this.ZeroPage(); this.SRE(); break;                                              // *SRE (zero page)
+                case 0x4b: this.FetchByte(); this.ASR(); break;                                             // *ASR (immediate)
+                case 0x4f: this.Absolute(); this.SRE(); break;                                              // *SRE (absolute)
 
-                case 0x52: this.Jam(); break;                                                                   // *JAM
-                case 0x53: this.IndirectIndexedYAddress(); this.FixupRead(); this.SRE(); break;                 // *SRE (indirect indexed Y)
-                case 0x57: this.ZeroPageXRead(); this.SRE(); break;                                             // *SRE (zero page, X)
-                case 0x5a: this.SwallowRead(); break;                                                           // *NOP (implied)
-                case 0x5b: this.AbsoluteYAddress(); this.FixupRead(); this.SRE(); break;                        // *SRE (absolute, Y)
-                case 0x5c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
-                case 0x5f: this.AbsoluteXAddress(); this.FixupRead(); this.SRE(); break;                        // *SRE (absolute, X)
+                case 0x52: this.JAM(); break;                                                               // *JAM
+                case 0x53: this.IndirectIndexedYAddress(); this.FixupRead(); this.SRE(); break;             // *SRE (indirect indexed Y)
+                case 0x57: this.ZeroPageX(); this.SRE(); break;                                             // *SRE (zero page, X)
+                case 0x5a: this.SwallowRead(); break;                                                       // *NOP (implied)
+                case 0x5b: this.AbsoluteYAddress(); this.FixupRead(); this.SRE(); break;                    // *SRE (absolute, Y)
+                case 0x5c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)
+                case 0x5f: this.AbsoluteXAddress(); this.FixupRead(); this.SRE(); break;                    // *SRE (absolute, X)
 
-                case 0x62: this.Jam(); break;                                                                   // *JAM
-                case 0x63: this.IndexedIndirectXRead(); this.RRA(); break;                                      // *RRA (indexed indirect X)
-                case 0x64: this.ZeroPageRead(); break;                                                          // *NOP (zero page)
-                case 0x67: this.ZeroPageRead(); this.RRA(); break;                                              // *RRA (zero page)
-                case 0x6b: this.FetchByte(); this.ARR(); break;                                                 // *ARR (immediate)
-                case 0x6f: this.AbsoluteRead(); this.RRA(); break;                                              // *RRA (absolute)
+                case 0x62: this.JAM(); break;                                                               // *JAM
+                case 0x63: this.IndexedIndirectX(); this.RRA(); break;                                      // *RRA (indexed indirect X)
+                case 0x64: this.ZeroPage(); break;                                                          // *NOP (zero page)
+                case 0x67: this.ZeroPage(); this.RRA(); break;                                              // *RRA (zero page)
+                case 0x6b: this.FetchByte(); this.ARR(); break;                                             // *ARR (immediate)
+                case 0x6f: this.Absolute(); this.RRA(); break;                                              // *RRA (absolute)
 
-                case 0x72: this.Jam(); break;                                                                   // *JAM
-                case 0x73: this.IndirectIndexedYAddress(); this.FixupRead(); this.RRA(); break;                 // *RRA (indirect indexed Y)
-                case 0x74: this.ZeroPageXRead(); break;                                                         // *NOP (zero page, X)
-                case 0x77: this.ZeroPageXRead(); this.RRA(); break;                                             // *RRA (zero page, X)
-                case 0x7a: this.SwallowRead(); break;                                                           // *NOP (implied)
-                case 0x7b: this.AbsoluteYAddress(); this.FixupRead(); this.RRA(); break;                        // *RRA (absolute, Y)
-                case 0x7c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
-                case 0x7f: this.AbsoluteXAddress(); this.FixupRead(); this.RRA(); break;                        // *RRA (absolute, X)
+                case 0x72: this.JAM(); break;                                                               // *JAM
+                case 0x73: this.IndirectIndexedYAddress(); this.FixupRead(); this.RRA(); break;             // *RRA (indirect indexed Y)
+                case 0x74: this.ZeroPageX(); break;                                                         // *NOP (zero page, X)
+                case 0x77: this.ZeroPageX(); this.RRA(); break;                                             // *RRA (zero page, X)
+                case 0x7a: this.SwallowRead(); break;                                                       // *NOP (implied)
+                case 0x7b: this.AbsoluteYAddress(); this.FixupRead(); this.RRA(); break;                    // *RRA (absolute, Y)
+                case 0x7c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)
+                case 0x7f: this.AbsoluteXAddress(); this.FixupRead(); this.RRA(); break;                    // *RRA (absolute, X)
 
-                case 0x80: this.FetchByte(); break;                                                             // *NOP (immediate)
-                case 0x83: this.IndexedIndirectXAddress(); this.SAX(); break;                                   // *SAX (indexed indirect X)
-                case 0x87: this.ZeroPageAddress(); this.SAX(); break;	                                        // *SAX (zero page)
-                case 0x89: this.FetchByte(); break;	                                                            // *NOP (immediate)
-                case 0x8b: this.FetchByte(); this.ANE(); break;	                                                // *ANE (immediate)
-                case 0x8f: this.AbsoluteAddress(); this.SAX(); break;	                                        // *SAX (absolute)
+                case 0x80: this.FetchByte(); break;                                                         // *NOP (immediate)
+                case 0x83: this.IndexedIndirectXAddress(); this.SAX(); break;                               // *SAX (indexed indirect X)
+                case 0x87: this.ZeroPageAddress(); this.SAX(); break;	                                    // *SAX (zero page)
+                case 0x89: this.FetchByte(); break;	                                                        // *NOP (immediate)
+                case 0x8b: this.FetchByte(); this.ANE(); break;	                                            // *ANE (immediate)
+                case 0x8f: this.AbsoluteAddress(); this.SAX(); break;	                                    // *SAX (absolute)
 
-                case 0x92: this.Jam(); break;                                                                   // *JAM
-                case 0x93: this.IndirectIndexedYAddress(); this.Fixup(); this.SHA(); break;                     // *SHA (indirect indexed, Y) (XXXX)
-                case 0x97: this.ZeroPageYAddress(); this.SAX(); break;                                          // *SAX (zero page, Y)
-                case 0x9b: this.AbsoluteYAddress(); this.Fixup(); this.TAS(); break;                            // *TAS (absolute, Y) (XXXX)
-                case 0x9c: this.AbsoluteXAddress(); this.Fixup(); this.SYA(); break;                            // *SYA (absolute, X) (XXXX)
-                case 0x9e: this.AbsoluteYAddress(); this.Fixup(); this.SXA(); break;                            // *SXA (absolute, Y) (XXXX)
-                case 0x9f: this.AbsoluteYAddress(); this.Fixup(); this.SHA(); break;                            // *SHA (absolute, Y) (XXXX)
+                case 0x92: this.JAM(); break;                                                               // *JAM
+                case 0x93: this.IndirectIndexedYAddress(); this.Fixup(); this.SHA(); break;                 // *SHA (indirect indexed, Y)
+                case 0x97: this.ZeroPageYAddress(); this.SAX(); break;                                      // *SAX (zero page, Y)
+                case 0x9b: this.AbsoluteYAddress(); this.Fixup(); this.TAS(); break;                        // *TAS (absolute, Y)
+                case 0x9c: this.AbsoluteXAddress(); this.Fixup(); this.SYA(); break;                        // *SYA (absolute, X)
+                case 0x9e: this.AbsoluteYAddress(); this.Fixup(); this.SXA(); break;                        // *SXA (absolute, Y)
+                case 0x9f: this.AbsoluteYAddress(); this.Fixup(); this.SHA(); break;                        // *SHA (absolute, Y)
 
-                case 0xa3: this.IndexedIndirectXRead(); this.LAX(); break;                                      // *LAX (indexed indirect X)
-                case 0xa7: this.ZeroPageRead(); this.LAX(); break;                                              // *LAX (zero page)
-                case 0xab: this.FetchByte(); this.ATX(); break;                                                 // *ATX (immediate)
-                case 0xaf: this.AbsoluteRead(); this.LAX(); break;                                              // *LAX (absolute)
+                case 0xa3: this.IndexedIndirectX(); this.LAX(); break;                                      // *LAX (indexed indirect X)
+                case 0xa7: this.ZeroPage(); this.LAX(); break;                                              // *LAX (zero page)
+                case 0xab: this.FetchByte(); this.ATX(); break;                                             // *ATX (immediate)
+                case 0xaf: this.Absolute(); this.LAX(); break;                                              // *LAX (absolute)
 
-                case 0xb2: this.Jam(); break;                                                                   // *JAM
-                case 0xb3: this.IndirectIndexedYRead(); this.LAX(); break;                                      // *LAX (indirect indexed Y)
-                case 0xb7: this.ZeroPageYRead(); this.LAX(); break;                                             // *LAX (zero page, Y)
-                case 0xbb: this.AbsoluteYAddress(); this.MaybeFixup(); this.LAS(); break;                       // *LAS (absolute, Y)
-                case 0xbf: this.AbsoluteYRead(); this.LAX(); break;                                             // *LAX (absolute, Y)
+                case 0xb2: this.JAM(); break;                                                               // *JAM
+                case 0xb3: this.IndirectIndexedY(); this.LAX(); break;                                      // *LAX (indirect indexed Y)
+                case 0xb7: this.ZeroPageY(); this.LAX(); break;                                             // *LAX (zero page, Y)
+                case 0xbb: this.AbsoluteYAddress(); this.MaybeFixup(); this.LAS(); break;                   // *LAS (absolute, Y)
+                case 0xbf: this.AbsoluteY(); this.LAX(); break;                                             // *LAX (absolute, Y)
 
-                case 0xc3: this.IndexedIndirectXRead(); this.DCP(); break;                                      // *DCP (indexed indirect X)
-                case 0xc7: this.ZeroPageRead(); this.DCP(); break;                                              // *DCP (zero page)
-                case 0xcb: this.FetchByte(); this.AXS(); break;                                                 // *AXS (immediate)
-                case 0xcf: this.AbsoluteRead(); this.DCP(); break;                                              // *DCP (absolute)
+                case 0xc3: this.IndexedIndirectX(); this.DCP(); break;                                      // *DCP (indexed indirect X)
+                case 0xc7: this.ZeroPage(); this.DCP(); break;                                              // *DCP (zero page)
+                case 0xcb: this.FetchByte(); this.AXS(); break;                                             // *AXS (immediate)
+                case 0xcf: this.Absolute(); this.DCP(); break;                                              // *DCP (absolute)
 
-                case 0xd2: this.Jam(); break;                                                                   // *JAM
-                case 0xd3: this.IndirectIndexedYAddress(); this.FixupRead(); this.DCP(); break;                 // *DCP (indirect indexed Y)
-                case 0xd7: this.ZeroPageXRead(); this.DCP(); break;                                             // *DCP (zero page, X)
-                case 0xda: this.SwallowRead(); break;                                                           // *NOP (implied)
-                case 0xdb: this.AbsoluteYAddress(); this.FixupRead(); this.DCP(); break;                        // *DCP (absolute, Y)
-                case 0xdc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
-                case 0xdf: this.AbsoluteXAddress(); this.FixupRead(); this.DCP(); break;                        // *DCP (absolute, X)
+                case 0xd2: this.JAM(); break;                                                               // *JAM
+                case 0xd3: this.IndirectIndexedYAddress(); this.FixupRead(); this.DCP(); break;             // *DCP (indirect indexed Y)
+                case 0xd7: this.ZeroPageX(); this.DCP(); break;                                             // *DCP (zero page, X)
+                case 0xda: this.SwallowRead(); break;                                                       // *NOP (implied)
+                case 0xdb: this.AbsoluteYAddress(); this.FixupRead(); this.DCP(); break;                    // *DCP (absolute, Y)
+                case 0xdc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)
+                case 0xdf: this.AbsoluteXAddress(); this.FixupRead(); this.DCP(); break;                    // *DCP (absolute, X)
 
-                case 0xe3: this.IndexedIndirectXRead(); this.ISB(); break;                                      // *ISB (indexed indirect X)
-                case 0xe7: this.ZeroPageRead(); this.ISB(); break;                                              // *ISB (zero page)
-                case 0xeb: this.FetchByte(); this.SBC(); break;                                                 // *SBC (immediate)
-                case 0xef: this.AbsoluteRead(); this.ISB(); break;                                              // *ISB (absolute)
+                case 0xe3: this.IndexedIndirectX(); this.ISB(); break;                                      // *ISB (indexed indirect X)
+                case 0xe7: this.ZeroPage(); this.ISB(); break;                                              // *ISB (zero page)
+                case 0xeb: this.FetchByte(); this.SBC(); break;                                             // *SBC (immediate)
+                case 0xef: this.Absolute(); this.ISB(); break;                                              // *ISB (absolute)
 
-                case 0xf2: this.Jam(); break;                                                                   // *JAM
-                case 0xf3: this.IndirectIndexedYAddress(); this.FixupRead(); this.ISB(); break;                 // *ISB (indirect indexed Y)
-                case 0xf7: this.ZeroPageXRead(); this.ISB(); break;                                             // *ISB (zero page, X)
-                case 0xfa: this.SwallowRead(); break;                                                           // *NOP (implied)
-                case 0xfb: this.AbsoluteYAddress(); this.FixupRead(); this.ISB(); break;                        // *ISB (absolute, Y)
-                case 0xfc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                               // *NOP (absolute, X)
-                case 0xff: this.AbsoluteXAddress(); this.FixupRead(); this.ISB(); break;	                    // *ISB (absolute, X)
+                case 0xf2: this.JAM(); break;                                                               // *JAM
+                case 0xf3: this.IndirectIndexedYAddress(); this.FixupRead(); this.ISB(); break;             // *ISB (indirect indexed Y)
+                case 0xf7: this.ZeroPageX(); this.ISB(); break;                                             // *ISB (zero page, X)
+                case 0xfa: this.SwallowRead(); break;                                                       // *NOP (implied)
+                case 0xfb: this.AbsoluteYAddress(); this.FixupRead(); this.ISB(); break;                    // *ISB (absolute, Y)
+                case 0xfc: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)
+                case 0xff: this.AbsoluteXAddress(); this.FixupRead(); this.ISB(); break;	                // *ISB (absolute, X)
             }
 
             return cycles != this.Cycles;
@@ -225,28 +225,14 @@ namespace M6502
 
         private void StoreFixupEffect(byte data)
         {
-            ////var fixedAddress = (byte)(this.Bus.Address.High + 1);
-            //var fixedAddress = this.FixedPage + 1;
-            //var updated = (byte)(data & fixedAddress);
-            //if (this.Fixed)
-            //{
-            //    this.Bus.Address.High = updated;
-            //}
+            var mask = (byte)(this.UnfixedPage + 1);   // base_hi + 1, always
+            var updated = (byte)(data & mask);
 
-            //this.MemoryWrite(updated);
-
-            byte updated;
             if (this.Fixed)
             {
-                updated = (byte)(data & this.FixedPage);
-                //this.Bus.Address.High = updated;
+                this.Bus.Address.High = updated;
             }
-            else
-            {
-                updated = (byte)(data & this.UnfixedPage);
-                //this.Bus.Address.High = updated;
-            }
-            this.Bus.Address.High = updated;
+
             this.MemoryWrite(updated);
         }
 
@@ -260,11 +246,15 @@ namespace M6502
 
         private void SAX() => this.MemoryWrite((byte)(this.A & this.X));
 
-        private void LAX() => this.A = this.X = this.Through();
+        private void LAX()
+        {
+            this.LDA();
+            this.LDX();
+        }
 
         private void ANC()
         {
-            this.AndR();
+            this.AND();
             this.SetFlag(StatusBits.CF, NegativeTest(this.A));
         }
 
@@ -274,7 +264,7 @@ namespace M6502
             this.ResetFlag(StatusBits.CF, this.Intermediate.High);
         }
 
-        private void Jam()
+        private void JAM()
         {
             this.SwallowRead();
             this.MemoryRead(0xff, 0xff);
@@ -304,44 +294,44 @@ namespace M6502
 
         private void ASR()
         {
-            this.AndR();
-            this.A = this.LSR(this.A);
+            this.AND();
+            this.ImplementLSRA();
         }
 
         private void ISB()
         {
-            this.ModifyWrite(this.INC());
+            this.INC();
             this.SBC();
         }
 
         private void RLA()
         {
-            this.ModifyWrite(this.ROL());
-            this.AndR();
+            this.ROL();
+            this.AND();
         }
 
         private void RRA()
         {
-            this.ModifyWrite(this.ROR());
-            this.ADC(this.Bus.Data);
+            this.ROR();
+            this.ADC();
         }
 
         private void SLO()
         {
-            this.ModifyWrite(this.ASL());
-            this.OrR();
+            this.ASL();
+            this.ORA();
         }
 
         private void SRE()
         {
-            this.ModifyWrite(this.LSR());
-            this.EorR();
+            this.LSR();
+            this.EOR();
         }
 
         private void DCP()
         {
-            this.ModifyWrite(this.DEC());
-            this.CMP(this.A, this.Bus.Data);
+            this.DEC();
+            this.CMP();
         }
 
         #endregion
