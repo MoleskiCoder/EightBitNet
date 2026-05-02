@@ -38,15 +38,15 @@ namespace M6502
                 case 0x1f: this.AbsoluteXAddress(); this.FixupRead(); this.SLO(); break;                    // *SLO (absolute, X)
 
                 case 0x22: this.JAM(); break;                                                               // *JAM
-                case 0x23: this.IndexedIndirectX(); this.RLA(); ; break;                                    // *RLA (indexed indirect X)
-                case 0x27: this.ZeroPage(); this.RLA(); ; break;                                            // *RLA (zero page)
+                case 0x23: this.IndexedIndirectX(); this.RLA(); break;                                      // *RLA (indexed indirect X)
+                case 0x27: this.ZeroPage(); this.RLA(); break;                                              // *RLA (zero page)
                 case 0x2b: this.FetchByte(); this.ANC(); break;                                             // *ANC (immediate)
                 case 0x2f: this.Absolute(); this.RLA(); break;                                              // *RLA (absolute)
 
                 case 0x32: this.JAM(); break;													            // *JAM
                 case 0x33: this.IndirectIndexedYAddress(); this.FixupRead(); this.RLA(); break;             // *RLA (indirect indexed Y)
                 case 0x34: this.ZeroPageX(); break;                                                         // *NOP (zero page, X)
-                case 0x37: this.ZeroPageX(); this.RLA(); ; break;                                           // *RLA (zero page, X)
+                case 0x37: this.ZeroPageX(); this.RLA(); break;                                             // *RLA (zero page, X)
                 case 0x3a: this.SwallowRead(); break;                                                       // *NOP (implied)
                 case 0x3b: this.AbsoluteYAddress(); this.FixupRead(); this.RLA(); break;                    // *RLA (absolute, Y)
                 case 0x3c: this.AbsoluteXAddress(); this.MaybeFixupRead(); break;                           // *NOP (absolute, X)

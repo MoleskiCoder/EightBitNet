@@ -772,10 +772,10 @@ namespace M6502
 
         protected void Branch(bool condition)
         {
-            _ = this.FetchByte();
+            var data = this.FetchByte();
             if (condition)
             {
-                var relative = (sbyte)this.Bus.Data;
+                var relative = (sbyte)data;
                 this.SwallowRead();
                 this.FixupBranch(relative);
                 this.Jump(this.Bus.Address);
@@ -1183,8 +1183,7 @@ namespace M6502
         {
             this.SwallowRead();
             this.SwallowPop();
-            this.Pop();
-            this.P = ClearBit(SetBit(this.Bus.Data, StatusBits.RF), StatusBits.BF);
+            this.P = ClearBit(SetBit(this.Pop(), StatusBits.RF), StatusBits.BF);
         }
 
         private void RTI()
