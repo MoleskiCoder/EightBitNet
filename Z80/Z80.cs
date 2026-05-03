@@ -2152,7 +2152,8 @@ namespace Z80
             }
             else
             {
-                this.AdjustParity((byte)(this.B & (byte)Mask.Three));
+                var parity = (this.Parity() >> 2) ^ (EvenParity((byte)(this.B & (byte)Mask.Three)) ? 1 : 0) ^ 1;
+                this.SetBit(StatusBits.PF, parity != 0);
             }
         }
 
