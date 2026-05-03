@@ -2142,19 +2142,16 @@ namespace Z80
 
         private void AdjustBlockRepeatFlagsIO()
         {
+            var direction = this.B;
             if (this.Carry() != 0)
             {
                 var negative = SignTest(this.Bus.Data) != 0;
-                var direction = (byte)(this.B + (negative ? -1 : +1));
-                var parity = (this.Parity() >> 2) ^ (EvenParity((byte)(direction & (byte)Mask.Three)) ? 1 : 0) ^ 1;
-                this.SetBit(StatusBits.PF, parity != 0);
+                direction += (byte)(negative ? -1 : +1);
                 this.SetBit(StatusBits.HC, (this.B & (byte)Mask.Four) == (negative ? 0 : (int)Mask.Four));
             }
-            else
-            {
-                var parity = (this.Parity() >> 2) ^ (EvenParity((byte)(this.B & (byte)Mask.Three)) ? 1 : 0) ^ 1;
-                this.SetBit(StatusBits.PF, parity != 0);
-            }
+
+            var parity = (this.Parity() >> 2) ^ (EvenParity((byte)(direction & (byte)Mask.Three)) ? 1 : 0) ^ 1;
+            this.SetBit(StatusBits.PF, parity != 0);
         }
 
         private void AdjustBlockInputOutputFlags(int basis)
