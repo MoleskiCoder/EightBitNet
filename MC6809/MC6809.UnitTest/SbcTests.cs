@@ -36,7 +36,7 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0, this.cpu.Overflow);
             Assert.AreNotEqual(0, this.cpu.Negative);
             Assert.AreNotEqual(0, this.cpu.Carry);
-            Assert.AreEqual(4, this.cpu.Cycles);
+            Assert.AreEqual(2, this.cpu.Cycles);
         }
 
         // Test the subtraction with carry instruction.
@@ -75,7 +75,7 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0, this.cpu.Overflow);
             Assert.AreNotEqual(0, this.cpu.Zero);
             Assert.AreEqual(0, this.cpu.Negative);
-            Assert.AreEqual(4, this.cpu.Cycles);
+            Assert.AreEqual(2, this.cpu.Cycles);
         }
 
         // Test the SBCA instruction.
@@ -93,7 +93,7 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0, this.cpu.Overflow);
             Assert.AreEqual(0, this.cpu.Zero);
             Assert.AreEqual(0, this.cpu.Negative);
-            Assert.AreEqual(4, this.cpu.Cycles);
+            Assert.AreEqual(2, this.cpu.Cycles);
         }
 
         // Test the SBCA instruction.
@@ -110,7 +110,7 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0, this.cpu.Overflow);
             Assert.AreEqual(0, this.cpu.Zero);
             Assert.AreNotEqual(0, this.cpu.Negative);
-            Assert.AreEqual(4, this.cpu.Cycles);
+            Assert.AreEqual(2, this.cpu.Cycles);
         }
     }
 }

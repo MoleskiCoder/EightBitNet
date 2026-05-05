@@ -815,7 +815,7 @@ namespace MC6809
             this.CC = this.AdjustNZ(data);
         }
 
-        private void STA() => this.Store(this.B);
+        private void STA() => this.Store(this.A);
         private void STB() => this.Store(this.B);
 
         private void Store(byte data) => this.MemoryWrite(this.Intermediate, this.Through(data));
@@ -1349,7 +1349,7 @@ namespace MC6809
                 case 0x73: this.Tick(7); this.ExtendedByte(); this.COM(); break;    // COM (extended)
 
                 // CWAI
-                case 0x3c: this.Tick(11); this.DirectByte(); this.CWAI(); break;    // CWAI (direct)
+                case 0x3c: this.Tick(11); this.ImmediateByte(); this.CWAI(); break; // CWAI (direct)
 
                 // DAA
                 case 0x19: this.Tick(2); this.DAA(); break;                         // DAA (inherent)
@@ -1501,13 +1501,13 @@ namespace MC6809
                 // SBC
 
                 // SBCA
-                case 0x82: this.Tick(4); this.ImmediateByte(); this.SBCA(); break;  // SBC (SBCA immediate)
+                case 0x82: this.Tick(2); this.ImmediateByte(); this.SBCA(); break;  // SBC (SBCA immediate)
                 case 0x92: this.Tick(4); this.DirectByte(); this.SBCA(); break;     // SBC (SBCA direct)
                 case 0xa2: this.Tick(4); this.IndexedByte(); this.SBCA(); break;    // SBC (SBCA indexed)
                 case 0xb2: this.Tick(5); this.ExtendedByte(); this.SBCA(); break;   // SBC (SBCB extended)
 
                 // SBCB
-                case 0xc2: this.Tick(4); this.ImmediateByte(); this.SBCB(); break;  // SBC (SBCB immediate)
+                case 0xc2: this.Tick(2); this.ImmediateByte(); this.SBCB(); break;  // SBC (SBCB immediate)
                 case 0xd2: this.Tick(4); this.DirectByte(); this.SBCB(); break;     // SBC (SBCB direct)
                 case 0xe2: this.Tick(4); this.IndexedByte(); this.SBCB(); break;    // SBC (SBCB indexed)
                 case 0xf2: this.Tick(5); this.ExtendedByte(); this.SBCB(); break;   // SBC (SBCB extended)
@@ -1811,24 +1811,30 @@ namespace MC6809
 
         private void DAA()
         {
-            var adjusted = this.A;
+            var original = this.A;
 
-            this.CC = SetBit(this.CC, StatusBits.CF, adjusted > 0x99);
+            var lowNibble = LowNibble(original);
+            var lowAdjust = this.HalfCarry != 0 || lowNibble > 9;
 
-            var lowAdjust = this.HalfCarry != 0 || LowNibble(adjusted) > 9;
-            var highAdjust = this.Carry != 0 || adjusted > 0x99;
+            var highNibble = HighNibble(original);
+            var highAdjust = this.Carry != 0 || highNibble > 9 || (highNibble == 9 && lowNibble > 9);
+
+            byte correction = 0;
 
             if (lowAdjust)
             {
-                adjusted += 6;
+                correction |= 0x06;
             }
 
             if (highAdjust)
             {
-                adjusted += 0x60;
+                correction |= 0x60;
             }
 
-            this.A = this.Through(adjusted);
+            var result = (byte)(original + correction);
+            var newCarry = (correction & 0x60) != 0;
+            this.A = this.Through(result);
+            this.CC = SetBit(this.CC, StatusBits.CF, newCarry);
         }
 
         private void EORA() => this.A = this.ExclusiveOr(this.A, this.Bus.Data);
