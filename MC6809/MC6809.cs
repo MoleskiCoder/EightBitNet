@@ -188,6 +188,8 @@ namespace MC6809
             }
         }
 
+        private void SYNC() => this.Halt();
+
         public void Halt()
         {
             this.LowerHALT();
@@ -379,15 +381,15 @@ namespace MC6809
 
         private bool LS => this.Carry != 0 || this.Zero != 0;               // (C OR Z)
 
-        private bool HI => !this.LS;                                            // !(C OR Z)
+        private bool HI => !this.LS;                                        // !(C OR Z)
 
         private bool LT => (this.Negative >> 3 ^ this.Overflow >> 1) != 0;  // (N XOR V)
 
-        private bool GE => !this.LT;                                            // !(N XOR V)
+        private bool GE => !this.LT;                                        // !(N XOR V)
 
-        private bool LE => this.Zero != 0 || this.LT;                         // (Z OR (N XOR V))
+        private bool LE => this.Zero != 0 || this.LT;                       // (Z OR (N XOR V))
 
-        private bool GT => !this.LE;                                            // !(Z OR (N XOR V))
+        private bool GT => !this.LE;                                        // !(Z OR (N XOR V))
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
@@ -604,34 +606,27 @@ namespace MC6809
 
         #region Addressing modes
 
-        private Register16 Address_relative_byte()
+        private void RelativeByteAddress()
         {
             this.FetchByte();
             var offset = (sbyte)this.Bus.Data;
             this.Intermediate.Word = (ushort)(this.PC.Word + offset);
-            return this.Intermediate;
         }
 
-        private Register16 Address_relative_word()
+        private void RelativeWordAddress()
         {
             this.FetchWord();
             var offset = (short)this.Intermediate.Word;
             this.Intermediate.Word = (ushort)(this.PC.Word + offset);
-            return this.Intermediate;
         }
 
-        private Register16 Address_direct()
+        private void DirectAddress()
         {
             this.FetchByte();
             this.Intermediate.Assign(this.Bus.Data, this.DP);
-            return this.Intermediate;
         }
 
-        private Register16 Address_extended()
-        {
-            this.FetchWord();
-            return this.Intermediate;
-        }
+        private void ExtendedAddress() => this.FetchWord();
 
         private Register16 RR(int which)
         {
@@ -645,7 +640,7 @@ namespace MC6809
             };
         }
 
-        private Register16 Address_indexed()
+        private void IndexedAddress()
         {
             this.FetchByte();
             var type = this.Bus.Data;
@@ -700,15 +695,15 @@ namespace MC6809
                         break;
                     case 0b1100: // n,PCR (eight-bit)
                         this.Tick();
-                        this.Intermediate.Word = this.Address_relative_byte().Word;
+                        this.RelativeByteAddress();
                         break;
                     case 0b1101: // n,PCR (sixteen-bit)
                         this.Tick(2);
-                        this.Intermediate.Word = this.Address_relative_word().Word;
+                        this.RelativeWordAddress();
                         break;
                     case 0b1111: // [n]
                         this.Tick(2);
-                        this.Intermediate.Word = this.Address_extended().Word;
+                        this.ExtendedAddress();
                         break;
                     default:
                         throw new InvalidOperationException("Invalid index type");
@@ -728,61 +723,54 @@ namespace MC6809
                 this.Tick();
                 this.Intermediate.Word = (ushort)(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five)));
             }
-
-            return this.Intermediate;
         }
 
-        private byte AM_immediate_byte()
+        private void ImmediateByte() => this.FetchByte();
+
+        private void DirectByte()
         {
-            this.FetchByte();
-            return this.Bus.Data;
+            this.DirectAddress();
+            this.MemoryRead(this.Intermediate);
         }
 
-        private byte AM_direct_byte()
+        private void IndexedByte()
         {
-            this.MemoryRead(this.Address_direct());
-            return this.Bus.Data;
+            this.IndexedAddress();
+            this.MemoryRead(this.Intermediate);
         }
 
-        private byte AM_indexed_byte()
+        private void ExtendedByte()
         {
-            this.MemoryRead(this.Address_indexed());
-            return this.Bus.Data;
+            this.ExtendedAddress();
+            this.MemoryRead(this.Intermediate);
         }
 
-        private byte AM_extended_byte()
+        private void ImmediateWord() => this.FetchWord();
+
+        private void DirectWord()
         {
-            this.MemoryRead(this.Address_extended());
-            return this.Bus.Data;
+            this.DirectAddress();
+            this.GetWord(this.Intermediate);
         }
 
-        private Register16 AM_immediate_word()
+        private void IndexedWord()
         {
-            this.FetchWord();
-            return this.Intermediate;
+            this.IndexedAddress();
+            this.GetWord(this.Intermediate);
         }
 
-        private Register16 AM_direct_word()
+        private void ExtendedWord()
         {
-            this.GetWord(this.Address_direct());
-            return this.Intermediate;
-        }
-
-        private Register16 AM_indexed_word()
-        {
-            this.GetWord(this.Address_indexed());
-            return this.Intermediate;
-        }
-
-        private Register16 AM_extended_word()
-        {
-            this.GetWord(this.Address_extended());
-            return this.Intermediate;
+            this.ExtendedAddress();
+            this.GetWord(this.Intermediate);
         }
 
         #endregion
 
         #region Load/store 8 or 16-bit data
+
+        private void LDA() => this.A = this.Through(this.Bus.Data);
+        private void LDB() => this.B = this.Through(this.Bus.Data);
 
         private byte Through(byte data)
         {
@@ -791,24 +779,141 @@ namespace MC6809
             return data;
         }
 
-        private Register16 Through(Register16 data)
+        private void LDD()
+        {
+            this.Through(this.Intermediate);
+            this.D.Assign(this.Intermediate);
+        }
+
+        private void LDS()
+        {
+            this.Through(this.Intermediate);
+            this.S.Assign(this.Intermediate);
+        }
+
+        private void LDU()
+        {
+            this.Through(this.Intermediate);
+            this.U.Assign(this.Intermediate);
+        }
+
+        private void LDX()
+        {
+            this.Through(this.Intermediate);
+            this.X.Assign(this.Intermediate);
+        }
+
+        private void LDY()
+        {
+            this.Through(this.Intermediate);
+            this.Y.Assign(this.Intermediate);
+        }
+
+        private void Through(Register16 data)
         {
             this.CC = ClearBit(this.CC, StatusBits.VF);
             this.CC = this.AdjustNZ(data);
-            return data;
         }
 
-        private byte LD(byte data) => this.Through(data);
+        private void STA() => this.Store(this.B);
+        private void STB() => this.Store(this.B);
 
-        private Register16 LD(Register16 data) => this.Through(data);
+        private void Store(byte data) => this.MemoryWrite(this.Intermediate, this.Through(data));
 
-        private byte ST(byte data) => this.Through(data);
+        private void STD()
+        {
+            this.Through(this.D);
+            this.SetWord(this.Intermediate, this.D);
+        }
 
-        private Register16 ST(Register16 data) => this.Through(data);
+        private void STU()
+        {
+            this.Through(this.U);
+            this.SetWord(this.Intermediate, this.U);
+        }
+
+        private void STS()
+        {
+            this.Through(this.S);
+            this.SetWord(this.Intermediate, this.S);
+        }
+
+        private void STX()
+        {
+            this.Through(this.X);
+            this.SetWord(this.Intermediate, this.X);
+        }
+
+        private void STY()
+        {
+            this.Through(this.Y);
+            this.SetWord(this.Intermediate, this.Y);
+        }
 
         #endregion
 
         #region Branching
+
+        private void LBSR()
+        {
+            this.RelativeWordAddress();
+            this.Call(this.Intermediate);
+        }
+
+        private void BSR()
+        {
+            this.RelativeByteAddress();
+            this.Call(this.Intermediate);
+        }
+
+        private void BRA() => this.BranchShort(true);
+        private void BRN() => this.BranchShort(false);
+        private void BHI() => this.BranchShort(this.HI);
+        private void BLS() => this.BranchShort(this.LS);
+        private void BCC() => this.BranchShort(this.Carry == 0);
+        private void BCS() => this.BranchShort(this.Carry != 0);
+        private void BNE() => this.BranchShort(this.Zero == 0);
+        private void BEQ() => this.BranchShort(this.Zero != 0);
+        private void BVC() => this.BranchShort(this.Overflow == 0);
+        private void BVS() => this.BranchShort(this.Overflow != 0);
+        private void BPL() => this.BranchShort(this.Negative == 0);
+        private void BMI() => this.BranchShort(this.Negative != 0);
+        private void BGE() => this.BranchShort(this.GE);
+        private void BLT() => this.BranchShort(this.LT);
+        private void BGT() => this.BranchShort(this.GT);
+        private void BLE() => this.BranchShort(this.LE);
+
+        private void LBRA() => this.BranchLong(true);
+        private void LBRN() => this.BranchLong(false);
+        private void LBHI() => this.BranchLong(this.HI);
+        private void LBLS() => this.BranchLong(this.LS);
+        private void LBCC() => this.BranchLong(this.Carry == 0);
+        private void LBCS() => this.BranchLong(this.Carry != 0);
+        private void LBNE() => this.BranchLong(this.Zero == 0);
+        private void LBEQ() => this.BranchLong(this.Zero != 0);
+        private void LBVC() => this.BranchLong(this.Overflow == 0);
+        private void LBVS() => this.BranchLong(this.Overflow != 0);
+        private void LBPL() => this.BranchLong(this.Negative == 0);
+        private void LBMI() => this.BranchLong(this.Negative != 0);
+        private void LBGE() => this.BranchLong(this.GE);
+        private void LBLT() => this.BranchLong(this.LT);
+        private void LBGT() => this.BranchLong(this.GT);
+        private void LBLE() => this.BranchLong(this.LE);
+
+        private void BranchShort(bool condition)
+        {
+            this.RelativeByteAddress();
+            this.Branch(this.Intermediate, condition);
+        }
+
+        private void BranchLong(bool condition)
+        {
+            this.RelativeWordAddress();
+            if (this.Branch(this.Intermediate, condition))
+            {
+                this.Tick();
+            }
+        }
 
         private bool Branch(Register16 destination, bool condition)
         {
@@ -818,16 +923,6 @@ namespace MC6809
             }
 
             return condition;
-        }
-
-        private void BranchShort(bool condition) => this.Branch(this.Address_relative_byte(), condition);
-
-        private void BranchLong(bool condition)
-        {
-            if (this.Branch(this.Address_relative_word(), condition))
-            {
-                this.Tick();
-            }
         }
 
         #endregion
@@ -849,6 +944,11 @@ namespace MC6809
         private void SaveRegisterState() => this.PSH(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Eight : (byte)0b10000001);
 
         private void RestoreRegisterState() => this.PUL(this.S, this.EntireRegisterSet != 0 ? (byte)Mask.Eight : (byte)0b10000001);
+
+        private void PSHS() => this.PSH(this.S);
+        private void PSHU() => this.PSH(this.U);
+
+        private void PSH(Register16 stack) => this.PSH(stack, this.Bus.Data);
 
         private void PSH(Register16 stack, byte data)
         {
@@ -902,6 +1002,11 @@ namespace MC6809
                 this.Push(stack, this.CC);
             }
         }
+
+        private void PULU() => this.PUL(this.U);
+        private void PULS() => this.PUL(this.S);
+
+        private void PUL(Register16 stack) => this.PUL(stack, this.Bus.Data);
 
         private void PUL(Register16 stack, byte data)
         {
@@ -995,8 +1100,10 @@ namespace MC6809
             };
         }
 
-        private void EXG(byte data)
+        private void EXG()
         {
+            var data = this.Bus.Data;
+
             var leftSpecifier = HighNibble(data);
             var leftType = leftSpecifier & (int)Bits.Bit3;
 
@@ -1035,8 +1142,10 @@ namespace MC6809
             }
         }
 
-        private void TFR(byte data)
+        private void TFR()
         {
+            var data = this.Bus.Data;
+
             var sourceSpecifier = HighNibble(data);
             var sourceType = sourceSpecifier & (int)Bits.Bit3;
 
@@ -1120,6 +1229,7 @@ namespace MC6809
             {
                 this.Execute11();
             }
+            else
             {
                 this.ExecuteUnprefixed();
             }
@@ -1133,362 +1243,362 @@ namespace MC6809
         {
             switch (this.OpCode)
             {
-                case 0x10: this.prefix10 = true; this.FetchByte(); this.Execute(this.Bus.Data); break;
-                case 0x11: this.prefix11 = true; this.FetchByte(); this.Execute(this.Bus.Data); break;
+                case 0x10: this.Prefix10(); break;
+                case 0x11: this.Prefix11(); break;
 
                 // ABX
-                case 0x3a: this.Tick(3); this.X.Word += this.B; break;                                          // ABX (inherent)
+                case 0x3a: this.Tick(3); this.ABX(); break;                         // ABX (inherent)
 
                 // ADC
-                case 0x89: this.Tick(2); this.A = this.ADC(this.A, this.AM_immediate_byte()); break;            // ADC (ADCA immediate)
-                case 0x99: this.Tick(4); this.A = this.ADC(this.A, this.AM_direct_byte()); break;               // ADC (ADCA direct)
-                case 0xa9: this.Tick(4); this.A = this.ADC(this.A, this.AM_indexed_byte()); break;              // ADC (ADCA indexed)
-                case 0xb9: this.Tick(4); this.A = this.ADC(this.A, this.AM_extended_byte()); break;             // ADC (ADCA extended)
+                case 0x89: this.Tick(2); this.ImmediateByte(); this.ADCA(); break;  // ADC (ADCA immediate)
+                case 0x99: this.Tick(4); this.DirectByte(); this.ADCA(); break;     // ADC (ADCA direct)
+                case 0xa9: this.Tick(4); this.IndexedByte(); this.ADCA(); break;    // ADC (ADCA indexed)
+                case 0xb9: this.Tick(4); this.ExtendedByte(); this.ADCA(); break;   // ADC (ADCA extended)
 
-                case 0xc9: this.Tick(2); this.B = this.ADC(this.B, this.AM_immediate_byte()); break;            // ADC (ADCB immediate)
-                case 0xd9: this.Tick(4); this.B = this.ADC(this.B, this.AM_direct_byte()); break;               // ADC (ADCB direct)
-                case 0xe9: this.Tick(4); this.B = this.ADC(this.B, this.AM_indexed_byte()); break;              // ADC (ADCB indexed)
-                case 0xf9: this.Tick(4); this.B = this.ADC(this.B, this.AM_extended_byte()); break;             // ADC (ADCB extended)
+                case 0xc9: this.Tick(2); this.ImmediateByte(); this.ADCB(); break;  // ADC (ADCB immediate)
+                case 0xd9: this.Tick(4); this.DirectByte(); this.ADCB(); break;     // ADC (ADCB direct)
+                case 0xe9: this.Tick(4); this.IndexedByte(); this.ADCB(); break;    // ADC (ADCB indexed)
+                case 0xf9: this.Tick(4); this.ExtendedByte(); this.ADCB(); break;   // ADC (ADCB extended)
 
                 // ADD
-                case 0x8b: this.Tick(2); this.A = this.ADD(this.A, this.AM_immediate_byte()); break;            // ADD (ADDA immediate)
-                case 0x9b: this.Tick(4); this.A = this.ADD(this.A, this.AM_direct_byte()); break;               // ADD (ADDA direct)
-                case 0xab: this.Tick(4); this.A = this.ADD(this.A, this.AM_indexed_byte()); break;              // ADD (ADDA indexed)
-                case 0xbb: this.Tick(5); this.A = this.ADD(this.A, this.AM_extended_byte()); break;             // ADD (ADDA extended)
+                case 0x8b: this.Tick(2); this.ImmediateByte(); this.ADDA(); break;  // ADD (ADDA immediate)
+                case 0x9b: this.Tick(4); this.DirectByte(); this.ADDA(); break;     // ADD (ADDA direct)
+                case 0xab: this.Tick(4); this.IndexedByte(); this.ADDA(); break;    // ADD (ADDA indexed)
+                case 0xbb: this.Tick(5); this.ExtendedByte(); this.ADDA(); break;   // ADD (ADDA extended)
 
-                case 0xcb: this.Tick(2); this.B = this.ADD(this.B, this.AM_immediate_byte()); break;            // ADD (ADDB immediate)
-                case 0xdb: this.Tick(4); this.B = this.ADD(this.B, this.AM_direct_byte()); break;               // ADD (ADDB direct)
-                case 0xeb: this.Tick(4); this.B = this.ADD(this.B, this.AM_indexed_byte()); break;              // ADD (ADDB indexed)
-                case 0xfb: this.Tick(5); this.B = this.ADD(this.B, this.AM_extended_byte()); break;             // ADD (ADDB extended)
+                case 0xcb: this.Tick(2); this.ImmediateByte(); this.ADDB(); break;  // ADD (ADDB immediate)
+                case 0xdb: this.Tick(4); this.DirectByte(); this.ADDB(); break;     // ADD (ADDB direct)
+                case 0xeb: this.Tick(4); this.IndexedByte(); this.ADDB(); break;    // ADD (ADDB indexed)
+                case 0xfb: this.Tick(5); this.ExtendedByte(); this.ADDB(); break;   // ADD (ADDB extended)
 
-                case 0xc3: this.Tick(4); this.D.Word = this.ADD(this.D, this.AM_immediate_word()).Word; break;  // ADD (ADDD immediate)
-                case 0xd3: this.Tick(6); this.D.Word = this.ADD(this.D, this.AM_direct_word()).Word; break;     // ADD (ADDD direct)
-                case 0xe3: this.Tick(6); this.D.Word = this.ADD(this.D, this.AM_indexed_word()).Word; break;    // ADD (ADDD indexed)
-                case 0xf3: this.Tick(7); this.D.Word = this.ADD(this.D, this.AM_extended_word()).Word; break;   // ADD (ADDD extended)
+                case 0xc3: this.Tick(4); this.ImmediateWord(); this.ADDD(); break;  // ADD (ADDD immediate)
+                case 0xd3: this.Tick(6); this.DirectWord(); this.ADDD(); break;     // ADD (ADDD direct)
+                case 0xe3: this.Tick(6); this.IndexedWord(); this.ADDD(); break;    // ADD (ADDD indexed)
+                case 0xf3: this.Tick(7); this.ExtendedWord(); this.ADDD(); break;   // ADD (ADDD extended)
 
                 // AND
-                case 0x84: this.Tick(2); this.A = this.AndR(this.A, this.AM_immediate_byte()); break;           // AND (ANDA immediate)
-                case 0x94: this.Tick(4); this.A = this.AndR(this.A, this.AM_direct_byte()); break;              // AND (ANDA direct)
-                case 0xa4: this.Tick(4); this.A = this.AndR(this.A, this.AM_indexed_byte()); break;             // AND (ANDA indexed)
-                case 0xb4: this.Tick(5); this.A = this.AndR(this.A, this.AM_extended_byte()); break;            // AND (ANDA extended)
+                case 0x84: this.Tick(2); this.ImmediateByte(); this.ANDA(); break;  // AND (ANDA immediate)
+                case 0x94: this.Tick(4); this.DirectByte(); this.ANDA(); break;     // AND (ANDA direct)
+                case 0xa4: this.Tick(4); this.IndexedByte(); this.ANDA(); break;    // AND (ANDA indexed)
+                case 0xb4: this.Tick(5); this.ExtendedByte(); this.ANDA(); break;   // AND (ANDA extended)
 
-                case 0xc4: this.Tick(2); this.B = this.AndR(this.B, this.AM_immediate_byte()); break;           // AND (ANDB immediate)
-                case 0xd4: this.Tick(4); this.B = this.AndR(this.B, this.AM_direct_byte()); break;              // AND (ANDB direct)
-                case 0xe4: this.Tick(4); this.B = this.AndR(this.B, this.AM_indexed_byte()); break;             // AND (ANDB indexed)
-                case 0xf4: this.Tick(5); this.B = this.AndR(this.B, this.AM_extended_byte()); break;            // AND (ANDB extended)
+                case 0xc4: this.Tick(2); this.ImmediateByte(); this.ANDB(); break;  // AND (ANDB immediate)
+                case 0xd4: this.Tick(4); this.DirectByte(); this.ANDB(); break;     // AND (ANDB direct)
+                case 0xe4: this.Tick(4); this.IndexedByte(); this.ANDB(); break;    // AND (ANDB indexed)
+                case 0xf4: this.Tick(5); this.ExtendedByte(); this.ANDB(); break;   // AND (ANDB extended)
 
-                case 0x1c: this.Tick(3); this.CC &= this.AM_immediate_byte(); break;                            // AND (ANDCC immediate)
+                case 0x1c: this.Tick(3); this.ImmediateByte(); this.ANDCC(); break; // AND (ANDCC immediate)
 
                 // ASL/LSL
-                case 0x08: this.Tick(6); this.MemoryWrite(this.ASL(this.AM_direct_byte())); break;              // ASL (direct)
-                case 0x48: this.Tick(2); this.A = this.ASL(this.A); break;                                      // ASL (ASLA inherent)
-                case 0x58: this.Tick(2); this.B = this.ASL(this.B); break;                                      // ASL (ASLB inherent)
-                case 0x68: this.Tick(6); this.MemoryWrite(this.ASL(this.AM_indexed_byte())); break;             // ASL (indexed)
-                case 0x78: this.Tick(7); this.MemoryWrite(this.ASL(this.AM_extended_byte())); break;            // ASL (extended)
+                case 0x08: this.Tick(6); this.DirectByte(); this.ASL(); break;      // ASL (direct)
+                case 0x48: this.Tick(2); this.ASLA(); break;                        // ASL (ASLA inherent)
+                case 0x58: this.Tick(2); this.ASLB(); break;                        // ASL (ASLB inherent)
+                case 0x68: this.Tick(6); this.IndexedByte(); this.ASL(); break;     // ASL (indexed)
+                case 0x78: this.Tick(7); this.ExtendedByte(); this.ASL(); break;    // ASL (extended)
 
                 // ASR
-                case 0x07: this.Tick(6); this.MemoryWrite(this.ASR(this.AM_direct_byte())); break;              // ASR (direct)
-                case 0x47: this.Tick(2); this.A = this.ASR(this.A); break;                                      // ASR (ASRA inherent)
-                case 0x57: this.Tick(2); this.B = this.ASR(this.B); break;                                      // ASR (ASRB inherent)
-                case 0x67: this.Tick(6); this.MemoryWrite(this.ASR(this.AM_indexed_byte())); break;             // ASR (indexed)
-                case 0x77: this.Tick(7); this.MemoryWrite(this.ASR(this.AM_extended_byte())); break;            // ASR (extended)
+                case 0x07: this.Tick(6); this.DirectByte(); this.ASR(); break;      // ASR (direct)
+                case 0x47: this.Tick(2); this.ASRA(); break;                        // ASR (ASRA inherent)
+                case 0x57: this.Tick(2); this.ASRB(); break;                        // ASR (ASRB inherent)
+                case 0x67: this.Tick(6); this.IndexedByte(); this.ASR(); break;     // ASR (indexed)
+                case 0x77: this.Tick(7); this.ExtendedByte(); this.ASR(); break;    // ASR (extended)
 
                 // BIT
-                case 0x85: this.Tick(2); this.BIT(this.A, this.AM_immediate_byte()); break;                     // BIT (BITA immediate)
-                case 0x95: this.Tick(4); this.BIT(this.A, this.AM_direct_byte()); break;                        // BIT (BITA direct)
-                case 0xa5: this.Tick(4); this.BIT(this.A, this.AM_indexed_byte()); break;                       // BIT (BITA indexed)
-                case 0xb5: this.Tick(5); this.BIT(this.A, this.AM_extended_byte()); break;                      // BIT (BITA extended)
+                case 0x85: this.Tick(2); this.ImmediateByte(); this.BITA(); break;  // BIT (BITA immediate)
+                case 0x95: this.Tick(4); this.DirectByte(); this.BITA(); break;     // BIT (BITA direct)
+                case 0xa5: this.Tick(4); this.IndexedByte(); this.BITA(); break;    // BIT (BITA indexed)
+                case 0xb5: this.Tick(5); this.ExtendedByte(); this.BITA(); break;   // BIT (BITA extended)
 
-                case 0xc5: this.Tick(2); this.BIT(this.B, this.AM_immediate_byte()); break;                     // BIT (BITB immediate)
-                case 0xd5: this.Tick(4); this.BIT(this.B, this.AM_direct_byte()); break;                        // BIT (BITB direct)
-                case 0xe5: this.Tick(4); this.BIT(this.B, this.AM_indexed_byte()); break;                       // BIT (BITB indexed)
-                case 0xf5: this.Tick(5); this.BIT(this.B, this.AM_extended_byte()); break;                      // BIT (BITB extended)
+                case 0xc5: this.Tick(2); this.ImmediateByte(); this.BITB(); break;  // BIT (BITB immediate)
+                case 0xd5: this.Tick(4); this.DirectByte(); this.BITB(); break;     // BIT (BITB direct)
+                case 0xe5: this.Tick(4); this.IndexedByte(); this.BITB(); break;    // BIT (BITB indexed)
+                case 0xf5: this.Tick(5); this.ExtendedByte(); this.BITB(); break;   // BIT (BITB extended)
 
                 // CLR
-                case 0x0f: this.Tick(6); this.MemoryWrite(this.Address_direct(), this.CLR()); break;            // CLR (direct)
-                case 0x4f: this.Tick(2); this.A = this.CLR(); break;                                            // CLR (CLRA implied)
-                case 0x5f: this.Tick(2); this.B = this.CLR(); break;                                            // CLR (CLRB implied)
-                case 0x6f: this.Tick(6); this.MemoryWrite(this.Address_indexed(), this.CLR()); break;           // CLR (indexed)
-                case 0x7f: this.Tick(7); this.MemoryWrite(this.Address_extended(), this.CLR()); break;          // CLR (extended)
+                case 0x0f: this.Tick(6); this.DirectAddress(); this.CLR(); break;   // CLR (direct)
+                case 0x4f: this.Tick(2); this.CLRA(); break;                        // CLR (CLRA implied)
+                case 0x5f: this.Tick(2); this.CLRB(); break;                        // CLR (CLRB implied)
+                case 0x6f: this.Tick(6); this.IndexedAddress(); this.CLR(); break;  // CLR (indexed)
+                case 0x7f: this.Tick(7); this.ExtendedAddress(); this.CLR(); break; // CLR (extended)
 
                 // CMP
 
                 // CMPA
-                case 0x81: this.Tick(2); this.CMP(this.A, this.AM_immediate_byte()); break;                     // CMP (CMPA, immediate)
-                case 0x91: this.Tick(4); this.CMP(this.A, this.AM_direct_byte()); break;                        // CMP (CMPA, direct)
-                case 0xa1: this.Tick(4); this.CMP(this.A, this.AM_indexed_byte()); break;                       // CMP (CMPA, indexed)
-                case 0xb1: this.Tick(5); this.CMP(this.A, this.AM_extended_byte()); break;                      // CMP (CMPA, extended)
+                case 0x81: this.Tick(2); this.ImmediateByte(); this.CMPA(); break;  // CMP (CMPA, immediate)
+                case 0x91: this.Tick(4); this.DirectByte(); this.CMPA(); break;     // CMP (CMPA, direct)
+                case 0xa1: this.Tick(4); this.IndexedByte(); this.CMPA(); break;    // CMP (CMPA, indexed)
+                case 0xb1: this.Tick(5); this.ExtendedByte(); this.CMPA(); break;   // CMP (CMPA, extended)
 
                 // CMPB
-                case 0xc1: this.Tick(2); this.CMP(this.B, this.AM_immediate_byte()); break;                     // CMP (CMPB, immediate)
-                case 0xd1: this.Tick(4); this.CMP(this.B, this.AM_direct_byte()); break;                        // CMP (CMPB, direct)
-                case 0xe1: this.Tick(4); this.CMP(this.B, this.AM_indexed_byte()); break;                       // CMP (CMPB, indexed)
-                case 0xf1: this.Tick(5); this.CMP(this.B, this.AM_extended_byte()); break;                      // CMP (CMPB, extended)
+                case 0xc1: this.Tick(2); this.ImmediateByte(); this.CMPB(); break;  // CMP (CMPB, immediate)
+                case 0xd1: this.Tick(4); this.DirectByte(); this.CMPB(); break;     // CMP (CMPB, direct)
+                case 0xe1: this.Tick(4); this.IndexedByte(); this.CMPB(); break;    // CMP (CMPB, indexed)
+                case 0xf1: this.Tick(5); this.ExtendedByte(); this.CMPB(); break;   // CMP (CMPB, extended)
 
                 // CMPX
-                case 0x8c: this.Tick(4); this.CMP(this.X, this.AM_immediate_word()); break;                     // CMP (CMPX, immediate)
-                case 0x9c: this.Tick(6); this.CMP(this.X, this.AM_direct_word()); break;                        // CMP (CMPX, direct)
-                case 0xac: this.Tick(6); this.CMP(this.X, this.AM_indexed_word()); break;                       // CMP (CMPX, indexed)
-                case 0xbc: this.Tick(7); this.CMP(this.X, this.AM_extended_word()); break;                      // CMP (CMPX, extended)
+                case 0x8c: this.Tick(4); this.ImmediateWord(); this.CMPX(); break;  // CMP (CMPX, immediate)
+                case 0x9c: this.Tick(6); this.DirectWord(); this.CMPX(); break;     // CMP (CMPX, direct)
+                case 0xac: this.Tick(6); this.IndexedWord(); this.CMPX(); break;    // CMP (CMPX, indexed)
+                case 0xbc: this.Tick(7); this.ExtendedWord(); this.CMPX(); break;   // CMP (CMPX, extended)
 
                 // COM
-                case 0x03: this.Tick(6); this.MemoryWrite(this.COM(this.AM_direct_byte())); break;              // COM (direct)
-                case 0x43: this.Tick(2); this.A = this.COM(this.A); break;                                      // COM (COMA inherent)
-                case 0x53: this.Tick(2); this.B = this.COM(this.B); break;                                      // COM (COMB inherent)
-                case 0x63: this.Tick(6); this.MemoryWrite(this.COM(this.AM_indexed_byte())); break;             // COM (indexed)
-                case 0x73: this.Tick(7); this.MemoryWrite(this.COM(this.AM_extended_byte())); break;            // COM (extended)
+                case 0x03: this.Tick(6); this.DirectByte(); this.COM(); break;      // COM (direct)
+                case 0x43: this.Tick(2); this.COMA(); break;                        // COM (COMA inherent)
+                case 0x53: this.Tick(2); this.COMB(); break;                        // COM (COMB inherent)
+                case 0x63: this.Tick(6); this.IndexedByte(); this.COM(); break;     // COM (indexed)
+                case 0x73: this.Tick(7); this.ExtendedByte(); this.COM(); break;    // COM (extended)
 
                 // CWAI
-                case 0x3c: this.Tick(11); this.CWAI(this.AM_direct_byte()); break;                              // CWAI (direct)
+                case 0x3c: this.Tick(11); this.DirectByte(); this.CWAI(); break;    // CWAI (direct)
 
                 // DAA
-                case 0x19: this.Tick(2); this.A = this.DA(this.A); break;                                       // DAA (inherent)
+                case 0x19: this.Tick(2); this.DAA(); break;                         // DAA (inherent)
 
                 // DEC
-                case 0x0a: this.Tick(6); this.MemoryWrite(this.DEC(this.AM_direct_byte())); break;              // DEC (direct)
-                case 0x4a: this.Tick(2); this.A = this.DEC(this.A); break;                                      // DEC (DECA inherent)
-                case 0x5a: this.Tick(2); this.B = this.DEC(this.B); break;                                      // DEC (DECB inherent)
-                case 0x6a: this.Tick(6); this.MemoryWrite(this.DEC(this.AM_indexed_byte())); break;             // DEC (indexed)
-                case 0x7a: this.Tick(7); this.MemoryWrite(this.DEC(this.AM_extended_byte())); break;            // DEC (extended)
+                case 0x0a: this.Tick(6); this.DirectByte(); this.DEC(); break;      // DEC (direct)
+                case 0x4a: this.Tick(2); this.DECA(); break;                        // DEC (DECA inherent)
+                case 0x5a: this.Tick(2); this.DECB(); break;                        // DEC (DECB inherent)
+                case 0x6a: this.Tick(6); this.IndexedByte(); this.DEC(); break;     // DEC (indexed)
+                case 0x7a: this.Tick(7); this.ExtendedByte(); this.DEC(); break;    // DEC (extended)
 
                 // EOR
 
                 // EORA
-                case 0x88: this.Tick(2); this.A = this.EorR(this.A, this.AM_immediate_byte()); break;           // EOR (EORA immediate)
-                case 0x98: this.Tick(4); this.A = this.EorR(this.A, this.AM_direct_byte()); break;              // EOR (EORA direct)
-                case 0xa8: this.Tick(4); this.A = this.EorR(this.A, this.AM_indexed_byte()); break;             // EOR (EORA indexed)
-                case 0xb8: this.Tick(5); this.A = this.EorR(this.A, this.AM_extended_byte()); break;            // EOR (EORA extended)
+                case 0x88: this.Tick(2); this.ImmediateByte(); this.EORA(); break;  // EOR (EORA immediate)
+                case 0x98: this.Tick(4); this.DirectByte(); this.EORA(); break;     // EOR (EORA direct)
+                case 0xa8: this.Tick(4); this.IndexedByte(); this.EORA(); break;    // EOR (EORA indexed)
+                case 0xb8: this.Tick(5); this.ExtendedByte(); this.EORA(); break;   // EOR (EORA extended)
 
                 // EORB
-                case 0xc8: this.Tick(2); this.B = this.EorR(this.B, this.AM_immediate_byte()); break;           // EOR (EORB immediate)
-                case 0xd8: this.Tick(4); this.B = this.EorR(this.B, this.AM_direct_byte()); break;              // EOR (EORB direct)
-                case 0xe8: this.Tick(4); this.B = this.EorR(this.B, this.AM_indexed_byte()); break;             // EOR (EORB indexed)
-                case 0xf8: this.Tick(5); this.B = this.EorR(this.B, this.AM_extended_byte()); break;            // EOR (EORB extended)
+                case 0xc8: this.Tick(2); this.ImmediateByte(); this.EORB(); break;  // EOR (EORB immediate)
+                case 0xd8: this.Tick(4); this.DirectByte(); this.EORB(); break;     // EOR (EORB direct)
+                case 0xe8: this.Tick(4); this.IndexedByte(); this.EORB(); break;    // EOR (EORB indexed)
+                case 0xf8: this.Tick(5); this.ExtendedByte(); this.EORB(); break;   // EOR (EORB extended)
 
                 // EXG
-                case 0x1e: this.Tick(8); this.EXG(this.AM_immediate_byte()); break;                             // EXG (R1,R2 immediate)
+                case 0x1e: this.Tick(8); this.ImmediateByte(); this.EXG(); break;   // EXG (R1,R2 immediate)
 
                 // INC
-                case 0x0c: this.Tick(6); this.MemoryWrite(this.INC(this.AM_direct_byte())); break;              // INC (direct)
-                case 0x4c: this.Tick(2); this.A = this.INC(this.A); break;                                      // INC (INCA inherent)
-                case 0x5c: this.Tick(2); this.B = this.INC(this.B); break;                                      // INC (INCB inherent)
-                case 0x6c: this.Tick(6); this.MemoryWrite(this.INC(this.AM_indexed_byte())); break;             // INC (indexed)
-                case 0x7c: this.Tick(7); this.MemoryWrite(this.INC(this.AM_extended_byte())); break;            // INC (extended)
+                case 0x0c: this.Tick(6); this.DirectByte(); this.INC(); break;      // INC (direct)
+                case 0x4c: this.Tick(2); this.INCA(); break;                        // INC (INCA inherent)
+                case 0x5c: this.Tick(2); this.INCB(); break;                        // INC (INCB inherent)
+                case 0x6c: this.Tick(6); this.IndexedByte(); this.INC(); break;     // INC (indexed)
+                case 0x7c: this.Tick(7); this.ExtendedByte(); this.INC(); break;    // INC (extended)
 
                 // JMP
-                case 0x0e: this.Tick(6); this.Jump(this.Address_direct()); break;                               // JMP (direct)
-                case 0x6e: this.Tick(6); this.Jump(this.Address_indexed()); break;                              // JMP (indexed)
-                case 0x7e: this.Tick(7); this.Jump(this.Address_extended()); break;                             // JMP (extended)
+                case 0x0e: this.Tick(6); this.DirectAddress(); this.JMP(); break;   // JMP (direct)
+                case 0x6e: this.Tick(6); this.IndexedAddress(); this.JMP(); break;  // JMP (indexed)
+                case 0x7e: this.Tick(7); this.ExtendedAddress(); this.JMP(); break; // JMP (extended)
 
                 // JSR
-                case 0x9d: this.Tick(6); this.JSR(this.Address_direct()); break;                                // JSR (direct)
-                case 0xad: this.Tick(6); this.JSR(this.Address_indexed()); break;                               // JSR (indexed)
-                case 0xbd: this.Tick(7); this.JSR(this.Address_extended()); break;                              // JSR (extended)
+                case 0x9d: this.Tick(6); this.DirectAddress(); this.JSR(); break;   // JSR (direct)
+                case 0xad: this.Tick(6); this.IndexedAddress(); this.JSR(); break;  // JSR (indexed)
+                case 0xbd: this.Tick(7); this.ExtendedAddress(); this.JSR(); break; // JSR (extended)
 
                 // LD
 
                 // LDA
-                case 0x86: this.Tick(2); this.A = this.LD(this.AM_immediate_byte()); break;                     // LD (LDA immediate)
-                case 0x96: this.Tick(4); this.A = this.LD(this.AM_direct_byte()); break;                        // LD (LDA direct)
-                case 0xa6: this.Tick(4); this.A = this.LD(this.AM_indexed_byte()); break;                       // LD (LDA indexed)
-                case 0xb6: this.Tick(5); this.A = this.LD(this.AM_extended_byte()); break;                      // LD (LDA extended)
+                case 0x86: this.Tick(2); this.ImmediateByte(); this.LDA(); break;   // LD (LDA immediate)
+                case 0x96: this.Tick(4); this.DirectByte(); this.LDA(); break;      // LD (LDA direct)
+                case 0xa6: this.Tick(4); this.IndexedByte(); this.LDA(); break;     // LD (LDA indexed)
+                case 0xb6: this.Tick(5); this.ExtendedByte(); this.LDA(); break;    // LD (LDA extended)
 
                 // LDB
-                case 0xc6: this.Tick(2); this.B = this.LD(this.AM_immediate_byte()); break;                     // LD (LDB immediate)
-                case 0xd6: this.Tick(4); this.B = this.LD(this.AM_direct_byte()); break;                        // LD (LDB direct)
-                case 0xe6: this.Tick(4); this.B = this.LD(this.AM_indexed_byte()); break;                       // LD (LDB indexed)
-                case 0xf6: this.Tick(5); this.B = this.LD(this.AM_extended_byte()); break;                      // LD (LDB extended)
+                case 0xc6: this.Tick(2); this.ImmediateByte(); this.LDB(); break;   // LD (LDB immediate)
+                case 0xd6: this.Tick(4); this.DirectByte(); this.LDB(); break;      // LD (LDB direct)
+                case 0xe6: this.Tick(4); this.IndexedByte(); this.LDB(); break;     // LD (LDB indexed)
+                case 0xf6: this.Tick(5); this.ExtendedByte(); this.LDB(); break;    // LD (LDB extended)
 
                 // LDD
-                case 0xcc: this.Tick(3); this.D.Word = this.LD(this.AM_immediate_word()).Word; break;           // LD (LDD immediate)
-                case 0xdc: this.Tick(5); this.D.Word = this.LD(this.AM_direct_word()).Word; break;              // LD (LDD direct)
-                case 0xec: this.Tick(5); this.D.Word = this.LD(this.AM_indexed_word()).Word; break;             // LD (LDD indexed)
-                case 0xfc: this.Tick(6); this.D.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDD extended)
+                case 0xcc: this.Tick(3); this.ImmediateWord(); this.LDD(); break;   // LD (LDD immediate)
+                case 0xdc: this.Tick(5); this.DirectWord(); this.LDD(); break;      // LD (LDD direct)
+                case 0xec: this.Tick(5); this.IndexedWord(); this.LDD(); break;     // LD (LDD indexed)
+                case 0xfc: this.Tick(6); this.ExtendedWord(); this.LDD(); break;    // LD (LDD extended)
 
                 // LDU
-                case 0xce: this.Tick(3); this.U.Word = this.LD(this.AM_immediate_word()).Word; break;           // LD (LDU immediate)
-                case 0xde: this.Tick(5); this.U.Word = this.LD(this.AM_direct_word()).Word; break;              // LD (LDU direct)
-                case 0xee: this.Tick(5); this.U.Word = this.LD(this.AM_indexed_word()).Word; break;             // LD (LDU indexed)
-                case 0xfe: this.Tick(6); this.U.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDU extended)
+                case 0xce: this.Tick(3); this.ImmediateWord(); this.LDU(); break;   // LD (LDU immediate)
+                case 0xde: this.Tick(5); this.DirectWord(); this.LDU(); break;      // LD (LDU direct)
+                case 0xee: this.Tick(5); this.IndexedWord(); this.LDU(); break;     // LD (LDU indexed)
+                case 0xfe: this.Tick(6); this.ExtendedWord(); this.LDU(); break;    // LD (LDU extended)
 
                 // LDX
-                case 0x8e: this.Tick(3); this.X.Word = this.LD(this.AM_immediate_word()).Word; break;           // LD (LDX immediate)
-                case 0x9e: this.Tick(5); this.X.Word = this.LD(this.AM_direct_word()).Word; break;              // LD (LDX direct)
-                case 0xae: this.Tick(5); this.X.Word = this.LD(this.AM_indexed_word()).Word; break;             // LD (LDX indexed)
-                case 0xbe: this.Tick(6); this.X.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDX extended)
+                case 0x8e: this.Tick(3); this.ImmediateWord(); this.LDX(); break;   // LD (LDX immediate)
+                case 0x9e: this.Tick(5); this.DirectWord(); this.LDX(); break;      // LD (LDX direct)
+                case 0xae: this.Tick(5); this.IndexedWord(); this.LDX(); break;     // LD (LDX indexed)
+                case 0xbe: this.Tick(6); this.ExtendedWord(); this.LDX(); break;    // LD (LDX extended)
 
                 // LEA
-                case 0x30: this.Tick(4); this.CC = this.AdjustZero(this.X.Word = this.Address_indexed().Word); break;     // LEA (LEAX indexed)
-                case 0x31: this.Tick(4); this.CC = this.AdjustZero(this.Y.Word = this.Address_indexed().Word); break;     // LEA (LEAY indexed)
-                case 0x32: this.Tick(4); this.S.Word = this.Address_indexed().Word; break;                      // LEA (LEAS indexed)
-                case 0x33: this.Tick(4); this.U.Word = this.Address_indexed().Word; break;                      // LEA (LEAU indexed)
+                case 0x30: this.Tick(4); this.LEAX(); break;                        // LEA (LEAX indexed)
+                case 0x31: this.Tick(4); this.LEAY(); break;                        // LEA (LEAY indexed)
+                case 0x32: this.Tick(4); this.LEAS(); break;                        // LEA (LEAS indexed)
+                case 0x33: this.Tick(4); this.LEAU(); break;                        // LEA (LEAU indexed)
 
                 // LSR
-                case 0x04: this.Tick(6); this.MemoryWrite(this.LSR(this.AM_direct_byte())); break;              // LSR (direct)
-                case 0x44: this.Tick(2); this.A = this.LSR(this.A); break;                                      // LSR (LSRA inherent)
-                case 0x54: this.Tick(2); this.B = this.LSR(this.B); break;                                      // LSR (LSRB inherent)
-                case 0x64: this.Tick(6); this.MemoryWrite(this.LSR(this.AM_indexed_byte())); break;             // LSR (indexed)
-                case 0x74: this.Tick(7); this.MemoryWrite(this.LSR(this.AM_extended_byte())); break;            // LSR (extended)
+                case 0x04: this.Tick(6); this.DirectByte(); this.LSR(); break;      // LSR (direct)
+                case 0x44: this.Tick(2); this.LSRA(); break;                        // LSR (LSRA inherent)
+                case 0x54: this.Tick(2); this.LSRB(); break;                        // LSR (LSRB inherent)
+                case 0x64: this.Tick(6); this.IndexedByte(); this.LSR(); break;     // LSR (indexed)
+                case 0x74: this.Tick(7); this.ExtendedByte(); this.LSR(); break;    // LSR (extended)
 
                 // MUL
-                case 0x3d: this.Tick(11); this.D.Word = this.MUL(this.A, this.B).Word; break;                   // MUL (inherent)
+                case 0x3d: this.Tick(11); this.MUL(); break;                        // MUL (inherent)
 
                 // NEG
-                case 0x00: this.Tick(6); this.MemoryWrite(this.NEG(this.AM_direct_byte())); break;              // NEG (direct)
-                case 0x40: this.Tick(2); this.A = this.NEG(this.A); break;                                      // NEG (NEGA, inherent)
-                case 0x50: this.Tick(2); this.B = this.NEG(this.B); break;                                      // NEG (NEGB, inherent)
-                case 0x60: this.Tick(6); this.MemoryWrite(this.NEG(this.AM_indexed_byte())); break;             // NEG (indexed)
-                case 0x70: this.Tick(7); this.MemoryWrite(this.NEG(this.AM_extended_byte())); break;            // NEG (extended)
+                case 0x00: this.Tick(6); this.DirectByte(); this.NEG(); break;      // NEG (direct)
+                case 0x40: this.Tick(2); this.NEGA(); break;                        // NEG (NEGA, inherent)
+                case 0x50: this.Tick(2); this.NEGB(); break;                        // NEG (NEGB, inherent)
+                case 0x60: this.Tick(6); this.IndexedByte(); this.NEG(); break;     // NEG (indexed)
+                case 0x70: this.Tick(7); this.ExtendedByte(); this.NEG(); break;    // NEG (extended)
 
                 // NOP
-                case 0x12: this.Tick(2); break;                                                                 // NOP (inherent)
+                case 0x12: this.Tick(2); break;                                     // NOP (inherent)
 
                 // OR
 
                 // ORA
-                case 0x8a: this.Tick(2); this.A = this.OrR(this.A, this.AM_immediate_byte()); break;            // OR (ORA immediate)
-                case 0x9a: this.Tick(4); this.A = this.OrR(this.A, this.AM_direct_byte()); break;               // OR (ORA direct)
-                case 0xaa: this.Tick(4); this.A = this.OrR(this.A, this.AM_indexed_byte()); break;              // OR (ORA indexed)
-                case 0xba: this.Tick(5); this.A = this.OrR(this.A, this.AM_extended_byte()); break;             // OR (ORA extended)
+                case 0x8a: this.Tick(2); this.ImmediateByte(); this.ORA(); break;   // OR (ORA immediate)
+                case 0x9a: this.Tick(4); this.DirectByte(); this.ORA(); break;      // OR (ORA direct)
+                case 0xaa: this.Tick(4); this.IndexedByte(); this.ORA(); break;     // OR (ORA indexed)
+                case 0xba: this.Tick(5); this.ExtendedByte(); this.ORA(); break;    // OR (ORA extended)
 
                 // ORB
-                case 0xca: this.Tick(2); this.B = this.OrR(this.B, this.AM_immediate_byte()); break;            // OR (ORB immediate)
-                case 0xda: this.Tick(4); this.B = this.OrR(this.B, this.AM_direct_byte()); break;               // OR (ORB direct)
-                case 0xea: this.Tick(4); this.B = this.OrR(this.B, this.AM_indexed_byte()); break;              // OR (ORB indexed)
-                case 0xfa: this.Tick(5); this.B = this.OrR(this.B, this.AM_extended_byte()); break;             // OR (ORB extended)
+                case 0xca: this.Tick(2); this.ImmediateByte(); this.ORB(); break;   // OR (ORB immediate)
+                case 0xda: this.Tick(4); this.DirectByte(); this.ORB(); break;      // OR (ORB direct)
+                case 0xea: this.Tick(4); this.IndexedByte(); this.ORB(); break;     // OR (ORB indexed)
+                case 0xfa: this.Tick(5); this.ExtendedByte(); this.ORB(); break;    // OR (ORB extended)
 
                 // ORCC
-                case 0x1a: this.Tick(3); this.CC |= this.AM_immediate_byte(); break;                            // OR (ORCC immediate)
+                case 0x1a: this.Tick(3); this.ImmediateByte(); this.ORCC(); break;  // OR (ORCC immediate)
 
                 // PSH
-                case 0x34: this.Tick(5); this.PSH(this.S, this.AM_immediate_byte()); break;                     // PSH (PSHS immediate)
-                case 0x36: this.Tick(5); this.PSH(this.U, this.AM_immediate_byte()); break;                     // PSH (PSHU immediate)
+                case 0x34: this.Tick(5); this.ImmediateByte(); this.PSHS(); break;  // PSH (PSHS immediate)
+                case 0x36: this.Tick(5); this.ImmediateByte(); this.PSHU(); break;  // PSH (PSHU immediate)
 
                 // PUL
-                case 0x35: this.Tick(5); this.PUL(this.S, this.AM_immediate_byte()); break;                     // PUL (PULS immediate)
-                case 0x37: this.Tick(5); this.PUL(this.U, this.AM_immediate_byte()); break;                     // PUL (PULU immediate)
+                case 0x35: this.Tick(5); this.ImmediateByte(); this.PULS(); break;  // PUL (PULS immediate)
+                case 0x37: this.Tick(5); this.ImmediateByte(); this.PULU(); break;  // PUL (PULU immediate)
 
                 // ROL
-                case 0x09: this.Tick(6); this.MemoryWrite(this.ROL(this.AM_direct_byte())); break;              // ROL (direct)
-                case 0x49: this.Tick(2); this.A = this.ROL(this.A); break;                                      // ROL (ROLA inherent)
-                case 0x59: this.Tick(2); this.B = this.ROL(this.B); break;                                      // ROL (ROLB inherent)
-                case 0x69: this.Tick(6); this.MemoryWrite(this.ROL(this.AM_indexed_byte())); break;             // ROL (indexed)
-                case 0x79: this.Tick(7); this.MemoryWrite(this.ROL(this.AM_extended_byte())); break;            // ROL (extended)
+                case 0x09: this.Tick(6); this.DirectByte(); this.ROL(); break;      // ROL (direct)
+                case 0x49: this.Tick(2); this.ROLA(); break;                        // ROL (ROLA inherent)
+                case 0x59: this.Tick(2); this.ROLB(); break;                        // ROL (ROLB inherent)
+                case 0x69: this.Tick(6); this.IndexedByte(); this.ROL(); break;     // ROL (indexed)
+                case 0x79: this.Tick(7); this.ExtendedByte(); this.ROL(); break;    // ROL (extended)
 
                 // ROR
-                case 0x06: this.Tick(6); this.MemoryWrite(this.ROR(this.AM_direct_byte())); break;              // ROR (direct)
-                case 0x46: this.Tick(2); this.A = this.ROR(this.A); break;                                      // ROR (RORA inherent)
-                case 0x56: this.Tick(2); this.B = this.ROR(this.B); break;                                      // ROR (RORB inherent)
-                case 0x66: this.Tick(6); this.MemoryWrite(this.ROR(this.AM_indexed_byte())); break;             // ROR (indexed)
-                case 0x76: this.Tick(7); this.MemoryWrite(this.ROR(this.AM_extended_byte())); break;            // ROR (extended)
+                case 0x06: this.Tick(6); this.DirectByte(); this.ROR(); break;      // ROR (direct)
+                case 0x46: this.Tick(2); this.RORA(); break;                        // ROR (RORA inherent)
+                case 0x56: this.Tick(2); this.RORB(); break;                        // ROR (RORB inherent)
+                case 0x66: this.Tick(6); this.IndexedByte(); this.ROR(); break;     // ROR (indexed)
+                case 0x76: this.Tick(7); this.ExtendedByte();this.ROR(); break;     // ROR (extended)
 
                 // RTI
-                case 0x3B: this.Tick(6); this.RTI(); break;                                                     // RTI (inherent)
+                case 0x3B: this.Tick(6); this.RTI(); break;                         // RTI (inherent)
 
                 // RTS
-                case 0x39: this.Tick(5); this.RTS(); break;                                                     // RTS (inherent)
+                case 0x39: this.Tick(5); this.RTS(); break;                         // RTS (inherent)
 
                 // SBC
 
                 // SBCA
-                case 0x82: this.Tick(4); this.A = this.SBC(this.A, this.AM_immediate_byte()); break;            // SBC (SBCA immediate)
-                case 0x92: this.Tick(4); this.A = this.SBC(this.A, this.AM_direct_byte()); break;               // SBC (SBCA direct)
-                case 0xa2: this.Tick(4); this.A = this.SBC(this.A, this.AM_indexed_byte()); break;              // SBC (SBCA indexed)
-                case 0xb2: this.Tick(5); this.A = this.SBC(this.A, this.AM_extended_byte()); break;             // SBC (SBCB extended)
+                case 0x82: this.Tick(4); this.ImmediateByte(); this.SBCA(); break;  // SBC (SBCA immediate)
+                case 0x92: this.Tick(4); this.DirectByte(); this.SBCA(); break;     // SBC (SBCA direct)
+                case 0xa2: this.Tick(4); this.IndexedByte(); this.SBCA(); break;    // SBC (SBCA indexed)
+                case 0xb2: this.Tick(5); this.ExtendedByte(); this.SBCA(); break;   // SBC (SBCB extended)
 
                 // SBCB
-                case 0xc2: this.Tick(4); this.B = this.SBC(this.B, this.AM_immediate_byte()); break;            // SBC (SBCB immediate)
-                case 0xd2: this.Tick(4); this.B = this.SBC(this.B, this.AM_direct_byte()); break;               // SBC (SBCB direct)
-                case 0xe2: this.Tick(4); this.B = this.SBC(this.B, this.AM_indexed_byte()); break;              // SBC (SBCB indexed)
-                case 0xf2: this.Tick(5); this.B = this.SBC(this.B, this.AM_extended_byte()); break;             // SBC (SBCB extended)
+                case 0xc2: this.Tick(4); this.ImmediateByte(); this.SBCB(); break;  // SBC (SBCB immediate)
+                case 0xd2: this.Tick(4); this.DirectByte(); this.SBCB(); break;     // SBC (SBCB direct)
+                case 0xe2: this.Tick(4); this.IndexedByte(); this.SBCB(); break;    // SBC (SBCB indexed)
+                case 0xf2: this.Tick(5); this.ExtendedByte(); this.SBCB(); break;   // SBC (SBCB extended)
 
                 // SEX
-                case 0x1d: this.Tick(2); this.A = this.SEX(this.B); break;                                      // SEX (inherent)
+                case 0x1d: this.Tick(2); this.SEX(); break;                         // SEX (inherent)
 
                 // ST
 
                 // STA
-                case 0x97: this.Tick(4); this.MemoryWrite(this.Address_direct(), this.ST(this.A)); break;       // ST (STA direct)
-                case 0xa7: this.Tick(4); this.MemoryWrite(this.Address_indexed(), this.ST(this.A)); break;      // ST (STA indexed)
-                case 0xb7: this.Tick(5); this.MemoryWrite(this.Address_extended(), this.ST(this.A)); break;     // ST (STA extended)
+                case 0x97: this.Tick(4); this.DirectAddress(); this.STA(); break;   // ST (STA direct)
+                case 0xa7: this.Tick(4); this.IndexedAddress(); this.STA(); break;  // ST (STA indexed)
+                case 0xb7: this.Tick(5); this.ExtendedAddress(); this.STA(); break; // ST (STA extended)
 
                 // STB
-                case 0xd7: this.Tick(4); this.MemoryWrite(this.Address_direct(), this.ST(this.B)); break;       // ST (STB direct)
-                case 0xe7: this.Tick(4); this.MemoryWrite(this.Address_indexed(), this.ST(this.B)); break;      // ST (STB indexed)
-                case 0xf7: this.Tick(5); this.MemoryWrite(this.Address_extended(), this.ST(this.B)); break;     // ST (STB extended)
+                case 0xd7: this.Tick(4); this.DirectAddress(); this.STB(); break;   // ST (STB direct)
+                case 0xe7: this.Tick(4); this.IndexedAddress(); this.STB(); break;  // ST (STB indexed)
+                case 0xf7: this.Tick(5); this.ExtendedAddress(); this.STB(); break; // ST (STB extended)
 
                 // STD
-                case 0xdd: this.Tick(5); this.SetWord(this.Address_direct(), this.ST(this.D)); break;           // ST (STD direct)
-                case 0xed: this.Tick(5); this.SetWord(this.Address_indexed(), this.ST(this.D)); break;          // ST (STD indexed)
-                case 0xfd: this.Tick(6); this.SetWord(this.Address_extended(), this.ST(this.D)); break;         // ST (STD extended)
+                case 0xdd: this.Tick(5); this.DirectAddress(); this.STD(); break;   // ST (STD direct)
+                case 0xed: this.Tick(5); this.IndexedAddress(); this.STD(); break;  // ST (STD indexed)
+                case 0xfd: this.Tick(6); this.ExtendedAddress(); this.STD(); break; // ST (STD extended)
 
                 // STU
-                case 0xdf: this.Tick(5); this.SetWord(this.Address_direct(), this.ST(this.U)); break;           // ST (STU direct)
-                case 0xef: this.Tick(5); this.SetWord(this.Address_indexed(), this.ST(this.U)); break;          // ST (STU indexed)
-                case 0xff: this.Tick(6); this.SetWord(this.Address_extended(), this.ST(this.U)); break;         // ST (STU extended)
+                case 0xdf: this.Tick(5); this.DirectAddress(); this.STU(); break;   // ST (STU direct)
+                case 0xef: this.Tick(5); this.IndexedAddress(); this.STU(); break;  // ST (STU indexed)
+                case 0xff: this.Tick(6); this.ExtendedAddress(); this.STU(); break; // ST (STU extended)
 
                 // STX
-                case 0x9f: this.Tick(5); this.SetWord(this.Address_direct(), this.ST(this.X)); break;           // ST (STX direct)
-                case 0xaf: this.Tick(5); this.SetWord(this.Address_indexed(), this.ST(this.X)); break;          // ST (STX indexed)
-                case 0xbf: this.Tick(6); this.SetWord(this.Address_extended(), this.ST(this.X)); break;         // ST (STX extended)
+                case 0x9f: this.Tick(5); this.DirectAddress(); this.STX(); break;   // ST (STX direct)
+                case 0xaf: this.Tick(5); this.IndexedAddress(); this.STX(); break;  // ST (STX indexed)
+                case 0xbf: this.Tick(6); this.ExtendedAddress(); this.STX(); break; // ST (STX extended)
 
                 // SUB
 
                 // SUBA
-                case 0x80: this.Tick(2); this.A = this.SUB(this.A, this.AM_immediate_byte()); break;            // SUB (SUBA immediate)
-                case 0x90: this.Tick(4); this.A = this.SUB(this.A, this.AM_direct_byte()); break;               // SUB (SUBA direct)
-                case 0xa0: this.Tick(4); this.A = this.SUB(this.A, this.AM_indexed_byte()); break;              // SUB (SUBA indexed)
-                case 0xb0: this.Tick(5); this.A = this.SUB(this.A, this.AM_extended_byte()); break;             // SUB (SUBA extended)
+                case 0x80: this.Tick(2); this.ImmediateByte(); this.SUBA(); break;  // SUB (SUBA immediate)
+                case 0x90: this.Tick(4); this.DirectByte(); this.SUBA(); break;     // SUB (SUBA direct)
+                case 0xa0: this.Tick(4); this.IndexedByte(); this.SUBA(); break;    // SUB (SUBA indexed)
+                case 0xb0: this.Tick(5); this.ExtendedByte(); this.SUBA(); break;   // SUB (SUBA extended)
 
                 // SUBB
-                case 0xc0: this.Tick(2); this.B = this.SUB(this.B, this.AM_immediate_byte()); break;            // SUB (SUBB immediate)
-                case 0xd0: this.Tick(4); this.B = this.SUB(this.B, this.AM_direct_byte()); break;               // SUB (SUBB direct)
-                case 0xe0: this.Tick(4); this.B = this.SUB(this.B, this.AM_indexed_byte()); break;              // SUB (SUBB indexed)
-                case 0xf0: this.Tick(5); this.B = this.SUB(this.B, this.AM_extended_byte()); break;             // SUB (SUBB extended)
+                case 0xc0: this.Tick(2); this.ImmediateByte(); this.SUBB(); break;  // SUB (SUBB immediate)
+                case 0xd0: this.Tick(4); this.DirectByte(); this.SUBB(); break;     // SUB (SUBB direct)
+                case 0xe0: this.Tick(4); this.IndexedByte(); this.SUBB(); break;    // SUB (SUBB indexed)
+                case 0xf0: this.Tick(5); this.ExtendedByte(); this.SUBB(); break;   // SUB (SUBB extended)
 
                 // SUBD
-                case 0x83: this.Tick(4); this.D.Word = this.SUB(this.D, this.AM_immediate_word()).Word; break;  // SUB (SUBD immediate)
-                case 0x93: this.Tick(6); this.D.Word = this.SUB(this.D, this.AM_direct_word()).Word; break;     // SUB (SUBD direct)
-                case 0xa3: this.Tick(6); this.D.Word = this.SUB(this.D, this.AM_indexed_word()).Word; break;    // SUB (SUBD indexed)
-                case 0xb3: this.Tick(7); this.D.Word = this.SUB(this.D, this.AM_extended_word()).Word; break;   // SUB (SUBD extended)
+                case 0x83: this.Tick(4); this.ImmediateWord(); this.SUBD(); break;  // SUB (SUBD immediate)
+                case 0x93: this.Tick(6); this.DirectWord(); this.SUBD(); break;     // SUB (SUBD direct)
+                case 0xa3: this.Tick(6); this.IndexedWord(); this.SUBD(); break;    // SUB (SUBD indexed)
+                case 0xb3: this.Tick(7); this.ExtendedWord(); this.SUBD(); break;   // SUB (SUBD extended)
 
                 // SWI
-                case 0x3f: this.Tick(10); this.SWI(); break;                                                    // SWI (inherent)
+                case 0x3f: this.Tick(10); this.SWI(); break;                        // SWI (inherent)
 
                 // SYNC
-                case 0x13: this.Tick(4); this.Halt(); break;                                                    // SYNC (inherent)
+                case 0x13: this.Tick(4); this.SYNC(); break;                        // SYNC (inherent)
 
                 // TFR
-                case 0x1f: this.Tick(6); this.TFR(this.AM_immediate_byte()); break;                             // TFR (immediate)
+                case 0x1f: this.Tick(6); this.ImmediateByte(); this.TFR(); break;   // TFR (immediate)
 
                 // TST
-                case 0x0d: this.Tick(6); this.TST(this.AM_direct_byte()); break;                                // TST (direct)
-                case 0x4d: this.Tick(2); this.TST(this.A); break;                                               // TST (TSTA inherent)
-                case 0x5d: this.Tick(2); this.TST(this.B); break;                                               // TST (TSTB inherent)
-                case 0x6d: this.Tick(6); this.TST(this.AM_indexed_byte()); break;                               // TST (indexed)
-                case 0x7d: this.Tick(7); this.TST(this.AM_extended_byte()); break;                              // TST (extended)
+                case 0x0d: this.Tick(6); this.DirectByte(); this.TST(); break;      // TST (direct)
+                case 0x4d: this.Tick(2); this.TSTA(); break;                        // TST (TSTA inherent)
+                case 0x5d: this.Tick(2); this.TSTB(); break;                        // TST (TSTB inherent)
+                case 0x6d: this.Tick(6); this.IndexedByte(); this.TST(); break;     // TST (indexed)
+                case 0x7d: this.Tick(7); this.ExtendedByte(); this.TST(); break;    // TST (extended)
 
                 // Branching
-                case 0x16: this.Tick(5); this.Jump(this.Address_relative_word()); break;                        // BRA (LBRA relative)
-                case 0x17: this.Tick(9); this.JSR(this.Address_relative_word()); break;                         // BSR (LBSR relative)
-                case 0x20: this.Tick(3); this.Jump(this.Address_relative_byte()); break;                        // BRA (relative)
-                case 0x21: this.Tick(3); this.Address_relative_byte(); break;                                   // BRN (relative)
-                case 0x22: this.Tick(3); this.BranchShort(this.HI); break;                                      // BHI (relative)
-                case 0x23: this.Tick(3); this.BranchShort(this.LS); break;                                      // BLS (relative)
-                case 0x24: this.Tick(3); this.BranchShort(this.Carry == 0); break;                              // BCC (relative)
-                case 0x25: this.Tick(3); this.BranchShort(this.Carry != 0); break;                              // BCS (relative)
-                case 0x26: this.Tick(3); this.BranchShort(this.Zero == 0); break;                               // BNE (relative)
-                case 0x27: this.Tick(3); this.BranchShort(this.Zero != 0); break;                               // BEQ (relative)
-                case 0x28: this.Tick(3); this.BranchShort(this.Overflow == 0); break;                           // BVC (relative)
-                case 0x29: this.Tick(3); this.BranchShort(this.Overflow != 0); break;                           // BVS (relative)
-                case 0x2a: this.Tick(3); this.BranchShort(this.Negative == 0); break;                           // BPL (relative)
-                case 0x2b: this.Tick(3); this.BranchShort(this.Negative != 0); break;                           // BMI (relative)
-                case 0x2c: this.Tick(3); this.BranchShort(this.GE); break;                                      // BGE (relative)
-                case 0x2d: this.Tick(3); this.BranchShort(this.LT); break;                                      // BLT (relative)
-                case 0x2e: this.Tick(3); this.BranchShort(this.GT); break;                                      // BGT (relative)
-                case 0x2f: this.Tick(3); this.BranchShort(this.LE); break;                                      // BLE (relative)
+                case 0x16: this.Tick(5); this.LBRA(); break;                        // BRA (LBRA relative)
+                case 0x17: this.Tick(9); this.LBSR(); break;                        // BSR (LBSR relative)
+                case 0x20: this.Tick(3); this.BRA(); break;                         // BRA (relative)
+                case 0x21: this.Tick(3); this.BRN(); break;                         // BRN (relative)
+                case 0x22: this.Tick(3); this.BHI(); break;                         // BHI (relative)
+                case 0x23: this.Tick(3); this.BLS(); break;                         // BLS (relative)
+                case 0x24: this.Tick(3); this.BCC(); break;                         // BCC (relative)
+                case 0x25: this.Tick(3); this.BCS(); break;                         // BCS (relative)
+                case 0x26: this.Tick(3); this.BNE(); break;                         // BNE (relative)
+                case 0x27: this.Tick(3); this.BEQ(); break;                         // BEQ (relative)
+                case 0x28: this.Tick(3); this.BVC(); break;                         // BVC (relative)
+                case 0x29: this.Tick(3); this.BVS(); break;                         // BVS (relative)
+                case 0x2a: this.Tick(3); this.BPL(); break;                         // BPL (relative)
+                case 0x2b: this.Tick(3); this.BMI(); break;                         // BMI (relative)
+                case 0x2c: this.Tick(3); this.BGE(); break;                         // BGE (relative)
+                case 0x2d: this.Tick(3); this.BLT(); break;                         // BLT (relative)
+                case 0x2e: this.Tick(3); this.BGT(); break;                         // BGT (relative)
+                case 0x2f: this.Tick(3); this.BLE(); break;                         // BLE (relative)
 
-                case 0x8d: this.Tick(7); this.JSR(this.Address_relative_byte()); break;                         // BSR (relative)
+                case 0x8d: this.Tick(7); this.BSR(); break;                         // BSR (relative)
 
                 default:
                     throw new InvalidOperationException("Unknown op-code");
@@ -1502,60 +1612,60 @@ namespace MC6809
                 // CMP
 
                 // CMPD
-                case 0x83: this.Tick(5); this.CMP(this.D, this.AM_immediate_word()); break;                     // CMP (CMPD, immediate)
-                case 0x93: this.Tick(7); this.CMP(this.D, this.AM_direct_word()); break;                        // CMP (CMPD, direct)
-                case 0xa3: this.Tick(7); this.CMP(this.D, this.AM_indexed_word()); break;                       // CMP (CMPD, indexed)
-                case 0xb3: this.Tick(8); this.CMP(this.D, this.AM_extended_word()); break;                      // CMP (CMPD, extended)
+                case 0x83: this.Tick(5); this.ImmediateWord(); this.CMPD(); break;  // CMP (CMPD, immediate)
+                case 0x93: this.Tick(7); this.DirectWord(); this.CMPD(); break;     // CMP (CMPD, direct)
+                case 0xa3: this.Tick(7); this.IndexedWord(); this.CMPD(); break;    // CMP (CMPD, indexed)
+                case 0xb3: this.Tick(8); this.ExtendedWord(); this.CMPD(); break;   // CMP (CMPD, extended)
 
                 // CMPY
-                case 0x8c: this.Tick(5); this.CMP(this.Y, this.AM_immediate_word()); break;                     // CMP (CMPY, immediate)
-                case 0x9c: this.Tick(7); this.CMP(this.Y, this.AM_direct_word()); break;                        // CMP (CMPY, direct)
-                case 0xac: this.Tick(7); this.CMP(this.Y, this.AM_indexed_word()); break;                       // CMP (CMPY, indexed)
-                case 0xbc: this.Tick(8); this.CMP(this.Y, this.AM_extended_word()); break;                      // CMP (CMPY, extended)
+                case 0x8c: this.Tick(5); this.ImmediateWord(); this.CMPY(); break;  // CMP (CMPY, immediate)
+                case 0x9c: this.Tick(7); this.DirectWord(); this.CMPY(); break;     // CMP (CMPY, direct)
+                case 0xac: this.Tick(7); this.IndexedWord(); this.CMPY(); break;    // CMP (CMPY, indexed)
+                case 0xbc: this.Tick(8); this.ExtendedWord(); this.CMPY(); break;   // CMP (CMPY, extended)
 
                 // LD
 
                 // LDS
-                case 0xce: this.Tick(4); this.S.Word = this.LD(this.AM_immediate_word()).Word; break;           // LD (LDS immediate)
-                case 0xde: this.Tick(6); this.S.Word = this.LD(this.AM_direct_word()).Word; break;              // LD (LDS direct)
-                case 0xee: this.Tick(6); this.S.Word = this.LD(this.AM_indexed_word()).Word; break;             // LD (LDS indexed)
-                case 0xfe: this.Tick(7); this.S.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDS extended)
+                case 0xce: this.Tick(4); this.ImmediateWord(); this.LDS(); break;   // LD (LDS immediate)
+                case 0xde: this.Tick(6); this.DirectWord(); this.LDS(); break;      // LD (LDS direct)
+                case 0xee: this.Tick(6); this.IndexedWord(); this.LDS(); break;     // LD (LDS indexed)
+                case 0xfe: this.Tick(7); this.ExtendedWord(); this.LDS(); break;    // LD (LDS extended)
 
                 // LDY
-                case 0x8e: this.Tick(4); this.Y.Word = this.LD(this.AM_immediate_word()).Word; break;           // LD (LDY immediate)
-                case 0x9e: this.Tick(6); this.Y.Word = this.LD(this.AM_direct_word()).Word; break;              // LD (LDY direct)
-                case 0xae: this.Tick(6); this.Y.Word = this.LD(this.AM_indexed_word()).Word; break;             // LD (LDY indexed)
-                case 0xbe: this.Tick(7); this.Y.Word = this.LD(this.AM_extended_word()).Word; break;            // LD (LDY extended)
+                case 0x8e: this.Tick(4); this.ImmediateWord(); this.LDY(); break;   // LD (LDY immediate)
+                case 0x9e: this.Tick(6); this.DirectWord(); this.LDY(); break;      // LD (LDY direct)
+                case 0xae: this.Tick(6); this.IndexedWord(); this.LDY(); break;     // LD (LDY indexed)
+                case 0xbe: this.Tick(7); this.ExtendedWord(); this.LDY(); break;    // LD (LDY extended)
 
                 // Branching
-                case 0x21: this.Tick(5); this.Address_relative_word(); break;                                   // BRN (LBRN relative)
-                case 0x22: this.Tick(5); this.BranchLong(this.HI); break;                                       // BHI (LBHI relative)
-                case 0x23: this.Tick(5); this.BranchLong(this.LS); break;                                       // BLS (LBLS relative)
-                case 0x24: this.Tick(5); this.BranchLong(this.Carry == 0); break;                               // BCC (LBCC relative)
-                case 0x25: this.Tick(5); this.BranchLong(this.Carry != 0); break;                               // BCS (LBCS relative)
-                case 0x26: this.Tick(5); this.BranchLong(this.Zero == 0); break;                                // BNE (LBNE relative)
-                case 0x27: this.Tick(5); this.BranchLong(this.Zero != 0); break;                                // BEQ (LBEQ relative)
-                case 0x28: this.Tick(5); this.BranchLong(this.Overflow == 0); break;                            // BVC (LBVC relative)
-                case 0x29: this.Tick(5); this.BranchLong(this.Overflow != 0); break;                            // BVS (LBVS relative)
-                case 0x2a: this.Tick(5); this.BranchLong(this.Negative == 0); break;                            // BPL (LBPL relative)
-                case 0x2b: this.Tick(5); this.BranchLong(this.Negative != 0); break;                            // BMI (LBMI relative)
-                case 0x2c: this.Tick(5); this.BranchLong(this.GE); break;                                       // BGE (LBGE relative)
-                case 0x2d: this.Tick(5); this.BranchLong(this.LT); break;                                       // BLT (LBLT relative)
-                case 0x2e: this.Tick(5); this.BranchLong(this.GT); break;                                       // BGT (LBGT relative)
-                case 0x2f: this.Tick(5); this.BranchLong(this.LE); break;                                       // BLE (LBLE relative)
+                case 0x21: this.Tick(5); this.LBRN(); break;                        // BRN (LBRN relative)
+                case 0x22: this.Tick(5); this.LBHI(); break;                        // BHI (LBHI relative)
+                case 0x23: this.Tick(5); this.LBLS(); break;                        // BLS (LBLS relative)
+                case 0x24: this.Tick(5); this.LBCC(); break;                        // BCC (LBCC relative)
+                case 0x25: this.Tick(5); this.LBCS(); break;                        // BCS (LBCS relative)
+                case 0x26: this.Tick(5); this.LBNE(); break;                        // BNE (LBNE relative)
+                case 0x27: this.Tick(5); this.LBEQ(); break;                        // BEQ (LBEQ relative)
+                case 0x28: this.Tick(5); this.LBVC(); break;                        // BVC (LBVC relative)
+                case 0x29: this.Tick(5); this.LBVS(); break;                        // BVS (LBVS relative)
+                case 0x2a: this.Tick(5); this.LBPL(); break;                        // BPL (LBPL relative)
+                case 0x2b: this.Tick(5); this.LBMI(); break;                        // BMI (LBMI relative)
+                case 0x2c: this.Tick(5); this.LBGE(); break;                        // BGE (LBGE relative)
+                case 0x2d: this.Tick(5); this.LBLT(); break;                        // BLT (LBLT relative)
+                case 0x2e: this.Tick(5); this.LBGT(); break;                        // BGT (LBGT relative)
+                case 0x2f: this.Tick(5); this.LBLE(); break;                        // BLE (LBLE relative)
 
                 // STS
-                case 0xdf: this.Tick(6); this.SetWord(this.Address_direct(), this.ST(this.S)); break;           // ST (STS direct)
-                case 0xef: this.Tick(6); this.SetWord(this.Address_indexed(), this.ST(this.S)); break;          // ST (STS indexed)
-                case 0xff: this.Tick(7); this.SetWord(this.Address_extended(), this.ST(this.S)); break;         // ST (STS extended)
+                case 0xdf: this.Tick(6); this.DirectAddress(); this.STS(); break;   // ST (STS direct)
+                case 0xef: this.Tick(6); this.IndexedAddress(); this.STS(); break;  // ST (STS indexed)
+                case 0xff: this.Tick(7); this.ExtendedAddress(); this.STS(); break; // ST (STS extended)
 
                 // STY
-                case 0x9f: this.Tick(6); this.SetWord(this.Address_direct(), this.ST(this.Y)); break;           // ST (STY direct)
-                case 0xaf: this.Tick(6); this.SetWord(this.Address_indexed(), this.ST(this.Y)); break;          // ST (STY indexed)
-                case 0xbf: this.Tick(7); this.SetWord(this.Address_extended(), this.ST(this.Y)); break;         // ST (STY extended)
+                case 0x9f: this.Tick(6); this.DirectAddress(); this.STY(); break;   // ST (STY direct)
+                case 0xaf: this.Tick(6); this.IndexedAddress(); this.STY(); break;  // ST (STY indexed)
+                case 0xbf: this.Tick(7); this.ExtendedAddress(); this.STY(); break; // ST (STY extended)
 
                 // SWI
-                case 0x3f: this.Tick(11); this.SWI2(); break;                                                   // SWI (SWI2 inherent)
+                case 0x3f: this.Tick(11); this.SWI2(); break;                       // SWI (SWI2 inherent)
 
                 default:
                     throw new InvalidOperationException("Unknown 10 prefixed op-code");
@@ -1569,19 +1679,19 @@ namespace MC6809
                 // CMP
 
                 // CMPU
-                case 0x83: this.Tick(5); this.CMP(this.U, this.AM_immediate_word()); break;                     // CMP (CMPU, immediate)
-                case 0x93: this.Tick(7); this.CMP(this.U, this.AM_direct_word()); break;                        // CMP (CMPU, direct)
-                case 0xa3: this.Tick(7); this.CMP(this.U, this.AM_indexed_word()); break;                       // CMP (CMPU, indexed)
-                case 0xb3: this.Tick(8); this.CMP(this.U, this.AM_extended_word()); break;                      // CMP (CMPU, extended)
+                case 0x83: this.Tick(5); this.ImmediateWord(); this.CMPU(); break;  // CMP (CMPU, immediate)
+                case 0x93: this.Tick(7); this.DirectWord(); this.CMPU(); break;     // CMP (CMPU, direct)
+                case 0xa3: this.Tick(7); this.IndexedWord(); this.CMPU(); break;    // CMP (CMPU, indexed)
+                case 0xb3: this.Tick(8); this.ExtendedWord(); this.CMPU(); break;   // CMP (CMPU, extended)
 
                 // CMPS
-                case 0x8c: this.Tick(5); this.CMP(this.S, this.AM_immediate_word()); break;                     // CMP (CMPS, immediate)
-                case 0x9c: this.Tick(7); this.CMP(this.S, this.AM_direct_word()); break;                        // CMP (CMPS, direct)
-                case 0xac: this.Tick(7); this.CMP(this.S, this.AM_indexed_word()); break;                       // CMP (CMPS, indexed)
-                case 0xbc: this.Tick(8); this.CMP(this.S, this.AM_extended_word()); break;                      // CMP (CMPS, extended)
+                case 0x8c: this.Tick(5); this.ImmediateWord(); this.CMPS(); break;  // CMP (CMPS, immediate)
+                case 0x9c: this.Tick(7); this.DirectWord(); this.CMPS(); break;     // CMP (CMPS, direct)
+                case 0xac: this.Tick(7); this.IndexedWord(); this.CMPS(); break;    // CMP (CMPS, indexed)
+                case 0xbc: this.Tick(8); this.ExtendedWord(); this.CMPS(); break;   // CMP (CMPS, extended)
 
                 // SWI
-                case 0x3f: this.Tick(11); this.SWI3(); break;                                                   // SWI (SWI3 inherent)
+                case 0x3f: this.Tick(11); this.SWI3(); break;                       // SWI (SWI3 inherent)
 
                 default:
                     throw new InvalidOperationException("Unknown 11 prefixed op-code");
@@ -1592,26 +1702,45 @@ namespace MC6809
 
         #region Miscellaneous instruction implementations
 
-        private byte ADC(byte operand, byte data) => this.ADD(operand, data, (byte)this.Carry);
+        private void ADCA() => this.A = this.AddWithCarry(this.A);
+        private void ADCB() => this.B = this.AddWithCarry(this.B);
 
-        private byte ADD(byte operand, byte data, byte carry = 0)
+        private byte AddWithCarry(byte operand) => this.Add(operand, this.Bus.Data, (byte)this.Carry);
+
+        private void ADDA() => this.A = this.Add(this.A);
+        private void ADDB() => this.B = this.Add(this.B);
+
+        private byte Add(byte operand) => this.Add(operand, this.Bus.Data);
+
+        private byte Add(byte operand, byte data, byte carry = 0)
         {
             this.Intermediate.Word = (ushort)(operand + data + carry);
             this.CC = this.AdjustAddition(operand, data, this.Intermediate);
             return this.Intermediate.Low;
         }
 
-        private Register16 ADD(Register16 operand, Register16 data)
+        private void ADDD() => this.Add(this.D, this.Intermediate, this.D);
+
+        private void Add(Register16 operand, Register16 data, Register16 result)
         {
-            var addition = (uint)(operand.Word + data.Word);
-            this.CC = this.AdjustAddition(operand, data, addition);
-            this.Intermediate.Word = (ushort)(addition & (uint)Mask.Sixteen);
-            return this.Intermediate;
+            var addition = operand.Word + data.Word;
+            this.CC = this.AdjustAddition(operand, data, (uint)addition);
+            result.Word = (ushort)addition;
         }
 
-        private byte AndR(byte operand, byte data) => this.Through((byte)(operand & data));
+        private void ANDCC() => this.CC &= this.Bus.Data;
 
-        private byte ASL(byte operand)
+        private void ANDA() => this.A = this.And(this.A, this.Bus.Data);
+        private void ANDB() => this.B = this.And(this.B, this.Bus.Data);
+
+        private byte And(byte operand, byte data) => this.Through((byte)(operand & data));
+
+        private void ASLA() => this.A = this.ArithmeticShiftLeft(this.A);
+        private void ASLB() => this.B = this.ArithmeticShiftLeft(this.B);
+
+        private void ASL() => this.MemoryWrite(this.ArithmeticShiftLeft(this.Bus.Data));
+
+        private byte ArithmeticShiftLeft(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
             this.CC = this.AdjustNZ(operand <<= 1);
@@ -1620,7 +1749,12 @@ namespace MC6809
             return operand;
         }
 
-        private byte ASR(byte operand)
+        private void ASRA() => this.A = this.ArithmeticShiftRight(this.A);
+        private void ASRB() => this.B = this.ArithmeticShiftRight(this.B);
+
+        private void ASR() => this.MemoryWrite(this.ArithmeticShiftRight(this.Bus.Data));
+
+        private byte ArithmeticShiftRight(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)(operand >> 1 | (int)Bits.Bit7);
@@ -1628,52 +1762,86 @@ namespace MC6809
             return result;
         }
 
-        private void BIT(byte operand, byte data) => this.AndR(operand, data);
+        private void BITA() => this.Bit(this.A, this.Bus.Data);
+        private void BITB() => this.Bit(this.B, this.Bus.Data);
 
-        private byte CLR()
+        private void Bit(byte operand, byte data) => this.And(operand, data);
+
+        private void CLRA() => this.A = this.Clear();
+        private void CLRB() => this.B = this.Clear();
+
+        private void CLR() => this.MemoryWrite(this.Intermediate, this.Clear());
+
+        private byte Clear()
         {
             this.CC = ClearBit(this.CC, StatusBits.CF);
             return this.Through((byte)0U);
         }
 
-        private void CMP(byte operand, byte data) => this.SUB(operand, data);
+        private void CMPA() => this.Compare(this.A, this.Bus.Data);
+        private void CMPB() => this.Compare(this.B, this.Bus.Data);
 
-        private void CMP(Register16 operand, Register16 data) => this.SUB(operand, data);
+        private void Compare(byte operand, byte data) => this.Subtract(operand, data);
 
-        private byte COM(byte operand)
+        private void CMPU() => this.Compare(this.U);
+        private void CMPS() => this.Compare(this.S);
+        private void CMPD() => this.Compare(this.D);
+        private void CMPX() => this.Compare(this.X);
+        private void CMPY() => this.Compare(this.Y);
+
+        private void Compare(Register16 operand) => this.Subtract(operand, this.Intermediate, this.Intermediate);
+
+        private void COMA() => this.A = this.Complement(this.A);
+        private void COMB() => this.B = this.Complement(this.B);
+
+        private void COM() => this.MemoryWrite(this.Complement(this.Bus.Data));
+
+        private byte Complement(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF);
             return this.Through((byte)~operand);
         }
 
-        private void CWAI(byte data)
+        private void CWAI()
         {
-            this.CC &= data;
+            this.CC &= this.Bus.Data;
             this.SaveEntireRegisterState();
             this.Halt();
         }
 
-        private byte DA(byte operand)
+        private void DAA()
         {
-            this.CC = SetBit(this.CC, StatusBits.CF, operand > 0x99);
+            var adjusted = this.A;
 
-            var lowAdjust = this.HalfCarry != 0 || LowNibble(operand) > 9;
-            var highAdjust = this.Carry != 0 || operand > 0x99;
+            this.CC = SetBit(this.CC, StatusBits.CF, adjusted > 0x99);
+
+            var lowAdjust = this.HalfCarry != 0 || LowNibble(adjusted) > 9;
+            var highAdjust = this.Carry != 0 || adjusted > 0x99;
 
             if (lowAdjust)
             {
-                operand += 6;
+                adjusted += 6;
             }
 
             if (highAdjust)
             {
-                operand += 0x60;
+                adjusted += 0x60;
             }
 
-            return this.Through(operand);
+            this.A = this.Through(adjusted);
         }
 
-        private byte DEC(byte operand)
+        private void EORA() => this.A = this.ExclusiveOr(this.A, this.Bus.Data);
+        private void EORB() => this.B = this.ExclusiveOr(this.B, this.Bus.Data);
+
+        private byte ExclusiveOr(byte operand, byte data) => this.Through((byte)(operand ^ data));
+
+        private void DECA() => this.A = this.Decrement(this.A);
+        private void DECB() => this.B = this.Decrement(this.B);
+
+        private void DEC() => this.MemoryWrite(this.Decrement(this.Bus.Data));
+
+        private byte Decrement(byte operand)
         {
             this.Intermediate.Word = (ushort)(operand - 1);
             var result = this.Intermediate.Low;
@@ -1682,9 +1850,12 @@ namespace MC6809
             return result;
         }
 
-        private byte EorR(byte operand, byte data) => this.Through((byte)(operand ^ data));
+        private void INCA() => this.A = this.Increment(this.A);
+        private void INCB() => this.B = this.Increment(this.B);
 
-        private byte INC(byte operand)
+        private void INC() => this.MemoryWrite(this.Increment(this.Bus.Data));
+
+        private byte Increment(byte operand)
         {
             this.Intermediate.Word = (ushort)(operand + 1);
             var result = this.Intermediate.Low;
@@ -1694,24 +1865,35 @@ namespace MC6809
             return result;
         }
 
-        private void JSR(Register16 address) => this.Call(address);
+        private void JMP() => this.Jump(this.Intermediate);
 
-        private byte LSR(byte operand)
+        private void JSR() => this.Call(this.Intermediate);
+
+        private void LSRA() => this.A = this.LogicalShiftRight(this.A);
+        private void LSRB() => this.B = this.LogicalShiftRight(this.B);
+
+        private void LSR() => this.MemoryWrite(this.LogicalShiftRight(this.Bus.Data));
+
+        private byte LogicalShiftRight(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             this.CC = this.AdjustNZ(operand >>= 1);
             return operand;
         }
 
-        private Register16 MUL(byte first, byte second)
+        private void MUL()
         {
-            this.Intermediate.Word = (ushort)(first * second);
-            this.CC = this.AdjustZero(this.Intermediate);
-            this.CC = SetBit(this.CC, StatusBits.CF, this.Intermediate.Low & (byte)Bits.Bit7);
-            return this.Intermediate;
+            this.D.Word = (ushort)(this.A * this.B);
+            this.CC = this.AdjustZero(this.D);
+            this.CC = SetBit(this.CC, StatusBits.CF, this.D.Low & (byte)Bits.Bit7);
         }
 
-        private byte NEG(byte operand)
+        private void NEGA() => this.A = this.Negate(this.A);
+        private void NEGB() => this.B = this.Negate(this.B);
+
+        private void NEG() => this.MemoryWrite(this.Negate(this.Bus.Data));
+
+        private byte Negate(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
             this.Intermediate.Word = (ushort)(0 - operand);
@@ -1721,9 +1903,19 @@ namespace MC6809
             return operand;
         }
 
-        private byte OrR(byte operand, byte data) => this.Through((byte)(operand | data));
+        private void ORCC() => this.CC |= this.Bus.Data;
 
-        private byte ROL(byte operand)
+        private void ORA() => this.A = this.Or(this.A);
+        private void ORB() => this.B = this.Or(this.B);
+
+        private byte Or(byte operand) => this.Through((byte)(operand | this.Bus.Data));
+
+        private void ROLA() => this.A = this.RotateLeft(this.A);
+        private void ROLB() => this.B = this.RotateLeft(this.B);
+
+        private void ROL() => this.MemoryWrite(this.RotateLeft(this.Bus.Data));
+
+        private byte RotateLeft(byte operand)
         {
             var carryIn = this.Carry;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
@@ -1733,7 +1925,12 @@ namespace MC6809
             return result;
         }
 
-        private byte ROR(byte operand)
+        private void RORA() => this.A = this.RotateRight(this.A);
+        private void RORB() => this.B = this.RotateRight(this.B);
+
+        private void ROR() => this.MemoryWrite(this.RotateRight(this.Bus.Data));
+
+        private byte RotateRight(byte operand)
         {
             var carryIn = this.Carry;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
@@ -1746,21 +1943,33 @@ namespace MC6809
 
         private void RTS() => this.Return();
 
-        private byte SBC(byte operand, byte data) => this.SUB(operand, data, (byte)this.Carry);
+        private void SBCA() => this.A = this.SubtractWithCarry(this.A);
+        private void SBCB() => this.B = this.SubtractWithCarry(this.B);
 
-        private byte SUB(byte operand, byte data, byte carry = 0)
+        private byte SubtractWithCarry(byte operand) => this.Subtract(operand, this.Bus.Data, (byte)this.Carry);
+
+        private void SUBA() => this.A = this.Subtract(this.A);
+        private void SUBB() => this.B = this.Subtract(this.B);
+
+        private byte Subtract(byte operand) => this.Subtract(operand, this.Bus.Data);
+
+        private byte Subtract(byte operand, byte data, byte carry = 0)
         {
             this.Intermediate.Word = (ushort)(operand - data - carry);
             this.CC = this.AdjustSubtraction(operand, data, this.Intermediate);
             return this.Intermediate.Low;
         }
 
-        private Register16 SUB(Register16 operand, Register16 data)
+        private void SUBD() => this.Subtract(this.D, this.Intermediate, this.D);
+
+        private void Subtract(Register16 operand, Register16 data, Register16 result)
         {
-            var subtraction = (uint)(operand.Word - data.Word);
-            this.CC = this.AdjustSubtraction(operand, data, subtraction);
-            return this.Intermediate;
+            var subtraction = operand.Word - data.Word;
+            this.CC = this.AdjustSubtraction(operand, data, (uint)subtraction);
+            result.Word = (ushort)subtraction;
         }
+
+        private void SEX() => this.A = this.SEX(this.B);
 
         private byte SEX(byte from)
         {
@@ -1791,8 +2000,53 @@ namespace MC6809
             this.Jump(this.Intermediate);
         }
 
-        private void TST(byte data) => this.CMP(data, 0);
+        private void TSTA() => this.Test(this.A);
+        private void TSTB() => this.Test(this.B);
+
+        private void TST() => this.Test(this.Bus.Data);
+
+        private void Test(byte data) => this.Compare(data, 0);
+
+        private void LEAX()
+        {
+            this.IndexedAddress();
+            this.X.Assign(this.Intermediate);
+            this.CC = this.AdjustZero(this.X);
+        }
+
+        private void LEAY()
+        {
+            this.IndexedAddress();
+            this.Y.Assign(this.Intermediate);
+            this.CC = this.AdjustZero(this.Y);
+        }
+
+        private void LEAS()
+        {
+            this.IndexedAddress();
+            this.S.Assign(this.Intermediate);
+        }
+
+        private void LEAU()
+        {
+            this.IndexedAddress();
+            this.U.Assign(this.Intermediate);
+        }
+
+        private void ABX() => this.X.Word += this.B;
+
+        private void Prefix10()
+        {
+            this.prefix10 = true;
+            this.Execute(this.FetchByte());
+        }
+
+        private void Prefix11()
+        {
+            this.prefix11 = true;
+            this.Execute(this.FetchByte());
+        }
 
         #endregion
+        }
     }
-}
