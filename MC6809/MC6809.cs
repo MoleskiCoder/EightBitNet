@@ -570,11 +570,14 @@ namespace MC6809
 
         protected override void Push(byte value) => this.PushS(value);
 
-        private void Push(Register16 stack, byte value) => this.MemoryWrite(stack.Decrement(), value);
+        private void Push(Register16 stack, byte value)
+        {
+            this.MemoryWrite(stack.Decrement(), value);
+        }
 
         private void PushS(byte value) => this.Push(this.S, value);
 
-        private void PushWord(Register16 stack, Register16 value)
+        private void Push(Register16 stack, Register16 value)
         {
             this.Push(stack, value.Low);
             this.Push(stack, value.High);
@@ -912,7 +915,7 @@ namespace MC6809
             if ((data & (byte)Bits.Bit7) != 0)
             {
                 this.Tick(2);
-                this.PushWord(stack, this.PC);
+                this.Push(stack, this.PC);
             }
 
             if ((data & (byte)Bits.Bit6) != 0)
@@ -920,19 +923,19 @@ namespace MC6809
                 this.Tick(2);
 
                 // Pushing to the S stack means we must be pushing U
-                this.PushWord(stack, ReferenceEquals(stack, this.S) ? this.U : this.S);
+                this.Push(stack, ReferenceEquals(stack, this.S) ? this.U : this.S);
             }
 
             if ((data & (byte)Bits.Bit5) != 0)
             {
                 this.Tick(2);
-                this.PushWord(stack, this.Y);
+                this.Push(stack, this.Y);
             }
 
             if ((data & (byte)Bits.Bit4) != 0)
             {
                 this.Tick(2);
-                this.PushWord(stack, this.X);
+                this.Push(stack, this.X);
             }
 
             if ((data & (byte)Bits.Bit3) != 0)
