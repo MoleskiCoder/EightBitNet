@@ -570,11 +570,7 @@ namespace MC6809
 
         protected override void Push(byte value) => this.PushS(value);
 
-        private void Push(Register16 stack, byte value)
-        {
-            stack.Decrement();
-            this.MemoryWrite(stack, value);
-        }
+        private void Push(Register16 stack, byte value) => this.MemoryWrite(stack.Decrement(), value);
 
         private void PushS(byte value) => this.Push(this.S, value);
 
@@ -652,24 +648,26 @@ namespace MC6809
                 {
                     case 0b0000: // ,R+
                         this.Tick(2);
-                        this.Intermediate.Word = r.Word++;
+                        this.Intermediate.Assign(r);
+                        r.Word++;
                         break;
                     case 0b0001: // ,R++
                         this.Tick(3);
-                        this.Intermediate.Word = r.Word;
+                        this.Intermediate.Assign(r);
                         r.Word += 2;
                         break;
                     case 0b0010: // ,-R
                         this.Tick(2);
-                        this.Intermediate.Word = --r.Word;
+                        --r.Word;
+                        this.Intermediate.Assign(r);
                         break;
                     case 0b0011: // ,--R
                         this.Tick(3);
                         r.Word -= 2;
-                        this.Intermediate.Word = r.Word;
+                        this.Intermediate.Assign(r);
                         break;
                     case 0b0100: // ,R
-                        this.Intermediate.Word = r.Word;
+                        this.Intermediate.Assign(r);
                         break;
                     case 0b0101: // B,R
                         this.Tick();
@@ -769,8 +767,10 @@ namespace MC6809
 
         #region Load/store 8 or 16-bit data
 
-        private void LDA() => this.A = this.Through(this.Bus.Data);
-        private void LDB() => this.B = this.Through(this.Bus.Data);
+        private void LDA() => this.Assign(ref this.A);
+        private void LDB() => this.Assign(ref this.B);
+
+        private void Assign(ref byte destination) => destination = this.Through(this.Bus.Data);
 
         private byte Through(byte data)
         {
@@ -779,40 +779,19 @@ namespace MC6809
             return data;
         }
 
-        private void LDD()
-        {
-            this.Through(this.Intermediate);
-            this.D.Assign(this.Intermediate);
-        }
+        private void LDD() => this.Assign(this.D);
+        private void LDS() => this.Assign(this.S);
+        private void LDU() => this.Assign(this.U);
+        private void LDX() => this.Assign(this.X);
+        private void LDY() => this.Assign(this.Y);
 
-        private void LDS()
-        {
-            this.Through(this.Intermediate);
-            this.S.Assign(this.Intermediate);
-        }
+        private void Assign(Register16 destination) => destination.Assign(this.Through(this.Intermediate));
 
-        private void LDU()
-        {
-            this.Through(this.Intermediate);
-            this.U.Assign(this.Intermediate);
-        }
-
-        private void LDX()
-        {
-            this.Through(this.Intermediate);
-            this.X.Assign(this.Intermediate);
-        }
-
-        private void LDY()
-        {
-            this.Through(this.Intermediate);
-            this.Y.Assign(this.Intermediate);
-        }
-
-        private void Through(Register16 data)
+        private Register16 Through(Register16 data)
         {
             this.CC = ClearBit(this.CC, StatusBits.VF);
             this.CC = this.AdjustNZ(data);
+            return data;
         }
 
         private void STA() => this.Store(this.A);
@@ -820,35 +799,13 @@ namespace MC6809
 
         private void Store(byte data) => this.MemoryWrite(this.Intermediate, this.Through(data));
 
-        private void STD()
-        {
-            this.Through(this.D);
-            this.SetWord(this.Intermediate, this.D);
-        }
+        private void STD() => this.Store(this.D);
+        private void STU() => this.Store(this.U);
+        private void STS() => this.Store(this.S);
+        private void STX() => this.Store(this.X);
+        private void STY() => this.Store(this.Y);
 
-        private void STU()
-        {
-            this.Through(this.U);
-            this.SetWord(this.Intermediate, this.U);
-        }
-
-        private void STS()
-        {
-            this.Through(this.S);
-            this.SetWord(this.Intermediate, this.S);
-        }
-
-        private void STX()
-        {
-            this.Through(this.X);
-            this.SetWord(this.Intermediate, this.X);
-        }
-
-        private void STY()
-        {
-            this.Through(this.Y);
-            this.SetWord(this.Intermediate, this.Y);
-        }
+        private void Store(Register16 data) => this.SetWord(this.Intermediate, this.Through(data));
 
         #endregion
 
@@ -1041,13 +998,13 @@ namespace MC6809
             if ((data & (byte)Bits.Bit4) != 0)
             {
                 this.Tick(2);
-                this.X.Word = this.PopWord(stack).Word;
+                this.X.Assign(this.PopWord(stack));
             }
 
             if ((data & (byte)Bits.Bit5) != 0)
             {
                 this.Tick(2);
-                this.Y.Word = this.PopWord(stack).Word;
+                this.Y.Assign(this.PopWord(stack));
             }
 
             if ((data & (byte)Bits.Bit6) != 0)
@@ -1055,13 +1012,13 @@ namespace MC6809
                 this.Tick(2);
 
                 // Pulling from the S stack means we must be pulling U
-                (ReferenceEquals(stack, this.S) ? this.U : this.S).Word = this.PopWord(stack).Word;
+                (ReferenceEquals(stack, this.S) ? this.U : this.S).Assign(this.PopWord(stack));
             }
 
             if ((data & (byte)Bits.Bit7) != 0)
             {
                 this.Tick(2);
-                this.PC.Word = this.PopWord(stack).Word;
+                this.PC.Assign(this.PopWord(stack));
             }
         }
 
@@ -1157,13 +1114,11 @@ namespace MC6809
                 var sourceRegister = this.ReferenceTransfer16(sourceSpecifier);
                 if (destinationType == 0)
                 {
-                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
-                    destinationRegister.Word = sourceRegister.Word;
+                    this.ReferenceTransfer16(destinationSpecifier).Assign(sourceRegister);
                 }
                 else
                 {
-                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
-                    destinationRegister = sourceRegister.Low;
+                    this.ReferenceTransfer8(destinationSpecifier) = sourceRegister.Low;
                 }
             }
             else
@@ -1171,14 +1126,11 @@ namespace MC6809
                 ref var sourceRegister = ref this.ReferenceTransfer8(sourceSpecifier);
                 if (destinationType == 0)
                 {
-                    var destinationRegister = this.ReferenceTransfer16(destinationSpecifier);
-                    destinationRegister.Low = sourceRegister;
-                    destinationRegister.High = (byte)Mask.Eight;
+                    this.ReferenceTransfer16(destinationSpecifier).Assign(sourceRegister, (byte)Mask.Eight);
                 }
                 else
                 {
-                    ref var destinationRegister = ref this.ReferenceTransfer8(destinationSpecifier);
-                    destinationRegister = sourceRegister;
+                    this.ReferenceTransfer8(destinationSpecifier) = sourceRegister;
                 }
             }
         }
