@@ -1176,8 +1176,6 @@ namespace MC6809
             }
         }
 
-        private void SwallowFetch() => _ = this.FetchByte();
-
         private void SwallowCurrent(int ticks = 1)
         {
             for (int i = 0; i < ticks; i++)
@@ -1219,8 +1217,7 @@ namespace MC6809
             }
             else
             {
-                this.FetchByte();
-                this.Execute(this.Bus.Data);
+                this.Execute(this.FetchByte());
             }
         }
 
@@ -1799,7 +1796,7 @@ namespace MC6809
         private byte ArithmeticShiftRight(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
-            var result = (byte)(operand >> 1 | (int)Bits.Bit7);
+            var result = (byte)(operand >> 1 | (operand & (byte)Bits.Bit7));
             this.CC = this.AdjustNZ(result);
             return result;
         }
@@ -2049,8 +2046,8 @@ namespace MC6809
 
         private void ORCC()
         {
-            this.SwallowCurrent();
             this.CC |= this.Bus.Data;
+            this.SwallowRead();
         }
 
         private void ORA() => this.A = this.Or(this.A);
@@ -2170,8 +2167,8 @@ namespace MC6809
 
         private void SWI()
         {
-            SwallowCurrent();
-            SwallowRead();
+            this.SwallowCurrent();
+            this.SwallowRead();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ

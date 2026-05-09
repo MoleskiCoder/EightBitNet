@@ -39,5 +39,31 @@ namespace MC6809.UnitTest
             Assert.AreNotEqual(0, this.cpu.Negative);
             Assert.AreEqual(2, this.cpu.Cycles);
         }
+
+        // ASR of positive value 0x40: sign bit (0) must be preserved, not forced to 1
+        [TestMethod]
+        public void TestInherentPositive()
+        {
+            this.cpu.A = 0x40;
+            this.cpu.Step();
+            Assert.AreEqual(0x20, this.cpu.A);
+            Assert.AreEqual(0, this.cpu.Carry);
+            Assert.AreEqual(0, this.cpu.Zero);
+            Assert.AreEqual(0, this.cpu.Negative);
+            Assert.AreEqual(2, this.cpu.Cycles);
+        }
+
+        // ASR of 0x01: carry set, result zero
+        [TestMethod]
+        public void TestInherentOne()
+        {
+            this.cpu.A = 0x01;
+            this.cpu.Step();
+            Assert.AreEqual(0x00, this.cpu.A);
+            Assert.AreNotEqual(0, this.cpu.Carry);
+            Assert.AreNotEqual(0, this.cpu.Zero);
+            Assert.AreEqual(0, this.cpu.Negative);
+            Assert.AreEqual(2, this.cpu.Cycles);
+        }
     }
 }
