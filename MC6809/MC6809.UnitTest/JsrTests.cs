@@ -71,7 +71,7 @@ namespace MC6809.UnitTest
             Assert.AreEqual(2, this.board.Peek(0x914));
             Assert.AreEqual(0xb, this.board.Peek(0x913));
 
-            Assert.AreEqual(10, this.cpu.Cycles);
+            Assert.AreEqual(11, this.cpu.Cycles);
         }
     }
 }
