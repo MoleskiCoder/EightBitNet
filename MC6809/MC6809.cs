@@ -8,7 +8,8 @@ namespace MC6809
 
     // Uses some information from:
     // http://www.cpu-world.com/Arch/6809.html
-    // http://atjs.mbnet.fi/mc6809/Information/6809.htm
+    // https://web.archive.org/web/20200817115822/http://atjs.mbnet.fi/mc6809/
+    // https://colorcomputerarchive.com/repo/Documents/Books/Motorola%206809%20and%20Hitachi%206309%20Programming%20Reference%20(Darren%20Atkinson).pdf
 
     /*
     |---------------|-----------------------------------|
