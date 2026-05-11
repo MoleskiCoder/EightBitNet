@@ -42,8 +42,8 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0x4b0, this.cpu.D.Word);
             Assert.AreEqual(0x4, this.cpu.A);
             Assert.AreEqual(0xb0, this.cpu.B);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreNotEqual(0, this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsTrue(this.cpu.Carry);
         }
 
         // Multiply 0x0C with 0x00. Result is 0x0000.
@@ -65,8 +65,8 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0, this.cpu.D.Word);
             Assert.AreEqual(0, this.cpu.A);
             Assert.AreEqual(0, this.cpu.B);
-            Assert.AreNotEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Carry);
+            Assert.IsTrue(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Carry);
         }
     }
 }

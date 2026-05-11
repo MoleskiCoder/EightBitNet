@@ -38,7 +38,7 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0xb01, this.cpu.PC.Word);
             Assert.AreEqual(0x13, this.cpu.B);
             Assert.AreEqual(0x3, this.cpu.CC);
-            Assert.AreNotEqual(0, this.cpu.Carry);
+            Assert.IsTrue(this.cpu.Carry);
         }
 
         [TestMethod]
@@ -69,10 +69,10 @@ namespace MC6809.UnitTest
 
             Assert.AreEqual(0xb0, this.cpu.B);
             Assert.AreEqual(9, this.cpu.CC);
-            Assert.AreNotEqual(0, this.cpu.Carry);
-            Assert.AreEqual(0, this.cpu.Overflow);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreNotEqual(0, this.cpu.Negative);
+            Assert.IsTrue(this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Overflow);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsTrue(this.cpu.Negative);
         }
     }
 }

@@ -52,11 +52,11 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0x80d4, this.cpu.X.Word);
             Assert.AreEqual(0, this.cpu.Y.Word);
             Assert.AreEqual(0, this.cpu.U.Word);
-            Assert.AreEqual(0, this.cpu.Carry);
-            Assert.AreEqual(0, this.cpu.Overflow);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Negative);
-            Assert.AreEqual(0, this.cpu.HalfCarry);
+            Assert.IsFalse(this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Overflow);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.HalfCarry);
             Assert.AreEqual(3, this.cpu.Cycles);
         }
 
@@ -75,11 +75,11 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0x80d4, this.cpu.X.Word);
             Assert.AreEqual(0, this.cpu.Y.Word);
             Assert.AreEqual(0, this.cpu.U.Word);
-            Assert.AreNotEqual(0, this.cpu.Carry);
-            Assert.AreNotEqual(0, this.cpu.Overflow);
-            Assert.AreNotEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Negative);
-            Assert.AreEqual(0, this.cpu.HalfCarry);
+            Assert.IsTrue(this.cpu.Carry);
+            Assert.IsTrue(this.cpu.Overflow);
+            Assert.IsTrue(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.HalfCarry);
             Assert.AreEqual(3, this.cpu.Cycles);
         }
     }

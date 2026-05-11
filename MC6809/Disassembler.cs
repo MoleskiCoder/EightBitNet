@@ -17,8 +17,8 @@ namespace MC6809
         public bool Ignore => this.CPU.HALT.Lowered()
                                 || this.CPU.RESET.Lowered()
                                 || this.CPU.NMI.Lowered()
-                                || this.CPU.FIRQ.Lowered() && this.CPU.FastInterruptMasked == 0
-                                || this.CPU.INT.Lowered() && this.CPU.InterruptMasked == 0;
+                                || this.CPU.FIRQ.Lowered() && this.CPU.FastInterruptMasked
+                                || this.CPU.INT.Lowered() && this.CPU.InterruptMasked;
 
         private Bus BUS { get; } = bus;
 

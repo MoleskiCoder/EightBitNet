@@ -361,35 +361,51 @@ namespace MC6809
 
         #region Status (etc.) bit twiddling
 
-        public int EntireRegisterSet => this.CC & (byte)StatusBits.EF;
+        public int EntireRegisterSetFlag => this.CC & (byte)StatusBits.EF;
 
-        public bool E => this.EntireRegisterSet != 0;
+        public bool EntireRegisterSet => this.EntireRegisterSetFlag != 0;
 
-        public int FastInterruptMasked => this.CC & (byte)StatusBits.FF;
+        public bool E => this.EntireRegisterSet;
 
-        public int HalfCarry => this.CC & (byte)StatusBits.HF;
+        public int FastInterruptMaskedFlag => this.CC & (byte)StatusBits.FF;
 
-        public int InterruptMasked => this.CC & (byte)StatusBits.IF;
+        public bool FastInterruptMasked => this.FastInterruptMaskedFlag != 0;
 
-        public int Negative => this.CC & (byte)StatusBits.NF;
+        public int HalfCarryFlag => this.CC & (byte)StatusBits.HF;
 
-        public int Zero => this.CC & (byte)StatusBits.ZF;
+        public bool HalfCarry => this.HalfCarryFlag != 0;
 
-        public int Overflow => this.CC & (byte)StatusBits.VF;
+        public int InterruptMaskedFlag => this.CC & (byte)StatusBits.IF;
 
-        public int Carry => this.CC & (byte)StatusBits.CF;
+        public bool InterruptMasked => this.InterruptMaskedFlag != 0;
 
-        private bool LS => this.Carry != 0 || this.Zero != 0;               // (C OR Z)
+        public int NegativeFlag => this.CC & (byte)StatusBits.NF;
 
-        private bool HI => !this.LS;                                        // !(C OR Z)
+        public bool Negative => this.NegativeFlag != 0;
 
-        private bool LT => (this.Negative >> 3 ^ this.Overflow >> 1) != 0;  // (N XOR V)
+        public int ZeroFlag => this.CC & (byte)StatusBits.ZF;
 
-        private bool GE => !this.LT;                                        // !(N XOR V)
+        public bool Zero => this.ZeroFlag != 0;
 
-        private bool LE => this.Zero != 0 || this.LT;                       // (Z OR (N XOR V))
+        public int OverflowFlag => this.CC & (byte)StatusBits.VF;
 
-        private bool GT => !this.LE;                                        // !(Z OR (N XOR V))
+        public bool Overflow => this.OverflowFlag != 0;
+
+        public int CarryFlag => this.CC & (byte)StatusBits.CF;
+
+        public bool Carry => this.CarryFlag != 0;
+
+        private bool LS => this.Carry || this.Zero;                                 // (C OR Z)
+
+        private bool HI => !this.LS;                                                // !(C OR Z)
+
+        private bool LT => (this.NegativeFlag >> 3 ^ this.OverflowFlag >> 1) != 0;  // (N XOR V)
+
+        private bool GE => !this.LT;                                                // !(N XOR V)
+
+        private bool LE => this.Zero || this.LT;                                    // (Z OR (N XOR V))
+
+        private bool GT => !this.LE;                                                // !(Z OR (N XOR V))
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
@@ -855,14 +871,14 @@ namespace MC6809
         private void BRN() => this.BranchShort(false);
         private void BHI() => this.BranchShort(this.HI);
         private void BLS() => this.BranchShort(this.LS);
-        private void BCC() => this.BranchShort(this.Carry == 0);
-        private void BCS() => this.BranchShort(this.Carry != 0);
-        private void BNE() => this.BranchShort(this.Zero == 0);
-        private void BEQ() => this.BranchShort(this.Zero != 0);
-        private void BVC() => this.BranchShort(this.Overflow == 0);
-        private void BVS() => this.BranchShort(this.Overflow != 0);
-        private void BPL() => this.BranchShort(this.Negative == 0);
-        private void BMI() => this.BranchShort(this.Negative != 0);
+        private void BCC() => this.BranchShort(!this.Carry);
+        private void BCS() => this.BranchShort(this.Carry);
+        private void BNE() => this.BranchShort(!this.Zero);
+        private void BEQ() => this.BranchShort(this.Zero);
+        private void BVC() => this.BranchShort(!this.Overflow);
+        private void BVS() => this.BranchShort(this.Overflow);
+        private void BPL() => this.BranchShort(!this.Negative);
+        private void BMI() => this.BranchShort(this.Negative);
         private void BGE() => this.BranchShort(this.GE);
         private void BLT() => this.BranchShort(this.LT);
         private void BGT() => this.BranchShort(this.GT);
@@ -872,14 +888,14 @@ namespace MC6809
         private void LBRN() => this.BranchLong(false);
         private void LBHI() => this.BranchLong(this.HI);
         private void LBLS() => this.BranchLong(this.LS);
-        private void LBCC() => this.BranchLong(this.Carry == 0);
-        private void LBCS() => this.BranchLong(this.Carry != 0);
-        private void LBNE() => this.BranchLong(this.Zero == 0);
-        private void LBEQ() => this.BranchLong(this.Zero != 0);
-        private void LBVC() => this.BranchLong(this.Overflow == 0);
-        private void LBVS() => this.BranchLong(this.Overflow != 0);
-        private void LBPL() => this.BranchLong(this.Negative == 0);
-        private void LBMI() => this.BranchLong(this.Negative != 0);
+        private void LBCC() => this.BranchLong(!this.Carry);
+        private void LBCS() => this.BranchLong(this.Carry);
+        private void LBNE() => this.BranchLong(!this.Zero);
+        private void LBEQ() => this.BranchLong(this.Zero);
+        private void LBVC() => this.BranchLong(!this.Overflow);
+        private void LBVS() => this.BranchLong(this.Overflow);
+        private void LBPL() => this.BranchLong(!this.Negative);
+        private void LBMI() => this.BranchLong(this.Negative);
         private void LBGE() => this.BranchLong(this.GE);
         private void LBLT() => this.BranchLong(this.LT);
         private void LBGT() => this.BranchLong(this.GT);
@@ -1208,11 +1224,11 @@ namespace MC6809
             {
                 this.HandleNMI();
             }
-            else if (this.FIRQ.Lowered() && this.FastInterruptMasked == 0)
+            else if (this.FIRQ.Lowered() && !this.FastInterruptMasked)
             {
                 this.HandleFIRQ();
             }
-            else if (this.INT.Lowered() && this.InterruptMasked == 0)
+            else if (this.INT.Lowered() && !this.InterruptMasked)
             {
                 this.HandleINT();
             }
@@ -1715,7 +1731,7 @@ namespace MC6809
         private void ADCA() => this.A = this.AddWithCarry(this.A);
         private void ADCB() => this.B = this.AddWithCarry(this.B);
 
-        private byte AddWithCarry(byte operand) => this.Add(operand, this.Bus.Data, (byte)this.Carry);
+        private byte AddWithCarry(byte operand) => this.Add(operand, this.Bus.Data, (byte)this.CarryFlag);
 
         private void ADDA() => this.A = this.Add(this.A);
         private void ADDB() => this.B = this.Add(this.B);
@@ -1765,7 +1781,7 @@ namespace MC6809
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
             this.CC = this.AdjustNZ(operand <<= 1);
-            var overflow = this.Carry ^ this.Negative >> 3;
+            var overflow = this.CarryFlag ^ this.NegativeFlag >> 3;
             this.CC = SetBit(this.CC, StatusBits.VF, overflow);
             return operand;
         }
@@ -1855,10 +1871,10 @@ namespace MC6809
             var original = this.A;
 
             var lowNibble = LowNibble(original);
-            var lowAdjust = this.HalfCarry != 0 || lowNibble > 9;
+            var lowAdjust = this.HalfCarry || lowNibble > 9;
 
             var highNibble = HighNibble(original);
-            var highAdjust = this.Carry != 0 || highNibble > 9 || (highNibble == 9 && lowNibble > 9);
+            var highAdjust = this.Carry || highNibble > 9 || (highNibble == 9 && lowNibble > 9);
 
             byte correction = 0;
 
@@ -2004,7 +2020,7 @@ namespace MC6809
 
         private byte RotateLeft(byte operand)
         {
-            var carryIn = this.Carry;
+            var carryIn = this.CarryFlag;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
             this.CC = SetBit(this.CC, StatusBits.VF, (operand & (byte)Bits.Bit7) >> 7 ^ (operand & (byte)Bits.Bit6) >> 6);
             var result = (byte)(operand << 1 | carryIn);
@@ -2025,7 +2041,7 @@ namespace MC6809
 
         private byte RotateRight(byte operand)
         {
-            var carryIn = this.Carry;
+            var carryIn = this.CarryFlag;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)(operand >> 1 | carryIn << 7);
             this.CC = this.AdjustNZ(result);
@@ -2047,7 +2063,7 @@ namespace MC6809
         private void SBCA() => this.A = this.SubtractWithCarry(this.A);
         private void SBCB() => this.B = this.SubtractWithCarry(this.B);
 
-        private byte SubtractWithCarry(byte operand) => this.Subtract(operand, this.Bus.Data, (byte)this.Carry);
+        private byte SubtractWithCarry(byte operand) => this.Subtract(operand, this.Bus.Data, (byte)this.CarryFlag);
 
         private void SUBA() => this.A = this.Subtract(this.A);
         private void SUBB() => this.B = this.Subtract(this.B);

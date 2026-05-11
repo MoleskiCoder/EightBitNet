@@ -73,7 +73,7 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0x50, this.cpu.X.Word);
-            Assert.AreEqual(0, this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Zero);
         }
 
         [TestMethod]
@@ -90,7 +90,7 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0xe7a, this.cpu.X.Word);
-            Assert.AreEqual(0, this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Zero);
         }
     }
 }

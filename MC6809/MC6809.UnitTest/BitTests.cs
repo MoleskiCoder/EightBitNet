@@ -36,8 +36,8 @@ namespace MC6809.UnitTest
             this.cpu.CC = (byte)StatusBits.ZF;
             this.cpu.Step();
             Assert.AreEqual(0xa6, this.cpu.A);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreNotEqual(0, this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsTrue(this.cpu.Negative);
             Assert.AreEqual(2, this.cpu.Cycles);
         }
     }

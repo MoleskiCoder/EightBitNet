@@ -33,9 +33,9 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0x10, this.cpu.A);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Overflow);
-            Assert.AreEqual(0, this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
+            Assert.IsFalse(this.cpu.Negative);
             Assert.AreEqual(2, this.cpu.Cycles);
         }
 

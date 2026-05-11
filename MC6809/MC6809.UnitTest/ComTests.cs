@@ -36,10 +36,10 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0xf8, this.board.Peek(0x0200));
-            Assert.AreNotEqual(0, this.cpu.Negative);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Overflow);
-            Assert.AreNotEqual(0, this.cpu.Carry);
+            Assert.IsTrue(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
+            Assert.IsTrue(this.cpu.Carry);
         }
 
         [TestMethod]

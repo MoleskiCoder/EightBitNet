@@ -34,9 +34,9 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0xff, this.cpu.A);
-            Assert.AreNotEqual(0, this.cpu.Negative);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Overflow);
+            Assert.IsTrue(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
         }
 
         [TestMethod]
@@ -64,9 +64,9 @@ namespace MC6809.UnitTest
 
             this.cpu.Step();
 
-            Assert.AreEqual(0, this.cpu.Negative);
-            Assert.AreNotEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Overflow);
+            Assert.IsFalse(this.cpu.Negative);
+            Assert.IsTrue(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
         }
 
         [TestMethod]
@@ -81,9 +81,9 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0xff, this.board.Peek(0x205));
-            Assert.AreNotEqual(0, this.cpu.Negative);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Overflow);
+            Assert.IsTrue(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
         }
     }
 }

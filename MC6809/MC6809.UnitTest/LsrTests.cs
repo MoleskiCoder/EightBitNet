@@ -37,8 +37,8 @@ namespace MC6809.UnitTest
 
             Assert.AreEqual(0x1F, this.cpu.A);
             Assert.AreEqual(2, this.cpu.CC);
-            Assert.AreEqual(0, this.cpu.Carry);
-            Assert.AreEqual(0, this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Negative);
         }
 
         // Logical Shift Right of 1
@@ -55,9 +55,9 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0, this.cpu.A);
-            Assert.AreNotEqual(0, this.cpu.Zero);
-            Assert.AreNotEqual(0, this.cpu.Carry);
-            Assert.AreEqual(0, this.cpu.Negative);
+            Assert.IsTrue(this.cpu.Zero);
+            Assert.IsTrue(this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Negative);
         }
 
         // Logical Shift Right of 0xB8
@@ -73,8 +73,8 @@ namespace MC6809.UnitTest
             this.cpu.Step();
 
             Assert.AreEqual(0x5c, this.cpu.A);
-            Assert.AreEqual(0, this.cpu.Zero);
-            Assert.AreEqual(0, this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Carry);
         }
 
         // Shift a byte at 0x0402, because DP = 0x04.
