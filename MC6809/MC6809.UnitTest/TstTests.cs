@@ -85,5 +85,69 @@ namespace MC6809.UnitTest
             Assert.IsFalse(this.cpu.Zero);
             Assert.IsFalse(this.cpu.Overflow);
         }
+
+        [TestMethod]
+        public void TestTSTA_inherent_preserves_carry_set()
+        {
+            this.board.Poke(0xb00, 0x4D);
+            this.cpu.CC = (byte)StatusBits.CF;
+            this.cpu.A = 0x01;
+            this.cpu.PC.Word = 0xb00;
+
+            this.cpu.Step();
+
+            Assert.IsTrue(this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
+        }
+
+        [TestMethod]
+        public void TestTSTA_inherent_preserves_carry_clear()
+        {
+            this.board.Poke(0xb00, 0x4D);
+            this.cpu.CC = (byte)StatusBits.VF; // V set, C clear
+            this.cpu.A = 0x01;
+            this.cpu.PC.Word = 0xb00;
+
+            this.cpu.Step();
+
+            Assert.IsFalse(this.cpu.Carry);
+            Assert.IsFalse(this.cpu.Overflow); // TST clears V
+        }
+
+        [TestMethod]
+        public void TestTSTB_inherent_preserves_carry_set()
+        {
+            this.board.Poke(0xb00, 0x5D);
+            this.cpu.CC = (byte)StatusBits.CF;
+            this.cpu.B = 0x80;
+            this.cpu.PC.Word = 0xb00;
+
+            this.cpu.Step();
+
+            Assert.IsTrue(this.cpu.Carry);
+            Assert.IsTrue(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
+        }
+
+        [TestMethod]
+        public void TestTST_extended_preserves_carry_set()
+        {
+            this.board.Poke(0x300, 0xfa);
+            this.board.Poke(0xb00, 0x7D);
+            this.board.Poke(0xb01, 0x03);
+            this.board.Poke(0xb02, 0x00);
+            this.cpu.CC = (byte)StatusBits.CF;
+            this.cpu.PC.Word = 0xb00;
+
+            this.cpu.Step();
+
+            Assert.IsTrue(this.cpu.Carry);
+            Assert.IsTrue(this.cpu.Negative);
+            Assert.IsFalse(this.cpu.Zero);
+            Assert.IsFalse(this.cpu.Overflow);
+        }
     }
 }
