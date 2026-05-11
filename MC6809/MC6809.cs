@@ -568,10 +568,7 @@ namespace MC6809
 
         protected override void Push(byte value) => this.PushS(value);
 
-        private void Push(Register16 stack, byte value)
-        {
-            this.MemoryWrite(stack.Decrement(), value);
-        }
+        private void Push(Register16 stack, byte value) => this.MemoryWrite(stack.Decrement(), value);
 
         private void PushS(byte value) => this.Push(this.S, value);
 
@@ -1792,7 +1789,7 @@ namespace MC6809
             this.SwallowEffectiveAddress();
             var result = this.Clear();
             this.SwallowEffectiveAddress();
-            this.MemoryWrite(this.EA, result);
+            this.MemoryWrite(result);
         }
 
         private byte Clear()
