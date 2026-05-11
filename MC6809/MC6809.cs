@@ -351,6 +351,8 @@ namespace MC6809
 
         public Register16 S { get; } = new();
 
+        private Register16 EA { get; } = new();
+
         public ref byte DP => ref this.dp;
 
         public ref byte CC => ref this.cc;
@@ -495,8 +497,8 @@ namespace MC6809
             this.DP = 0;
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.GetWordPaged(0xff, RESET_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, RESET_vector, this.EA);
+            this.Jump(this.EA);
         }
 
         protected override void HandleINT()
@@ -506,8 +508,8 @@ namespace MC6809
             this.RaiseBS();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.GetWordPaged(0xff, IRQ_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, IRQ_vector, this.EA);
+            this.Jump(this.EA);
         }
 
         private void HandleHALT()
@@ -524,8 +526,8 @@ namespace MC6809
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.GetWordPaged(0xff, NMI_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, NMI_vector, this.EA);
+            this.Jump(this.EA);
         }
 
         private void HandleFIRQ()
@@ -536,8 +538,8 @@ namespace MC6809
             this.SavePartialRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.GetWordPaged(0xff, FIRQ_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, FIRQ_vector, this.EA);
+            this.Jump(this.EA);
         }
 
         #endregion
@@ -602,25 +604,25 @@ namespace MC6809
         private void RelativeByteAddress()
         {
             var offset = (sbyte)this.FetchByte();
-            this.Intermediate.Word = (ushort)(this.PC.Word + offset);
+            this.EA.Word = (ushort)(this.PC.Word + offset);
         }
 
         private void RelativeWordAddress()
         {
             this.FetchWord();
             var offset = (short)this.Intermediate.Word;
-            this.Intermediate.Word = (ushort)(this.PC.Word + offset);
+            this.EA.Word = (ushort)(this.PC.Word + offset);
         }
 
         private void DirectAddress()
         {
-            this.Intermediate.Assign(this.FetchByte(), this.DP);
+            this.EA.Assign(this.FetchByte(), this.DP);
             this.SwallowRead();
         }
 
         private void ExtendedAddress()
         {
-            this.FetchWord();
+            this.FetchInto(this.EA);
             this.SwallowRead();
         }
 
@@ -646,56 +648,56 @@ namespace MC6809
                 switch (type & (byte)Mask.Four)
                 {
                     case 0b0000: // ,R+
-                        this.Intermediate.Assign(r);
+                        this.EA.Assign(r);
                         r.Word++;
                         this.SwallowCurrent();
                         this.SwallowRead(2);
                         break;
                     case 0b0001: // ,R++
-                        this.Intermediate.Assign(r);
+                        this.EA.Assign(r);
                         r.Word += 2;
                         this.SwallowCurrent();
                         this.SwallowRead(3);
                         break;
                     case 0b0010: // ,-R
                         --r.Word;
-                        this.Intermediate.Assign(r);
+                        this.EA.Assign(r);
                         this.SwallowCurrent();
                         this.SwallowRead(2);
                         break;
                     case 0b0011: // ,--R
                         r.Word -= 2;
-                        this.Intermediate.Assign(r);
+                        this.EA.Assign(r);
                         this.SwallowCurrent();
                         this.SwallowRead(3);
                         break;
                     case 0b0100: // ,R
-                        this.Intermediate.Assign(r);
+                        this.EA.Assign(r);
                         this.SwallowCurrent();
                         break;
                     case 0b0101: // B,R
-                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.B);
+                        this.EA.Word = (ushort)(r.Word + (sbyte)this.B);
                         this.SwallowCurrent();
                         this.SwallowRead();
                         break;
                     case 0b0110: // A,R
-                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.A);
+                        this.EA.Word = (ushort)(r.Word + (sbyte)this.A);
                         this.SwallowCurrent();
                         this.SwallowRead();
                         break;
                     case 0b1000: // n,R (eight-bit)
                         this.FetchByte();
-                        this.Intermediate.Word = (ushort)(r.Word + (sbyte)this.Bus.Data);
+                        this.EA.Word = (ushort)(r.Word + (sbyte)this.Bus.Data);
                         this.SwallowRead();
                         break;
                     case 0b1001: // n,R (sixteen-bit)
-                        this.FetchWord();
-                        this.Intermediate.Word += r.Word;
+                        this.FetchInto(this.EA);
+                        this.EA.Word += r.Word;
                         this.SwallowCurrent();
                         this.SwallowRead(2);
                         break;
                     case 0b1011: // D,R
-                        this.Intermediate.Word = (ushort)(r.Word + this.D.Word);
+                        this.EA.Word = (ushort)(r.Word + this.D.Word);
                         this.SwallowCurrent(3);
                         this.SwallowRead(2);
                         break;
@@ -709,7 +711,7 @@ namespace MC6809
                         this.SwallowRead(3);
                         break;
                     case 0b1111: // [n]
-                        this.FetchWord();
+                        this.FetchInto(this.EA);
                         this.SwallowCurrent();
                         break;
                     default:
@@ -719,15 +721,15 @@ namespace MC6809
                 var indirect = type & (byte)Bits.Bit4;
                 if (indirect != 0)
                 {
-                    var address = this.Intermediate;
-                    this.GetWord(address);
+                    this.LEA(this.Bus.Address);
+                    this.GetInto(this.EA);
                     this.SwallowRead();
                 }
             }
             else
             {
                 // EA = ,R + 5-bit offset
-                this.Intermediate.Word = (ushort)(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five)));
+                this.EA.Word = (ushort)(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five)));
                 this.SwallowCurrent();
                 this.SwallowRead();
             }
@@ -738,19 +740,19 @@ namespace MC6809
         private void DirectByte()
         {
             this.DirectAddress();
-            this.MemoryRead(this.Intermediate);
+            this.MemoryRead(this.EA);
         }
 
         private void IndexedByte()
         {
             this.IndexedAddress();
-            this.MemoryRead(this.Intermediate);
+            this.MemoryRead(this.EA);
         }
 
         private void ExtendedByte()
         {
             this.ExtendedAddress();
-            this.MemoryRead(this.Intermediate);
+            this.MemoryRead(this.EA);
         }
 
         private void ImmediateWord() => this.FetchWord();
@@ -758,19 +760,19 @@ namespace MC6809
         private void DirectWord()
         {
             this.DirectAddress();
-            this.GetWord(this.Intermediate);
+            this.GetWord(this.EA);
         }
 
         private void IndexedWord()
         {
             this.IndexedAddress();
-            this.GetWord(this.Intermediate);
+            this.GetWord(this.EA);
         }
 
         private void ExtendedWord()
         {
             this.ExtendedAddress();
-            this.GetWord(this.Intermediate);
+            this.GetWord(this.EA);
         }
 
         #endregion
@@ -807,7 +809,7 @@ namespace MC6809
         private void STA() => this.Store(this.A);
         private void STB() => this.Store(this.B);
 
-        private void Store(byte data) => this.MemoryWrite(this.Intermediate, this.Through(data));
+        private void Store(byte data) => this.MemoryWrite(this.EA, this.Through(data));
 
         private void STD() => this.Store(this.D);
         private void STU() => this.Store(this.U);
@@ -815,7 +817,7 @@ namespace MC6809
         private void STX() => this.Store(this.X);
         private void STY() => this.Store(this.Y);
 
-        private void Store(Register16 data) => this.SetWord(this.Intermediate, this.Through(data));
+        private void Store(Register16 data) => this.SetWord(this.EA, this.Through(data));
 
         #endregion
 
@@ -825,13 +827,13 @@ namespace MC6809
         {
             this.RelativeWordAddress();
             this.SwallowRead(4);
-            this.Call(this.Intermediate);
+            this.Call(this.EA);
         }
 
         private void BSR()
         {
             this.SwallowRead(3);
-            this.Call(this.Intermediate);
+            this.Call(this.EA);
         }
 
         private void BRA() => this.BranchShort(true);
@@ -870,14 +872,14 @@ namespace MC6809
 
         private void BranchShort(bool condition)
         {
-            this.Branch(this.Intermediate, condition);
+            this.Branch(this.EA, condition);
             this.SwallowRead();
         }
 
         private void BranchLong(bool condition)
         {
             this.SwallowRead();
-            if (this.Branch(this.Intermediate, condition))
+            if (this.Branch(this.EA, condition))
             {
                 this.SwallowRead();
             }
@@ -1174,7 +1176,7 @@ namespace MC6809
 
         private void SwallowPop(Register16 stack) => _ = this.MemoryRead(stack);
 
-        private void SwallowEffectiveAddress() => _ = this.MemoryRead(this.Intermediate);
+        private void SwallowEffectiveAddress() => _ = this.MemoryRead(this.EA);
 
         #endregion
 
@@ -1790,7 +1792,7 @@ namespace MC6809
             this.SwallowEffectiveAddress();
             var result = this.Clear();
             this.SwallowEffectiveAddress();
-            this.MemoryWrite(this.Intermediate, result);
+            this.MemoryWrite(this.EA, result);
         }
 
         private byte Clear()
@@ -1911,13 +1913,13 @@ namespace MC6809
             return result;
         }
 
-        private void JMP() => this.Jump(this.Intermediate);
+        private void JMP() => this.Jump(this.EA);
 
         private void JSR()
         {
             this.SwallowEffectiveAddress();
             this.SwallowRead();
-            this.Call(this.Intermediate);
+            this.Call(this.EA);
         }
 
         private void LSRA() => this.A = this.LogicalShiftRight(this.A);
@@ -2073,8 +2075,8 @@ namespace MC6809
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
             this.SwallowRead();
-            this.GetWordPaged(0xff, SWI_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, SWI_vector, this.EA);
+            this.Jump(this.EA);
             this.SwallowRead();
         }
 
@@ -2084,8 +2086,8 @@ namespace MC6809
             this.SwallowRead();
             this.SaveEntireRegisterState();
             this.SwallowRead();
-            this.GetWordPaged(0xff, SWI2_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, SWI2_vector, this.EA);
+            this.Jump(this.EA);
             this.SwallowRead();
         }
 
@@ -2095,8 +2097,8 @@ namespace MC6809
             this.SwallowRead();
             this.SaveEntireRegisterState();
             this.SwallowRead();
-            this.GetWordPaged(0xff, SWI3_vector);
-            this.Jump(this.Intermediate);
+            this.GetPagedInto(0xff, SWI3_vector, this.EA);
+            this.Jump(this.EA);
             this.SwallowRead();
         }
 
@@ -2114,19 +2116,21 @@ namespace MC6809
 
         private void LEAX()
         {
-            this.X.Assign(this.Intermediate);
+            this.LEA(this.X);
             this.CC = this.AdjustZero(this.X);
         }
 
         private void LEAY()
         {
-            this.Y.Assign(this.Intermediate);
+            this.LEA(this.Y);
             this.CC = this.AdjustZero(this.Y);
         }
 
-        private void LEAS() => this.S.Assign(this.Intermediate);
+        private void LEAS() => this.LEA(this.S);
 
-        private void LEAU() => this.U.Assign(this.Intermediate);
+        private void LEAU() => this.LEA(this.U);
+
+        private void LEA(Register16 register) => register.Assign(this.EA);
 
         private void ABX()
         {
