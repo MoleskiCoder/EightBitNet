@@ -598,6 +598,12 @@ namespace MC6809
 
         #region Addressing modes
 
+        protected override void ImmediateAddress()
+        {
+            this.EA.Assign(this.PC);
+            _ = this.IncrementPC();
+        }
+
         private void RelativeByteAddress()
         {
             var offset = (sbyte)this.FetchByte();
@@ -619,7 +625,8 @@ namespace MC6809
 
         private void ExtendedAddress()
         {
-            this.FetchInto(this.EA);
+            this.FetchInto(this.Intermediate);
+            this.EA.Assign(this.Intermediate);
             this.SwallowRead();
         }
 
@@ -688,7 +695,8 @@ namespace MC6809
                         this.SwallowRead();
                         break;
                     case 0b1001: // n,R (sixteen-bit)
-                        this.FetchInto(this.EA);
+                        this.FetchInto(this.Intermediate);
+                        this.EA.Assign(this.Intermediate);
                         this.EA.Word += r.Word;
                         this.SwallowCurrent();
                         this.SwallowRead(2);
@@ -708,7 +716,8 @@ namespace MC6809
                         this.SwallowRead(3);
                         break;
                     case 0b1111: // [n]
-                        this.FetchInto(this.EA);
+                        this.FetchInto(this.Intermediate);
+                        this.EA.Assign(this.Intermediate);
                         this.SwallowCurrent();
                         break;
                     default:
@@ -732,7 +741,17 @@ namespace MC6809
             }
         }
 
-        private void ImmediateByte() => this.FetchByte();
+        private void ImmediateByte()
+        {
+            this.ImmediateAddress();
+            this.MemoryRead(this.EA);
+        }
+
+        protected override byte FetchByte()
+        {
+            this.ImmediateByte();
+            return this.Bus.Data;
+        }
 
         private void DirectByte()
         {
