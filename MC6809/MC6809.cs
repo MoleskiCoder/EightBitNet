@@ -822,7 +822,6 @@ namespace MC6809
 
         private void LBSR()
         {
-            this.RelativeWordAddress();
             this.SwallowRead(4);
             this.Call(this.EA);
         }
