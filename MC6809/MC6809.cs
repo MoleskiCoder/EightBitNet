@@ -1936,7 +1936,6 @@ namespace MC6809
             var result = this.Intermediate.Low;
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustOverflow(operand, 1, this.Intermediate);
-            this.CC = this.AdjustHalfCarry(operand, 1, result);
             return result;
         }
 
