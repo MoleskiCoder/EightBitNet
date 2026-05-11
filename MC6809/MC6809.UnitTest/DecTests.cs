@@ -69,5 +69,29 @@ namespace MC6809.UnitTest
             Assert.IsTrue(this.cpu.Negative);
             Assert.AreEqual(2, this.cpu.Cycles);
         }
+
+        // DEC does not affect H: H=1 before must be H=1 after
+        [TestMethod]
+        public void TestInherentDECA_preserves_half_carry_set()
+        {
+            this.board.Poke(0, 0x4a);
+            this.cpu.CC = (byte)StatusBits.HF;
+            this.cpu.A = 0x10;
+            this.cpu.Step();
+            Assert.AreEqual(0x0f, this.cpu.A);
+            Assert.IsTrue(this.cpu.HalfCarry);
+        }
+
+        // DEC does not affect H: H=0 before must be H=0 after
+        [TestMethod]
+        public void TestInherentDECA_preserves_half_carry_clear()
+        {
+            this.board.Poke(0, 0x4a);
+            this.cpu.CC = 0;
+            this.cpu.A = 0x10;
+            this.cpu.Step();
+            Assert.AreEqual(0x0f, this.cpu.A);
+            Assert.IsFalse(this.cpu.HalfCarry);
+        }
     }
 }

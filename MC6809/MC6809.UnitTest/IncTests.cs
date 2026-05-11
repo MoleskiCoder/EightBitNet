@@ -67,5 +67,29 @@ namespace MC6809.UnitTest
             Assert.IsFalse(this.cpu.Carry);
             Assert.AreEqual(2, this.cpu.Cycles);
         }
+
+        // INC does not affect H: H=1 before must be H=1 after
+        [TestMethod]
+        public void TestInherentINCA_preserves_half_carry_set()
+        {
+            this.board.Poke(0, 0x4c);
+            this.cpu.CC = (byte)StatusBits.HF;
+            this.cpu.A = 0x01;
+            this.cpu.Step();
+            Assert.AreEqual(0x02, this.cpu.A);
+            Assert.IsTrue(this.cpu.HalfCarry);
+        }
+
+        // INC does not affect H: a nibble-crossing increment must not set H=1
+        [TestMethod]
+        public void TestInherentINCA_preserves_half_carry_clear()
+        {
+            this.board.Poke(0, 0x4c);
+            this.cpu.CC = 0;
+            this.cpu.A = 0x0f;
+            this.cpu.Step();
+            Assert.AreEqual(0x10, this.cpu.A);
+            Assert.IsFalse(this.cpu.HalfCarry);
+        }
     }
 }

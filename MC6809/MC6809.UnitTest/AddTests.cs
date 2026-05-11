@@ -59,6 +59,32 @@ namespace MC6809.UnitTest
             Assert.AreEqual(2, this.cpu.Cycles);
         }
 
+        // 0x08 + 0x08 = 0x10: carry out of low nibble sets H
+        [TestMethod]
+        public void TestImmediateADDA_half_carry_set()
+        {
+            this.board.Poke(0, 0x8b);
+            this.board.Poke(1, 0x08);
+            this.cpu.CC = 0;
+            this.cpu.A = 0x08;
+            this.cpu.Step();
+            Assert.AreEqual(0x10, this.cpu.A);
+            Assert.IsTrue(this.cpu.HalfCarry);
+        }
+
+        // 0x01 + 0x01 = 0x02: no carry out of low nibble, H clear
+        [TestMethod]
+        public void TestImmediateADDA_half_carry_clear()
+        {
+            this.board.Poke(0, 0x8b);
+            this.board.Poke(1, 0x01);
+            this.cpu.CC = 0;
+            this.cpu.A = 0x01;
+            this.cpu.Step();
+            Assert.AreEqual(0x02, this.cpu.A);
+            Assert.IsFalse(this.cpu.HalfCarry);
+        }
+
         // The overflow (V) bit indicates signed two’s complement overflow, which occurs when the
         // sign bit differs from the carry bit after an arithmetic operation.
         // A=0x03 + 0xFF becomes 0x02
