@@ -190,21 +190,11 @@ namespace MC6809
             }
         }
 
-        private void SYNC()
-        {
-            this.SwallowCurrent();
-            this.Halt();
-        }
+        private void SYNC() => this.Halt();
 
-        public void Halt()
-        {
-            this.LowerHALT();
-        }
+        public void Halt() => this.LowerHALT();
 
-        public void Proceed()
-        {
-            this.RaiseHALT();
-        }
+        public void Proceed() => this.RaiseHALT();
 
         #endregion
 
@@ -840,7 +830,6 @@ namespace MC6809
 
         private void BSR()
         {
-            this.RelativeByteAddress();
             this.SwallowRead(3);
             this.Call(this.Intermediate);
         }
@@ -881,14 +870,12 @@ namespace MC6809
 
         private void BranchShort(bool condition)
         {
-            this.RelativeByteAddress();
             this.Branch(this.Intermediate, condition);
             this.SwallowRead();
         }
 
         private void BranchLong(bool condition)
         {
-            this.RelativeWordAddress();
             this.SwallowRead();
             if (this.Branch(this.Intermediate, condition))
             {
@@ -1252,358 +1239,358 @@ namespace MC6809
                 case 0x11: this.Prefix11(); break;
 
                 // ABX
-                case 0x3a: this.ABX(); Debug.Assert(this.Cycles == 3); break;                           // ABX (inherent)
+                case 0x3a: this.SwallowCurrent(); this.ABX(); Debug.Assert(this.Cycles == 3); break;        // ABX (inherent)
 
                 // ADC
-                case 0x89: this.ImmediateByte(); this.ADCA(); Debug.Assert(this.Cycles == 2); break;    // ADC (ADCA immediate)
-                case 0x99: this.DirectByte(); this.ADCA(); Debug.Assert(this.Cycles == 4); break;       // ADC (ADCA direct)
-                case 0xa9: this.IndexedByte(); this.ADCA(); Debug.Assert(this.Cycles >= 4); break;      // ADC (ADCA indexed)
-                case 0xb9: this.ExtendedByte(); this.ADCA(); Debug.Assert(this.Cycles == 5); break;     // ADC (ADCA extended)
+                case 0x89: this.ImmediateByte(); this.ADCA(); Debug.Assert(this.Cycles == 2); break;        // ADC (ADCA immediate)
+                case 0x99: this.DirectByte(); this.ADCA(); Debug.Assert(this.Cycles == 4); break;           // ADC (ADCA direct)
+                case 0xa9: this.IndexedByte(); this.ADCA(); Debug.Assert(this.Cycles >= 4); break;          // ADC (ADCA indexed)
+                case 0xb9: this.ExtendedByte(); this.ADCA(); Debug.Assert(this.Cycles == 5); break;         // ADC (ADCA extended)
 
-                case 0xc9: this.ImmediateByte(); this.ADCB(); Debug.Assert(this.Cycles == 2); break;    // ADC (ADCB immediate)
-                case 0xd9: this.DirectByte(); this.ADCB(); Debug.Assert(this.Cycles == 4); break;       // ADC (ADCB direct)
-                case 0xe9: this.IndexedByte(); this.ADCB(); Debug.Assert(this.Cycles >= 4); break;      // ADC (ADCB indexed)
-                case 0xf9: this.ExtendedByte(); this.ADCB(); Debug.Assert(this.Cycles == 5); break;     // ADC (ADCB extended)
+                case 0xc9: this.ImmediateByte(); this.ADCB(); Debug.Assert(this.Cycles == 2); break;        // ADC (ADCB immediate)
+                case 0xd9: this.DirectByte(); this.ADCB(); Debug.Assert(this.Cycles == 4); break;           // ADC (ADCB direct)
+                case 0xe9: this.IndexedByte(); this.ADCB(); Debug.Assert(this.Cycles >= 4); break;          // ADC (ADCB indexed)
+                case 0xf9: this.ExtendedByte(); this.ADCB(); Debug.Assert(this.Cycles == 5); break;         // ADC (ADCB extended)
 
                 // ADD
-                case 0x8b: this.ImmediateByte(); this.ADDA(); Debug.Assert(this.Cycles == 2); break;    // ADD (ADDA immediate)
-                case 0x9b: this.DirectByte(); this.ADDA(); Debug.Assert(this.Cycles == 4); break;       // ADD (ADDA direct)
-                case 0xab: this.IndexedByte(); this.ADDA(); Debug.Assert(this.Cycles >= 4); break;      // ADD (ADDA indexed)
-                case 0xbb: this.ExtendedByte(); this.ADDA(); Debug.Assert(this.Cycles == 5); break;     // ADD (ADDA extended)
+                case 0x8b: this.ImmediateByte(); this.ADDA(); Debug.Assert(this.Cycles == 2); break;        // ADD (ADDA immediate)
+                case 0x9b: this.DirectByte(); this.ADDA(); Debug.Assert(this.Cycles == 4); break;           // ADD (ADDA direct)
+                case 0xab: this.IndexedByte(); this.ADDA(); Debug.Assert(this.Cycles >= 4); break;          // ADD (ADDA indexed)
+                case 0xbb: this.ExtendedByte(); this.ADDA(); Debug.Assert(this.Cycles == 5); break;         // ADD (ADDA extended)
 
-                case 0xcb: this.ImmediateByte(); this.ADDB(); Debug.Assert(this.Cycles == 2); break;    // ADD (ADDB immediate)
-                case 0xdb: this.DirectByte(); this.ADDB(); Debug.Assert(this.Cycles == 4); break;       // ADD (ADDB direct)
-                case 0xeb: this.IndexedByte(); this.ADDB(); Debug.Assert(this.Cycles >= 4); break;      // ADD (ADDB indexed)
-                case 0xfb: this.ExtendedByte(); this.ADDB(); Debug.Assert(this.Cycles == 5); break;     // ADD (ADDB extended)
+                case 0xcb: this.ImmediateByte(); this.ADDB(); Debug.Assert(this.Cycles == 2); break;        // ADD (ADDB immediate)
+                case 0xdb: this.DirectByte(); this.ADDB(); Debug.Assert(this.Cycles == 4); break;           // ADD (ADDB direct)
+                case 0xeb: this.IndexedByte(); this.ADDB(); Debug.Assert(this.Cycles >= 4); break;          // ADD (ADDB indexed)
+                case 0xfb: this.ExtendedByte(); this.ADDB(); Debug.Assert(this.Cycles == 5); break;         // ADD (ADDB extended)
 
-                case 0xc3: this.ImmediateWord(); this.ADDD(); Debug.Assert(this.Cycles == 4); break;    // ADD (ADDD immediate)
-                case 0xd3: this.DirectWord(); this.ADDD(); Debug.Assert(this.Cycles == 6); break;       // ADD (ADDD direct)
-                case 0xe3: this.IndexedWord(); this.ADDD(); Debug.Assert(this.Cycles >= 6); break;      // ADD (ADDD indexed)
-                case 0xf3: this.ExtendedWord(); this.ADDD(); Debug.Assert(this.Cycles == 7); break;     // ADD (ADDD extended)
+                case 0xc3: this.ImmediateWord(); this.ADDD(); Debug.Assert(this.Cycles == 4); break;        // ADD (ADDD immediate)
+                case 0xd3: this.DirectWord(); this.ADDD(); Debug.Assert(this.Cycles == 6); break;           // ADD (ADDD direct)
+                case 0xe3: this.IndexedWord(); this.ADDD(); Debug.Assert(this.Cycles >= 6); break;          // ADD (ADDD indexed)
+                case 0xf3: this.ExtendedWord(); this.ADDD(); Debug.Assert(this.Cycles == 7); break;         // ADD (ADDD extended)
 
                 // AND
-                case 0x84: this.ImmediateByte(); this.ANDA(); Debug.Assert(this.Cycles == 2); break;    // AND (ANDA immediate)
-                case 0x94: this.DirectByte(); this.ANDA(); Debug.Assert(this.Cycles == 4); break;       // AND (ANDA direct)
-                case 0xa4: this.IndexedByte(); this.ANDA(); Debug.Assert(this.Cycles >= 4); break;      // AND (ANDA indexed)
-                case 0xb4: this.ExtendedByte(); this.ANDA(); Debug.Assert(this.Cycles == 5); break;     // AND (ANDA extended)
+                case 0x84: this.ImmediateByte(); this.ANDA(); Debug.Assert(this.Cycles == 2); break;        // AND (ANDA immediate)
+                case 0x94: this.DirectByte(); this.ANDA(); Debug.Assert(this.Cycles == 4); break;           // AND (ANDA direct)
+                case 0xa4: this.IndexedByte(); this.ANDA(); Debug.Assert(this.Cycles >= 4); break;          // AND (ANDA indexed)
+                case 0xb4: this.ExtendedByte(); this.ANDA(); Debug.Assert(this.Cycles == 5); break;         // AND (ANDA extended)
 
-                case 0xc4: this.ImmediateByte(); this.ANDB(); Debug.Assert(this.Cycles == 2); break;    // AND (ANDB immediate)
-                case 0xd4: this.DirectByte(); this.ANDB(); Debug.Assert(this.Cycles == 4); break;       // AND (ANDB direct)
-                case 0xe4: this.IndexedByte(); this.ANDB(); Debug.Assert(this.Cycles >= 4); break;      // AND (ANDB indexed)
-                case 0xf4: this.ExtendedByte(); this.ANDB(); Debug.Assert(this.Cycles == 5); break;     // AND (ANDB extended)
+                case 0xc4: this.ImmediateByte(); this.ANDB(); Debug.Assert(this.Cycles == 2); break;        // AND (ANDB immediate)
+                case 0xd4: this.DirectByte(); this.ANDB(); Debug.Assert(this.Cycles == 4); break;           // AND (ANDB direct)
+                case 0xe4: this.IndexedByte(); this.ANDB(); Debug.Assert(this.Cycles >= 4); break;          // AND (ANDB indexed)
+                case 0xf4: this.ExtendedByte(); this.ANDB(); Debug.Assert(this.Cycles == 5); break;         // AND (ANDB extended)
 
-                case 0x1c: this.ImmediateByte(); this.ANDCC(); Debug.Assert(this.Cycles == 3); break;   // AND (ANDCC immediate)
+                case 0x1c: this.ImmediateByte(); this.ANDCC(); Debug.Assert(this.Cycles == 3); break;       // AND (ANDCC immediate)
 
                 // ASL/LSL
-                case 0x08: this.DirectByte(); this.ASL(); Debug.Assert(this.Cycles == 6); break;        // ASL (direct)
-                case 0x48: this.ASLA(); Debug.Assert(this.Cycles == 2); break;                          // ASL (ASLA inherent)
-                case 0x58: this.ASLB(); Debug.Assert(this.Cycles == 2); break;                          // ASL (ASLB inherent)
-                case 0x68: this.IndexedByte(); this.ASL(); Debug.Assert(this.Cycles >= 6); break;       // ASL (indexed)
-                case 0x78: this.ExtendedByte(); this.ASL(); Debug.Assert(this.Cycles == 7); break;      // ASL (extended)
+                case 0x08: this.DirectByte(); this.ASL(); Debug.Assert(this.Cycles == 6); break;            // ASL (direct)
+                case 0x48: this.SwallowCurrent(); this.ASLA(); Debug.Assert(this.Cycles == 2); break;       // ASL (ASLA inherent)
+                case 0x58: this.SwallowCurrent(); this.ASLB(); Debug.Assert(this.Cycles == 2); break;       // ASL (ASLB inherent)
+                case 0x68: this.IndexedByte(); this.ASL(); Debug.Assert(this.Cycles >= 6); break;           // ASL (indexed)
+                case 0x78: this.ExtendedByte(); this.ASL(); Debug.Assert(this.Cycles == 7); break;          // ASL (extended)
 
                 // ASR
-                case 0x07: this.DirectByte(); this.ASR(); Debug.Assert(this.Cycles == 6); break;        // ASR (direct)
-                case 0x47: this.ASRA(); Debug.Assert(this.Cycles == 2); break;                          // ASR (ASRA inherent)
-                case 0x57: this.ASRB(); Debug.Assert(this.Cycles == 2); break;                          // ASR (ASRB inherent)
-                case 0x67: this.IndexedByte(); this.ASR(); Debug.Assert(this.Cycles >= 6); break;       // ASR (indexed)
-                case 0x77: this.ExtendedByte(); this.ASR(); Debug.Assert(this.Cycles == 7); break;      // ASR (extended)
+                case 0x07: this.DirectByte(); this.ASR(); Debug.Assert(this.Cycles == 6); break;            // ASR (direct)
+                case 0x47: this.SwallowCurrent(); this.ASRA(); Debug.Assert(this.Cycles == 2); break;       // ASR (ASRA inherent)
+                case 0x57: this.SwallowCurrent(); this.ASRB(); Debug.Assert(this.Cycles == 2); break;       // ASR (ASRB inherent)
+                case 0x67: this.IndexedByte(); this.ASR(); Debug.Assert(this.Cycles >= 6); break;           // ASR (indexed)
+                case 0x77: this.ExtendedByte(); this.ASR(); Debug.Assert(this.Cycles == 7); break;          // ASR (extended)
 
                 // BIT
-                case 0x85: this.ImmediateByte(); this.BITA(); Debug.Assert(this.Cycles == 2); break;    // BIT (BITA immediate)
-                case 0x95: this.DirectByte(); this.BITA(); Debug.Assert(this.Cycles == 4); break;       // BIT (BITA direct)
-                case 0xa5: this.IndexedByte(); this.BITA(); Debug.Assert(this.Cycles >= 4); break;      // BIT (BITA indexed)
-                case 0xb5: this.ExtendedByte(); this.BITA(); Debug.Assert(this.Cycles == 5); break;     // BIT (BITA extended)
+                case 0x85: this.ImmediateByte(); this.BITA(); Debug.Assert(this.Cycles == 2); break;        // BIT (BITA immediate)
+                case 0x95: this.DirectByte(); this.BITA(); Debug.Assert(this.Cycles == 4); break;           // BIT (BITA direct)
+                case 0xa5: this.IndexedByte(); this.BITA(); Debug.Assert(this.Cycles >= 4); break;          // BIT (BITA indexed)
+                case 0xb5: this.ExtendedByte(); this.BITA(); Debug.Assert(this.Cycles == 5); break;         // BIT (BITA extended)
 
-                case 0xc5: this.ImmediateByte(); this.BITB(); Debug.Assert(this.Cycles == 2); break;    // BIT (BITB immediate)
-                case 0xd5: this.DirectByte(); this.BITB(); Debug.Assert(this.Cycles == 4); break;       // BIT (BITB direct)
-                case 0xe5: this.IndexedByte(); this.BITB(); Debug.Assert(this.Cycles >= 4); break;      // BIT (BITB indexed)
-                case 0xf5: this.ExtendedByte(); this.BITB(); Debug.Assert(this.Cycles == 5); break;     // BIT (BITB extended)
+                case 0xc5: this.ImmediateByte(); this.BITB(); Debug.Assert(this.Cycles == 2); break;        // BIT (BITB immediate)
+                case 0xd5: this.DirectByte(); this.BITB(); Debug.Assert(this.Cycles == 4); break;           // BIT (BITB direct)
+                case 0xe5: this.IndexedByte(); this.BITB(); Debug.Assert(this.Cycles >= 4); break;          // BIT (BITB indexed)
+                case 0xf5: this.ExtendedByte(); this.BITB(); Debug.Assert(this.Cycles == 5); break;         // BIT (BITB extended)
 
                 // CLR
-                case 0x0f: this.DirectAddress(); this.CLR(); Debug.Assert(this.Cycles == 6); break;     // CLR (direct)
-                case 0x4f: this.CLRA(); Debug.Assert(this.Cycles == 2); break;                          // CLR (CLRA implied)
-                case 0x5f: this.CLRB(); Debug.Assert(this.Cycles == 2); break;                          // CLR (CLRB implied)
-                case 0x6f: this.IndexedAddress(); this.CLR(); Debug.Assert(this.Cycles >= 6); break;    // CLR (indexed)
-                case 0x7f: this.ExtendedAddress(); this.CLR(); Debug.Assert(this.Cycles == 7); break;   // CLR (extended)
+                case 0x0f: this.DirectAddress(); this.CLR(); Debug.Assert(this.Cycles == 6); break;         // CLR (direct)
+                case 0x4f: this.SwallowCurrent(); this.CLRA(); Debug.Assert(this.Cycles == 2); break;       // CLR (CLRA implied)
+                case 0x5f: this.SwallowCurrent(); this.CLRB(); Debug.Assert(this.Cycles == 2); break;       // CLR (CLRB implied)
+                case 0x6f: this.IndexedAddress(); this.CLR(); Debug.Assert(this.Cycles >= 6); break;        // CLR (indexed)
+                case 0x7f: this.ExtendedAddress(); this.CLR(); Debug.Assert(this.Cycles == 7); break;       // CLR (extended)
 
                 // CMP
 
                 // CMPA
-                case 0x81: this.ImmediateByte(); this.CMPA(); Debug.Assert(this.Cycles == 2); break;    // CMP (CMPA, immediate)
-                case 0x91: this.DirectByte(); this.CMPA(); Debug.Assert(this.Cycles == 4); break;       // CMP (CMPA, direct)
-                case 0xa1: this.IndexedByte(); this.CMPA(); Debug.Assert(this.Cycles >= 4); break;      // CMP (CMPA, indexed)
-                case 0xb1: this.ExtendedByte(); this.CMPA(); Debug.Assert(this.Cycles == 5); break;     // CMP (CMPA, extended)
+                case 0x81: this.ImmediateByte(); this.CMPA(); Debug.Assert(this.Cycles == 2); break;        // CMP (CMPA, immediate)
+                case 0x91: this.DirectByte(); this.CMPA(); Debug.Assert(this.Cycles == 4); break;           // CMP (CMPA, direct)
+                case 0xa1: this.IndexedByte(); this.CMPA(); Debug.Assert(this.Cycles >= 4); break;          // CMP (CMPA, indexed)
+                case 0xb1: this.ExtendedByte(); this.CMPA(); Debug.Assert(this.Cycles == 5); break;         // CMP (CMPA, extended)
 
                 // CMPB
-                case 0xc1: this.ImmediateByte(); this.CMPB(); Debug.Assert(this.Cycles == 2); break;    // CMP (CMPB, immediate)
-                case 0xd1: this.DirectByte(); this.CMPB(); Debug.Assert(this.Cycles == 4); break;       // CMP (CMPB, direct)
-                case 0xe1: this.IndexedByte(); this.CMPB(); Debug.Assert(this.Cycles >= 4); break;      // CMP (CMPB, indexed)
-                case 0xf1: this.ExtendedByte(); this.CMPB(); Debug.Assert(this.Cycles == 5); break;     // CMP (CMPB, extended)
+                case 0xc1: this.ImmediateByte(); this.CMPB(); Debug.Assert(this.Cycles == 2); break;        // CMP (CMPB, immediate)
+                case 0xd1: this.DirectByte(); this.CMPB(); Debug.Assert(this.Cycles == 4); break;           // CMP (CMPB, direct)
+                case 0xe1: this.IndexedByte(); this.CMPB(); Debug.Assert(this.Cycles >= 4); break;          // CMP (CMPB, indexed)
+                case 0xf1: this.ExtendedByte(); this.CMPB(); Debug.Assert(this.Cycles == 5); break;         // CMP (CMPB, extended)
 
                 // CMPX
-                case 0x8c: this.ImmediateWord(); this.CMPX(); Debug.Assert(this.Cycles == 4); break;    // CMP (CMPX, immediate)
-                case 0x9c: this.DirectWord(); this.CMPX(); Debug.Assert(this.Cycles == 6); break;       // CMP (CMPX, direct)
-                case 0xac: this.IndexedWord(); this.CMPX(); Debug.Assert(this.Cycles >= 6); break;      // CMP (CMPX, indexed)
-                case 0xbc: this.ExtendedWord(); this.CMPX(); Debug.Assert(this.Cycles == 7); break;     // CMP (CMPX, extended)
+                case 0x8c: this.ImmediateWord(); this.CMPX(); Debug.Assert(this.Cycles == 4); break;        // CMP (CMPX, immediate)
+                case 0x9c: this.DirectWord(); this.CMPX(); Debug.Assert(this.Cycles == 6); break;           // CMP (CMPX, direct)
+                case 0xac: this.IndexedWord(); this.CMPX(); Debug.Assert(this.Cycles >= 6); break;          // CMP (CMPX, indexed)
+                case 0xbc: this.ExtendedWord(); this.CMPX(); Debug.Assert(this.Cycles == 7); break;         // CMP (CMPX, extended)
 
                 // COM
-                case 0x03: this.DirectByte(); this.COM(); Debug.Assert(this.Cycles == 6); break;        // COM (direct)
-                case 0x43: this.COMA(); Debug.Assert(this.Cycles == 2); break;                          // COM (COMA inherent)
-                case 0x53: this.COMB(); Debug.Assert(this.Cycles == 2); break;                          // COM (COMB inherent)
-                case 0x63: this.IndexedByte(); this.COM(); Debug.Assert(this.Cycles >= 6); break;       // COM (indexed)
-                case 0x73: this.ExtendedByte(); this.COM(); Debug.Assert(this.Cycles == 7); break;      // COM (extended)
+                case 0x03: this.DirectByte(); this.COM(); Debug.Assert(this.Cycles == 6); break;            // COM (direct)
+                case 0x43: this.SwallowCurrent(); this.COMA(); Debug.Assert(this.Cycles == 2); break;       // COM (COMA inherent)
+                case 0x53: this.SwallowCurrent(); this.COMB(); Debug.Assert(this.Cycles == 2); break;       // COM (COMB inherent)
+                case 0x63: this.IndexedByte(); this.COM(); Debug.Assert(this.Cycles >= 6); break;           // COM (indexed)
+                case 0x73: this.ExtendedByte(); this.COM(); Debug.Assert(this.Cycles == 7); break;          // COM (extended)
 
                 // CWAI
-                case 0x3c: this.CWAI(); break;                                                          // CWAI (inherent) - cycles omitted: halts before full interrupt response
+                case 0x3c: this.SwallowCurrent(); this.CWAI(); break;                                       // CWAI (inherent) - cycles omitted: halts before full interrupt response
 
                 // DAA
-                case 0x19: this.DAA(); Debug.Assert(this.Cycles == 2); break;                           // DAA (inherent)
+                case 0x19: this.SwallowCurrent(); this.DAA(); Debug.Assert(this.Cycles == 2); break;        // DAA (inherent)
 
                 // DEC
-                case 0x0a: this.DirectByte(); this.DEC(); Debug.Assert(this.Cycles == 6); break;        // DEC (direct)
-                case 0x4a: this.DECA(); Debug.Assert(this.Cycles == 2); break;                          // DEC (DECA inherent)
-                case 0x5a: this.DECB(); Debug.Assert(this.Cycles == 2); break;                          // DEC (DECB inherent)
-                case 0x6a: this.IndexedByte(); this.DEC(); Debug.Assert(this.Cycles >= 6); break;       // DEC (indexed)
-                case 0x7a: this.ExtendedByte(); this.DEC(); Debug.Assert(this.Cycles == 7); break;      // DEC (extended)
+                case 0x0a: this.DirectByte(); this.DEC(); Debug.Assert(this.Cycles == 6); break;            // DEC (direct)
+                case 0x4a: this.SwallowCurrent(); this.DECA(); Debug.Assert(this.Cycles == 2); break;       // DEC (DECA inherent)
+                case 0x5a: this.SwallowCurrent(); this.DECB(); Debug.Assert(this.Cycles == 2); break;       // DEC (DECB inherent)
+                case 0x6a: this.IndexedByte(); this.DEC(); Debug.Assert(this.Cycles >= 6); break;           // DEC (indexed)
+                case 0x7a: this.ExtendedByte(); this.DEC(); Debug.Assert(this.Cycles == 7); break;          // DEC (extended)
 
                 // EOR
 
                 // EORA
-                case 0x88: this.ImmediateByte(); this.EORA(); Debug.Assert(this.Cycles == 2); break;    // EOR (EORA immediate)
-                case 0x98: this.DirectByte(); this.EORA(); Debug.Assert(this.Cycles == 4); break;       // EOR (EORA direct)
-                case 0xa8: this.IndexedByte(); this.EORA(); Debug.Assert(this.Cycles >= 4); break;      // EOR (EORA indexed)
-                case 0xb8: this.ExtendedByte(); this.EORA(); Debug.Assert(this.Cycles == 5); break;     // EOR (EORA extended)
+                case 0x88: this.ImmediateByte(); this.EORA(); Debug.Assert(this.Cycles == 2); break;        // EOR (EORA immediate)
+                case 0x98: this.DirectByte(); this.EORA(); Debug.Assert(this.Cycles == 4); break;           // EOR (EORA direct)
+                case 0xa8: this.IndexedByte(); this.EORA(); Debug.Assert(this.Cycles >= 4); break;          // EOR (EORA indexed)
+                case 0xb8: this.ExtendedByte(); this.EORA(); Debug.Assert(this.Cycles == 5); break;         // EOR (EORA extended)
 
                 // EORB
-                case 0xc8: this.ImmediateByte(); this.EORB(); Debug.Assert(this.Cycles == 2); break;    // EOR (EORB immediate)
-                case 0xd8: this.DirectByte(); this.EORB(); Debug.Assert(this.Cycles == 4); break;       // EOR (EORB direct)
-                case 0xe8: this.IndexedByte(); this.EORB(); Debug.Assert(this.Cycles >= 4); break;      // EOR (EORB indexed)
-                case 0xf8: this.ExtendedByte(); this.EORB(); Debug.Assert(this.Cycles == 5); break;     // EOR (EORB extended)
+                case 0xc8: this.ImmediateByte(); this.EORB(); Debug.Assert(this.Cycles == 2); break;        // EOR (EORB immediate)
+                case 0xd8: this.DirectByte(); this.EORB(); Debug.Assert(this.Cycles == 4); break;           // EOR (EORB direct)
+                case 0xe8: this.IndexedByte(); this.EORB(); Debug.Assert(this.Cycles >= 4); break;          // EOR (EORB indexed)
+                case 0xf8: this.ExtendedByte(); this.EORB(); Debug.Assert(this.Cycles == 5); break;         // EOR (EORB extended)
 
                 // EXG
-                case 0x1e: this.ImmediateByte(); this.EXG(); Debug.Assert(this.Cycles == 8); break;     // EXG (R1,R2 immediate)
+                case 0x1e: this.ImmediateByte(); this.EXG(); Debug.Assert(this.Cycles == 8); break;         // EXG (R1,R2 immediate)
 
                 // INC
-                case 0x0c: this.DirectByte(); this.INC(); Debug.Assert(this.Cycles == 6); break;        // INC (direct)
-                case 0x4c: this.INCA(); Debug.Assert(this.Cycles == 2); break;                          // INC (INCA inherent)
-                case 0x5c: this.INCB(); Debug.Assert(this.Cycles == 2); break;                          // INC (INCB inherent)
-                case 0x6c: this.IndexedByte(); this.INC(); Debug.Assert(this.Cycles >= 6); break;       // INC (indexed)
-                case 0x7c: this.ExtendedByte(); this.INC(); Debug.Assert(this.Cycles == 7); break;      // INC (extended)
+                case 0x0c: this.DirectByte(); this.INC(); Debug.Assert(this.Cycles == 6); break;            // INC (direct)
+                case 0x4c: this.SwallowCurrent(); this.INCA(); Debug.Assert(this.Cycles == 2); break;       // INC (INCA inherent)
+                case 0x5c: this.SwallowCurrent(); this.INCB(); Debug.Assert(this.Cycles == 2); break;       // INC (INCB inherent)
+                case 0x6c: this.IndexedByte(); this.INC(); Debug.Assert(this.Cycles >= 6); break;           // INC (indexed)
+                case 0x7c: this.ExtendedByte(); this.INC(); Debug.Assert(this.Cycles == 7); break;          // INC (extended)
 
                 // JMP
-                case 0x0e: this.DirectAddress(); this.JMP(); Debug.Assert(this.Cycles == 3); break;     // JMP (direct)
-                case 0x6e: this.IndexedAddress(); this.JMP(); Debug.Assert(this.Cycles >= 3); break;    // JMP (indexed)
-                case 0x7e: this.ExtendedAddress(); this.JMP(); Debug.Assert(this.Cycles == 4); break;   // JMP (extended)
+                case 0x0e: this.DirectAddress(); this.JMP(); Debug.Assert(this.Cycles == 3); break;         // JMP (direct)
+                case 0x6e: this.IndexedAddress(); this.JMP(); Debug.Assert(this.Cycles >= 3); break;        // JMP (indexed)
+                case 0x7e: this.ExtendedAddress(); this.JMP(); Debug.Assert(this.Cycles == 4); break;       // JMP (extended)
 
                 // JSR
-                case 0x9d: this.DirectAddress(); this.JSR(); Debug.Assert(this.Cycles == 7); break;     // JSR (direct)
-                case 0xad: this.IndexedAddress(); this.JSR(); Debug.Assert(this.Cycles >= 7); break;    // JSR (indexed)
-                case 0xbd: this.ExtendedAddress(); this.JSR(); Debug.Assert(this.Cycles == 8); break;   // JSR (extended)
+                case 0x9d: this.DirectAddress(); this.JSR(); Debug.Assert(this.Cycles == 7); break;         // JSR (direct)
+                case 0xad: this.IndexedAddress(); this.JSR(); Debug.Assert(this.Cycles >= 7); break;        // JSR (indexed)
+                case 0xbd: this.ExtendedAddress(); this.JSR(); Debug.Assert(this.Cycles == 8); break;       // JSR (extended)
 
                 // LD
 
                 // LDA
-                case 0x86: this.ImmediateByte(); this.LDA(); Debug.Assert(this.Cycles == 2); break;     // LD (LDA immediate)
-                case 0x96: this.DirectByte(); this.LDA(); Debug.Assert(this.Cycles == 4); break;        // LD (LDA direct)
-                case 0xa6: this.IndexedByte(); this.LDA(); Debug.Assert(this.Cycles >= 4); break;       // LD (LDA indexed)
-                case 0xb6: this.ExtendedByte(); this.LDA(); Debug.Assert(this.Cycles == 5); break;      // LD (LDA extended)
+                case 0x86: this.ImmediateByte(); this.LDA(); Debug.Assert(this.Cycles == 2); break;         // LD (LDA immediate)
+                case 0x96: this.DirectByte(); this.LDA(); Debug.Assert(this.Cycles == 4); break;            // LD (LDA direct)
+                case 0xa6: this.IndexedByte(); this.LDA(); Debug.Assert(this.Cycles >= 4); break;           // LD (LDA indexed)
+                case 0xb6: this.ExtendedByte(); this.LDA(); Debug.Assert(this.Cycles == 5); break;          // LD (LDA extended)
 
                 // LDB
-                case 0xc6: this.ImmediateByte(); this.LDB(); Debug.Assert(this.Cycles == 2); break;     // LD (LDB immediate)
-                case 0xd6: this.DirectByte(); this.LDB(); Debug.Assert(this.Cycles == 4); break;        // LD (LDB direct)
-                case 0xe6: this.IndexedByte(); this.LDB(); Debug.Assert(this.Cycles >= 4); break;       // LD (LDB indexed)
-                case 0xf6: this.ExtendedByte(); this.LDB(); Debug.Assert(this.Cycles == 5); break;      // LD (LDB extended)
+                case 0xc6: this.ImmediateByte(); this.LDB(); Debug.Assert(this.Cycles == 2); break;         // LD (LDB immediate)
+                case 0xd6: this.DirectByte(); this.LDB(); Debug.Assert(this.Cycles == 4); break;            // LD (LDB direct)
+                case 0xe6: this.IndexedByte(); this.LDB(); Debug.Assert(this.Cycles >= 4); break;           // LD (LDB indexed)
+                case 0xf6: this.ExtendedByte(); this.LDB(); Debug.Assert(this.Cycles == 5); break;          // LD (LDB extended)
 
                 // LDD
-                case 0xcc: this.ImmediateWord(); this.LDD(); Debug.Assert(this.Cycles == 3); break;     // LD (LDD immediate)
-                case 0xdc: this.DirectWord(); this.LDD(); Debug.Assert(this.Cycles == 5); break;        // LD (LDD direct)
-                case 0xec: this.IndexedWord(); this.LDD(); Debug.Assert(this.Cycles >= 5); break;       // LD (LDD indexed)
-                case 0xfc: this.ExtendedWord(); this.LDD(); Debug.Assert(this.Cycles == 6); break;      // LD (LDD extended)
+                case 0xcc: this.ImmediateWord(); this.LDD(); Debug.Assert(this.Cycles == 3); break;         // LD (LDD immediate)
+                case 0xdc: this.DirectWord(); this.LDD(); Debug.Assert(this.Cycles == 5); break;            // LD (LDD direct)
+                case 0xec: this.IndexedWord(); this.LDD(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDD indexed)
+                case 0xfc: this.ExtendedWord(); this.LDD(); Debug.Assert(this.Cycles == 6); break;          // LD (LDD extended)
 
                 // LDU
-                case 0xce: this.ImmediateWord(); this.LDU(); Debug.Assert(this.Cycles == 3); break;     // LD (LDU immediate)
-                case 0xde: this.DirectWord(); this.LDU(); Debug.Assert(this.Cycles == 5); break;        // LD (LDU direct)
-                case 0xee: this.IndexedWord(); this.LDU(); Debug.Assert(this.Cycles >= 5); break;       // LD (LDU indexed)
-                case 0xfe: this.ExtendedWord(); this.LDU(); Debug.Assert(this.Cycles == 6); break;      // LD (LDU extended)
+                case 0xce: this.ImmediateWord(); this.LDU(); Debug.Assert(this.Cycles == 3); break;         // LD (LDU immediate)
+                case 0xde: this.DirectWord(); this.LDU(); Debug.Assert(this.Cycles == 5); break;            // LD (LDU direct)
+                case 0xee: this.IndexedWord(); this.LDU(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDU indexed)
+                case 0xfe: this.ExtendedWord(); this.LDU(); Debug.Assert(this.Cycles == 6); break;          // LD (LDU extended)
 
                 // LDX
-                case 0x8e: this.ImmediateWord(); this.LDX(); Debug.Assert(this.Cycles == 3); break;     // LD (LDX immediate)
-                case 0x9e: this.DirectWord(); this.LDX(); Debug.Assert(this.Cycles == 5); break;        // LD (LDX direct)
-                case 0xae: this.IndexedWord(); this.LDX(); Debug.Assert(this.Cycles >= 5); break;       // LD (LDX indexed)
-                case 0xbe: this.ExtendedWord(); this.LDX(); Debug.Assert(this.Cycles == 6); break;      // LD (LDX extended)
+                case 0x8e: this.ImmediateWord(); this.LDX(); Debug.Assert(this.Cycles == 3); break;         // LD (LDX immediate)
+                case 0x9e: this.DirectWord(); this.LDX(); Debug.Assert(this.Cycles == 5); break;            // LD (LDX direct)
+                case 0xae: this.IndexedWord(); this.LDX(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDX indexed)
+                case 0xbe: this.ExtendedWord(); this.LDX(); Debug.Assert(this.Cycles == 6); break;          // LD (LDX extended)
 
                 // LEA
-                case 0x30: this.LEAX(); Debug.Assert(this.Cycles >= 4); break;                          // LEA (LEAX indexed)
-                case 0x31: this.LEAY(); Debug.Assert(this.Cycles >= 4); break;                          // LEA (LEAY indexed)
-                case 0x32: this.LEAS(); Debug.Assert(this.Cycles >= 4); break;                          // LEA (LEAS indexed)
-                case 0x33: this.LEAU(); Debug.Assert(this.Cycles >= 4); break;                          // LEA (LEAU indexed)
+                case 0x30: this.IndexedAddress(); this.LEAX(); Debug.Assert(this.Cycles >= 4); break;       // LEA (LEAX indexed)
+                case 0x31: this.IndexedAddress(); this.LEAY(); Debug.Assert(this.Cycles >= 4); break;       // LEA (LEAY indexed)
+                case 0x32: this.IndexedAddress(); this.LEAS(); Debug.Assert(this.Cycles >= 4); break;       // LEA (LEAS indexed)
+                case 0x33: this.IndexedAddress(); this.LEAU(); Debug.Assert(this.Cycles >= 4); break;       // LEA (LEAU indexed)
 
                 // LSR
-                case 0x04: this.DirectByte(); this.LSR(); Debug.Assert(this.Cycles == 6); break;        // LSR (direct)
-                case 0x44: this.LSRA(); Debug.Assert(this.Cycles == 2); break;                          // LSR (LSRA inherent)
-                case 0x54: this.LSRB(); Debug.Assert(this.Cycles == 2); break;                          // LSR (LSRB inherent)
-                case 0x64: this.IndexedByte(); this.LSR(); Debug.Assert(this.Cycles >= 6); break;       // LSR (indexed)
-                case 0x74: this.ExtendedByte(); this.LSR(); Debug.Assert(this.Cycles == 7); break;      // LSR (extended)
+                case 0x04: this.DirectByte(); this.LSR(); Debug.Assert(this.Cycles == 6); break;            // LSR (direct)
+                case 0x44: this.SwallowCurrent(); this.LSRA(); Debug.Assert(this.Cycles == 2); break;       // LSR (LSRA inherent)
+                case 0x54: this.SwallowCurrent(); this.LSRB(); Debug.Assert(this.Cycles == 2); break;       // LSR (LSRB inherent)
+                case 0x64: this.IndexedByte(); this.LSR(); Debug.Assert(this.Cycles >= 6); break;           // LSR (indexed)
+                case 0x74: this.ExtendedByte(); this.LSR(); Debug.Assert(this.Cycles == 7); break;          // LSR (extended)
 
                 // MUL
-                case 0x3d: this.MUL(); Debug.Assert(this.Cycles == 11); break;                          // MUL (inherent)
+                case 0x3d: this.SwallowCurrent(); this.MUL(); Debug.Assert(this.Cycles == 11); break;       // MUL (inherent)
 
                 // NEG
-                case 0x00: this.DirectByte(); this.NEG(); Debug.Assert(this.Cycles == 6); break;        // NEG (direct)
-                case 0x40: this.NEGA(); Debug.Assert(this.Cycles == 2); break;                          // NEG (NEGA, inherent)
-                case 0x50: this.NEGB(); Debug.Assert(this.Cycles == 2); break;                          // NEG (NEGB, inherent)
-                case 0x60: this.IndexedByte(); this.NEG(); Debug.Assert(this.Cycles >= 6); break;       // NEG (indexed)
-                case 0x70: this.ExtendedByte(); this.NEG(); Debug.Assert(this.Cycles == 7); break;      // NEG (extended)
+                case 0x00: this.DirectByte(); this.NEG(); Debug.Assert(this.Cycles == 6); break;            // NEG (direct)
+                case 0x40: this.SwallowCurrent(); this.NEGA(); Debug.Assert(this.Cycles == 2); break;       // NEG (NEGA, inherent)
+                case 0x50: this.SwallowCurrent(); this.NEGB(); Debug.Assert(this.Cycles == 2); break;       // NEG (NEGB, inherent)
+                case 0x60: this.IndexedByte(); this.NEG(); Debug.Assert(this.Cycles >= 6); break;           // NEG (indexed)
+                case 0x70: this.ExtendedByte(); this.NEG(); Debug.Assert(this.Cycles == 7); break;          // NEG (extended)
 
                 // NOP
-                case 0x12: this.NOP(); Debug.Assert(this.Cycles == 2); break;                           // NOP (inherent)
+                case 0x12: this.SwallowCurrent(); NOP(); Debug.Assert(this.Cycles == 2); break;             // NOP (inherent)
 
                 // OR
 
                 // ORA
-                case 0x8a: this.ImmediateByte(); this.ORA(); Debug.Assert(this.Cycles == 2); break;     // OR (ORA immediate)
-                case 0x9a: this.DirectByte(); this.ORA(); Debug.Assert(this.Cycles == 4); break;        // OR (ORA direct)
-                case 0xaa: this.IndexedByte(); this.ORA(); Debug.Assert(this.Cycles >= 4); break;       // OR (ORA indexed)
-                case 0xba: this.ExtendedByte(); this.ORA(); Debug.Assert(this.Cycles == 5); break;      // OR (ORA extended)
+                case 0x8a: this.ImmediateByte(); this.ORA(); Debug.Assert(this.Cycles == 2); break;         // OR (ORA immediate)
+                case 0x9a: this.DirectByte(); this.ORA(); Debug.Assert(this.Cycles == 4); break;            // OR (ORA direct)
+                case 0xaa: this.IndexedByte(); this.ORA(); Debug.Assert(this.Cycles >= 4); break;           // OR (ORA indexed)
+                case 0xba: this.ExtendedByte(); this.ORA(); Debug.Assert(this.Cycles == 5); break;          // OR (ORA extended)
 
                 // ORB
-                case 0xca: this.ImmediateByte(); this.ORB(); Debug.Assert(this.Cycles == 2); break;     // OR (ORB immediate)
-                case 0xda: this.DirectByte(); this.ORB(); Debug.Assert(this.Cycles == 4); break;        // OR (ORB direct)
-                case 0xea: this.IndexedByte(); this.ORB(); Debug.Assert(this.Cycles >= 4); break;       // OR (ORB indexed)
-                case 0xfa: this.ExtendedByte(); this.ORB(); Debug.Assert(this.Cycles == 5); break;      // OR (ORB extended)
+                case 0xca: this.ImmediateByte(); this.ORB(); Debug.Assert(this.Cycles == 2); break;         // OR (ORB immediate)
+                case 0xda: this.DirectByte(); this.ORB(); Debug.Assert(this.Cycles == 4); break;            // OR (ORB direct)
+                case 0xea: this.IndexedByte(); this.ORB(); Debug.Assert(this.Cycles >= 4); break;           // OR (ORB indexed)
+                case 0xfa: this.ExtendedByte(); this.ORB(); Debug.Assert(this.Cycles == 5); break;          // OR (ORB extended)
 
                 // ORCC
-                case 0x1a: this.ImmediateByte(); this.ORCC(); Debug.Assert(this.Cycles == 3); break;    // OR (ORCC immediate)
+                case 0x1a: this.ImmediateByte(); this.ORCC(); Debug.Assert(this.Cycles == 3); break;        // OR (ORCC immediate)
 
                 // PSH
-                case 0x34: this.ImmediateByte(); this.PSHS(); Debug.Assert(this.Cycles >= 5); break;    // PSH (PSHS immediate)
-                case 0x36: this.ImmediateByte(); this.PSHU(); Debug.Assert(this.Cycles >= 5); break;    // PSH (PSHU immediate)
+                case 0x34: this.ImmediateByte(); this.PSHS(); Debug.Assert(this.Cycles >= 5); break;        // PSH (PSHS immediate)
+                case 0x36: this.ImmediateByte(); this.PSHU(); Debug.Assert(this.Cycles >= 5); break;        // PSH (PSHU immediate)
 
                 // PUL
-                case 0x35: this.ImmediateByte(); this.PULS(); Debug.Assert(this.Cycles >= 5); break;    // PUL (PULS immediate)
-                case 0x37: this.ImmediateByte(); this.PULU(); Debug.Assert(this.Cycles >= 5); break;    // PUL (PULU immediate)
+                case 0x35: this.ImmediateByte(); this.PULS(); Debug.Assert(this.Cycles >= 5); break;        // PUL (PULS immediate)
+                case 0x37: this.ImmediateByte(); this.PULU(); Debug.Assert(this.Cycles >= 5); break;        // PUL (PULU immediate)
 
                 // ROL
-                case 0x09: this.DirectByte(); this.ROL(); Debug.Assert(this.Cycles == 6); break;        // ROL (direct)
-                case 0x49: this.ROLA(); Debug.Assert(this.Cycles == 2); break;                          // ROL (ROLA inherent)
-                case 0x59: this.ROLB(); Debug.Assert(this.Cycles == 2); break;                          // ROL (ROLB inherent)
-                case 0x69: this.IndexedByte(); this.ROL(); Debug.Assert(this.Cycles >= 6); break;       // ROL (indexed)
-                case 0x79: this.ExtendedByte(); this.ROL(); Debug.Assert(this.Cycles == 7); break;      // ROL (extended)
+                case 0x09: this.DirectByte(); this.ROL(); Debug.Assert(this.Cycles == 6); break;            // ROL (direct)
+                case 0x49: this.SwallowCurrent(); this.ROLA(); Debug.Assert(this.Cycles == 2); break;       // ROL (ROLA inherent)
+                case 0x59: this.SwallowCurrent(); this.ROLB(); Debug.Assert(this.Cycles == 2); break;       // ROL (ROLB inherent)
+                case 0x69: this.IndexedByte(); this.ROL(); Debug.Assert(this.Cycles >= 6); break;           // ROL (indexed)
+                case 0x79: this.ExtendedByte(); this.ROL(); Debug.Assert(this.Cycles == 7); break;          // ROL (extended)
 
                 // ROR
-                case 0x06: this.DirectByte(); this.ROR(); Debug.Assert(this.Cycles == 6); break;        // ROR (direct)
-                case 0x46: this.RORA(); Debug.Assert(this.Cycles == 2); break;                          // ROR (RORA inherent)
-                case 0x56: this.RORB(); Debug.Assert(this.Cycles == 2); break;                          // ROR (RORB inherent)
-                case 0x66: this.IndexedByte(); this.ROR(); Debug.Assert(this.Cycles >= 6); break;       // ROR (indexed)
-                case 0x76: this.ExtendedByte(); this.ROR(); Debug.Assert(this.Cycles == 7); break;      // ROR (extended)
+                case 0x06: this.DirectByte(); this.ROR(); Debug.Assert(this.Cycles == 6); break;            // ROR (direct)
+                case 0x46: this.SwallowCurrent(); this.RORA(); Debug.Assert(this.Cycles == 2); break;       // ROR (RORA inherent)
+                case 0x56: this.SwallowCurrent(); this.RORB(); Debug.Assert(this.Cycles == 2); break;       // ROR (RORB inherent)
+                case 0x66: this.IndexedByte(); this.ROR(); Debug.Assert(this.Cycles >= 6); break;           // ROR (indexed)
+                case 0x76: this.ExtendedByte(); this.ROR(); Debug.Assert(this.Cycles == 7); break;          // ROR (extended)
 
                 // RTI
-                case 0x3B: this.RTI(); Debug.Assert(this.Cycles == (this.E ? 15 : 6)); break;           // RTI (inherent)
+                case 0x3B: this.SwallowCurrent(); this.RTI(); Debug.Assert(this.Cycles == (this.E ? 15 : 6)); break; // RTI (inherent)
 
                 // RTS
-                case 0x39: this.RTS(); Debug.Assert(this.Cycles == 5); break;                           // RTS (inherent)
+                case 0x39: this.SwallowCurrent(); this.RTS(); Debug.Assert(this.Cycles == 5); break;        // RTS (inherent)
 
                 // SBC
 
                 // SBCA
-                case 0x82: this.ImmediateByte(); this.SBCA(); Debug.Assert(this.Cycles == 2); break;    // SBC (SBCA immediate)
-                case 0x92: this.DirectByte(); this.SBCA(); Debug.Assert(this.Cycles == 4); break;       // SBC (SBCA direct)
-                case 0xa2: this.IndexedByte(); this.SBCA(); Debug.Assert(this.Cycles >= 4); break;      // SBC (SBCA indexed)
-                case 0xb2: this.ExtendedByte(); this.SBCA(); Debug.Assert(this.Cycles == 5); break;     // SBC (SBCB extended)
+                case 0x82: this.ImmediateByte(); this.SBCA(); Debug.Assert(this.Cycles == 2); break;        // SBC (SBCA immediate)
+                case 0x92: this.DirectByte(); this.SBCA(); Debug.Assert(this.Cycles == 4); break;           // SBC (SBCA direct)
+                case 0xa2: this.IndexedByte(); this.SBCA(); Debug.Assert(this.Cycles >= 4); break;          // SBC (SBCA indexed)
+                case 0xb2: this.ExtendedByte(); this.SBCA(); Debug.Assert(this.Cycles == 5); break;         // SBC (SBCB extended)
 
                 // SBCB
-                case 0xc2: this.ImmediateByte(); this.SBCB(); Debug.Assert(this.Cycles == 2); break;    // SBC (SBCB immediate)
-                case 0xd2: this.DirectByte(); this.SBCB(); Debug.Assert(this.Cycles == 4); break;       // SBC (SBCB direct)
-                case 0xe2: this.IndexedByte(); this.SBCB(); Debug.Assert(this.Cycles >= 4); break;      // SBC (SBCB indexed)
-                case 0xf2: this.ExtendedByte(); this.SBCB(); Debug.Assert(this.Cycles == 5); break;     // SBC (SBCB extended)
+                case 0xc2: this.ImmediateByte(); this.SBCB(); Debug.Assert(this.Cycles == 2); break;        // SBC (SBCB immediate)
+                case 0xd2: this.DirectByte(); this.SBCB(); Debug.Assert(this.Cycles == 4); break;           // SBC (SBCB direct)
+                case 0xe2: this.IndexedByte(); this.SBCB(); Debug.Assert(this.Cycles >= 4); break;          // SBC (SBCB indexed)
+                case 0xf2: this.ExtendedByte(); this.SBCB(); Debug.Assert(this.Cycles == 5); break;         // SBC (SBCB extended)
 
                 // SEX
-                case 0x1d: this.SEX(); Debug.Assert(this.Cycles == 2); break;                           // SEX (inherent)
+                case 0x1d: this.SwallowCurrent(); this.SEX(); Debug.Assert(this.Cycles == 2); break;        // SEX (inherent)
 
                 // ST
 
                 // STA
-                case 0x97: this.DirectAddress(); this.STA(); Debug.Assert(this.Cycles == 4); break;     // ST (STA direct)
-                case 0xa7: this.IndexedAddress(); this.STA(); Debug.Assert(this.Cycles >= 4); break;    // ST (STA indexed)
-                case 0xb7: this.ExtendedAddress(); this.STA(); Debug.Assert(this.Cycles == 5); break;   // ST (STA extended)
+                case 0x97: this.DirectAddress(); this.STA(); Debug.Assert(this.Cycles == 4); break;         // ST (STA direct)
+                case 0xa7: this.IndexedAddress(); this.STA(); Debug.Assert(this.Cycles >= 4); break;        // ST (STA indexed)
+                case 0xb7: this.ExtendedAddress(); this.STA(); Debug.Assert(this.Cycles == 5); break;       // ST (STA extended)
 
                 // STB
-                case 0xd7: this.DirectAddress(); this.STB(); Debug.Assert(this.Cycles == 4); break;     // ST (STB direct)
-                case 0xe7: this.IndexedAddress(); this.STB(); Debug.Assert(this.Cycles >= 4); break;    // ST (STB indexed)
-                case 0xf7: this.ExtendedAddress(); this.STB(); Debug.Assert(this.Cycles == 5); break;   // ST (STB extended)
+                case 0xd7: this.DirectAddress(); this.STB(); Debug.Assert(this.Cycles == 4); break;         // ST (STB direct)
+                case 0xe7: this.IndexedAddress(); this.STB(); Debug.Assert(this.Cycles >= 4); break;        // ST (STB indexed)
+                case 0xf7: this.ExtendedAddress(); this.STB(); Debug.Assert(this.Cycles == 5); break;       // ST (STB extended)
 
                 // STD
-                case 0xdd: this.DirectAddress(); this.STD(); Debug.Assert(this.Cycles == 5); break;     // ST (STD direct)
-                case 0xed: this.IndexedAddress(); this.STD(); Debug.Assert(this.Cycles >= 5); break;    // ST (STD indexed)
-                case 0xfd: this.ExtendedAddress(); this.STD(); Debug.Assert(this.Cycles == 6); break;   // ST (STD extended)
+                case 0xdd: this.DirectAddress(); this.STD(); Debug.Assert(this.Cycles == 5); break;         // ST (STD direct)
+                case 0xed: this.IndexedAddress(); this.STD(); Debug.Assert(this.Cycles >= 5); break;        // ST (STD indexed)
+                case 0xfd: this.ExtendedAddress(); this.STD(); Debug.Assert(this.Cycles == 6); break;       // ST (STD extended)
 
                 // STU
-                case 0xdf: this.DirectAddress(); this.STU(); Debug.Assert(this.Cycles == 5); break;     // ST (STU direct)
-                case 0xef: this.IndexedAddress(); this.STU(); Debug.Assert(this.Cycles >= 5); break;    // ST (STU indexed)
-                case 0xff: this.ExtendedAddress(); this.STU(); Debug.Assert(this.Cycles == 6); break;   // ST (STU extended)
+                case 0xdf: this.DirectAddress(); this.STU(); Debug.Assert(this.Cycles == 5); break;         // ST (STU direct)
+                case 0xef: this.IndexedAddress(); this.STU(); Debug.Assert(this.Cycles >= 5); break;        // ST (STU indexed)
+                case 0xff: this.ExtendedAddress(); this.STU(); Debug.Assert(this.Cycles == 6); break;       // ST (STU extended)
 
                 // STX
-                case 0x9f: this.DirectAddress(); this.STX(); Debug.Assert(this.Cycles == 5); break;     // ST (STX direct)
-                case 0xaf: this.IndexedAddress(); this.STX(); Debug.Assert(this.Cycles >= 5); break;    // ST (STX indexed)
-                case 0xbf: this.ExtendedAddress(); this.STX(); Debug.Assert(this.Cycles == 6); break;   // ST (STX extended)
+                case 0x9f: this.DirectAddress(); this.STX(); Debug.Assert(this.Cycles == 5); break;         // ST (STX direct)
+                case 0xaf: this.IndexedAddress(); this.STX(); Debug.Assert(this.Cycles >= 5); break;        // ST (STX indexed)
+                case 0xbf: this.ExtendedAddress(); this.STX(); Debug.Assert(this.Cycles == 6); break;       // ST (STX extended)
 
                 // SUB
 
                 // SUBA
-                case 0x80: this.ImmediateByte(); this.SUBA(); Debug.Assert(this.Cycles == 2); break;    // SUB (SUBA immediate)
-                case 0x90: this.DirectByte(); this.SUBA(); Debug.Assert(this.Cycles == 4); break;       // SUB (SUBA direct)
-                case 0xa0: this.IndexedByte(); this.SUBA(); Debug.Assert(this.Cycles >= 4); break;      // SUB (SUBA indexed)
-                case 0xb0: this.ExtendedByte(); this.SUBA(); Debug.Assert(this.Cycles == 5); break;     // SUB (SUBA extended)
+                case 0x80: this.ImmediateByte(); this.SUBA(); Debug.Assert(this.Cycles == 2); break;        // SUB (SUBA immediate)
+                case 0x90: this.DirectByte(); this.SUBA(); Debug.Assert(this.Cycles == 4); break;           // SUB (SUBA direct)
+                case 0xa0: this.IndexedByte(); this.SUBA(); Debug.Assert(this.Cycles >= 4); break;          // SUB (SUBA indexed)
+                case 0xb0: this.ExtendedByte(); this.SUBA(); Debug.Assert(this.Cycles == 5); break;         // SUB (SUBA extended)
 
                 // SUBB
-                case 0xc0: this.ImmediateByte(); this.SUBB(); Debug.Assert(this.Cycles == 2); break;    // SUB (SUBB immediate)
-                case 0xd0: this.DirectByte(); this.SUBB(); Debug.Assert(this.Cycles == 4); break;       // SUB (SUBB direct)
-                case 0xe0: this.IndexedByte(); this.SUBB(); Debug.Assert(this.Cycles >= 4); break;      // SUB (SUBB indexed)
-                case 0xf0: this.ExtendedByte(); this.SUBB(); Debug.Assert(this.Cycles == 5); break;     // SUB (SUBB extended)
+                case 0xc0: this.ImmediateByte(); this.SUBB(); Debug.Assert(this.Cycles == 2); break;        // SUB (SUBB immediate)
+                case 0xd0: this.DirectByte(); this.SUBB(); Debug.Assert(this.Cycles == 4); break;           // SUB (SUBB direct)
+                case 0xe0: this.IndexedByte(); this.SUBB(); Debug.Assert(this.Cycles >= 4); break;          // SUB (SUBB indexed)
+                case 0xf0: this.ExtendedByte(); this.SUBB(); Debug.Assert(this.Cycles == 5); break;         // SUB (SUBB extended)
 
                 // SUBD
-                case 0x83: this.ImmediateWord(); this.SUBD(); Debug.Assert(this.Cycles == 4); break;    // SUB (SUBD immediate)
-                case 0x93: this.DirectWord(); this.SUBD(); Debug.Assert(this.Cycles == 6); break;       // SUB (SUBD direct)
-                case 0xa3: this.IndexedWord(); this.SUBD(); Debug.Assert(this.Cycles >= 6); break;      // SUB (SUBD indexed)
-                case 0xb3: this.ExtendedWord(); this.SUBD(); Debug.Assert(this.Cycles == 7); break;     // SUB (SUBD extended)
+                case 0x83: this.ImmediateWord(); this.SUBD(); Debug.Assert(this.Cycles == 4); break;        // SUB (SUBD immediate)
+                case 0x93: this.DirectWord(); this.SUBD(); Debug.Assert(this.Cycles == 6); break;           // SUB (SUBD direct)
+                case 0xa3: this.IndexedWord(); this.SUBD(); Debug.Assert(this.Cycles >= 6); break;          // SUB (SUBD indexed)
+                case 0xb3: this.ExtendedWord(); this.SUBD(); Debug.Assert(this.Cycles == 7); break;         // SUB (SUBD extended)
 
                 // SWI
-                case 0x3f: this.SWI(); Debug.Assert(this.Cycles == 19); break;                          // SWI (inherent)
+                case 0x3f: this.SwallowCurrent(); this.SWI(); Debug.Assert(this.Cycles == 19); break;       // SWI (inherent)
 
                 // SYNC
-                case 0x13: this.SYNC(); Debug.Assert(this.Cycles == 2); break;                          // SYNC (inherent)
+                case 0x13: this.SwallowCurrent(); this.SYNC(); Debug.Assert(this.Cycles == 2); break;       // SYNC (inherent)
 
                 // TFR
-                case 0x1f: this.ImmediateByte(); this.TFR(); Debug.Assert(this.Cycles == 6); break;     // TFR (immediate)
+                case 0x1f: this.ImmediateByte(); this.TFR(); Debug.Assert(this.Cycles == 6); break;         // TFR (immediate)
 
                 // TST
-                case 0x0d: this.DirectByte(); this.TST(); Debug.Assert(this.Cycles == 6); break;        // TST (direct)
-                case 0x4d: this.TSTA(); Debug.Assert(this.Cycles == 2); break;                          // TST (TSTA inherent)
-                case 0x5d: this.TSTB(); Debug.Assert(this.Cycles == 2); break;                          // TST (TSTB inherent)
-                case 0x6d: this.IndexedByte(); this.TST(); Debug.Assert(this.Cycles >= 6); break;       // TST (indexed)
-                case 0x7d: this.ExtendedByte(); this.TST(); Debug.Assert(this.Cycles == 7); break;      // TST (extended)
+                case 0x0d: this.DirectByte(); this.TST(); Debug.Assert(this.Cycles == 6); break;            // TST (direct)
+                case 0x4d: this.SwallowCurrent(); this.TSTA(); Debug.Assert(this.Cycles == 2); break;       // TST (TSTA inherent)
+                case 0x5d: this.SwallowCurrent(); this.TSTB(); Debug.Assert(this.Cycles == 2); break;       // TST (TSTB inherent)
+                case 0x6d: this.IndexedByte(); this.TST(); Debug.Assert(this.Cycles >= 6); break;           // TST (indexed)
+                case 0x7d: this.ExtendedByte(); this.TST(); Debug.Assert(this.Cycles == 7); break;          // TST (extended)
 
                 // Branching
-                case 0x16: this.LBRA(); Debug.Assert(this.Cycles == 5); break;                          // BRA (LBRA relative)
-                case 0x17: this.LBSR(); Debug.Assert(this.Cycles == 9); break;                          // BSR (LBSR relative)
-                case 0x20: this.BRA(); Debug.Assert(this.Cycles == 3); break;                           // BRA (relative)
-                case 0x21: this.BRN(); Debug.Assert(this.Cycles == 3); break;                           // BRN (relative)
-                case 0x22: this.BHI(); Debug.Assert(this.Cycles == 3); break;                           // BHI (relative)
-                case 0x23: this.BLS(); Debug.Assert(this.Cycles == 3); break;                           // BLS (relative)
-                case 0x24: this.BCC(); Debug.Assert(this.Cycles == 3); break;                           // BCC (relative)
-                case 0x25: this.BCS(); Debug.Assert(this.Cycles == 3); break;                           // BCS (relative)
-                case 0x26: this.BNE(); Debug.Assert(this.Cycles == 3); break;                           // BNE (relative)
-                case 0x27: this.BEQ(); Debug.Assert(this.Cycles == 3); break;                           // BEQ (relative)
-                case 0x28: this.BVC(); Debug.Assert(this.Cycles == 3); break;                           // BVC (relative)
-                case 0x29: this.BVS(); Debug.Assert(this.Cycles == 3); break;                           // BVS (relative)
-                case 0x2a: this.BPL(); Debug.Assert(this.Cycles == 3); break;                           // BPL (relative)
-                case 0x2b: this.BMI(); Debug.Assert(this.Cycles == 3); break;                           // BMI (relative)
-                case 0x2c: this.BGE(); Debug.Assert(this.Cycles == 3); break;                           // BGE (relative)
-                case 0x2d: this.BLT(); Debug.Assert(this.Cycles == 3); break;                           // BLT (relative)
-                case 0x2e: this.BGT(); Debug.Assert(this.Cycles == 3); break;                           // BGT (relative)
-                case 0x2f: this.BLE(); Debug.Assert(this.Cycles == 3); break;                           // BLE (relative)
+                case 0x16: this.RelativeWordAddress(); this.LBRA(); Debug.Assert(this.Cycles == 5); break;  // BRA (LBRA relative)
+                case 0x17: this.RelativeWordAddress(); this.LBSR(); Debug.Assert(this.Cycles == 9); break;  // BSR (LBSR relative)
+                case 0x20: this.RelativeByteAddress(); this.BRA(); Debug.Assert(this.Cycles == 3); break;   // BRA (relative)
+                case 0x21: this.RelativeByteAddress(); this.BRN(); Debug.Assert(this.Cycles == 3); break;   // BRN (relative)
+                case 0x22: this.RelativeByteAddress(); this.BHI(); Debug.Assert(this.Cycles == 3); break;   // BHI (relative)
+                case 0x23: this.RelativeByteAddress(); this.BLS(); Debug.Assert(this.Cycles == 3); break;   // BLS (relative)
+                case 0x24: this.RelativeByteAddress(); this.BCC(); Debug.Assert(this.Cycles == 3); break;   // BCC (relative)
+                case 0x25: this.RelativeByteAddress(); this.BCS(); Debug.Assert(this.Cycles == 3); break;   // BCS (relative)
+                case 0x26: this.RelativeByteAddress(); this.BNE(); Debug.Assert(this.Cycles == 3); break;   // BNE (relative)
+                case 0x27: this.RelativeByteAddress(); this.BEQ(); Debug.Assert(this.Cycles == 3); break;   // BEQ (relative)
+                case 0x28: this.RelativeByteAddress(); this.BVC(); Debug.Assert(this.Cycles == 3); break;   // BVC (relative)
+                case 0x29: this.RelativeByteAddress(); this.BVS(); Debug.Assert(this.Cycles == 3); break;   // BVS (relative)
+                case 0x2a: this.RelativeByteAddress(); this.BPL(); Debug.Assert(this.Cycles == 3); break;   // BPL (relative)
+                case 0x2b: this.RelativeByteAddress(); this.BMI(); Debug.Assert(this.Cycles == 3); break;   // BMI (relative)
+                case 0x2c: this.RelativeByteAddress(); this.BGE(); Debug.Assert(this.Cycles == 3); break;   // BGE (relative)
+                case 0x2d: this.RelativeByteAddress(); this.BLT(); Debug.Assert(this.Cycles == 3); break;   // BLT (relative)
+                case 0x2e: this.RelativeByteAddress(); this.BGT(); Debug.Assert(this.Cycles == 3); break;   // BGT (relative)
+                case 0x2f: this.RelativeByteAddress(); this.BLE(); Debug.Assert(this.Cycles == 3); break;   // BLE (relative)
 
-                case 0x8d: this.BSR(); Debug.Assert(this.Cycles == 7); break;                           // BSR (relative)
+                case 0x8d: this.RelativeByteAddress(); this.BSR(); Debug.Assert(this.Cycles == 7); break;   // BSR (relative)
 
                 default:
                     throw new InvalidOperationException("Unknown op-code");
@@ -1617,60 +1604,60 @@ namespace MC6809
                 // CMP
 
                 // CMPD
-                case 0x83: this.ImmediateWord(); this.CMPD(); Debug.Assert(this.Cycles == 5); break;    // CMP (CMPD, immediate)
-                case 0x93: this.DirectWord(); this.CMPD(); Debug.Assert(this.Cycles == 7); break;       // CMP (CMPD, direct)
-                case 0xa3: this.IndexedWord(); this.CMPD(); Debug.Assert(this.Cycles >= 7); break;      // CMP (CMPD, indexed)
-                case 0xb3: this.ExtendedWord(); this.CMPD(); Debug.Assert(this.Cycles == 8); break;     // CMP (CMPD, extended)
+                case 0x83: this.ImmediateWord(); this.CMPD(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPD, immediate)
+                case 0x93: this.DirectWord(); this.CMPD(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPD, direct)
+                case 0xa3: this.IndexedWord(); this.CMPD(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPD, indexed)
+                case 0xb3: this.ExtendedWord(); this.CMPD(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPD, extended)
 
                 // CMPY
-                case 0x8c: this.ImmediateWord(); this.CMPY(); Debug.Assert(this.Cycles == 5); break;    // CMP (CMPY, immediate)
-                case 0x9c: this.DirectWord(); this.CMPY(); Debug.Assert(this.Cycles == 7); break;       // CMP (CMPY, direct)
-                case 0xac: this.IndexedWord(); this.CMPY(); Debug.Assert(this.Cycles >= 7); break;      // CMP (CMPY, indexed)
-                case 0xbc: this.ExtendedWord(); this.CMPY(); Debug.Assert(this.Cycles == 8); break;     // CMP (CMPY, extended)
+                case 0x8c: this.ImmediateWord(); this.CMPY(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPY, immediate)
+                case 0x9c: this.DirectWord(); this.CMPY(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPY, direct)
+                case 0xac: this.IndexedWord(); this.CMPY(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPY, indexed)
+                case 0xbc: this.ExtendedWord(); this.CMPY(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPY, extended)
 
                 // LD
 
                 // LDS
-                case 0xce: this.ImmediateWord(); this.LDS(); Debug.Assert(this.Cycles == 4); break;     // LD (LDS immediate)
-                case 0xde: this.DirectWord(); this.LDS(); Debug.Assert(this.Cycles == 6); break;        // LD (LDS direct)
-                case 0xee: this.IndexedWord(); this.LDS(); Debug.Assert(this.Cycles >= 6); break;       // LD (LDS indexed)
-                case 0xfe: this.ExtendedWord(); this.LDS(); Debug.Assert(this.Cycles == 7); break;      // LD (LDS extended)
+                case 0xce: this.ImmediateWord(); this.LDS(); Debug.Assert(this.Cycles == 4); break;         // LD (LDS immediate)
+                case 0xde: this.DirectWord(); this.LDS(); Debug.Assert(this.Cycles == 6); break;            // LD (LDS direct)
+                case 0xee: this.IndexedWord(); this.LDS(); Debug.Assert(this.Cycles >= 6); break;           // LD (LDS indexed)
+                case 0xfe: this.ExtendedWord(); this.LDS(); Debug.Assert(this.Cycles == 7); break;          // LD (LDS extended)
 
                 // LDY
-                case 0x8e: this.ImmediateWord(); this.LDY(); Debug.Assert(this.Cycles == 4); break;     // LD (LDY immediate)
-                case 0x9e: this.DirectWord(); this.LDY(); Debug.Assert(this.Cycles == 6); break;        // LD (LDY direct)
-                case 0xae: this.IndexedWord(); this.LDY(); Debug.Assert(this.Cycles >= 6); break;       // LD (LDY indexed)
-                case 0xbe: this.ExtendedWord(); this.LDY(); Debug.Assert(this.Cycles == 7); break;      // LD (LDY extended)
+                case 0x8e: this.ImmediateWord(); this.LDY(); Debug.Assert(this.Cycles == 4); break;         // LD (LDY immediate)
+                case 0x9e: this.DirectWord(); this.LDY(); Debug.Assert(this.Cycles == 6); break;            // LD (LDY direct)
+                case 0xae: this.IndexedWord(); this.LDY(); Debug.Assert(this.Cycles >= 6); break;           // LD (LDY indexed)
+                case 0xbe: this.ExtendedWord(); this.LDY(); Debug.Assert(this.Cycles == 7); break;          // LD (LDY extended)
 
                 // Branching
-                case 0x21: this.LBRN(); Debug.Assert(this.Cycles == 5); break;                          // BRN (LBRN relative)
-                case 0x22: this.LBHI(); Debug.Assert(this.Cycles >= 5); break;                          // BHI (LBHI relative)
-                case 0x23: this.LBLS(); Debug.Assert(this.Cycles >= 5); break;                          // BLS (LBLS relative)
-                case 0x24: this.LBCC(); Debug.Assert(this.Cycles >= 5); break;                          // BCC (LBCC relative)
-                case 0x25: this.LBCS(); Debug.Assert(this.Cycles >= 5); break;                          // BCS (LBCS relative)
-                case 0x26: this.LBNE(); Debug.Assert(this.Cycles >= 5); break;                          // BNE (LBNE relative)
-                case 0x27: this.LBEQ(); Debug.Assert(this.Cycles >= 5); break;                          // BEQ (LBEQ relative)
-                case 0x28: this.LBVC(); Debug.Assert(this.Cycles >= 5); break;                          // BVC (LBVC relative)
-                case 0x29: this.LBVS(); Debug.Assert(this.Cycles >= 5); break;                          // BVS (LBVS relative)
-                case 0x2a: this.LBPL(); Debug.Assert(this.Cycles >= 5); break;                          // BPL (LBPL relative)
-                case 0x2b: this.LBMI(); Debug.Assert(this.Cycles >= 5); break;                          // BMI (LBMI relative)
-                case 0x2c: this.LBGE(); Debug.Assert(this.Cycles >= 5); break;                          // BGE (LBGE relative)
-                case 0x2d: this.LBLT(); Debug.Assert(this.Cycles >= 5); break;                          // BLT (LBLT relative)
-                case 0x2e: this.LBGT(); Debug.Assert(this.Cycles >= 5); break;                          // BGT (LBGT relative)
-                case 0x2f: this.LBLE(); Debug.Assert(this.Cycles >= 5); break;                          // BLE (LBLE relative)
+                case 0x21: this.RelativeWordAddress(); this.LBRN(); Debug.Assert(this.Cycles == 5); break;  // BRN (LBRN relative)
+                case 0x22: this.RelativeWordAddress(); this.LBHI(); Debug.Assert(this.Cycles >= 5); break;  // BHI (LBHI relative)
+                case 0x23: this.RelativeWordAddress(); this.LBLS(); Debug.Assert(this.Cycles >= 5); break;  // BLS (LBLS relative)
+                case 0x24: this.RelativeWordAddress(); this.LBCC(); Debug.Assert(this.Cycles >= 5); break;  // BCC (LBCC relative)
+                case 0x25: this.RelativeWordAddress(); this.LBCS(); Debug.Assert(this.Cycles >= 5); break;  // BCS (LBCS relative)
+                case 0x26: this.RelativeWordAddress(); this.LBNE(); Debug.Assert(this.Cycles >= 5); break;  // BNE (LBNE relative)
+                case 0x27: this.RelativeWordAddress(); this.LBEQ(); Debug.Assert(this.Cycles >= 5); break;  // BEQ (LBEQ relative)
+                case 0x28: this.RelativeWordAddress(); this.LBVC(); Debug.Assert(this.Cycles >= 5); break;  // BVC (LBVC relative)
+                case 0x29: this.RelativeWordAddress(); this.LBVS(); Debug.Assert(this.Cycles >= 5); break;  // BVS (LBVS relative)
+                case 0x2a: this.RelativeWordAddress(); this.LBPL(); Debug.Assert(this.Cycles >= 5); break;  // BPL (LBPL relative)
+                case 0x2b: this.RelativeWordAddress(); this.LBMI(); Debug.Assert(this.Cycles >= 5); break;  // BMI (LBMI relative)
+                case 0x2c: this.RelativeWordAddress(); this.LBGE(); Debug.Assert(this.Cycles >= 5); break;  // BGE (LBGE relative)
+                case 0x2d: this.RelativeWordAddress(); this.LBLT(); Debug.Assert(this.Cycles >= 5); break;  // BLT (LBLT relative)
+                case 0x2e: this.RelativeWordAddress(); this.LBGT(); Debug.Assert(this.Cycles >= 5); break;  // BGT (LBGT relative)
+                case 0x2f: this.RelativeWordAddress(); this.LBLE(); Debug.Assert(this.Cycles >= 5); break;  // BLE (LBLE relative)
 
                 // STS
-                case 0xdf: this.DirectAddress(); this.STS(); Debug.Assert(this.Cycles == 6); break;     // ST (STS direct)
-                case 0xef: this.IndexedAddress(); this.STS(); Debug.Assert(this.Cycles >= 6); break;    // ST (STS indexed)
-                case 0xff: this.ExtendedAddress(); this.STS(); Debug.Assert(this.Cycles == 7); break;   // ST (STS extended)
+                case 0xdf: this.DirectAddress(); this.STS(); Debug.Assert(this.Cycles == 6); break;         // ST (STS direct)
+                case 0xef: this.IndexedAddress(); this.STS(); Debug.Assert(this.Cycles >= 6); break;        // ST (STS indexed)
+                case 0xff: this.ExtendedAddress(); this.STS(); Debug.Assert(this.Cycles == 7); break;       // ST (STS extended)
 
                 // STY
-                case 0x9f: this.DirectAddress(); this.STY(); Debug.Assert(this.Cycles == 6); break;     // ST (STY direct)
-                case 0xaf: this.IndexedAddress(); this.STY(); Debug.Assert(this.Cycles >= 6); break;    // ST (STY indexed)
-                case 0xbf: this.ExtendedAddress(); this.STY(); Debug.Assert(this.Cycles == 7); break;   // ST (STY extended)
+                case 0x9f: this.DirectAddress(); this.STY(); Debug.Assert(this.Cycles == 6); break;         // ST (STY direct)
+                case 0xaf: this.IndexedAddress(); this.STY(); Debug.Assert(this.Cycles >= 6); break;        // ST (STY indexed)
+                case 0xbf: this.ExtendedAddress(); this.STY(); Debug.Assert(this.Cycles == 7); break;       // ST (STY extended)
 
                 // SWI
-                case 0x3f: this.SWI2(); Debug.Assert(this.Cycles == 20); break;                         // SWI (SWI2 inherent)
+                case 0x3f: this.SwallowCurrent(); this.SWI2(); Debug.Assert(this.Cycles == 20); break;      // SWI (SWI2 inherent)
 
                 default:
                     throw new InvalidOperationException("Unknown 10 prefixed op-code");
@@ -1684,19 +1671,19 @@ namespace MC6809
                 // CMP
 
                 // CMPU
-                case 0x83: this.ImmediateWord(); this.CMPU(); Debug.Assert(this.Cycles == 5); break;    // CMP (CMPU, immediate)
-                case 0x93: this.DirectWord(); this.CMPU(); Debug.Assert(this.Cycles == 7); break;       // CMP (CMPU, direct)
-                case 0xa3: this.IndexedWord(); this.CMPU(); Debug.Assert(this.Cycles >= 7); break;      // CMP (CMPU, indexed)
-                case 0xb3: this.ExtendedWord(); this.CMPU(); Debug.Assert(this.Cycles == 8); break;     // CMP (CMPU, extended)
+                case 0x83: this.ImmediateWord(); this.CMPU(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPU, immediate)
+                case 0x93: this.DirectWord(); this.CMPU(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPU, direct)
+                case 0xa3: this.IndexedWord(); this.CMPU(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPU, indexed)
+                case 0xb3: this.ExtendedWord(); this.CMPU(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPU, extended)
 
                 // CMPS
-                case 0x8c: this.ImmediateWord(); this.CMPS(); Debug.Assert(this.Cycles == 5); break;    // CMP (CMPS, immediate)
-                case 0x9c: this.DirectWord(); this.CMPS(); Debug.Assert(this.Cycles == 7); break;       // CMP (CMPS, direct)
-                case 0xac: this.IndexedWord(); this.CMPS(); Debug.Assert(this.Cycles >= 7); break;      // CMP (CMPS, indexed)
-                case 0xbc: this.ExtendedWord(); this.CMPS(); Debug.Assert(this.Cycles == 8); break;     // CMP (CMPS, extended)
+                case 0x8c: this.ImmediateWord(); this.CMPS(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPS, immediate)
+                case 0x9c: this.DirectWord(); this.CMPS(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPS, direct)
+                case 0xac: this.IndexedWord(); this.CMPS(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPS, indexed)
+                case 0xbc: this.ExtendedWord(); this.CMPS(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPS, extended)
 
                 // SWI
-                case 0x3f: this.SWI3(); Debug.Assert(this.Cycles == 20); break;                         // SWI (SWI3 inherent)
+                case 0x3f: this.SwallowCurrent(); this.SWI3(); Debug.Assert(this.Cycles == 20); break;      // SWI (SWI3 inherent)
 
                 default:
                     throw new InvalidOperationException("Unknown 11 prefixed op-code");
@@ -1707,7 +1694,10 @@ namespace MC6809
 
         #region Miscellaneous instruction implementations
 
-        private void NOP() => this.SwallowCurrent();
+        private static void NOP()
+        {
+            // No operation!
+        }
 
         private void ADCA() => this.A = this.AddWithCarry(this.A);
         private void ADCB() => this.B = this.AddWithCarry(this.B);
@@ -1747,17 +1737,9 @@ namespace MC6809
 
         private byte And(byte operand, byte data) => this.Through((byte)(operand & data));
 
-        private void ASLA()
-        {
-            this.SwallowCurrent();
-            this.A = this.ArithmeticShiftLeft(this.A);
-        }
+        private void ASLA() => this.A = this.ArithmeticShiftLeft(this.A);
 
-        private void ASLB()
-        {
-            this.SwallowCurrent();
-            this.B = this.ArithmeticShiftLeft(this.B);
-        }
+        private void ASLB() => this.B = this.ArithmeticShiftLeft(this.B);
 
         private void ASL()
         {
@@ -1775,17 +1757,9 @@ namespace MC6809
             return operand;
         }
 
-        private void ASRA()
-        {
-            this.SwallowCurrent();
-            this.A = this.ArithmeticShiftRight(this.A);
-        }
+        private void ASRA() => this.A = this.ArithmeticShiftRight(this.A);
 
-        private void ASRB()
-        {
-            this.SwallowCurrent();
-            this.B = this.ArithmeticShiftRight(this.B);
-        }
+        private void ASRB() => this.B = this.ArithmeticShiftRight(this.B);
 
         private void ASR()
         {
@@ -1807,17 +1781,9 @@ namespace MC6809
 
         private void Bit(byte operand, byte data) => this.And(operand, data);
 
-        private void CLRA()
-        {
-            this.SwallowCurrent();
-            this.A = this.Clear();
-        }
+        private void CLRA() => this.A = this.Clear();
 
-        private void CLRB()
-        {
-            this.SwallowCurrent();
-            this.B = this.Clear();
-        }
+        private void CLRB() => this.B = this.Clear();
 
         private void CLR()
         {
@@ -1846,17 +1812,9 @@ namespace MC6809
 
         private void Compare(Register16 operand) => this.Subtract(operand, this.Intermediate, this.Intermediate);
 
-        private void COMA()
-        {
-            this.SwallowCurrent();
-            this.A = this.Complement(this.A);
-        }
+        private void COMA() => this.A = this.Complement(this.A);
 
-        private void COMB()
-        {
-            this.SwallowCurrent();
-            this.B = this.Complement(this.B);
-        }
+        private void COMB() => this.B = this.Complement(this.B);
 
         private void COM()
         {
@@ -1873,7 +1831,6 @@ namespace MC6809
 
         private void CWAI()
         {
-            this.SwallowCurrent();
             this.SwallowRead();
             this.CC &= this.Bus.Data;
             this.SaveEntireRegisterState();
@@ -1882,8 +1839,6 @@ namespace MC6809
 
         private void DAA()
         {
-            this.SwallowCurrent();
-
             var original = this.A;
 
             var lowNibble = LowNibble(original);
@@ -1915,17 +1870,9 @@ namespace MC6809
 
         private byte ExclusiveOr(byte operand, byte data) => this.Through((byte)(operand ^ data));
 
-        private void DECA()
-        {
-            this.SwallowCurrent();
-            this.A = this.Decrement(this.A);
-        }
+        private void DECA() => this.A = this.Decrement(this.A);
 
-        private void DECB()
-        {
-            this.SwallowCurrent();
-            this.B = this.Decrement(this.B);
-        }
+        private void DECB() => this.B = this.Decrement(this.B);
 
         private void DEC()
         {
@@ -1943,17 +1890,9 @@ namespace MC6809
             return result;
         }
 
-        private void INCA()
-        {
-            this.SwallowCurrent();
-            this.A = this.Increment(this.A);
-        }
+        private void INCA() => this.A = this.Increment(this.A);
 
-        private void INCB()
-        {
-            this.SwallowCurrent();
-            this.B = this.Increment(this.B);
-        }
+        private void INCB() => this.B = this.Increment(this.B);
 
         private void INC()
         {
@@ -1981,17 +1920,9 @@ namespace MC6809
             this.Call(this.Intermediate);
         }
 
-        private void LSRA()
-        {
-            this.SwallowCurrent();
-            this.A = this.LogicalShiftRight(this.A);
-        }
+        private void LSRA() => this.A = this.LogicalShiftRight(this.A);
 
-        private void LSRB()
-        {
-            this.SwallowCurrent();
-            this.B = this.LogicalShiftRight(this.B);
-        }
+        private void LSRB() => this.B = this.LogicalShiftRight(this.B);
 
         private void LSR()
         {
@@ -2009,24 +1940,15 @@ namespace MC6809
 
         private void MUL()
         {
-            this.SwallowCurrent();
             this.SwallowRead(9);
             this.D.Word = (ushort)(this.A * this.B);
             this.CC = this.AdjustZero(this.D);
             this.CC = SetBit(this.CC, StatusBits.CF, this.D.Low & (byte)Bits.Bit7);
         }
 
-        private void NEGA()
-        {
-            this.SwallowCurrent();
-            this.A = this.Negate(this.A);
-        }
+        private void NEGA() => this.A = this.Negate(this.A);
 
-        private void NEGB()
-        {
-            this.SwallowCurrent();
-            this.B = this.Negate(this.B);
-        }
+        private void NEGB() => this.B = this.Negate(this.B);
 
         private void NEG()
         {
@@ -2056,17 +1978,9 @@ namespace MC6809
 
         private byte Or(byte operand) => this.Through((byte)(operand | this.Bus.Data));
 
-        private void ROLA()
-        {
-            this.SwallowCurrent();
-            this.A = this.RotateLeft(this.A);
-        }
+        private void ROLA() => this.A = this.RotateLeft(this.A);
 
-        private void ROLB()
-        {
-            this.SwallowCurrent();
-            this.B = this.RotateLeft(this.B);
-        }
+        private void ROLB() => this.B = this.RotateLeft(this.B);
 
         private void ROL()
         {
@@ -2085,17 +1999,9 @@ namespace MC6809
             return result;
         }
 
-        private void RORA()
-        {
-            this.SwallowCurrent();
-            this.A = this.RotateRight(this.A);
-        }
+        private void RORA() => this.A = this.RotateRight(this.A);
 
-        private void RORB()
-        {
-            this.SwallowCurrent();
-            this.B = this.RotateRight(this.B);
-        }
+        private void RORB() => this.B = this.RotateRight(this.B);
 
         private void ROR()
         {
@@ -2115,14 +2021,12 @@ namespace MC6809
 
         private void RTI()
         {
-            this.SwallowCurrent();
             this.RestoreRegisterState();
             this.SwallowRead();
         }
 
         private void RTS()
         {
-            this.SwallowCurrent();
             this.Return();
             this.SwallowRead();
         }
@@ -2154,11 +2058,7 @@ namespace MC6809
             this.SwallowRead();
         }
 
-        private void SEX()
-        {
-            this.SwallowCurrent();
-            this.A = this.SEX(this.B);
-        }
+        private void SEX() => this.A = this.SEX(this.B);
 
         private byte SEX(byte from)
         {
@@ -2168,12 +2068,11 @@ namespace MC6809
 
         private void SWI()
         {
-            this.SwallowCurrent();
             this.SwallowRead();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            SwallowRead();
+            this.SwallowRead();
             this.GetWordPaged(0xff, SWI_vector);
             this.Jump(this.Intermediate);
             this.SwallowRead();
@@ -2181,7 +2080,7 @@ namespace MC6809
 
         private void SWI2()
         {
-            this.SwallowCurrent();
+            
             this.SwallowRead();
             this.SaveEntireRegisterState();
             this.SwallowRead();
@@ -2192,7 +2091,7 @@ namespace MC6809
 
         private void SWI3()
         {
-            this.SwallowCurrent();
+            
             this.SwallowRead();
             this.SaveEntireRegisterState();
             this.SwallowRead();
@@ -2201,56 +2100,36 @@ namespace MC6809
             this.SwallowRead();
         }
 
-        private void TSTA()
-        {
-            this.SwallowCurrent();
-            this.Test(this.A);
-        }
+        private void TSTA() => this.Test(this.A);
 
-        private void TSTB()
-        {
-            this.SwallowCurrent();
-            this.Test(this.B);
-        }
+        private void TSTB() => this.Test(this.B);
 
         private void TST()
         {
             this.Test(this.Bus.Data);
-            this.SwallowRead();
-            this.SwallowRead();
+            this.SwallowRead(2);
         }
 
         private void Test(byte data) => this.Compare(data, 0);
 
         private void LEAX()
         {
-            this.IndexedAddress();
             this.X.Assign(this.Intermediate);
             this.CC = this.AdjustZero(this.X);
         }
 
         private void LEAY()
         {
-            this.IndexedAddress();
             this.Y.Assign(this.Intermediate);
             this.CC = this.AdjustZero(this.Y);
         }
 
-        private void LEAS()
-        {
-            this.IndexedAddress();
-            this.S.Assign(this.Intermediate);
-        }
+        private void LEAS() => this.S.Assign(this.Intermediate);
 
-        private void LEAU()
-        {
-            this.IndexedAddress();
-            this.U.Assign(this.Intermediate);
-        }
+        private void LEAU() => this.U.Assign(this.Intermediate);
 
         private void ABX()
         {
-            this.SwallowCurrent();
             this.X.Word += this.B;
             this.SwallowRead();
         }
