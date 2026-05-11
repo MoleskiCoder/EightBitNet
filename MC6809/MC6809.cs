@@ -2139,7 +2139,7 @@ namespace MC6809
             this.SwallowRead(2);
         }
 
-        private void Test(byte data) => this.Compare(data, 0);
+        private void Test(byte data) => _ = this.Through(data);
 
         private void LEAX()
         {
