@@ -866,15 +866,10 @@ namespace MC6809
         private void LBGT() => this.BranchLong(this.GT);
         private void LBLE() => this.BranchLong(this.LE);
 
-        private void BranchShort(bool condition)
-        {
-            this.Branch(this.EA, condition);
-            this.SwallowRead();
-        }
+        private void BranchShort(bool condition) => _ = this.Branch(this.EA, condition);
 
         private void BranchLong(bool condition)
         {
-            this.SwallowRead();
             if (this.Branch(this.EA, condition))
             {
                 this.SwallowRead();
@@ -883,6 +878,7 @@ namespace MC6809
 
         private bool Branch(Register16 destination, bool condition)
         {
+            this.SwallowRead();
             if (condition)
             {
                 this.Jump(destination);
