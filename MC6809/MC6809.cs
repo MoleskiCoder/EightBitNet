@@ -34,11 +34,11 @@ namespace MC6809
         private const byte SWI2_vector = 0xf4;  // SWI2 vector
         private const byte SWI3_vector = 0xf2;  // SWI3 vector
 
-        private byte cc;
-        private byte dp;
+        private byte _cc;
+        private byte _dp;
 
-        private bool prefix10;
-        private bool prefix11;
+        private bool _prefix10;
+        private bool _prefix11;
 
         public MC6809(Bus bus)
         : base(bus)
@@ -57,9 +57,9 @@ namespace MC6809
 
         #region NMI pin
 
-        private PinLevel nmiLine = PinLevel.Low;
+        private PinLevel _nmiLine = PinLevel.Low;
 
-        public ref PinLevel NMI => ref this.nmiLine;
+        public ref PinLevel NMI => ref this._nmiLine;
 
         public event EventHandler<EventArgs>? RaisingNMI;
 
@@ -102,9 +102,9 @@ namespace MC6809
 
         #region FIRQ pin
 
-        private PinLevel firqLine = PinLevel.Low;
+        private PinLevel _firqLine = PinLevel.Low;
 
-        public ref PinLevel FIRQ => ref this.firqLine;
+        public ref PinLevel FIRQ => ref this._firqLine;
 
         public event EventHandler<EventArgs>? RaisingFIRQ;
 
@@ -147,9 +147,9 @@ namespace MC6809
 
         #region HALT pin
 
-        private PinLevel haltLine = PinLevel.Low;
+        private PinLevel _haltLine = PinLevel.Low;
 
-        public ref PinLevel HALT => ref this.haltLine;
+        public ref PinLevel HALT => ref this._haltLine;
 
         public bool Halted => this.HALT.Lowered();
 
@@ -200,11 +200,11 @@ namespace MC6809
 
         #region BA pin
 
-        private PinLevel baLine = PinLevel.Low;
+        private PinLevel _baLine = PinLevel.Low;
 
-        public ref PinLevel BA => ref this.baLine;
+        public ref PinLevel BA => ref this._baLine;
 
-        private PinLevel bsLine = PinLevel.Low;
+        private PinLevel _bsLine = PinLevel.Low;
 
         public event EventHandler<EventArgs>? RaisingBA;
 
@@ -247,7 +247,7 @@ namespace MC6809
 
         #region BS pin
 
-        public ref PinLevel BS => ref this.bsLine;
+        public ref PinLevel BS => ref this._bsLine;
 
         public event EventHandler<EventArgs>? RaisingBS;
 
@@ -290,9 +290,9 @@ namespace MC6809
 
         #region RW pin
 
-        private PinLevel rwLine = PinLevel.Low;
+        private PinLevel _rwLine = PinLevel.Low;
 
-        public ref PinLevel RW => ref this.rwLine;
+        public ref PinLevel RW => ref this._rwLine;
 
         public event EventHandler<EventArgs>? RaisingRW;
 
@@ -353,9 +353,9 @@ namespace MC6809
 
         private Register16 EA { get; } = new();
 
-        public ref byte DP => ref this.dp;
+        public ref byte DP => ref this._dp;
 
-        public ref byte CC => ref this.cc;
+        public ref byte CC => ref this._cc;
 
         #endregion
 
@@ -1211,7 +1211,7 @@ namespace MC6809
 
         public override void PoweredStep()
         {
-            this.prefix10 = this.prefix11 = false;
+            this._prefix10 = this._prefix11 = false;
             if (this.Halted)
             {
                 this.HandleHALT();
@@ -1242,11 +1242,11 @@ namespace MC6809
         {
             this.LowerBA();
             this.LowerBS();
-            if (this.prefix10)
+            if (this._prefix10)
             {
                 this.Execute10();
             }
-            else if (this.prefix11)
+            else if (this._prefix11)
             {
                 this.Execute11();
             }
@@ -2166,13 +2166,13 @@ namespace MC6809
 
         private void Prefix10()
         {
-            this.prefix10 = true;
+            this._prefix10 = true;
             this.Execute(this.FetchByte());
         }
 
         private void Prefix11()
         {
-            this.prefix11 = true;
+            this._prefix11 = true;
             this.Execute(this.FetchByte());
         }
 
