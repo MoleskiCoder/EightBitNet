@@ -36,7 +36,7 @@ namespace LR35902.FuseTest
             var allowedCycles = this.test.RegisterState.TStates;
             try
             {
-                _ = this.CPU.Run(allowedCycles);
+                this.CPU.Run(allowedCycles);
                 this.Check();
             }
             catch (InvalidOperationException error)

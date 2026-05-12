@@ -178,7 +178,7 @@
 
                 var expectedAddress = expectedCycle.Address;
                 var actualAddress = actualCycle.Address;
-                _ = this.Check("Cycle address", expectedAddress, actualAddress);
+                this.Check("Cycle address", expectedAddress, actualAddress);
 
                 Debug.Assert(expectedCycle.Value is not null);
                 var expectedValue = (byte)expectedCycle.Value;
@@ -186,11 +186,11 @@
                 Debug.Assert(actualCycle.Value is not null);
                 var actualValue = (byte)actualCycle.Value;
 
-                _ = this.Check("Cycle value", expectedValue, actualValue);
+                this.Check("Cycle value", expectedValue, actualValue);
 
                 var expectedAction = expectedCycle.Type;
                 var actualAction = actualCycle.Type;
-                _ = this.Check("Cycle action", expectedAction, actualAction);
+                this.Check("Cycle action", expectedAction, actualAction);
             }
 
             if (actualIDX < actualCycles.Count)

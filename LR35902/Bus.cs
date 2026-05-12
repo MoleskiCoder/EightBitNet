@@ -97,7 +97,7 @@ namespace LR35902
             for (var bank = 1; bank < banks; ++bank)
             {
                 var bankedROM = new Rom();
-                _ = bankedROM.Load(path, 0, bankSize * bank, bankSize);
+                bankedROM.Load(path, 0, bankSize * bank, bankSize);
                 this.gameRomBanks.Add(bankedROM);
             }
 

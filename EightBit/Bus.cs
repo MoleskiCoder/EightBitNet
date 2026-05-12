@@ -89,7 +89,7 @@ namespace EightBit
             {
                 var mapped = this.Mapping(address);
                 var offset = address - mapped.Begin;
-                _ = mapped.Memory.Load(content, offset);
+                mapped.Memory.Load(content, offset);
             }
         }
     }

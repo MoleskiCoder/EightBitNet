@@ -48,7 +48,7 @@ namespace Z80.Test
         {
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            _ = this.ram.Load(programPath, loadAddress.Word);
+            this.ram.Load(programPath, loadAddress.Word);
 
             this.CPU.LoweredHALT += this.CPU_LoweredHALT;
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_CPM;

@@ -92,14 +92,14 @@ namespace EightBit
         {
             if (this.HALT.Raised())
             {
-                _ = base.IncrementPC();
+                base.IncrementPC();
             }
             return this.PC;
         }
 
         protected override byte FetchInstruction()
         {
-            _ = this.FetchByte();
+            this.FetchByte();
             return this.HALT.Lowered() ? (byte)0 : this.Bus.Data;
         }
 
@@ -150,8 +150,8 @@ namespace EightBit
 
         protected sealed override byte Pop()
         {
-            _ = this.MemoryRead(this.SP);
-            _ = this.SP.Increment();
+            this.MemoryRead(this.SP);
+            this.SP.Increment();
             return this.Bus.Data;
         }
 
@@ -178,7 +178,7 @@ namespace EightBit
         protected byte ReadMemoryIndirect()
         {
             this.Bus.Address.Assign(this.MEMPTR);
-            _ = this.MEMPTR.Increment();
+            this.MEMPTR.Increment();
             return this.MemoryRead();
         }
 
@@ -191,7 +191,7 @@ namespace EightBit
         protected void WriteMemoryIndirect(byte data)
         {
             this.Bus.Address.Assign(this.MEMPTR);
-            _ = this.MEMPTR.Increment();
+            this.MEMPTR.Increment();
             this.MEMPTR.High = this.Bus.Data = data;
             this.MemoryWrite();
         }

@@ -605,8 +605,8 @@ namespace MC6809
 
         private byte Pop(Register16 stack)
         {
-            _ = this.MemoryRead(stack);
-            _ = stack.Increment();
+            this.MemoryRead(stack);
+            stack.Increment();
             return this.Bus.Data;
         }
 
@@ -626,7 +626,7 @@ namespace MC6809
         protected override void ImmediateAddress()
         {
             this.EA.Assign(this.PC);
-            _ = this.IncrementPC();
+            this.IncrementPC();
         }
 
         private void RelativeByteAddress()
@@ -910,7 +910,7 @@ namespace MC6809
         private void LBGT() => this.BranchLong(this.GT);
         private void LBLE() => this.BranchLong(this.LE);
 
-        private void BranchShort(bool condition) => _ = this.Branch(this.EA, condition);
+        private void BranchShort(bool condition) => this.Branch(this.EA, condition);
 
         private void BranchLong(bool condition)
         {
@@ -1205,7 +1205,7 @@ namespace MC6809
         {
             for (int i = 0; i < ticks; i++)
             {
-                _ = this.MemoryRead(0xff, 0xff);
+                this.MemoryRead(0xff, 0xff);
             }
         }
 
@@ -1213,13 +1213,13 @@ namespace MC6809
         {
             for (int i = 0; i < ticks; i++)
             {
-                _ = this.MemoryRead(this.PC);
+                this.MemoryRead(this.PC);
             }
         }
 
-        private void SwallowPop(Register16 stack) => _ = this.MemoryRead(stack);
+        private void SwallowPop(Register16 stack) => this.MemoryRead(stack);
 
-        private void SwallowEffectiveAddress() => _ = this.MemoryRead(this.EA);
+        private void SwallowEffectiveAddress() => this.MemoryRead(this.EA);
 
         private void SwallowSpin(int ticks = 1)
         {
@@ -2159,7 +2159,7 @@ namespace MC6809
             this.SwallowRead(2);
         }
 
-        private void Test(byte data) => _ = this.Through(data);
+        private void Test(byte data) => this.Through(data);
 
         private void LEAX()
         {

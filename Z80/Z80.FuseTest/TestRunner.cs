@@ -69,7 +69,7 @@ namespace Z80.FuseTest
             var allowedCycles = this.test.RegisterState.TStates;
             try
             {
-                _ = this.cpu.Run(allowedCycles);
+                this.cpu.Run(allowedCycles);
                 this.Check();
             }
             catch (InvalidOperationException error)

@@ -30,7 +30,7 @@ namespace EightBit
         {
             ArgumentNullException.ThrowIfNull(into);
             into.High = this.MemoryRead();
-            _ = this.Bus.Address.Increment();
+            this.Bus.Address.Increment();
             into.Low = this.MemoryRead();
         }
 
@@ -60,7 +60,7 @@ namespace EightBit
         {
             ArgumentNullException.ThrowIfNull(value);
             this.MemoryWrite(value.High);
-            _ = this.Bus.Address.Increment();
+            this.Bus.Address.Increment();
             this.MemoryWrite(value.Low);
         }
 

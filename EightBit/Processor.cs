@@ -208,7 +208,7 @@ namespace EightBit
         protected virtual void ImmediateAddress()
         {
             this.Bus.Address.Assign(this.PC);
-            _ = this.IncrementPC();
+            this.IncrementPC();
         }
 
         protected virtual byte FetchByte()

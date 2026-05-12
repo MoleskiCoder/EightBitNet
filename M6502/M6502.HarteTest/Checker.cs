@@ -172,15 +172,15 @@
 
                 var expectedAddress = expectedCycle.Address;
                 var actualAddress = actualCycle.Address;
-                _ = this.Check("Cycle address", expectedAddress, actualAddress);
+                this.Check("Cycle address", expectedAddress, actualAddress);
 
                 var expectedValue = expectedCycle.Value;
                 var actualValue = actualCycle.Value;
-                _ = this.Check("Cycle value", expectedValue, actualValue);
+                this.Check("Cycle value", expectedValue, actualValue);
 
                 var expectedAction = expectedCycle.Type;
                 var actualAction = actualCycle.Type;
-                _ = this.Check("Cycle action", expectedAction, actualAction);
+                this.Check("Cycle action", expectedAction, actualAction);
             }
 
             if (actualIDX < actualCycles.Count)

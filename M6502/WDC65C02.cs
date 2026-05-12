@@ -390,7 +390,7 @@ namespace M6502
 
         private void BranchBit(bool condition)
         {
-            _ = this.FetchByte();
+            this.FetchByte();
             if (condition)
             {
                 var relative = (sbyte)this.Bus.Data;

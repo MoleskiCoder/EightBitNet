@@ -306,11 +306,11 @@ namespace M6502
 
         #region Cycle wastage
 
-        protected void SwallowRead() => _ = this.MemoryRead(this.PC);
+        protected void SwallowRead() => this.MemoryRead(this.PC);
 
-        protected void SwallowPop() => _ = this.MemoryRead(this.S, 1);
+        protected void SwallowPop() => this.MemoryRead(this.S, 1);
 
-        protected void SwallowFetch() => _ = this.FetchByte();
+        protected void SwallowFetch() => this.FetchByte();
 
         #endregion
 
@@ -776,7 +776,7 @@ namespace M6502
                 var relative = (sbyte)this.Bus.Data;
                 this.SwallowRead();
                 this.FixupBranch(relative);
-                this.Jump(this.Bus.Address);
+                this.JMP();
             }
         }
 
@@ -929,7 +929,7 @@ namespace M6502
 
         private byte DecimalSUB(byte operand, int borrow)
         {
-            _ = this.BinarySUB(operand, borrow);
+            this.BinarySUB(operand, borrow);
 
             var data = this.Bus.Data;
             var low = (byte)(LowNibble(operand) - LowNibble(data) - borrow);

@@ -182,7 +182,7 @@
                 {
                     this.addressCycleDistributions[this.executingAddress] = addressDistribution = [];
                 }
-                _ = addressDistribution.TryGetValue(cycles, out var current);
+                addressDistribution.TryGetValue(cycles, out var current);
                 addressDistribution[cycles] = ++current;
             }
 
@@ -194,7 +194,7 @@
                 {
                     var id = scope.ID;
                     // Current will be initialised to zero, if absent
-                    _ = this.scopeCycles.TryGetValue(id, out var current);
+                    this.scopeCycles.TryGetValue(id, out var current);
                     this.scopeCycles[id] = current + cycles;
                 }
             }

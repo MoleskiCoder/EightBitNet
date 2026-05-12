@@ -792,7 +792,7 @@ namespace Intel8080
             this.Bus.Data = exchange.High;
             exchange.High = this.MEMPTR.High;
             this.MemoryUpdate(2);
-            _ = this.Bus.Address.Decrement();
+            this.Bus.Address.Decrement();
             this.Bus.Data = exchange.Low;
             exchange.Low = this.MEMPTR.Low;
             this.MemoryUpdate();

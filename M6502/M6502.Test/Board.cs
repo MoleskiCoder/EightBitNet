@@ -71,7 +71,7 @@ namespace M6502.Test
 
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            _ = this.ram.Load(programPath, loadAddress.Word);
+            this.ram.Load(programPath, loadAddress.Word);
 
             if (this.configuration.DebugMode)
             {
@@ -196,13 +196,13 @@ namespace M6502.Test
 
             var output = new StringBuilder();
 
-            _ = output.Append(CultureInfo.InvariantCulture, $"PC={Disassembler.DumpWordValue(address)}:");
-            _ = output.Append(CultureInfo.InvariantCulture, $"P={Disassembler.DumpFlags(this.CPU.P)}, ");
-            _ = output.Append(CultureInfo.InvariantCulture, $"A={Disassembler.DumpByteValue(this.CPU.A)}, ");
-            _ = output.Append(CultureInfo.InvariantCulture, $"X={Disassembler.DumpByteValue(this.CPU.X)}, ");
-            _ = output.Append(CultureInfo.InvariantCulture, $"Y={Disassembler.DumpByteValue(this.CPU.Y)}, ");
-            _ = output.Append(CultureInfo.InvariantCulture, $"S={Disassembler.DumpByteValue(this.CPU.S)}\t");
-            _ = output.Append(this.disassembler.Disassemble(address));
+            output.Append(CultureInfo.InvariantCulture, $"PC={Disassembler.DumpWordValue(address)}:");
+            output.Append(CultureInfo.InvariantCulture, $"P={Disassembler.DumpFlags(this.CPU.P)}, ");
+            output.Append(CultureInfo.InvariantCulture, $"A={Disassembler.DumpByteValue(this.CPU.A)}, ");
+            output.Append(CultureInfo.InvariantCulture, $"X={Disassembler.DumpByteValue(this.CPU.X)}, ");
+            output.Append(CultureInfo.InvariantCulture, $"Y={Disassembler.DumpByteValue(this.CPU.Y)}, ");
+            output.Append(CultureInfo.InvariantCulture, $"S={Disassembler.DumpByteValue(this.CPU.S)}\t");
+            output.Append(this.disassembler.Disassemble(address));
 
             Console.Out.WriteLine(output.ToString());
         }

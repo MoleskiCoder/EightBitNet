@@ -243,7 +243,7 @@ namespace LR35902
 
         private void LR35902_RaisingHALT(object? sender, EventArgs e)
         {
-            _ = this.PC.Increment();
+            this.PC.Increment();
         }
 
         protected override void HandleRESET()
@@ -360,7 +360,7 @@ namespace LR35902
             this.OnReadingMemory();
             this.LowerMWR();
                 this.LowerRD();
-                    _ = base.MemoryRead();
+                    base.MemoryRead();
                     this.TickMachine();
                 this.RaiseRD();
             this.RaiseMWR();
@@ -590,13 +590,13 @@ namespace LR35902
 
                                         case 2: // GB: LDI (HL),A
                                             this.Bus.Address.Assign(this.HL);
-                                            _ = this.HL.Increment();
+                                            this.HL.Increment();
                                             this.MemoryWrite(this.A);
                                             break;
 
                                         case 3: // GB: LDD (HL),A
                                             this.Bus.Address.Assign(this.HL);
-                                            _ = this.HL.Decrement();
+                                            this.HL.Decrement();
                                             this.MemoryWrite(this.A);
                                             break;
 
@@ -616,12 +616,12 @@ namespace LR35902
                                             break;
                                         case 2:   // GB: LDI A,(HL)
                                             this.Bus.Address.Assign(this.HL);
-                                            _ = this.HL.Increment();
+                                            this.HL.Increment();
                                             this.A = this.MemoryRead();
                                             break;
                                         case 3:   // GB: LDD A,(HL)
                                             this.Bus.Address.Assign(this.HL);
-                                            _ = this.HL.Decrement();
+                                            this.HL.Decrement();
                                             this.A = this.MemoryRead();
                                             break;
                                         default:
@@ -639,11 +639,11 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // INC rp
-                                    _ = this.RP(p).Increment();
+                                    this.RP(p).Increment();
                                     break;
                                 
                                 case 1: // DEC rp
-                                    _ = this.RP(p).Decrement();
+                                    this.RP(p).Decrement();
                                     break;
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
