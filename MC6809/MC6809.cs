@@ -2165,17 +2165,27 @@ namespace MC6809
         {
             this.LEA(this.X);
             this.CC = this.AdjustZero(this.X);
+            this.SwallowRead();
         }
 
         private void LEAY()
         {
             this.LEA(this.Y);
             this.CC = this.AdjustZero(this.Y);
+            this.SwallowRead();
         }
 
-        private void LEAS() => this.LEA(this.S);
+        private void LEAS()
+        {
+            this.LEA(this.S);
+            this.SwallowRead();
+        }
 
-        private void LEAU() => this.LEA(this.U);
+        private void LEAU()
+        {
+            this.LEA(this.U);
+            this.SwallowRead();
+        }
 
         private void LEA(Register16 register) => register.Assign(this.EA);
 
