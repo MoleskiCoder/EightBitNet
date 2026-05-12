@@ -36,7 +36,7 @@ namespace M6502
         protected override void Interrupt(byte vector, InterruptSource source, InterruptType type)
         {
             base.Interrupt(vector, source, type);
-            this.ClearDecimal();  // Disable decimal mode (Change from MOS6502)
+            this.CLD();  // Disable decimal mode (Change from MOS6502)
         }
 
         #endregion
