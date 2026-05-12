@@ -4,14 +4,14 @@
 
 namespace EightBit
 {
-    public static class Program
+    internal static class Program
     {
         public static void Main(string[] args)
         {
             var configuration = new Configuration();
 
 #if DEBUG
-            //configuration.DebugMode = true;
+            configuration.DebugMode = true;
 #endif
 
             var harness = new TestHarness(configuration);
