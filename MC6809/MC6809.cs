@@ -514,19 +514,23 @@ namespace MC6809
             this.DP = 0;
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.GetPagedInto(0xff, RESET_vector, this.EA);
-            this.Jump(this.EA);
+            this.Bus.Address.Assign(RESET_vector, 0xff);
+            this.SwallowSpin(3);
+            this.GetPagedInto(this.PC);
+            this.SwallowRead();
         }
 
         protected override void HandleINT()
         {
             base.HandleINT();
+            this.SwallowCurrent(2);
             this.LowerBA();
             this.RaiseBS();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.GetPagedInto(0xff, IRQ_vector, this.EA);
-            this.Jump(this.EA);
+            this.SwallowRead();
+            this.GetPagedInto(0xff, IRQ_vector, this.PC);
+            this.SwallowRead();
         }
 
         private void HandleHALT()
@@ -537,26 +541,30 @@ namespace MC6809
 
         private void HandleNMI()
         {
+            this.SwallowCurrent(2);
             this.RaiseNMI();
             this.LowerBA();
             this.RaiseBS();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.GetPagedInto(0xff, NMI_vector, this.EA);
-            this.Jump(this.EA);
+            this.SwallowRead();
+            this.GetPagedInto(0xff, NMI_vector, this.PC);
+            this.SwallowRead();
         }
 
         private void HandleFIRQ()
         {
+            this.SwallowCurrent(2);
             this.RaiseFIRQ();
             this.LowerBA();
             this.RaiseBS();
             this.SavePartialRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.GetPagedInto(0xff, FIRQ_vector, this.EA);
-            this.Jump(this.EA);
+            this.SwallowRead();
+            this.GetPagedInto(0xff, FIRQ_vector, this.PC);
+            this.SwallowRead();
         }
 
         #endregion
@@ -939,9 +947,16 @@ namespace MC6809
             this.SaveRegisterState();
         }
 
-        private void SaveRegisterState() => this.PSH(this.S, this.E ? (byte)Mask.Eight : (byte)0b10000001);
+        private void SaveRegisterState()
+        {
+            this.SwallowRead();
+            this.PSH(this.S, this.E ? (byte)Mask.Eight : (byte)0b10000001);
+        }
 
-        private void RestoreRegisterState() => this.PUL(this.S, this.E ? (byte)Mask.Eight : (byte)0b10000001);
+        private void RestoreRegisterState()
+        {
+            this.PUL(this.S, this.E ? (byte)Mask.Eight : (byte)0b10000001);
+        }
 
         private void PSHS() => this.PSH(this.S);
         private void PSHU() => this.PSH(this.U);
@@ -1206,6 +1221,14 @@ namespace MC6809
 
         private void SwallowEffectiveAddress() => _ = this.MemoryRead(this.EA);
 
+        private void SwallowSpin(int ticks = 1)
+        {
+            for (int i = 0; i < ticks; i++)
+            {
+                this.MemoryRead();
+            }
+        }
+
         #endregion
 
         #region Instruction execution
@@ -1371,7 +1394,7 @@ namespace MC6809
                 case 0x73: this.ExtendedByte(); this.COM(); Debug.Assert(this.Cycles == 7); break;          // COM (extended)
 
                 // CWAI
-                case 0x3c: this.SwallowCurrent(); this.CWAI(); break;                                       // CWAI (inherent) - cycles omitted: halts before full interrupt response
+                case 0x3c: this.ImmediateByte(); this.CWAI(); break;                                        // CWAI (immediate) - cycles omitted: halts before full interrupt response
 
                 // DAA
                 case 0x19: this.SwallowCurrent(); this.DAA(); Debug.Assert(this.Cycles == 2); break;        // DAA (inherent)
@@ -1861,9 +1884,10 @@ namespace MC6809
 
         private void CWAI()
         {
-            this.SwallowRead();
             this.CC &= this.Bus.Data;
+            this.SwallowCurrent();
             this.SaveEntireRegisterState();
+            this.SwallowRead();
             this.Halt();
         }
 
@@ -2097,7 +2121,6 @@ namespace MC6809
 
         private void SWI()
         {
-            this.SwallowRead();
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
@@ -2110,7 +2133,6 @@ namespace MC6809
         private void SWI2()
         {
             
-            this.SwallowRead();
             this.SaveEntireRegisterState();
             this.SwallowRead();
             this.GetPagedInto(0xff, SWI2_vector, this.EA);
@@ -2120,8 +2142,6 @@ namespace MC6809
 
         private void SWI3()
         {
-            
-            this.SwallowRead();
             this.SaveEntireRegisterState();
             this.SwallowRead();
             this.GetPagedInto(0xff, SWI3_vector, this.EA);
