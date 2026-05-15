@@ -14,6 +14,8 @@ namespace M6502
             this.RaisedPOWER += this.Core_RaisedPOWER;
         }
 
+        protected bool ImmediateInstruction { get; private set; }
+
         #region Pin controls
 
         #region NMI pin
@@ -259,7 +261,7 @@ namespace M6502
         #region Processor state helpers
 
         protected int InterruptMasked => this.P & (byte)StatusBits.IF;
-        protected int DecimalMasked => this.P & (byte)StatusBits.DF;
+        protected int Denary => this.P & (byte)StatusBits.DF;
         protected int Negative => NegativeTest(this.P);
         protected int Zero => ZeroTest(this.P);
         protected int Overflow => OverflowTest(this.P);
@@ -340,7 +342,6 @@ namespace M6502
                 case 0x18: this.SwallowRead(); this.CLC(); break;                           // CLC (implied)
                 case 0x19: this.AbsoluteY(); this.ORA(); break;                             // ORA (absolute, Y)
                 case 0x1d: this.AbsoluteX(); this.ORA(); break;                             // ORA (absolute, X)
-                case 0x1e: this.AbsoluteXAddress(); this.FixupRead(); this.ASL(); break;    // ASL (absolute, X)
 
                 case 0x20: this.JSR(); break;                                               // JSR (absolute)
                 case 0x21: this.IndexedIndirectX(); this.AND(); break;                      // AND (indexed indirect X)
@@ -361,7 +362,6 @@ namespace M6502
                 case 0x38: this.SwallowRead(); this.SEC(); break;                           // SEC (implied)
                 case 0x39: this.AbsoluteY(); this.AND(); break;                             // AND (absolute, Y)
                 case 0x3d: this.AbsoluteX(); this.AND(); break;                             // AND (absolute, X)
-                case 0x3e: this.AbsoluteXAddress(); this.FixupRead(); this.ROL(); break;    // ROL (absolute, X)
 
                 case 0x40: this.SwallowRead(); this.RTI(); break;                           // RTI (implied)
                 case 0x41: this.IndexedIndirectX(); this.EOR(); break;                      // EOR (indexed indirect X)
@@ -383,7 +383,6 @@ namespace M6502
                 case 0x58: this.SwallowRead(); this.CLI(); break;                           // CLI (implied)
                 case 0x59: this.AbsoluteY(); this.EOR(); break;                             // EOR (absolute, Y)
                 case 0x5d: this.AbsoluteX(); this.EOR(); break;                             // EOR (absolute, X)
-                case 0x5e: this.AbsoluteXAddress(); this.FixupRead(); this.LSR(); break;    // LSR (absolute, X)
 
                 case 0x60: this.SwallowRead(); this.RTS(); break;                           // RTS (implied)
                 case 0x61: this.IndexedIndirectX(); this.ADC(); break;                      // ADC (indexed indirect X)
@@ -403,7 +402,6 @@ namespace M6502
                 case 0x78: this.SwallowRead(); this.SEI(); break;                           // SEI (implied)
                 case 0x79: this.AbsoluteY(); this.ADC(); break;                             // ADC (absolute, Y)
                 case 0x7d: this.AbsoluteX(); this.ADC(); break;                             // ADC (absolute, X)
-                case 0x7e: this.AbsoluteXAddress(); this.FixupRead(); this.ROR(); break;	// ROR (absolute, X)
 
                 case 0x81: this.IndexedIndirectXAddress(); this.STA(); break;               // STA (indexed indirect X)
                 case 0x82: this.Immediate(); NOP(); break;                                  // *NOP (immediate)
@@ -514,6 +512,7 @@ namespace M6502
 
             if (this.RDY.Raised())
             {
+                this.ImmediateInstruction = false;
                 this.OpCode = this.FetchInstruction();
                 if (this.RESET.Lowered())
                 {
@@ -709,7 +708,11 @@ namespace M6502
 
         #region Address and read
 
-        protected void Immediate() => this.FetchByte();
+        protected void Immediate()
+        {
+            this.ImmediateInstruction = true;
+            this.FetchByte();
+        }
 
         protected void Absolute()
         {
@@ -908,26 +911,26 @@ namespace M6502
             this.SetFlag(StatusBits.VF, NegativeTest((byte)((operand ^ data) & (operand ^ intermediate))));
         }
 
-        protected void SBC()
+        protected virtual void SBC()
         {
             var operand = this.A;
             this.A = this.SUB(operand, CarryTest((byte)~this.P));
 
-            this.AdjustOverflowSubtract(operand);
-            this.AdjustNZ(this.Intermediate.Low);
-            this.ResetFlag(StatusBits.CF, this.Intermediate.High);
+            this.PostSUB(operand);
+            //this.AdjustOverflowSubtract(operand);
+            //this.ResetFlag(StatusBits.CF, this.Intermediate.High);
         }
 
-        private byte SUB(byte operand, int borrow) => this.DecimalMasked != 0 ? this.DecimalSUB(operand, borrow) : this.BinarySUB(operand, borrow);
+        private byte SUB(byte operand, int borrow) => this.Denary != 0 ? this.DecimalSUB(operand, borrow) : this.BinarySUB(operand, borrow);
 
-        protected byte BinarySUB(byte operand, int borrow = 0)
+        protected virtual byte BinarySUB(byte operand, int borrow = 0)
         {
             var data = this.Bus.Data;
             this.Intermediate.Word = (ushort)(operand - data - borrow);
             return this.Intermediate.Low;
         }
 
-        private byte DecimalSUB(byte operand, int borrow)
+        protected virtual byte DecimalSUB(byte operand, int borrow)
         {
             this.BinarySUB(operand, borrow);
 
@@ -949,6 +952,12 @@ namespace M6502
             return (byte)(PromoteNibble(high) | LowNibble(low));
         }
 
+        protected virtual void PostSUB(byte operand)
+        {
+            this.AdjustOverflowSubtract(operand);
+            this.ResetFlag(StatusBits.CF, this.Intermediate.High);
+        }
+
         #endregion
 
         #region Addition
@@ -960,11 +969,11 @@ namespace M6502
             this.SetFlag(StatusBits.VF, NegativeTest((byte)(~(operand ^ data) & (operand ^ intermediate))));
         }
 
-        protected void ADC() => this.ADC(this.Bus.Data);
+        protected virtual void ADC() => this.ADC(this.Bus.Data);
 
-        protected void ADC(byte data) => this.A = this.DecimalMasked != 0 ? this.DecimalADC(data) : this.BinaryADC(data);
+        protected void ADC(byte data) => this.A = this.Denary != 0 ? this.DecimalADC(data) : this.BinaryADC(data);
 
-        private byte BinaryADC(byte data)
+        protected virtual byte BinaryADC(byte data)
         {
             var operand = this.A;
             this.Intermediate.Word = (ushort)(operand + data + this.Carry);
@@ -972,12 +981,10 @@ namespace M6502
             this.AdjustOverflowAdd(operand);
             this.SetFlag(StatusBits.CF, CarryTest(this.Intermediate.High));
 
-            this.AdjustNZ(this.Intermediate.Low);
-
             return this.Intermediate.Low;
         }
 
-        private byte DecimalADC(byte data)
+        protected virtual byte DecimalADC(byte data)
         {
             var operand = this.A;
 
@@ -1025,11 +1032,13 @@ namespace M6502
 
         protected void EOR(byte data) => this.A = this.Through(this.A ^ data);
 
+        protected void BitSet(byte mask) => this.AdjustZero((byte)(this.A & mask));
+
         protected void BIT()
         {
             var data = this.Bus.Data;
             this.SetFlag(StatusBits.VF, OverflowTest(data));
-            this.AdjustZero((byte)(this.A & data));
+            this.BitSet(data);
             this.AdjustNegative(data);
         }
 

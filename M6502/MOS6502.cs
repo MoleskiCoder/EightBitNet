@@ -35,6 +35,7 @@ namespace M6502
                 case 0x1a: this.SwallowRead(); NOP(); break;                                                // *NOP (implied)
                 case 0x1b: this.AbsoluteYAddress(); this.FixupRead(); this.SLO(); break;                    // *SLO (absolute, Y)
                 case 0x1c: this.AbsoluteXAddress(); this.MaybeFixupRead(); NOP(); break;                    // *NOP (absolute, X)
+                case 0x1e: this.AbsoluteXAddress(); this.FixupRead(); this.ASL(); break;                    // ASL (absolute, X)
                 case 0x1f: this.AbsoluteXAddress(); this.FixupRead(); this.SLO(); break;                    // *SLO (absolute, X)
 
                 case 0x22: this.SwallowRead(); this.JAM(); break;                                           // *JAM
@@ -50,6 +51,7 @@ namespace M6502
                 case 0x3a: this.SwallowRead(); NOP(); break;                                                // *NOP (implied)
                 case 0x3b: this.AbsoluteYAddress(); this.FixupRead(); this.RLA(); break;                    // *RLA (absolute, Y)
                 case 0x3c: this.AbsoluteXAddress(); this.MaybeFixupRead(); NOP(); break;                    // *NOP (absolute, X)
+                case 0x3e: this.AbsoluteXAddress(); this.FixupRead(); this.ROL(); break;                    // ROL (absolute, X)
                 case 0x3f: this.AbsoluteXAddress(); this.FixupRead(); this.RLA(); break;                    // *RLA (absolute, X)
 
                 case 0x42: this.SwallowRead(); this.JAM(); break;                                           // *JAM
@@ -64,6 +66,7 @@ namespace M6502
                 case 0x5a: this.SwallowRead(); NOP(); break;                                                // *NOP (implied)
                 case 0x5b: this.AbsoluteYAddress(); this.FixupRead(); this.SRE(); break;                    // *SRE (absolute, Y)
                 case 0x5c: this.AbsoluteXAddress(); this.MaybeFixupRead(); NOP(); break;                    // *NOP (absolute, X)
+                case 0x5e: this.AbsoluteXAddress(); this.FixupRead(); this.LSR(); break;                    // LSR (absolute, X)
                 case 0x5f: this.AbsoluteXAddress(); this.FixupRead(); this.SRE(); break;                    // *SRE (absolute, X)
 
                 case 0x62: this.SwallowRead(); this.JAM(); break;                                           // *JAM
@@ -80,6 +83,7 @@ namespace M6502
                 case 0x7a: this.SwallowRead(); NOP(); break;                                                // *NOP (implied)
                 case 0x7b: this.AbsoluteYAddress(); this.FixupRead(); this.RRA(); break;                    // *RRA (absolute, Y)
                 case 0x7c: this.AbsoluteXAddress(); this.MaybeFixupRead(); NOP(); break;                    // *NOP (absolute, X)
+                case 0x7e: this.AbsoluteXAddress(); this.FixupRead(); this.ROR(); break;	                // ROR (absolute, X)
                 case 0x7f: this.AbsoluteXAddress(); this.FixupRead(); this.RRA(); break;                    // *RRA (absolute, X)
 
                 case 0x80: this.FetchByte(); NOP(); break;                                                  // *NOP (immediate)
@@ -186,7 +190,7 @@ namespace M6502
         private void ARR()
         {
             var value = this.Bus.Data;
-            if (this.DecimalMasked != 0)
+            if (this.Denary != 0)
                 this.ARR_d(value);
             else
                 this.ARR_b(value);
@@ -331,6 +335,32 @@ namespace M6502
         {
             this.DEC();
             this.CMP();
+        }
+
+        #endregion
+
+        #region Processor variations
+
+        protected override byte BinaryADC(byte data)
+        {
+            var returned = base.BinaryADC(data);
+            this.AdjustNZ(returned);
+            return returned;
+        }
+
+        protected override byte BinarySUB(byte operand, int borrow = 0)
+        {
+            var returned = base.BinarySUB(operand, borrow);
+            this.AdjustNZ(this.Intermediate.Low);
+            return returned;
+
+        }
+
+        protected override byte DecimalSUB(byte operand, int borrow)
+        {
+            var returned = base.DecimalSUB(operand, borrow);
+            this.AdjustNZ(this.Intermediate.Low);
+            return returned;
         }
 
         #endregion
