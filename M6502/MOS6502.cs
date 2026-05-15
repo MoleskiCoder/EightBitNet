@@ -343,24 +343,24 @@ namespace M6502
 
         protected override byte BinaryADC(byte data)
         {
-            var returned = base.BinaryADC(data);
-            this.AdjustNZ(returned);
-            return returned;
+            var result = base.BinaryADC(data);
+            this.AdjustNZ(result);
+            return result;
         }
 
         protected override byte BinarySUB(byte operand, int borrow = 0)
         {
-            var returned = base.BinarySUB(operand, borrow);
-            this.AdjustNZ(this.Intermediate.Low);
-            return returned;
+            var result = base.BinarySUB(operand, borrow);
+            this.AdjustNZ(result);
+            return result;
 
         }
 
         protected override byte DecimalSUB(byte operand, int borrow)
         {
-            var returned = base.DecimalSUB(operand, borrow);
+            var result = base.DecimalSUB(operand, borrow);
             this.AdjustNZ(this.Intermediate.Low);
-            return returned;
+            return result;
         }
 
         #endregion

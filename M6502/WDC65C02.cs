@@ -296,24 +296,18 @@ namespace M6502
             return returned;
         }
 
-        protected override void SBC()
+        protected override void PostSUB(byte operand)
         {
-            base.SBC();
-            if (this.Denary != 0)
-            {
-                this.AdjustNZ(this.A);
-                if (this.ImmediateInstruction)
-                    this.MemoryRead(0x00, 0x00);
-                else
-                    this.SwallowSpin();
-            }
+            // PostSUB needs to be empty, so we can sort out the
+            // post calculations memory operations in DecimalSUB.
         }
 
         protected override byte BinarySUB(byte operand, int borrow = 0)
         {
-            var returned = base.BinarySUB(operand, borrow);
-            this.AdjustNZ(this.Intermediate.Low);
-            return returned;
+            var result = base.BinarySUB(operand, borrow);
+            base.PostSUB(operand);
+            this.AdjustNZ(result);
+            return result;
         }
 
         protected override byte DecimalSUB(byte operand, int borrow)
@@ -333,6 +327,14 @@ namespace M6502
             {
                 result -= 0x60;
             }
+
+            base.PostSUB(operand);
+            this.AdjustNZ(result);
+
+            if (this.ImmediateInstruction)
+                this.MemoryRead(0x00, 0x00);
+            else
+                this.SwallowSpin();
 
             return result;
         }

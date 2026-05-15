@@ -915,10 +915,7 @@ namespace M6502
         {
             var operand = this.A;
             this.A = this.SUB(operand, CarryTest((byte)~this.P));
-
             this.PostSUB(operand);
-            //this.AdjustOverflowSubtract(operand);
-            //this.ResetFlag(StatusBits.CF, this.Intermediate.High);
         }
 
         private byte SUB(byte operand, int borrow) => this.Denary != 0 ? this.DecimalSUB(operand, borrow) : this.BinarySUB(operand, borrow);
