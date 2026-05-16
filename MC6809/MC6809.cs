@@ -593,7 +593,11 @@ namespace MC6809
 
         protected override void Push(byte value) => this.PushS(value);
 
-        private void Push(Register16 stack, byte value) => this.MemoryWrite(stack.Decrement(), value);
+        private void Push(Register16 stack, byte value)
+        {
+            stack.Decrement();
+            this.MemoryWrite(stack, value);
+        }
 
         private void PushS(byte value) => this.Push(this.S, value);
 

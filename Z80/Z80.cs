@@ -2004,7 +2004,8 @@ namespace Z80
 
         private void RepeatBlockInstruction()
         {
-            this.MEMPTR.Assign(this.DecrementPC());
+            this.DecrementPC();
+            this.MEMPTR.Assign(this.PC);
             this.DecrementPC();
             this.AdjustXY(this.PC.High);
         }

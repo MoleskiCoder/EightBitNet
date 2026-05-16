@@ -4,13 +4,10 @@
 
 namespace EightBit
 {
-    using System.Runtime.InteropServices;
-
-    [StructLayout(LayoutKind.Explicit, Size = 2)]
     public sealed class Register16
     {
-        [FieldOffset(0)] private byte _low;
-        [FieldOffset(1)] private byte _high;
+        private byte _low;
+        private byte _high;
 
         public Register16(byte low, byte high)
         {
@@ -44,26 +41,18 @@ namespace EightBit
 
         public Register16(Register16 rhs)
         {
-            ArgumentNullException.ThrowIfNull(rhs);
+            //ArgumentNullException.ThrowIfNull(rhs);
             this.Low = rhs.Low;
             this.High = rhs.High;
         }
 
-        public unsafe ushort Word
+        public ushort Word
         {
-            get
-            {
-                fixed (byte* bytes = &this._low)
-                {
-                    return *(ushort*)bytes;
-                }
-            }
+            get => Chip.MakeWord(this._low, this._high);
             set
             {
-                fixed (byte* bytes = &this._low)
-                {
-                    *(ushort*)bytes = value;
-                }
+                this._low = Chip.LowByte(value);
+                this._high = Chip.HighByte(value);
             }
         }
 
@@ -73,7 +62,7 @@ namespace EightBit
 
         public static bool operator ==(Register16 left, Register16 right)
         {
-            ArgumentNullException.ThrowIfNull(left);
+            //ArgumentNullException.ThrowIfNull(left);
             return left.Equals(right);
         }
 
@@ -93,21 +82,13 @@ namespace EightBit
 
         public void Assign(Register16 from)
         {
-            ArgumentNullException.ThrowIfNull(from);
+            //ArgumentNullException.ThrowIfNull(from);
             this.Low = from.Low;
             this.High = from.High;
         }
 
-        public Register16 Increment()
-        {
-            ++this.Word;
-            return this;
-        }
+        public void Increment() => ++this.Word;
 
-        public Register16 Decrement()
-        {
-            --this.Word;
-            return this;
-        }
+        public void Decrement() => --this.Word;
     }
 }

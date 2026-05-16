@@ -380,14 +380,19 @@ namespace Intel8080
 
                             break;
                         case 3: // 16-bit INC/DEC
-                            _ = q switch
+                            switch(q)
                             {
                                 // INC rp
-                                0 => this.RP(p).Increment(),
+                                case 0:
+                                    this.RP(p).Increment();
+                                    break;
                                 // DEC rp
-                                1 => this.RP(p).Decrement(),
-                                _ => throw new NotSupportedException("Invalid operation mode"),
-                            };
+                                case 1:
+                                    this.RP(p).Decrement();
+                                    break;
+                                default:
+                                    throw new NotSupportedException("Invalid operation mode");
+                            }
                             this.Tick();
                             break;
                         case 4: // 8-bit INC

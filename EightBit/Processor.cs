@@ -201,9 +201,9 @@ namespace EightBit
 
         protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
-        protected virtual Register16 IncrementPC() => this.PC.Increment();
+        protected virtual void IncrementPC() => this.PC.Increment();
 
-        protected virtual Register16 DecrementPC() => this.PC.Decrement();
+        protected virtual void DecrementPC() => this.PC.Decrement();
 
         protected virtual void ImmediateAddress()
         {
