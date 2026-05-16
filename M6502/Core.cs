@@ -554,14 +554,19 @@ namespace M6502
 
         protected sealed override void BusWrite()
         {
-            this.Tick();
-            this.WriteToBus();
+            this.OnWritingMemory();
+                this.Tick();
+                this.WriteToBus();
+            this.OnWrittenMemory();
         }
 
         protected sealed override byte BusRead()
         {
-            this.Tick();
-            return this.ReadFromBus();
+            this.OnReadingMemory();
+                this.Tick();
+                this.ReadFromBus();
+            this.OnReadMemory();
+            return this.Bus.Data;
         }
 
         private byte ReadFromBus()
@@ -1060,7 +1065,7 @@ namespace M6502
 
         #region Increment/decrement
 
-        private void DEX() =>this.X = this.DEC(this.X);
+        private void DEX() => this.X = this.DEC(this.X);
 
         private void DEY() => this.Y = this.DEC(this.Y);
 

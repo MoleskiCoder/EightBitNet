@@ -573,16 +573,21 @@ namespace MC6809
 
         protected override void BusWrite()
         {
-            this.Tick();
-            this.LowerRW();
-            base.BusWrite();
+            this.OnWritingMemory();
+                this.Tick();
+                this.LowerRW();
+                base.BusWrite();
+            this.OnWrittenMemory();
         }
 
         protected override byte BusRead()
         {
-            this.Tick();
-            this.RaiseRW();
-            return base.BusRead();
+            this.OnReadingMemory();
+                this.Tick();
+                this.RaiseRW();
+                base.BusRead();
+            this.OnReadMemory();
+            return this.Bus.Data;
         }
 
         #endregion
@@ -1262,7 +1267,7 @@ namespace MC6809
             }
             else
             {
-                this.Execute(this.FetchByte());
+                this.Execute(this.FetchInstruction());
             }
         }
 
@@ -2017,7 +2022,7 @@ namespace MC6809
         private byte Negate(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
-            this.Intermediate.Word = (ushort)(0 - operand);
+            this.Intermediate.Word = (ushort)(~operand + 1);
             operand = this.Intermediate.Low;
             this.CC = this.AdjustNZ(operand);
             this.CC = this.AdjustCarry(this.Intermediate);
@@ -2126,8 +2131,8 @@ namespace MC6809
         private void SWI()
         {
             this.SaveEntireRegisterState();
-            this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
-            this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
+            this.CC = SetBit(this.CC, StatusBits.IF | StatusBits.FF);  // Disable IRQ / FIRQ
+            Debug.Assert(this.FastInterruptMasked && this.InterruptMasked);
             this.SwallowRead();
             this.GetPagedInto(0xff, SWI_vector, this.EA);
             this.Jump(this.EA);
@@ -2202,13 +2207,13 @@ namespace MC6809
         private void Prefix10()
         {
             this._prefix10 = true;
-            this.Execute(this.FetchByte());
+            this.Execute(this.FetchInstruction());
         }
 
         private void Prefix11()
         {
             this._prefix11 = true;
-            this.Execute(this.FetchByte());
+            this.Execute(this.FetchInstruction());
         }
 
         #endregion

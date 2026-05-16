@@ -92,10 +92,7 @@ namespace EightBit
             return current;
         }
 
-        protected virtual byte FetchInstruction()
-        {
-            return this.FetchByte();
-        }
+        protected virtual byte FetchInstruction() => this.FetchByte();
 
         public void Execute(byte value)
         {
@@ -219,19 +216,13 @@ namespace EightBit
 
         protected abstract void GetInto(Register16 into);
 
-        protected virtual void GetWord()
-        {
-            this.GetInto(this.Intermediate);
-        }
+        protected virtual void GetWord() => this.GetInto(this.Intermediate);
 
         protected abstract void SetWord(Register16 value);
 
         protected abstract void GetPagedInto(Register16 into);
 
-        protected virtual void GetWordPaged()
-        {
-            this.GetPagedInto(this.Intermediate);
-        }
+        protected virtual void GetWordPaged() => this.GetPagedInto(this.Intermediate);
 
         protected void GetWordPaged(byte page, byte offset)
         {
@@ -262,10 +253,7 @@ namespace EightBit
 
         protected abstract void FetchInto(Register16 into);
 
-        protected void FetchWord()
-        {
-            this.FetchInto(this.Intermediate);
-        }
+        protected void FetchWord() => this.FetchInto(this.Intermediate);
 
         protected void FetchWordAddress()
         {
