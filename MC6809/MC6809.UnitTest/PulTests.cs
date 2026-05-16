@@ -30,16 +30,16 @@ namespace MC6809.UnitTest
             this.board.Poke(512 - 11, 0x11);
             this.board.Poke(512 - 10, 0x12);
             this.board.Poke(512 - 9, 0x13);
-            this.cpu.PokeWord(512 - 8, 0x9141);
-            this.cpu.PokeWord(512 - 6, 0xa142);
-            this.cpu.PokeWord(512 - 4, 0xb140);
-            this.cpu.PokeWord(512 - 2, 0x04ff);
-            this.cpu.Y.Word = 0x1115;
-            this.cpu.S.Word = 500;
+            this.cpu.PokeShort(512 - 8, 0x9141);
+            this.cpu.PokeShort(512 - 6, 0xa142);
+            this.cpu.PokeShort(512 - 4, 0xb140);
+            this.cpu.PokeShort(512 - 2, 0x04ff);
+            this.cpu.Y.Joined = 0x1115;
+            this.cpu.S.Joined = 500;
             this.cpu.CC = 0xf;
             this.board.Poke(0xb00, 0x35);
             this.board.Poke(0xb01, 0xff);
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -47,10 +47,10 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0x11, this.cpu.A);
             Assert.AreEqual(0x12, this.cpu.B);
             Assert.AreEqual(0x13, this.cpu.DP);
-            Assert.AreEqual(0x9141, this.cpu.X.Word);
-            Assert.AreEqual(0xa142, this.cpu.Y.Word);
-            Assert.AreEqual(0xb140, this.cpu.U.Word);
-            Assert.AreEqual(0x4ff, this.cpu.PC.Word);
+            Assert.AreEqual(0x9141, this.cpu.X.Joined);
+            Assert.AreEqual(0xa142, this.cpu.Y.Joined);
+            Assert.AreEqual(0xb140, this.cpu.U.Joined);
+            Assert.AreEqual(0x4ff, this.cpu.PC.Joined);
         }
 
         [TestMethod]
@@ -60,16 +60,16 @@ namespace MC6809.UnitTest
             this.board.Poke(512 - 11, 0x11);
             this.board.Poke(512 - 10, 0x12);
             this.board.Poke(512 - 9, 0x13);
-            this.cpu.PokeWord(512 - 8, 0x9141);
-            this.cpu.PokeWord(512 - 6, 0xa142);
-            this.cpu.PokeWord(512 - 4, 0xb140);
-            this.cpu.PokeWord(512 - 2, 0x04ff);
-            this.cpu.Y.Word = 0x1115;
-            this.cpu.U.Word = 500;
+            this.cpu.PokeShort(512 - 8, 0x9141);
+            this.cpu.PokeShort(512 - 6, 0xa142);
+            this.cpu.PokeShort(512 - 4, 0xb140);
+            this.cpu.PokeShort(512 - 2, 0x04ff);
+            this.cpu.Y.Joined = 0x1115;
+            this.cpu.U.Joined = 500;
             this.cpu.CC = 0xf;
             this.board.Poke(0xb00, 0x37);
             this.board.Poke(0xb01, 0xff);
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -77,28 +77,28 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0x11, this.cpu.A);
             Assert.AreEqual(0x12, this.cpu.B);
             Assert.AreEqual(0x13, this.cpu.DP);
-            Assert.AreEqual(0x9141, this.cpu.X.Word);
-            Assert.AreEqual(0xa142, this.cpu.Y.Word);
-            Assert.AreEqual(0xb140, this.cpu.S.Word);
-            Assert.AreEqual(0x4ff, this.cpu.PC.Word);
+            Assert.AreEqual(0x9141, this.cpu.X.Joined);
+            Assert.AreEqual(0xa142, this.cpu.Y.Joined);
+            Assert.AreEqual(0xb140, this.cpu.S.Joined);
+            Assert.AreEqual(0x4ff, this.cpu.PC.Joined);
         }
 
         [TestMethod]
         public void TestPULS_y()
         {
-            this.cpu.PokeWord(0x205, 0xb140);
-            this.cpu.PokeWord(0x207, 0x04ff);
-            this.cpu.Y.Word = 0x1115;
-            this.cpu.S.Word = 0x205;
+            this.cpu.PokeShort(0x205, 0xb140);
+            this.cpu.PokeShort(0x207, 0x04ff);
+            this.cpu.Y.Joined = 0x1115;
+            this.cpu.S.Joined = 0x205;
             this.cpu.CC = 0xf;
             this.board.Poke(0xb00, 0x35);
             this.board.Poke(0xb01, 0xa0);
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
-            Assert.AreEqual(0xb140, this.cpu.Y.Word);
-            Assert.AreEqual(0x4ff, this.cpu.PC.Word);
+            Assert.AreEqual(0xb140, this.cpu.Y.Joined);
+            Assert.AreEqual(0x4ff, this.cpu.PC.Joined);
             Assert.AreEqual(0xf, this.cpu.CC);
         }
     }

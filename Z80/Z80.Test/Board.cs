@@ -48,7 +48,7 @@ namespace Z80.Test
         {
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress.Word);
+            this.ram.Load(programPath, loadAddress.Joined);
 
             this.CPU.LoweredHALT += this.CPU_LoweredHALT;
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_CPM;
@@ -59,7 +59,7 @@ namespace Z80.Test
             }
 
             this.Poke(0, 0xc3);  // JMP
-            this.CPU.PokeWord(1, this.configuration.StartAddress);
+            this.CPU.PokeShort(1, this.configuration.StartAddress);
             this.Poke(5, 0xc9); // ret
         }
 
@@ -73,7 +73,7 @@ namespace Z80.Test
                     System.Console.Out.Write(this.CPU.E.ToString(CultureInfo.InvariantCulture));
                     break;
                 case 0x9:
-                    for (var i = this.CPU.DE.Word; this.Peek(i) != '$'; ++i)
+                    for (var i = this.CPU.DE.Joined; this.Peek(i) != '$'; ++i)
                     {
                         System.Console.Out.Write((char)this.Peek(i));
                     }

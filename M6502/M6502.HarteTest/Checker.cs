@@ -40,7 +40,7 @@
 
             this.Runner.RaisePOWER();
             this.InitialiseState(test);
-            var pc = cpu.PC.Word;
+            var pc = cpu.PC.Joined;
 
             this.Cycles = cpu.Step();
             this.Runner.LowerPOWER();
@@ -60,7 +60,7 @@
 
                 var final = test.Final ?? throw new InvalidOperationException("Final test state cannot be null");
 
-                this.Raise("PC", final.PC, cpu.PC.Word);
+                this.Raise("PC", final.PC, cpu.PC.Joined);
                 this.Raise("S", final.S, cpu.S);
                 this.Raise("A", final.A, cpu.A);
                 this.Raise("X", final.X, cpu.X);
@@ -195,7 +195,7 @@
             }
 
             var final = test.Final ?? throw new InvalidOperationException("Final state cannot be null");
-            var pc_good = this.Check("PC", final.PC, cpu.PC.Word);
+            var pc_good = this.Check("PC", final.PC, cpu.PC.Joined);
             var s_good = this.Check("S", final.S, cpu.S);
             var a_good = this.Check("A", final.A, cpu.A);
             var x_good = this.Check("X", final.X, cpu.X);
@@ -260,7 +260,7 @@
             var cpu = this.Runner.CPU;
             var ram = this.Runner.RAM;
 
-            cpu.PC.Word = state.PC;
+            cpu.PC.Joined = state.PC;
             cpu.S = state.S;
             cpu.A = state.A;
             cpu.X = state.X;
@@ -286,7 +286,7 @@
 
         private void Runner_WrittenByte(object? sender, EventArgs e) => this.AddActualCycle(this.Runner.Address, this.Runner.Data, "write");
 
-        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Word, value, action);
+        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Joined, value, action);
 
         private void AddActualCycle(ushort address, byte value, string action) => this.ActualCycles.Add(new Cycle(address, value, action));
 

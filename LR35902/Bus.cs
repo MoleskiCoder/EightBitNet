@@ -176,7 +176,7 @@ namespace LR35902
 
         private void Bus_WrittenByte(object? sender, EventArgs e)
         {
-            var address = this.Address.Word;
+            var address = this.Address.Joined;
             var value = this.Data;
 
             switch (address & 0xe000)

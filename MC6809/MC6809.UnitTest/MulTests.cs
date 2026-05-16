@@ -35,11 +35,11 @@ namespace MC6809.UnitTest
             this.cpu.CC |= (byte)StatusBits.ZF;
             this.cpu.A = 0xc;
             this.cpu.B = 0x64;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
-            Assert.AreEqual(0x4b0, this.cpu.D.Word);
+            Assert.AreEqual(0x4b0, this.cpu.D.Joined);
             Assert.AreEqual(0x4, this.cpu.A);
             Assert.AreEqual(0xb0, this.cpu.B);
             Assert.IsFalse(this.cpu.Zero);
@@ -58,11 +58,11 @@ namespace MC6809.UnitTest
             this.cpu.CC = Chip.SetBit(this.cpu.CC, (byte)StatusBits.ZF);
             this.cpu.A = 0xc;
             this.cpu.B = 0x00;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
-            Assert.AreEqual(0, this.cpu.D.Word);
+            Assert.AreEqual(0, this.cpu.D.Joined);
             Assert.AreEqual(0, this.cpu.A);
             Assert.AreEqual(0, this.cpu.B);
             Assert.IsTrue(this.cpu.Zero);

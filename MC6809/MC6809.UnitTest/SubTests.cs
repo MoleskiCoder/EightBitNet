@@ -116,7 +116,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0x21, 0x21);
             this.cpu.CC = (byte)StatusBits.ZF;
             this.cpu.B = 3;
-            this.cpu.Y.Word = 0x21;
+            this.cpu.Y.Joined = 0x21;
             this.cpu.Step();
             Assert.AreEqual(0xe2, this.cpu.B);
             Assert.IsTrue(this.cpu.Negative);

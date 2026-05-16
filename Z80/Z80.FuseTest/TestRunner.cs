@@ -112,7 +112,7 @@ namespace Z80.FuseTest
 
         private void AddActualEvent(string specifier)
         {
-            var address = this.Address.Word;
+            var address = this.Address.Joined;
             var cycles = this.totalCycles + this.cpu.Cycles;
             if (specifier.EndsWith('C'))
             {
@@ -161,24 +161,24 @@ namespace Z80.FuseTest
             var testState = this.test.RegisterState;
             var inputRegisters = testState.Registers;
 
-            this.cpu.AF.Word = inputRegisters[(int)Register.AF_].Word;
-            this.cpu.BC.Word = inputRegisters[(int)Register.BC_].Word;
-            this.cpu.DE.Word = inputRegisters[(int)Register.DE_].Word;
-            this.cpu.HL.Word = inputRegisters[(int)Register.HL_].Word;
+            this.cpu.AF.Joined = inputRegisters[(int)Register.AF_].Joined;
+            this.cpu.BC.Joined = inputRegisters[(int)Register.BC_].Joined;
+            this.cpu.DE.Joined = inputRegisters[(int)Register.DE_].Joined;
+            this.cpu.HL.Joined = inputRegisters[(int)Register.HL_].Joined;
             this.cpu.Exx();
             this.cpu.ExxAF();
-            this.cpu.AF.Word = inputRegisters[(int)Register.AF].Word;
-            this.cpu.BC.Word = inputRegisters[(int)Register.BC].Word;
-            this.cpu.DE.Word = inputRegisters[(int)Register.DE].Word;
-            this.cpu.HL.Word = inputRegisters[(int)Register.HL].Word;
+            this.cpu.AF.Joined = inputRegisters[(int)Register.AF].Joined;
+            this.cpu.BC.Joined = inputRegisters[(int)Register.BC].Joined;
+            this.cpu.DE.Joined = inputRegisters[(int)Register.DE].Joined;
+            this.cpu.HL.Joined = inputRegisters[(int)Register.HL].Joined;
 
-            this.cpu.IX.Word = inputRegisters[(int)Register.IX].Word;
-            this.cpu.IY.Word = inputRegisters[(int)Register.IY].Word;
+            this.cpu.IX.Joined = inputRegisters[(int)Register.IX].Joined;
+            this.cpu.IY.Joined = inputRegisters[(int)Register.IY].Joined;
 
-            this.cpu.SP.Word = inputRegisters[(int)Register.SP].Word;
-            this.cpu.PC.Word = inputRegisters[(int)Register.PC].Word;
+            this.cpu.SP.Joined = inputRegisters[(int)Register.SP].Joined;
+            this.cpu.PC.Joined = inputRegisters[(int)Register.PC].Joined;
 
-            this.cpu.MEMPTR.Word = inputRegisters[(int)Register.MEMPTR].Word;
+            this.cpu.MEMPTR.Joined = inputRegisters[(int)Register.MEMPTR].Joined;
 
             this.cpu.IV = (byte)testState.I;
             this.cpu.REFRESH = (byte)testState.R;
@@ -211,26 +211,26 @@ namespace Z80.FuseTest
             var expectedState = this.result.RegisterState;
             var expectedRegisters = expectedState.Registers;
 
-            var af = this.cpu.AF.Word == expectedRegisters[(int)Register.AF].Word;
-            var bc = this.cpu.BC.Word == expectedRegisters[(int)Register.BC].Word;
-            var de = this.cpu.DE.Word == expectedRegisters[(int)Register.DE].Word;
-            var hl = this.cpu.HL.Word == expectedRegisters[(int)Register.HL].Word;
+            var af = this.cpu.AF.Joined == expectedRegisters[(int)Register.AF].Joined;
+            var bc = this.cpu.BC.Joined == expectedRegisters[(int)Register.BC].Joined;
+            var de = this.cpu.DE.Joined == expectedRegisters[(int)Register.DE].Joined;
+            var hl = this.cpu.HL.Joined == expectedRegisters[(int)Register.HL].Joined;
 
             this.cpu.Exx();
             this.cpu.ExxAF();
 
-            var af_ = this.cpu.AF.Word == expectedRegisters[(int)Register.AF_].Word;
-            var bc_ = this.cpu.BC.Word == expectedRegisters[(int)Register.BC_].Word;
-            var de_ = this.cpu.DE.Word == expectedRegisters[(int)Register.DE_].Word;
-            var hl_ = this.cpu.HL.Word == expectedRegisters[(int)Register.HL_].Word;
+            var af_ = this.cpu.AF.Joined == expectedRegisters[(int)Register.AF_].Joined;
+            var bc_ = this.cpu.BC.Joined == expectedRegisters[(int)Register.BC_].Joined;
+            var de_ = this.cpu.DE.Joined == expectedRegisters[(int)Register.DE_].Joined;
+            var hl_ = this.cpu.HL.Joined == expectedRegisters[(int)Register.HL_].Joined;
 
-            var ix = this.cpu.IX.Word == expectedRegisters[(int)Register.IX].Word;
-            var iy = this.cpu.IY.Word == expectedRegisters[(int)Register.IY].Word;
+            var ix = this.cpu.IX.Joined == expectedRegisters[(int)Register.IX].Joined;
+            var iy = this.cpu.IY.Joined == expectedRegisters[(int)Register.IY].Joined;
 
-            var sp = this.cpu.SP.Word == expectedRegisters[(int)Register.SP].Word;
-            var pc = this.cpu.PC.Word == expectedRegisters[(int)Register.PC].Word;
+            var sp = this.cpu.SP.Joined == expectedRegisters[(int)Register.SP].Joined;
+            var pc = this.cpu.PC.Joined == expectedRegisters[(int)Register.PC].Joined;
 
-            var memptr = this.cpu.MEMPTR.Word == expectedRegisters[(int)Register.MEMPTR].Word;
+            var memptr = this.cpu.MEMPTR.Joined == expectedRegisters[(int)Register.MEMPTR].Joined;
 
             var iv = this.cpu.IV == expectedState.I;
             var refresh = this.cpu.REFRESH == expectedState.R;
@@ -403,7 +403,7 @@ namespace Z80.FuseTest
                     Console.Error.WriteLine(output);
                 }
 
-                this.cpu.PC.Word = this.test.RegisterState.Registers[(int)Register.PC].Word;
+                this.cpu.PC.Joined = this.test.RegisterState.Registers[(int)Register.PC].Joined;
                 var disassembled = this.disassembler.Disassemble(this.cpu);
                 Console.Error.WriteLine(disassembled);
             }

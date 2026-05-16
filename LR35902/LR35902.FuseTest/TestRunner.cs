@@ -94,13 +94,13 @@ namespace LR35902.FuseTest
             var testState = this.test.RegisterState;
             var inputRegisters = testState.Registers;
 
-            this.CPU.AF.Word = inputRegisters[(int)Register.AF].Word;
-            this.CPU.BC.Word = inputRegisters[(int)Register.BC].Word;
-            this.CPU.DE.Word = inputRegisters[(int)Register.DE].Word;
-            this.CPU.HL.Word = inputRegisters[(int)Register.HL].Word;
+            this.CPU.AF.Joined = inputRegisters[(int)Register.AF].Joined;
+            this.CPU.BC.Joined = inputRegisters[(int)Register.BC].Joined;
+            this.CPU.DE.Joined = inputRegisters[(int)Register.DE].Joined;
+            this.CPU.HL.Joined = inputRegisters[(int)Register.HL].Joined;
 
-            this.CPU.SP.Word = inputRegisters[(int)Register.SP].Word;
-            this.CPU.PC.Word = inputRegisters[(int)Register.PC].Word;
+            this.CPU.SP.Joined = inputRegisters[(int)Register.SP].Joined;
+            this.CPU.PC.Joined = inputRegisters[(int)Register.PC].Joined;
         }
 
         private void InitialiseMemory()
@@ -126,13 +126,13 @@ namespace LR35902.FuseTest
             var expectedState = this.result.RegisterState;
             var expectedRegisters = expectedState.Registers;
 
-            var af = this.CPU.AF.Word == expectedRegisters[(int)Register.AF].Word;
-            var bc = this.CPU.BC.Word == expectedRegisters[(int)Register.BC].Word;
-            var de = this.CPU.DE.Word == expectedRegisters[(int)Register.DE].Word;
-            var hl = this.CPU.HL.Word == expectedRegisters[(int)Register.HL].Word;
+            var af = this.CPU.AF.Joined == expectedRegisters[(int)Register.AF].Joined;
+            var bc = this.CPU.BC.Joined == expectedRegisters[(int)Register.BC].Joined;
+            var de = this.CPU.DE.Joined == expectedRegisters[(int)Register.DE].Joined;
+            var hl = this.CPU.HL.Joined == expectedRegisters[(int)Register.HL].Joined;
 
-            var sp = this.CPU.SP.Word == expectedRegisters[(int)Register.SP].Word;
-            var pc = this.CPU.PC.Word == expectedRegisters[(int)Register.PC].Word;
+            var sp = this.CPU.SP.Joined == expectedRegisters[(int)Register.SP].Joined;
+            var pc = this.CPU.PC.Joined == expectedRegisters[(int)Register.PC].Joined;
 
             var success = af && bc && de && hl && sp && pc;
             if (!success)

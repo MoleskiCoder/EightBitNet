@@ -100,11 +100,11 @@ namespace EightBit
             this.Execute();
         }
 
-        public abstract Register16 PeekWord(ushort address);
+        public abstract Register16 PeekShort(ushort address);
 
-        public abstract void PokeWord(ushort address, Register16 value);
+        public abstract void PokeShort(ushort address, Register16 value);
 
-        public void PokeWord(ushort address, ushort value) => this.PokeWord(address, new Register16(value));
+        public void PokeShort(ushort address, ushort value) => this.PokeShort(address, new Register16(value));
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
         public virtual void RaiseRESET()
@@ -216,18 +216,18 @@ namespace EightBit
 
         protected abstract void GetInto(Register16 into);
 
-        protected virtual void GetWord() => this.GetInto(this.Intermediate);
+        protected virtual void GetShort() => this.GetInto(this.Intermediate);
 
-        protected abstract void SetWord(Register16 value);
+        protected abstract void SetShort(Register16 value);
 
         protected abstract void GetPagedInto(Register16 into);
 
-        protected virtual void GetWordPaged() => this.GetPagedInto(this.Intermediate);
+        protected virtual void GetShortPaged() => this.GetPagedInto(this.Intermediate);
 
-        protected void GetWordPaged(byte page, byte offset)
+        protected void GetShortPaged(byte page, byte offset)
         {
             this.Bus.Address.Assign(offset, page);
-            this.GetWordPaged();
+            this.GetShortPaged();
         }
 
         protected void GetPagedInto(byte page, byte offset, Register16 into)
@@ -253,11 +253,11 @@ namespace EightBit
 
         protected abstract void FetchInto(Register16 into);
 
-        protected void FetchWord() => this.FetchInto(this.Intermediate);
+        protected void FetchShort() => this.FetchInto(this.Intermediate);
 
-        protected void FetchWordAddress()
+        protected void FetchShortAddress()
         {
-            this.FetchWord();
+            this.FetchShort();
             this.Bus.Address.Assign(this.Intermediate);
         }
 
@@ -265,30 +265,30 @@ namespace EightBit
 
         protected abstract byte Pop();
 
-        protected abstract void PushWord(Register16 value);
+        protected abstract void PushShort(Register16 value);
 
         protected abstract void PopInto(Register16 into);
 
-        protected void GetWord(Register16 address)
+        protected void GetShort(Register16 address)
         {
             this.Bus.Address.Assign(address);
-            this.GetWord();
+            this.GetShort();
         }
 
-        protected void SetWord(Register16 address, Register16 value)
+        protected void SetShort(Register16 address, Register16 value)
         {
             this.Bus.Address.Assign(address);
-            this.SetWord(value);
+            this.SetShort(value);
         }
 
-        protected void Jump(ushort destination) => this.PC.Word = destination;
+        protected void Jump(ushort destination) => this.PC.Joined = destination;
 
         protected void Jump(Register16 destination) => this.PC.Assign(destination);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
         protected virtual void Call(Register16 destination)
         {
-            this.PushWord(this.PC);
+            this.PushShort(this.PC);
             this.Jump(destination);
         }
 

@@ -48,7 +48,7 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestBGT2()
         {
-            Assert.AreEqual(0, this.cpu.PC.Word);
+            Assert.AreEqual(0, this.cpu.PC.Joined);
             this.cpu.CC = 0;
             this.cpu.Step();
             this.cpu.Step();
@@ -58,7 +58,7 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestBGT3()
         {
-            Assert.AreEqual(0, this.cpu.PC.Word);
+            Assert.AreEqual(0, this.cpu.PC.Joined);
             this.cpu.CC = (byte)StatusBits.NF;
             this.cpu.Step();
             this.cpu.Step();
@@ -68,7 +68,7 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestBGT4()
         {
-            Assert.AreEqual(0, this.cpu.PC.Word);
+            Assert.AreEqual(0, this.cpu.PC.Joined);
             this.cpu.CC = (byte)(StatusBits.NF | StatusBits.VF);
             this.cpu.Step();
             this.cpu.Step();
@@ -78,7 +78,7 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestBGT5()
         {
-            Assert.AreEqual(0, this.cpu.PC.Word);
+            Assert.AreEqual(0, this.cpu.PC.Joined);
             this.cpu.CC = (byte)(StatusBits.ZF | StatusBits.NF);
             this.cpu.Step();
             this.cpu.Step();

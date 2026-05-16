@@ -46,7 +46,7 @@ namespace Intel8080.Test
         {
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress.Word);
+            this.ram.Load(programPath, loadAddress.Joined);
 
             this.CPU.LoweredHALT += this.CPU_LoweredHALT;
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_CPM;
@@ -57,7 +57,7 @@ namespace Intel8080.Test
             }
 
             this.Poke(0, 0xc3);  // JMP
-            this.CPU.PokeWord(1, this.configuration.StartAddress);
+            this.CPU.PokeShort(1, this.configuration.StartAddress);
             this.Poke(5, 0xc9); // ret
         }
 
@@ -71,7 +71,7 @@ namespace Intel8080.Test
                     System.Console.Out.Write((char)this.CPU.E);
                     break;
                 case 0x9:
-                    for (var i = this.CPU.DE.Word; this.Peek(i) != '$'; ++i)
+                    for (var i = this.CPU.DE.Joined; this.Peek(i) != '$'; ++i)
                     {
                         System.Console.Out.Write((char)this.Peek(i));
                     }
@@ -82,7 +82,7 @@ namespace Intel8080.Test
 
         private void CPU_ExecutingInstruction_CPM(object? sender, System.EventArgs e)
         {
-            switch (this.CPU.PC.Word)
+            switch (this.CPU.PC.Joined)
             {
                 case 0x0: // CP/M warm start
                     if (++this.warmstartCount == 2)

@@ -71,7 +71,7 @@ namespace M6502.Test
 
             var programPath = this.configuration.RomDirectory + "/" + this.configuration.Program;
             var loadAddress = this.configuration.LoadAddress;
-            this.ram.Load(programPath, loadAddress.Word);
+            this.ram.Load(programPath, loadAddress.Joined);
 
             if (this.configuration.DebugMode)
             {
@@ -104,7 +104,7 @@ namespace M6502.Test
             }
 
             this.Poke(0x00, 0x4c);
-            this.CPU.PokeWord(0x01, this.configuration.StartAddress);
+            this.CPU.PokeShort(0x01, this.configuration.StartAddress);
 
             symbolsParserTask?.Wait();
         }
@@ -192,7 +192,7 @@ namespace M6502.Test
 
         private void CPU_ExecutingInstruction_Debugging(object? sender, EventArgs e)
         {
-            var address = this.CPU.PC.Word;
+            var address = this.CPU.PC.Joined;
 
             var output = new StringBuilder();
 

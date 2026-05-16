@@ -25,7 +25,7 @@ namespace MC6809
     |-------|-------|-----------------------------------|
     */
 
-    public sealed class MC6809 : BigEndianProcessor
+    public class MC6809 : BigEndianProcessor
     {
         private const byte RESET_vector = 0xfe; // RESET vector
         private const byte NMI_vector = 0xfc;   // NMI vector
@@ -352,7 +352,7 @@ namespace MC6809
 
         public Register16 S { get; } = new();
 
-        private Register16 EA { get; } = new();
+        protected Register16 EA { get; } = new();
 
         public ref byte DP => ref this._dp;
 
@@ -366,7 +366,7 @@ namespace MC6809
 
         public bool EntireRegisterSet => this.EntireRegisterSetFlag != 0;
 
-        public bool E => this.EntireRegisterSet;
+        public bool EntireFlag => this.EntireRegisterSet;
 
         public int FastInterruptMaskedFlag => this.CC & (byte)StatusBits.FF;
 
@@ -418,53 +418,53 @@ namespace MC6809
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
 
-        private byte AdjustZero(byte datum) => ClearBit(this.CC, StatusBits.ZF, datum);
+        protected byte AdjustZero(byte datum) => ClearBit(this.CC, StatusBits.ZF, datum);
 
-        private byte AdjustZero(ushort datum) => ClearBit(this.CC, StatusBits.ZF, datum);
+        protected byte AdjustZero(ushort datum) => ClearBit(this.CC, StatusBits.ZF, datum);
 
-        private byte AdjustZero(Register16 datum) => this.AdjustZero(datum.Word);
+        protected byte AdjustZero(Register16 datum) => this.AdjustZero(datum.Joined);
 
-        private byte AdjustNegative(byte datum) => SetBit(this.CC, StatusBits.NF, datum & (byte)Bits.Bit7);
+        protected byte AdjustNegative(byte datum) => SetBit(this.CC, StatusBits.NF, datum & (byte)Bits.Bit7);
 
-        private byte AdjustNegative(ushort datum) => SetBit(this.CC, StatusBits.NF, datum & (ushort)Bits.Bit15);
+        protected byte AdjustNegative(ushort datum) => SetBit(this.CC, StatusBits.NF, datum & (ushort)Bits.Bit15);
 
-        private byte AdjustNZ(byte datum)
+        protected byte AdjustNZ(byte datum)
         {
             this.CC = this.AdjustZero(datum);
             return this.AdjustNegative(datum);
         }
 
-        private byte AdjustNZ(ushort datum)
+        protected byte AdjustNZ(ushort datum)
         {
             this.CC = this.AdjustZero(datum);
             return this.AdjustNegative(datum);
         }
 
-        private byte AdjustNZ(Register16 datum) => this.AdjustNZ(datum.Word);
+        protected byte AdjustNZ(Register16 datum) => this.AdjustNZ(datum.Joined);
 
-        private byte AdjustCarry(ushort datum) => SetBit(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);           // 8-bit addition
+        protected byte AdjustCarry(ushort datum) => SetBit(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);           // 8-bit addition
 
-        private byte AdjustCarry(uint datum) => SetBit(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));       // 16-bit addition
+        protected byte AdjustCarry(uint datum) => SetBit(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));       // 16-bit addition
 
-        private byte AdjustCarry(Register16 datum) => this.AdjustCarry(datum.Word);
+        protected byte AdjustCarry(Register16 datum) => this.AdjustCarry(datum.Joined);
 
-        private byte AdjustOverflow(byte before, byte data, Register16 after)
+        protected byte AdjustOverflow(byte before, byte data, Register16 after)
         {
             var lowAfter = after.Low;
             var highAfter = after.High;
             return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ highAfter << 7) & (int)Bits.Bit7);
         }
 
-        private byte AdjustOverflow(ushort before, ushort data, uint after)
+        protected byte AdjustOverflow(ushort before, ushort data, uint after)
         {
             var lowAfter = (ushort)(after & (uint)Mask.Sixteen);
             var highAfter = (ushort)(after >> 16);
             return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ highAfter << 15) & (int)Bits.Bit15);
         }
 
-        private byte AdjustHalfCarry(byte before, byte data, byte after) => SetBit(this.CC, StatusBits.HF, (before ^ data ^ after) & (int)Bits.Bit4);
+        protected byte AdjustHalfCarry(byte before, byte data, byte after) => SetBit(this.CC, StatusBits.HF, (before ^ data ^ after) & (int)Bits.Bit4);
 
-        private byte AdjustAddition(byte before, byte data, Register16 after)
+        protected byte AdjustAddition(byte before, byte data, Register16 after)
         {
             var result = after.Low;
             this.CC = this.AdjustNZ(result);
@@ -473,17 +473,17 @@ namespace MC6809
             return this.AdjustHalfCarry(before, data, result);
         }
 
-        private byte AdjustAddition(ushort before, ushort data, uint after)
+        protected byte AdjustAddition(ushort before, ushort data, uint after)
         {
-            this.Intermediate.Word = (ushort)after;
-            this.CC = this.AdjustNZ(this.Intermediate.Word);
+            this.Intermediate.Joined = (ushort)after;
+            this.CC = this.AdjustNZ(this.Intermediate.Joined);
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
         }
 
-        private byte AdjustAddition(Register16 before, Register16 data, uint after) => this.AdjustAddition(before.Word, data.Word, after);
+        protected byte AdjustAddition(Register16 before, Register16 data, uint after) => this.AdjustAddition(before.Joined, data.Joined, after);
 
-        private byte AdjustSubtraction(byte before, byte data, Register16 after)
+        protected byte AdjustSubtraction(byte before, byte data, Register16 after)
         {
             var result = after.Low;
             this.CC = this.AdjustNZ(result);
@@ -491,15 +491,15 @@ namespace MC6809
             return this.AdjustOverflow(before, data, after);
         }
 
-        private byte AdjustSubtraction(ushort before, ushort data, uint after)
+        protected byte AdjustSubtraction(ushort before, ushort data, uint after)
         {
-            this.Intermediate.Word = (ushort)after;
-            this.CC = this.AdjustNZ(this.Intermediate.Word);
+            this.Intermediate.Joined = (ushort)after;
+            this.CC = this.AdjustNZ(this.Intermediate.Joined);
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
         }
 
-        private byte AdjustSubtraction(Register16 before, Register16 data, uint after) => this.AdjustSubtraction(before.Word, data.Word, after);
+        protected byte AdjustSubtraction(Register16 before, Register16 data, uint after) => this.AdjustSubtraction(before.Joined, data.Joined, after);
 
         #endregion
 
@@ -598,7 +598,7 @@ namespace MC6809
 
         protected override void Push(byte value) => this.PushS(value);
 
-        private void Push(Register16 stack, byte value)
+        protected void Push(Register16 stack, byte value)
         {
             stack.Decrement();
             this.MemoryWrite(stack, value);
@@ -606,13 +606,13 @@ namespace MC6809
 
         private void PushS(byte value) => this.Push(this.S, value);
 
-        private void Push(Register16 stack, Register16 value)
+        protected void Push(Register16 stack, Register16 value)
         {
             this.Push(stack, value.Low);
             this.Push(stack, value.High);
         }
 
-        private byte Pop(Register16 stack)
+        protected byte Pop(Register16 stack)
         {
             this.MemoryRead(stack);
             stack.Increment();
@@ -621,7 +621,7 @@ namespace MC6809
 
         private byte PopS() => this.Pop(this.S);
 
-        private Register16 PopWord(Register16 stack)
+        protected Register16 PopWord(Register16 stack)
         {
             this.Intermediate.High = this.Pop(stack);
             this.Intermediate.Low = this.Pop(stack);
@@ -638,33 +638,33 @@ namespace MC6809
             this.IncrementPC();
         }
 
-        private void RelativeByteAddress()
+        protected void RelativeByteAddress()
         {
             var offset = (sbyte)this.FetchByte();
-            this.EA.Word = (ushort)(this.PC.Word + offset);
+            this.EA.Joined = (ushort)(this.PC.Joined + offset);
         }
 
-        private void RelativeWordAddress()
+        protected void RelativeWordAddress()
         {
-            this.FetchWord();
-            var offset = (short)this.Intermediate.Word;
-            this.EA.Word = (ushort)(this.PC.Word + offset);
+            this.FetchShort();
+            var offset = (short)this.Intermediate.Joined;
+            this.EA.Joined = (ushort)(this.PC.Joined + offset);
         }
 
-        private void DirectAddress()
+        protected void DirectAddress()
         {
             this.EA.Assign(this.FetchByte(), this.DP);
             this.SwallowRead();
         }
 
-        private void ExtendedAddress()
+        protected void ExtendedAddress()
         {
             this.FetchInto(this.Intermediate);
             this.EA.Assign(this.Intermediate);
             this.SwallowRead();
         }
 
-        private Register16 RR(int which)
+        protected Register16 RR(int which)
         {
             return which switch
             {
@@ -676,7 +676,7 @@ namespace MC6809
             };
         }
 
-        private void IndexedAddress()
+        protected void IndexedAddress()
         {
             var type = this.FetchByte();
             var r = this.RR((type & (byte)(Bits.Bit6 | Bits.Bit5)) >> 5);
@@ -687,24 +687,24 @@ namespace MC6809
                 {
                     case 0b0000: // ,R+
                         this.EA.Assign(r);
-                        r.Word++;
+                        r.Joined++;
                         this.SwallowCurrent();
                         this.SwallowRead(2);
                         break;
                     case 0b0001: // ,R++
                         this.EA.Assign(r);
-                        r.Word += 2;
+                        r.Joined += 2;
                         this.SwallowCurrent();
                         this.SwallowRead(3);
                         break;
                     case 0b0010: // ,-R
-                        --r.Word;
+                        --r.Joined;
                         this.EA.Assign(r);
                         this.SwallowCurrent();
                         this.SwallowRead(2);
                         break;
                     case 0b0011: // ,--R
-                        r.Word -= 2;
+                        r.Joined -= 2;
                         this.EA.Assign(r);
                         this.SwallowCurrent();
                         this.SwallowRead(3);
@@ -714,29 +714,29 @@ namespace MC6809
                         this.SwallowCurrent();
                         break;
                     case 0b0101: // B,R
-                        this.EA.Word = (ushort)(r.Word + (sbyte)this.B);
+                        this.EA.Joined = (ushort)(r.Joined + (sbyte)this.B);
                         this.SwallowCurrent();
                         this.SwallowRead();
                         break;
                     case 0b0110: // A,R
-                        this.EA.Word = (ushort)(r.Word + (sbyte)this.A);
+                        this.EA.Joined = (ushort)(r.Joined + (sbyte)this.A);
                         this.SwallowCurrent();
                         this.SwallowRead();
                         break;
                     case 0b1000: // n,R (eight-bit)
                         this.FetchByte();
-                        this.EA.Word = (ushort)(r.Word + (sbyte)this.Bus.Data);
+                        this.EA.Joined = (ushort)(r.Joined + (sbyte)this.Bus.Data);
                         this.SwallowRead();
                         break;
                     case 0b1001: // n,R (sixteen-bit)
                         this.FetchInto(this.Intermediate);
                         this.EA.Assign(this.Intermediate);
-                        this.EA.Word += r.Word;
+                        this.EA.Joined += r.Joined;
                         this.SwallowCurrent();
                         this.SwallowRead(2);
                         break;
                     case 0b1011: // D,R
-                        this.EA.Word = (ushort)(r.Word + this.D.Word);
+                        this.EA.Joined = (ushort)(r.Joined + this.D.Joined);
                         this.SwallowCurrent(3);
                         this.SwallowRead(2);
                         break;
@@ -769,13 +769,13 @@ namespace MC6809
             else
             {
                 // EA = ,R + 5-bit offset
-                this.EA.Word = (ushort)(r.Word + SignExtend(5, (byte)(type & (byte)Mask.Five)));
+                this.EA.Joined = (ushort)(r.Joined + SignExtend(5, (byte)(type & (byte)Mask.Five)));
                 this.SwallowCurrent();
                 this.SwallowRead();
             }
         }
 
-        private void ImmediateByte()
+        protected void ImmediateByte()
         {
             this.ImmediateAddress();
             this.MemoryRead(this.EA);
@@ -787,42 +787,42 @@ namespace MC6809
             return this.Bus.Data;
         }
 
-        private void DirectByte()
+        protected void DirectByte()
         {
             this.DirectAddress();
             this.MemoryRead(this.EA);
         }
 
-        private void IndexedByte()
+        protected void IndexedByte()
         {
             this.IndexedAddress();
             this.MemoryRead(this.EA);
         }
 
-        private void ExtendedByte()
+        protected void ExtendedByte()
         {
             this.ExtendedAddress();
             this.MemoryRead(this.EA);
         }
 
-        private void ImmediateWord() => this.FetchWord();
+        protected void ImmediateShort() => this.FetchShort();
 
-        private void DirectWord()
+        protected void DirectShort()
         {
             this.DirectAddress();
-            this.GetWord(this.EA);
+            this.GetShort(this.EA);
         }
 
-        private void IndexedWord()
+        protected void IndexedShort()
         {
             this.IndexedAddress();
-            this.GetWord(this.EA);
+            this.GetShort(this.EA);
         }
 
-        private void ExtendedWord()
+        protected void ExtendedShort()
         {
             this.ExtendedAddress();
-            this.GetWord(this.EA);
+            this.GetShort(this.EA);
         }
 
         #endregion
@@ -834,7 +834,7 @@ namespace MC6809
 
         private void Assign(ref byte destination) => destination = this.Through(this.Bus.Data);
 
-        private byte Through(byte data)
+        protected byte Through(byte data)
         {
             this.CC = ClearBit(this.CC, StatusBits.VF);
             this.CC = this.AdjustNZ(data);
@@ -849,10 +849,16 @@ namespace MC6809
 
         private void Assign(Register16 destination) => destination.Assign(this.Through(this.Intermediate));
 
-        private Register16 Through(Register16 data)
+        protected ushort Through(ushort data)
         {
             this.CC = ClearBit(this.CC, StatusBits.VF);
             this.CC = this.AdjustNZ(data);
+            return data;
+        }
+
+        protected Register16 Through(Register16 data)
+        {
+            this.Through(data.Joined);
             return data;
         }
 
@@ -867,7 +873,7 @@ namespace MC6809
         private void STX() => this.Store(this.X);
         private void STY() => this.Store(this.Y);
 
-        private void Store(Register16 data) => this.SetWord(this.EA, this.Through(data));
+        private void Store(Register16 data) => this.SetShort(this.EA, this.Through(data));
 
         #endregion
 
@@ -959,12 +965,12 @@ namespace MC6809
         private void SaveRegisterState()
         {
             this.SwallowRead();
-            this.PSH(this.S, this.E ? (byte)Mask.Eight : (byte)0b10000001);
+            this.PSH(this.S, this.EntireFlag ? (byte)Mask.Eight : (byte)0b10000001);
         }
 
         private void RestoreRegisterState()
         {
-            this.PUL(this.S, this.E ? (byte)Mask.Eight : (byte)0b10000001);
+            this.PUL(this.S, this.EntireFlag ? (byte)Mask.Eight : (byte)0b10000001);
         }
 
         private void PSHS() => this.PSH(this.S);
@@ -978,7 +984,7 @@ namespace MC6809
             this.PSH(stack, control);
         }
 
-        private void PSH(Register16 stack, byte control)
+        protected void PSH(Register16 stack, byte control)
         {
             // Reverse order of PUL
 
@@ -1039,7 +1045,7 @@ namespace MC6809
             this.SwallowPop(stack);
         }
 
-        private void PUL(Register16 stack, byte control)
+        protected void PUL(Register16 stack, byte control)
         {
             // Reverse order of PSH
 
@@ -1093,7 +1099,7 @@ namespace MC6809
 
         #region 8-bit register transfers
 
-        private ref byte ReferenceTransfer8(int specifier)
+        protected virtual ref byte ReferenceTransfer8(int specifier)
         {
             switch (specifier)
             {
@@ -1110,7 +1116,7 @@ namespace MC6809
             }
         }
 
-        private Register16 ReferenceTransfer16(int specifier)
+        protected virtual Register16 ReferenceTransfer16(int specifier)
         {
             return specifier switch
             {
@@ -1126,12 +1132,12 @@ namespace MC6809
 
         private void EXG()
         {
-            var data = this.Bus.Data;
+            var immediate = this.Bus.Data;
 
-            var leftSpecifier = HighNibble(data);
+            var leftSpecifier = HighNibble(immediate);
             var leftType = leftSpecifier & (int)Bits.Bit3;
 
-            var rightSpecifier = LowNibble(data);
+            var rightSpecifier = LowNibble(immediate);
             var rightType = rightSpecifier & (int)Bits.Bit3;
 
             if (leftType == 0)
@@ -1140,7 +1146,7 @@ namespace MC6809
                 if (rightType == 0)
                 {
                     var rightRegister = this.ReferenceTransfer16(rightSpecifier);
-                    (leftRegister.Word, rightRegister.Word) = (rightRegister.Word, leftRegister.Word);
+                    (leftRegister.Joined, rightRegister.Joined) = (rightRegister.Joined, leftRegister.Joined);
                 }
                 else
                 {
@@ -1170,12 +1176,12 @@ namespace MC6809
 
         private void TFR()
         {
-            var data = this.Bus.Data;
+            var immediate = this.Bus.Data;
 
-            var sourceSpecifier = HighNibble(data);
+            var sourceSpecifier = HighNibble(immediate);
             var sourceType = sourceSpecifier & (int)Bits.Bit3;
 
-            var destinationSpecifier = LowNibble(data);
+            var destinationSpecifier = LowNibble(immediate);
             var destinationType = destinationSpecifier & (int)Bits.Bit3;
 
             if (sourceType == 0)
@@ -1210,7 +1216,7 @@ namespace MC6809
 
         #region Cycle wastage
 
-        private void SwallowRead(int ticks = 1)
+        protected void SwallowRead(int ticks = 1)
         {
             for (int i = 0; i < ticks; i++)
             {
@@ -1218,7 +1224,7 @@ namespace MC6809
             }
         }
 
-        private void SwallowCurrent(int ticks = 1)
+        protected void SwallowCurrent(int ticks = 1)
         {
             for (int i = 0; i < ticks; i++)
             {
@@ -1226,11 +1232,11 @@ namespace MC6809
             }
         }
 
-        private void SwallowPop(Register16 stack) => this.MemoryRead(stack);
+        protected void SwallowPop(Register16 stack) => this.MemoryRead(stack);
 
-        private void SwallowEffectiveAddress() => this.MemoryRead(this.EA);
+        protected void SwallowEffectiveAddress() => this.MemoryRead(this.EA);
 
-        private void SwallowSpin(int ticks = 1)
+        protected void SwallowSpin(int ticks = 1)
         {
             for (int i = 0; i < ticks; i++)
             {
@@ -1293,7 +1299,7 @@ namespace MC6809
 
         #region Instruction dispatching
 
-        private void ExecuteUnprefixed()
+        protected virtual void ExecuteUnprefixed()
         {
             switch (this.OpCode)    
             {
@@ -1325,10 +1331,10 @@ namespace MC6809
                 case 0xeb: this.IndexedByte(); this.ADDB(); Debug.Assert(this.Cycles >= 4); break;          // ADD (ADDB indexed)
                 case 0xfb: this.ExtendedByte(); this.ADDB(); Debug.Assert(this.Cycles == 5); break;         // ADD (ADDB extended)
 
-                case 0xc3: this.ImmediateWord(); this.ADDD(); Debug.Assert(this.Cycles == 4); break;        // ADD (ADDD immediate)
-                case 0xd3: this.DirectWord(); this.ADDD(); Debug.Assert(this.Cycles == 6); break;           // ADD (ADDD direct)
-                case 0xe3: this.IndexedWord(); this.ADDD(); Debug.Assert(this.Cycles >= 6); break;          // ADD (ADDD indexed)
-                case 0xf3: this.ExtendedWord(); this.ADDD(); Debug.Assert(this.Cycles == 7); break;         // ADD (ADDD extended)
+                case 0xc3: this.ImmediateShort(); this.ADDD(); Debug.Assert(this.Cycles == 4); break;        // ADD (ADDD immediate)
+                case 0xd3: this.DirectShort(); this.ADDD(); Debug.Assert(this.Cycles == 6); break;           // ADD (ADDD direct)
+                case 0xe3: this.IndexedShort(); this.ADDD(); Debug.Assert(this.Cycles >= 6); break;          // ADD (ADDD indexed)
+                case 0xf3: this.ExtendedShort(); this.ADDD(); Debug.Assert(this.Cycles == 7); break;         // ADD (ADDD extended)
 
                 // AND
                 case 0x84: this.ImmediateByte(); this.ANDA(); Debug.Assert(this.Cycles == 2); break;        // AND (ANDA immediate)
@@ -1390,10 +1396,10 @@ namespace MC6809
                 case 0xf1: this.ExtendedByte(); this.CMPB(); Debug.Assert(this.Cycles == 5); break;         // CMP (CMPB, extended)
 
                 // CMPX
-                case 0x8c: this.ImmediateWord(); this.CMPX(); Debug.Assert(this.Cycles == 4); break;        // CMP (CMPX, immediate)
-                case 0x9c: this.DirectWord(); this.CMPX(); Debug.Assert(this.Cycles == 6); break;           // CMP (CMPX, direct)
-                case 0xac: this.IndexedWord(); this.CMPX(); Debug.Assert(this.Cycles >= 6); break;          // CMP (CMPX, indexed)
-                case 0xbc: this.ExtendedWord(); this.CMPX(); Debug.Assert(this.Cycles == 7); break;         // CMP (CMPX, extended)
+                case 0x8c: this.ImmediateShort(); this.CMPX(); Debug.Assert(this.Cycles == 4); break;        // CMP (CMPX, immediate)
+                case 0x9c: this.DirectShort(); this.CMPX(); Debug.Assert(this.Cycles == 6); break;           // CMP (CMPX, direct)
+                case 0xac: this.IndexedShort(); this.CMPX(); Debug.Assert(this.Cycles >= 6); break;          // CMP (CMPX, indexed)
+                case 0xbc: this.ExtendedShort(); this.CMPX(); Debug.Assert(this.Cycles == 7); break;         // CMP (CMPX, extended)
 
                 // COM
                 case 0x03: this.DirectByte(); this.COM(); Debug.Assert(this.Cycles == 6); break;            // COM (direct)
@@ -1464,22 +1470,22 @@ namespace MC6809
                 case 0xf6: this.ExtendedByte(); this.LDB(); Debug.Assert(this.Cycles == 5); break;          // LD (LDB extended)
 
                 // LDD
-                case 0xcc: this.ImmediateWord(); this.LDD(); Debug.Assert(this.Cycles == 3); break;         // LD (LDD immediate)
-                case 0xdc: this.DirectWord(); this.LDD(); Debug.Assert(this.Cycles == 5); break;            // LD (LDD direct)
-                case 0xec: this.IndexedWord(); this.LDD(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDD indexed)
-                case 0xfc: this.ExtendedWord(); this.LDD(); Debug.Assert(this.Cycles == 6); break;          // LD (LDD extended)
+                case 0xcc: this.ImmediateShort(); this.LDD(); Debug.Assert(this.Cycles == 3); break;         // LD (LDD immediate)
+                case 0xdc: this.DirectShort(); this.LDD(); Debug.Assert(this.Cycles == 5); break;            // LD (LDD direct)
+                case 0xec: this.IndexedShort(); this.LDD(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDD indexed)
+                case 0xfc: this.ExtendedShort(); this.LDD(); Debug.Assert(this.Cycles == 6); break;          // LD (LDD extended)
 
                 // LDU
-                case 0xce: this.ImmediateWord(); this.LDU(); Debug.Assert(this.Cycles == 3); break;         // LD (LDU immediate)
-                case 0xde: this.DirectWord(); this.LDU(); Debug.Assert(this.Cycles == 5); break;            // LD (LDU direct)
-                case 0xee: this.IndexedWord(); this.LDU(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDU indexed)
-                case 0xfe: this.ExtendedWord(); this.LDU(); Debug.Assert(this.Cycles == 6); break;          // LD (LDU extended)
+                case 0xce: this.ImmediateShort(); this.LDU(); Debug.Assert(this.Cycles == 3); break;         // LD (LDU immediate)
+                case 0xde: this.DirectShort(); this.LDU(); Debug.Assert(this.Cycles == 5); break;            // LD (LDU direct)
+                case 0xee: this.IndexedShort(); this.LDU(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDU indexed)
+                case 0xfe: this.ExtendedShort(); this.LDU(); Debug.Assert(this.Cycles == 6); break;          // LD (LDU extended)
 
                 // LDX
-                case 0x8e: this.ImmediateWord(); this.LDX(); Debug.Assert(this.Cycles == 3); break;         // LD (LDX immediate)
-                case 0x9e: this.DirectWord(); this.LDX(); Debug.Assert(this.Cycles == 5); break;            // LD (LDX direct)
-                case 0xae: this.IndexedWord(); this.LDX(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDX indexed)
-                case 0xbe: this.ExtendedWord(); this.LDX(); Debug.Assert(this.Cycles == 6); break;          // LD (LDX extended)
+                case 0x8e: this.ImmediateShort(); this.LDX(); Debug.Assert(this.Cycles == 3); break;         // LD (LDX immediate)
+                case 0x9e: this.DirectShort(); this.LDX(); Debug.Assert(this.Cycles == 5); break;            // LD (LDX direct)
+                case 0xae: this.IndexedShort(); this.LDX(); Debug.Assert(this.Cycles >= 5); break;           // LD (LDX indexed)
+                case 0xbe: this.ExtendedShort(); this.LDX(); Debug.Assert(this.Cycles == 6); break;          // LD (LDX extended)
 
                 // LEA
                 case 0x30: this.IndexedAddress(); this.LEAX(); Debug.Assert(this.Cycles >= 4); break;       // LEA (LEAX indexed)
@@ -1547,7 +1553,7 @@ namespace MC6809
                 case 0x76: this.ExtendedByte(); this.ROR(); Debug.Assert(this.Cycles == 7); break;          // ROR (extended)
 
                 // RTI
-                case 0x3B: this.SwallowCurrent(); this.RTI(); Debug.Assert(this.Cycles == (this.E ? 15 : 6)); break; // RTI (inherent)
+                case 0x3B: this.SwallowCurrent(); this.RTI(); Debug.Assert(this.Cycles == (this.EntireFlag ? 15 : 6)); break; // RTI (inherent)
 
                 // RTS
                 case 0x39: this.SwallowCurrent(); this.RTS(); Debug.Assert(this.Cycles == 5); break;        // RTS (inherent)
@@ -1611,10 +1617,10 @@ namespace MC6809
                 case 0xf0: this.ExtendedByte(); this.SUBB(); Debug.Assert(this.Cycles == 5); break;         // SUB (SUBB extended)
 
                 // SUBD
-                case 0x83: this.ImmediateWord(); this.SUBD(); Debug.Assert(this.Cycles == 4); break;        // SUB (SUBD immediate)
-                case 0x93: this.DirectWord(); this.SUBD(); Debug.Assert(this.Cycles == 6); break;           // SUB (SUBD direct)
-                case 0xa3: this.IndexedWord(); this.SUBD(); Debug.Assert(this.Cycles >= 6); break;          // SUB (SUBD indexed)
-                case 0xb3: this.ExtendedWord(); this.SUBD(); Debug.Assert(this.Cycles == 7); break;         // SUB (SUBD extended)
+                case 0x83: this.ImmediateShort(); this.SUBD(); Debug.Assert(this.Cycles == 4); break;        // SUB (SUBD immediate)
+                case 0x93: this.DirectShort(); this.SUBD(); Debug.Assert(this.Cycles == 6); break;           // SUB (SUBD direct)
+                case 0xa3: this.IndexedShort(); this.SUBD(); Debug.Assert(this.Cycles >= 6); break;          // SUB (SUBD indexed)
+                case 0xb3: this.ExtendedShort(); this.SUBD(); Debug.Assert(this.Cycles == 7); break;         // SUB (SUBD extended)
 
                 // SWI
                 case 0x3f: this.SwallowCurrent(); this.SWI(); Debug.Assert(this.Cycles == 19); break;       // SWI (inherent)
@@ -1659,37 +1665,37 @@ namespace MC6809
             }
         }
 
-        private void Execute10()
+        protected virtual void Execute10()
         {
             switch (this.OpCode)
             {
                 // CMP
 
                 // CMPD
-                case 0x83: this.ImmediateWord(); this.CMPD(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPD, immediate)
-                case 0x93: this.DirectWord(); this.CMPD(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPD, direct)
-                case 0xa3: this.IndexedWord(); this.CMPD(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPD, indexed)
-                case 0xb3: this.ExtendedWord(); this.CMPD(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPD, extended)
+                case 0x83: this.ImmediateShort(); this.CMPD(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPD, immediate)
+                case 0x93: this.DirectShort(); this.CMPD(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPD, direct)
+                case 0xa3: this.IndexedShort(); this.CMPD(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPD, indexed)
+                case 0xb3: this.ExtendedShort(); this.CMPD(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPD, extended)
 
                 // CMPY
-                case 0x8c: this.ImmediateWord(); this.CMPY(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPY, immediate)
-                case 0x9c: this.DirectWord(); this.CMPY(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPY, direct)
-                case 0xac: this.IndexedWord(); this.CMPY(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPY, indexed)
-                case 0xbc: this.ExtendedWord(); this.CMPY(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPY, extended)
+                case 0x8c: this.ImmediateShort(); this.CMPY(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPY, immediate)
+                case 0x9c: this.DirectShort(); this.CMPY(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPY, direct)
+                case 0xac: this.IndexedShort(); this.CMPY(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPY, indexed)
+                case 0xbc: this.ExtendedShort(); this.CMPY(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPY, extended)
 
                 // LD
 
                 // LDS
-                case 0xce: this.ImmediateWord(); this.LDS(); Debug.Assert(this.Cycles == 4); break;         // LD (LDS immediate)
-                case 0xde: this.DirectWord(); this.LDS(); Debug.Assert(this.Cycles == 6); break;            // LD (LDS direct)
-                case 0xee: this.IndexedWord(); this.LDS(); Debug.Assert(this.Cycles >= 6); break;           // LD (LDS indexed)
-                case 0xfe: this.ExtendedWord(); this.LDS(); Debug.Assert(this.Cycles == 7); break;          // LD (LDS extended)
+                case 0xce: this.ImmediateShort(); this.LDS(); Debug.Assert(this.Cycles == 4); break;         // LD (LDS immediate)
+                case 0xde: this.DirectShort(); this.LDS(); Debug.Assert(this.Cycles == 6); break;            // LD (LDS direct)
+                case 0xee: this.IndexedShort(); this.LDS(); Debug.Assert(this.Cycles >= 6); break;           // LD (LDS indexed)
+                case 0xfe: this.ExtendedShort(); this.LDS(); Debug.Assert(this.Cycles == 7); break;          // LD (LDS extended)
 
                 // LDY
-                case 0x8e: this.ImmediateWord(); this.LDY(); Debug.Assert(this.Cycles == 4); break;         // LD (LDY immediate)
-                case 0x9e: this.DirectWord(); this.LDY(); Debug.Assert(this.Cycles == 6); break;            // LD (LDY direct)
-                case 0xae: this.IndexedWord(); this.LDY(); Debug.Assert(this.Cycles >= 6); break;           // LD (LDY indexed)
-                case 0xbe: this.ExtendedWord(); this.LDY(); Debug.Assert(this.Cycles == 7); break;          // LD (LDY extended)
+                case 0x8e: this.ImmediateShort(); this.LDY(); Debug.Assert(this.Cycles == 4); break;         // LD (LDY immediate)
+                case 0x9e: this.DirectShort(); this.LDY(); Debug.Assert(this.Cycles == 6); break;            // LD (LDY direct)
+                case 0xae: this.IndexedShort(); this.LDY(); Debug.Assert(this.Cycles >= 6); break;           // LD (LDY indexed)
+                case 0xbe: this.ExtendedShort(); this.LDY(); Debug.Assert(this.Cycles == 7); break;          // LD (LDY extended)
 
                 // Branching
                 case 0x21: this.RelativeWordAddress(); this.LBRN(); Debug.Assert(this.Cycles == 5); break;  // BRN (LBRN relative)
@@ -1726,23 +1732,23 @@ namespace MC6809
             }
         }
 
-        private void Execute11()
+        protected virtual void Execute11()
         {
             switch (this.OpCode)
             {
                 // CMP
 
                 // CMPU
-                case 0x83: this.ImmediateWord(); this.CMPU(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPU, immediate)
-                case 0x93: this.DirectWord(); this.CMPU(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPU, direct)
-                case 0xa3: this.IndexedWord(); this.CMPU(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPU, indexed)
-                case 0xb3: this.ExtendedWord(); this.CMPU(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPU, extended)
+                case 0x83: this.ImmediateShort(); this.CMPU(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPU, immediate)
+                case 0x93: this.DirectShort(); this.CMPU(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPU, direct)
+                case 0xa3: this.IndexedShort(); this.CMPU(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPU, indexed)
+                case 0xb3: this.ExtendedShort(); this.CMPU(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPU, extended)
 
                 // CMPS
-                case 0x8c: this.ImmediateWord(); this.CMPS(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPS, immediate)
-                case 0x9c: this.DirectWord(); this.CMPS(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPS, direct)
-                case 0xac: this.IndexedWord(); this.CMPS(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPS, indexed)
-                case 0xbc: this.ExtendedWord(); this.CMPS(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPS, extended)
+                case 0x8c: this.ImmediateShort(); this.CMPS(); Debug.Assert(this.Cycles == 5); break;        // CMP (CMPS, immediate)
+                case 0x9c: this.DirectShort(); this.CMPS(); Debug.Assert(this.Cycles == 7); break;           // CMP (CMPS, direct)
+                case 0xac: this.IndexedShort(); this.CMPS(); Debug.Assert(this.Cycles >= 7); break;          // CMP (CMPS, indexed)
+                case 0xbc: this.ExtendedShort(); this.CMPS(); Debug.Assert(this.Cycles == 8); break;         // CMP (CMPS, extended)
 
                 // SWI
                 case 0x3f: this.SwallowCurrent(); this.SWI3(); Debug.Assert(this.Cycles == 20); break;      // SWI (SWI3 inherent)
@@ -1771,22 +1777,24 @@ namespace MC6809
 
         private byte Add(byte operand) => this.Add(operand, this.Bus.Data);
 
-        private byte Add(byte operand, byte data, byte carry = 0)
+        protected byte Add(byte operand, byte data, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand + data + carry);
+            this.Intermediate.Joined = (ushort)(operand + data + carry);
             this.CC = this.AdjustAddition(operand, data, this.Intermediate);
             return this.Intermediate.Low;
         }
 
         private void ADDD() => this.Add(this.D, this.Intermediate, this.D);
 
-        private void Add(Register16 operand, Register16 data, Register16 result)
+        protected void Add(Register16 operand, Register16 data, int carry, Register16 result)
         {
-            var addition = operand.Word + data.Word;
+            var addition = operand.Joined + data.Joined + carry;
             this.CC = this.AdjustAddition(operand, data, (uint)addition);
-            result.Word = (ushort)addition;
+            result.Joined = (ushort)addition;
             this.SwallowRead();
         }
+
+        protected void Add(Register16 operand, Register16 data, Register16 result) => this.Add(operand, data, 0, result);
 
         private void ANDCC()
         {
@@ -1794,10 +1802,16 @@ namespace MC6809
             this.SwallowRead();
         }
 
-        private void ANDA() => this.A = this.And(this.A, this.Bus.Data);
-        private void ANDB() => this.B = this.And(this.B, this.Bus.Data);
+        private void ANDA() => this.A = this.And(this.A);
+        private void ANDB() => this.B = this.And(this.B);
 
-        private byte And(byte operand, byte data) => this.Through((byte)(operand & data));
+        protected ushort And(ushort operand, ushort data) => this.Through((ushort)(operand & data));
+
+        protected void And(Register16 operand, Register16 data, Register16 destination) => destination.Joined = this.And(operand.Joined, data.Joined);
+
+        protected byte And(byte operand, byte data) => this.Through((byte)(operand & data));
+
+        protected byte And(byte operand) => this.And(operand, this.Bus.Data);
 
         private void ASLA() => this.A = this.ArithmeticShiftLeft(this.A);
 
@@ -1810,7 +1824,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte ArithmeticShiftLeft(byte operand)
+        protected byte ArithmeticShiftLeft(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
             this.CC = this.AdjustNZ(operand <<= 1);
@@ -1830,7 +1844,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte ArithmeticShiftRight(byte operand)
+        protected byte ArithmeticShiftRight(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             var result = (byte)(operand >> 1 | (operand & (byte)Bits.Bit7));
@@ -1855,7 +1869,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte Clear()
+        protected byte Clear()
         {
             this.CC = ClearBit(this.CC, StatusBits.CF);
             return this.Through((byte)0U);
@@ -1864,7 +1878,11 @@ namespace MC6809
         private void CMPA() => this.Compare(this.A, this.Bus.Data);
         private void CMPB() => this.Compare(this.B, this.Bus.Data);
 
-        private void Compare(byte operand, byte data) => this.Subtract(operand, data);
+        protected void Compare(ushort operand, ushort data) => this.Subtract(operand, data);
+
+        protected void Compare(Register16 operand, Register16 data) => this.Compare(operand.Joined, data.Joined);
+
+        protected void Compare(byte operand, byte data) => this.Subtract(operand, data);
 
         private void CMPU() => this.Compare(this.U);
         private void CMPS() => this.Compare(this.S);
@@ -1872,7 +1890,7 @@ namespace MC6809
         private void CMPX() => this.Compare(this.X);
         private void CMPY() => this.Compare(this.Y);
 
-        private void Compare(Register16 operand) => this.Subtract(operand, this.Intermediate, this.Intermediate);
+        protected void Compare(Register16 operand) => this.Subtract(operand, this.Intermediate, this.Intermediate);
 
         private void COMA() => this.A = this.Complement(this.A);
 
@@ -1885,7 +1903,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte Complement(byte operand)
+        protected byte Complement(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF);
             return this.Through((byte)~operand);
@@ -1928,10 +1946,16 @@ namespace MC6809
             this.CC = SetBit(this.CC, StatusBits.CF, newCarry);
         }
 
-        private void EORA() => this.A = this.ExclusiveOr(this.A, this.Bus.Data);
-        private void EORB() => this.B = this.ExclusiveOr(this.B, this.Bus.Data);
+        private void EORA() => this.A = this.ExclusiveOr(this.A);
+        private void EORB() => this.B = this.ExclusiveOr(this.B);
 
-        private byte ExclusiveOr(byte operand, byte data) => this.Through((byte)(operand ^ data));
+        protected ushort ExclusiveOr(ushort operand, ushort data) => this.Through((ushort)(operand ^ data));
+
+        protected void ExclusiveOr(Register16 operand, Register16 data, Register16 destination) => destination.Joined = this.ExclusiveOr(operand.Joined, data.Joined);
+
+        protected byte ExclusiveOr(byte operand, byte data) => this.Through((byte)(operand ^ data));
+
+        protected byte ExclusiveOr(byte operand) => this.ExclusiveOr(operand, this.Bus.Data);
 
         private void DECA() => this.A = this.Decrement(this.A);
 
@@ -1944,9 +1968,9 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte Decrement(byte operand)
+        protected byte Decrement(byte operand)
         {
-            this.Intermediate.Word = (ushort)(operand - 1);
+            this.Intermediate.Joined = (ushort)(operand - 1);
             var result = this.Intermediate.Low;
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustOverflow(operand, 1, this.Intermediate);
@@ -1964,9 +1988,9 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte Increment(byte operand)
+        protected byte Increment(byte operand)
         {
-            this.Intermediate.Word = (ushort)(operand + 1);
+            this.Intermediate.Joined = (ushort)(operand + 1);
             var result = this.Intermediate.Low;
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustOverflow(operand, 1, this.Intermediate);
@@ -1993,7 +2017,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte LogicalShiftRight(byte operand)
+        protected byte LogicalShiftRight(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
             this.CC = this.AdjustNZ(operand >>= 1);
@@ -2003,7 +2027,7 @@ namespace MC6809
         private void MUL()
         {
             this.SwallowRead(9);
-            this.D.Word = (ushort)(this.A * this.B);
+            this.D.Joined = (ushort)(this.A * this.B);
             this.CC = this.AdjustZero(this.D);
             this.CC = SetBit(this.CC, StatusBits.CF, this.D.Low & (byte)Bits.Bit7);
         }
@@ -2019,10 +2043,10 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte Negate(byte operand)
+        protected byte Negate(byte operand)
         {
             this.CC = SetBit(this.CC, StatusBits.VF, operand == (byte)Bits.Bit7);
-            this.Intermediate.Word = (ushort)(~operand + 1);
+            this.Intermediate.Joined = (ushort)(~operand + 1);
             operand = this.Intermediate.Low;
             this.CC = this.AdjustNZ(operand);
             this.CC = this.AdjustCarry(this.Intermediate);
@@ -2038,7 +2062,13 @@ namespace MC6809
         private void ORA() => this.A = this.Or(this.A);
         private void ORB() => this.B = this.Or(this.B);
 
-        private byte Or(byte operand) => this.Through((byte)(operand | this.Bus.Data));
+        protected ushort Or(ushort operand, ushort data) => this.Through((ushort)(operand | data));
+
+        protected void Or(Register16 operand, Register16 data, Register16 destination) => destination.Joined = this.Or(operand.Joined, data.Joined);
+
+        protected byte Or(byte operand, byte data) => this.Through((byte)(operand | data));
+
+        protected byte Or(byte operand) => this.Or(operand, this.Bus.Data);
 
         private void ROLA() => this.A = this.RotateLeft(this.A);
 
@@ -2051,7 +2081,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte RotateLeft(byte operand)
+        protected byte RotateLeft(byte operand)
         {
             var carryIn = this.CarryFlag;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit7);
@@ -2072,7 +2102,7 @@ namespace MC6809
             this.MemoryWrite(result);
         }
 
-        private byte RotateRight(byte operand)
+        protected byte RotateRight(byte operand)
         {
             var carryIn = this.CarryFlag;
             this.CC = SetBit(this.CC, StatusBits.CF, operand & (byte)Bits.Bit0);
@@ -2096,29 +2126,33 @@ namespace MC6809
         private void SBCA() => this.A = this.SubtractWithCarry(this.A);
         private void SBCB() => this.B = this.SubtractWithCarry(this.B);
 
-        private byte SubtractWithCarry(byte operand) => this.Subtract(operand, this.Bus.Data, (byte)this.CarryFlag);
+        private byte SubtractWithCarry(byte operand) => this.Subtract(operand, this.Bus.Data, this.CarryFlag);
 
         private void SUBA() => this.A = this.Subtract(this.A);
         private void SUBB() => this.B = this.Subtract(this.B);
 
         private byte Subtract(byte operand) => this.Subtract(operand, this.Bus.Data);
 
-        private byte Subtract(byte operand, byte data, byte carry = 0)
+        protected byte Subtract(byte operand, byte data, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand - data - carry);
+            this.Intermediate.Joined = (ushort)(operand - data - carry);
             this.CC = this.AdjustSubtraction(operand, data, this.Intermediate);
             return this.Intermediate.Low;
         }
 
         private void SUBD() => this.Subtract(this.D, this.Intermediate, this.D);
 
-        private void Subtract(Register16 operand, Register16 data, Register16 result)
+        protected ushort Subtract(ushort operand, ushort data, int carry = 0)
         {
-            var subtraction = operand.Word - data.Word;
+            var subtraction = operand - data - carry;
             this.CC = this.AdjustSubtraction(operand, data, (uint)subtraction);
-            result.Word = (ushort)subtraction;
             this.SwallowRead();
+            return (ushort)subtraction;
         }
+
+        protected void Subtract(Register16 operand, Register16 data, int carry, Register16 result) => result.Joined = this.Subtract(operand.Joined, data.Joined, carry);
+
+        protected void Subtract(Register16 operand, Register16 data, Register16 result) => this.Subtract(operand, data, 0, result);
 
         private void SEX() => this.A = this.SEX(this.B);
 
@@ -2196,11 +2230,11 @@ namespace MC6809
             this.SwallowRead();
         }
 
-        private void LEA(Register16 register) => register.Assign(this.EA);
+        protected void LEA(Register16 register) => register.Assign(this.EA);
 
         private void ABX()
         {
-            this.X.Word += this.B;
+            this.X.Joined += this.B;
             this.SwallowRead();
         }
 

@@ -71,9 +71,9 @@ namespace MC6809.UnitTest
             this.board.Poke(1, (byte)(data >> 8));
             this.board.Poke(2, (byte)(data & 0xFF));
             this.cpu.CC = 0;
-            this.cpu.D.Word = (ushort)operand;
+            this.cpu.D.Joined = (ushort)operand;
             this.cpu.Step();
-            Assert.AreEqual((ushort)expected, this.cpu.D.Word);
+            Assert.AreEqual((ushort)expected, this.cpu.D.Joined);
             Assert.AreEqual((byte)flags, (byte)(this.cpu.CC & 0x0F));
         }
 
@@ -193,9 +193,9 @@ namespace MC6809.UnitTest
             this.board.Poke(1, (byte)(data >> 8));
             this.board.Poke(2, (byte)(data & 0xFF));
             this.cpu.CC = 0;
-            this.cpu.D.Word = (ushort)operand;
+            this.cpu.D.Joined = (ushort)operand;
             this.cpu.Step();
-            Assert.AreEqual((ushort)expected, this.cpu.D.Word);
+            Assert.AreEqual((ushort)expected, this.cpu.D.Joined);
             Assert.AreEqual((byte)flags, (byte)(this.cpu.CC & 0x0F));
         }
 

@@ -40,7 +40,7 @@
 
             this.Runner.RaisePOWER();
             this.InitialiseState(test);
-            var pc = cpu.PC.Word;
+            var pc = cpu.PC.Joined;
 
             this.Cycles = cpu.Step();
             this.Runner.LowerPOWER();
@@ -116,7 +116,7 @@
             this.Valid = false;
         }
 
-        private bool Check(string what, ushort expected, Register16 actual) => this.Check(what, expected, actual.Word);
+        private bool Check(string what, ushort expected, Register16 actual) => this.Check(what, expected, actual.Joined);
 
         private bool Check(string what, ushort expected, ushort actual)
         {
@@ -318,7 +318,7 @@
 
         private void RaiseFlags(string what, byte expected, byte actual) => this.Messages.Add($"{what}: expected: {Disassembler.AsFlags(expected)}, actual: {Disassembler.AsFlags(actual)}");
 
-        private void Raise(string what, ushort expected, Register16 actual) => this.Raise(what, expected, actual.Word);
+        private void Raise(string what, ushort expected, Register16 actual) => this.Raise(what, expected, actual.Joined);
 
         private void Raise(string what, ushort expected, ushort actual) => this.Messages.Add($"{what}: expected: {expected:X4}, actual: {actual:X4}");
 
@@ -346,13 +346,13 @@
             var runner = this.Runner;
             var cpu = runner.CPU;
 
-            cpu.PC.Word = state.PC;
-            cpu.SP.Word = state.SP;
+            cpu.PC.Joined = state.PC;
+            cpu.SP.Joined = state.SP;
 
-            cpu.AF.Word = state.AF_;
-            cpu.BC.Word = state.BC_;
-            cpu.DE.Word = state.DE_;
-            cpu.HL.Word = state.HL_;
+            cpu.AF.Joined = state.AF_;
+            cpu.BC.Joined = state.BC_;
+            cpu.DE.Joined = state.DE_;
+            cpu.HL.Joined = state.HL_;
 
             cpu.Exx();
             cpu.ExxAF();
@@ -372,10 +372,10 @@
             cpu.IFF1 = state.IFF1 != 0;
             cpu.IFF2 = state.IFF2 != 0;
 
-            cpu.MEMPTR.Word = state.WZ;
+            cpu.MEMPTR.Joined = state.WZ;
 
-            cpu.IX.Word = state.IX;
-            cpu.IY.Word = state.IY;
+            cpu.IX.Joined = state.IX;
+            cpu.IY.Joined = state.IY;
 
             var initialRAM = state.RAM ?? throw new InvalidOperationException("Initial test state cannot have invalid RAM");
             foreach (var entry in initialRAM)
@@ -408,7 +408,7 @@
             }
         }
 
-        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Word, value, action);
+        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Joined, value, action);
 
         private void AddActualCycle(ushort address, byte value, string action) => this.ActualCycles.Add(new Cycle(address, value, action));
 

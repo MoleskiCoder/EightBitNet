@@ -61,7 +61,7 @@ namespace EightBit.UnitTest
         [TestMethod]
         public void MakeWord_CreatesCorrectWord()
         {
-            Assert.AreEqual(0x1234, Chip.MakeWord(0x34, 0x12));
+            Assert.AreEqual(0x1234, Chip.MakeShort(0x34, 0x12));
         }
 
         [TestMethod]

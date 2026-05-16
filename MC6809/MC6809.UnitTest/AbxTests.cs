@@ -31,9 +31,9 @@ namespace MC6809.UnitTest
         public void TestInherent()
         {
             this.cpu.B = 0x84;
-            this.cpu.X.Word = 0x1097;
+            this.cpu.X.Joined = 0x1097;
             this.cpu.Step();
-            Assert.AreEqual(0x111b, this.cpu.X.Word);
+            Assert.AreEqual(0x111b, this.cpu.X.Joined);
             Assert.AreEqual(3, this.cpu.Cycles);
         }
 
@@ -42,16 +42,16 @@ namespace MC6809.UnitTest
         {
             this.cpu.A = 0;
             this.cpu.B = 0xce;
-            this.cpu.X.Word = 0x8006;
-            this.cpu.Y.Word = 0;
-            this.cpu.U.Word = 0;
+            this.cpu.X.Joined = 0x8006;
+            this.cpu.Y.Joined = 0;
+            this.cpu.U.Joined = 0;
             this.cpu.CC = 0;
             this.cpu.Step();
             Assert.AreEqual(0, this.cpu.A);
             Assert.AreEqual(0xce, this.cpu.B);
-            Assert.AreEqual(0x80d4, this.cpu.X.Word);
-            Assert.AreEqual(0, this.cpu.Y.Word);
-            Assert.AreEqual(0, this.cpu.U.Word);
+            Assert.AreEqual(0x80d4, this.cpu.X.Joined);
+            Assert.AreEqual(0, this.cpu.Y.Joined);
+            Assert.AreEqual(0, this.cpu.U.Joined);
             Assert.IsFalse(this.cpu.Carry);
             Assert.IsFalse(this.cpu.Overflow);
             Assert.IsFalse(this.cpu.Zero);
@@ -65,16 +65,16 @@ namespace MC6809.UnitTest
         {
             this.cpu.A = 0;
             this.cpu.B = 0xd6;
-            this.cpu.X.Word = 0x7ffe;
-            this.cpu.Y.Word = 0;
-            this.cpu.U.Word = 0;
+            this.cpu.X.Joined = 0x7ffe;
+            this.cpu.Y.Joined = 0;
+            this.cpu.U.Joined = 0;
             this.cpu.CC = (byte)(StatusBits.CF | StatusBits.VF | StatusBits.ZF);
             this.cpu.Step();
             Assert.AreEqual(0, this.cpu.A);
             Assert.AreEqual(0xd6, this.cpu.B);
-            Assert.AreEqual(0x80d4, this.cpu.X.Word);
-            Assert.AreEqual(0, this.cpu.Y.Word);
-            Assert.AreEqual(0, this.cpu.U.Word);
+            Assert.AreEqual(0x80d4, this.cpu.X.Joined);
+            Assert.AreEqual(0, this.cpu.Y.Joined);
+            Assert.AreEqual(0, this.cpu.U.Joined);
             Assert.IsTrue(this.cpu.Carry);
             Assert.IsTrue(this.cpu.Overflow);
             Assert.IsTrue(this.cpu.Zero);

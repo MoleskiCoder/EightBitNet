@@ -31,7 +31,7 @@ namespace MC6809.UnitTest
             this.cpu.CC = 0;
             this.cpu.A = 0x7f;
             this.cpu.DP = 0xf6;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -45,14 +45,14 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x1e);
             this.board.Poke(0xb01, 0x01);
             this.cpu.CC = 0;
-            this.cpu.D.Word = 0x117f;
-            this.cpu.X.Word = 0xff16;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.D.Joined = 0x117f;
+            this.cpu.X.Joined = 0xff16;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
-            Assert.AreEqual(0xff16, this.cpu.D.Word);
-            Assert.AreEqual(0x117f, this.cpu.X.Word);
+            Assert.AreEqual(0xff16, this.cpu.D.Joined);
+            Assert.AreEqual(0x117f, this.cpu.X.Joined);
         }
 
         [TestMethod]
@@ -62,13 +62,13 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb01, 0x81);
             this.cpu.CC = 0;
             this.cpu.A = 0x56;
-            this.cpu.X.Word = 0x1234;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.X.Joined = 0x1234;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
             Assert.AreEqual(0x34, this.cpu.A);
-            Assert.AreEqual(0xff56, this.cpu.X.Word);
+            Assert.AreEqual(0xff56, this.cpu.X.Joined);
         }
     }
 }

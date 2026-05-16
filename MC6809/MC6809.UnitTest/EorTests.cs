@@ -31,18 +31,18 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestEOR_indexed()
         {
-            this.cpu.Y.Word = 0x12f0;
+            this.cpu.Y.Joined = 0x12f0;
             this.cpu.A = 0xf2;
             this.cpu.CC = 0x03;
             this.board.Poke(0x12f8, 0x98);
             this.board.Poke(0xb00, 0xa8);
             this.board.Poke(0xb01, 0x28);
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
             this.cpu.Step();
             Assert.AreEqual(0x98, this.board.Peek(0x12f8));
             Assert.AreEqual(0x6a, this.cpu.A);
             Assert.AreEqual(0x01, this.cpu.CC);
-            Assert.AreEqual(0x12f0, this.cpu.Y.Word);
+            Assert.AreEqual(0x12f0, this.cpu.Y.Joined);
         }
     }
 }

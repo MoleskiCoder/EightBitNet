@@ -26,25 +26,25 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestPSHS_all()
         {
-            this.cpu.S.Word = 517;
+            this.cpu.S.Joined = 517;
             this.cpu.CC = 0xf;
             this.cpu.A = 1;
             this.cpu.B = 2;
             this.cpu.DP = 3;
-            this.cpu.X.Word = 0x405;
-            this.cpu.Y.Word = 0x607;
-            this.cpu.U.Word = 0x809;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.X.Joined = 0x405;
+            this.cpu.Y.Joined = 0x607;
+            this.cpu.U.Joined = 0x809;
+            this.cpu.PC.Joined = 0xb00;
             this.board.Poke(0xb00, 0x34);
             this.board.Poke(0xb01, 0xff);
 
             this.cpu.Step();
 
-            Assert.AreEqual(0xb02, this.cpu.PC.Word);
+            Assert.AreEqual(0xb02, this.cpu.PC.Joined);
             Assert.AreEqual(0xf, this.cpu.CC);
             Assert.AreEqual(1, this.cpu.A);
             Assert.AreEqual(2, this.cpu.B);
-            Assert.AreEqual(517 - 12, this.cpu.S.Word);
+            Assert.AreEqual(517 - 12, this.cpu.S.Joined);
             Assert.AreEqual(0x02, this.board.Peek(517 - 1));
             Assert.AreEqual(0x0b, this.board.Peek(517 - 2));
             Assert.AreEqual(0x09, this.board.Peek(517 - 3));
@@ -62,25 +62,25 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestPSHU_all()
         {
-            this.cpu.U.Word = 517;
+            this.cpu.U.Joined = 517;
             this.cpu.CC = 0xf;
             this.cpu.A = 1;
             this.cpu.B = 2;
             this.cpu.DP = 3;
-            this.cpu.X.Word = 0x405;
-            this.cpu.Y.Word = 0x607;
-            this.cpu.S.Word = 0x809;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.X.Joined = 0x405;
+            this.cpu.Y.Joined = 0x607;
+            this.cpu.S.Joined = 0x809;
+            this.cpu.PC.Joined = 0xb00;
             this.board.Poke(0xb00, 0x36);
             this.board.Poke(0xb01, 0xff);
 
             this.cpu.Step();
 
-            Assert.AreEqual(0xb02, this.cpu.PC.Word);
+            Assert.AreEqual(0xb02, this.cpu.PC.Joined);
             Assert.AreEqual(0xf, this.cpu.CC);
             Assert.AreEqual(1, this.cpu.A);
             Assert.AreEqual(2, this.cpu.B);
-            Assert.AreEqual(517 - 12, this.cpu.U.Word);
+            Assert.AreEqual(517 - 12, this.cpu.U.Joined);
             Assert.AreEqual(0x02, this.board.Peek(517 - 1));
             Assert.AreEqual(0x0b, this.board.Peek(517 - 2));
             Assert.AreEqual(0x09, this.board.Peek(517 - 3));

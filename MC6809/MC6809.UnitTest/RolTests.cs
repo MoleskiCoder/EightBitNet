@@ -31,11 +31,11 @@ namespace MC6809.UnitTest
             this.cpu.CC = 0;
             this.cpu.CC |= (byte)StatusBits.NF;
             this.cpu.CC |= (byte)StatusBits.CF;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
-            Assert.AreEqual(0xb01, this.cpu.PC.Word);
+            Assert.AreEqual(0xb01, this.cpu.PC.Joined);
             Assert.AreEqual(0x13, this.cpu.B);
             Assert.AreEqual(0x3, this.cpu.CC);
             Assert.IsTrue(this.cpu.Carry);
@@ -49,7 +49,7 @@ namespace MC6809.UnitTest
             this.cpu.CC |= (byte)StatusBits.CF;
             this.cpu.CC |= (byte)StatusBits.VF;
             this.cpu.B = 1;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -63,7 +63,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xB00, 0x59);
             this.cpu.CC = 0;
             this.cpu.B = 0xd8;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 

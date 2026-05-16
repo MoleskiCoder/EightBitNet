@@ -31,17 +31,17 @@ namespace MC6809
             var a = this.CPU.A;
             var b = this.CPU.B;
             var dp = this.CPU.DP;
-            var x = this.CPU.X.Word;
-            var y = this.CPU.Y.Word;
-            var u = this.CPU.U.Word;
-            var s = this.CPU.S.Word;
+            var x = this.CPU.X.Joined;
+            var y = this.CPU.Y.Joined;
+            var u = this.CPU.U.Joined;
+            var s = this.CPU.S.Joined;
             return $"{current:x4}|{disassembled}\t\tcc={cc:x2} a={a:x2} b={b:x2} dp={dp:x2} x={x:x4} y={y:x4} u={u:x4} s={s:x4}";
         }
 
         public string Trace(Register16 current)
         {
             ArgumentNullException.ThrowIfNull(current, nameof(current));
-            return this.Trace(current.Word);
+            return this.Trace(current.Joined);
         }
 
         public string Trace() => this.Trace(this.CPU.PC);
@@ -828,6 +828,6 @@ namespace MC6809
 
         private byte GetByte(ushort absolute) => this.BUS.Peek(absolute);
 
-        private ushort GetWord(ushort absolute) => this.CPU.PeekWord(absolute).Word;
+        private ushort GetWord(ushort absolute) => this.CPU.PeekShort(absolute).Joined;
     }
 }

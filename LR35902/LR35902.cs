@@ -249,7 +249,7 @@ namespace LR35902
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.SP.Word = (ushort)(Mask.Sixteen - 1);
+            this.SP.Joined = (ushort)(Mask.Sixteen - 1);
             this.TickMachine(4);
         }
 
@@ -368,10 +368,10 @@ namespace LR35902
             return this.Bus.Data;
         }
 
-        protected override void PushWord(Register16 value)
+        protected override void PushShort(Register16 value)
         {
             this.TickMachine();
-            base.PushWord(value);
+            base.PushShort(value);
         }
 
         protected override void JumpRelative(sbyte offset)
@@ -533,9 +533,9 @@ namespace LR35902
                                 case 0: // NOP
                                     break;
                                 case 1: // GB: LD (nn),SP
-                                    this.FetchWord();
+                                    this.FetchShort();
                                     this.Bus.Address.Assign(this.Intermediate);
-                                    this.SetWord(this.SP);
+                                    this.SetShort(this.SP);
                                     break;
                                 case 2: // GB: STOP
                                     this.Stop();
@@ -766,11 +766,11 @@ namespace LR35902
 
                                 case 5:
                                     { // GB: ADD SP,dd
-                                        var before = this.SP.Word;
+                                        var before = this.SP.Joined;
                                         var value = (sbyte)this.FetchByte();
                                         this.TickMachine(2);
                                         var result = before + value;
-                                        this.SP.Word = (ushort)result;
+                                        this.SP.Joined = (ushort)result;
                                         var carried = before ^ value ^ (result & (int)Mask.Sixteen);
                                         this.ClearBit(StatusBits.ZF | StatusBits.NF);
                                         this.SetBit(StatusBits.CF, carried & (int)Bits.Bit8);
@@ -784,11 +784,11 @@ namespace LR35902
 
                                 case 7:
                                     { // GB: LD HL,SP + dd
-                                        var before = this.SP.Word;
+                                        var before = this.SP.Joined;
                                         var value = (sbyte)this.FetchByte();
                                         this.TickMachine();
                                         var result = before + value;
-                                        this.HL.Word = (ushort)result;
+                                        this.HL.Joined = (ushort)result;
                                         var carried = before ^ value ^ (result & (int)Mask.Sixteen);
                                         this.ClearBit(StatusBits.ZF | StatusBits.NF);
                                         this.SetBit(StatusBits.CF, carried & (int)Bits.Bit8);
@@ -892,7 +892,7 @@ namespace LR35902
                             switch (q)
                             {
                                 case 0: // PUSH rp2[p]
-                                    this.PushWord(this.RP2(p));
+                                    this.PushShort(this.RP2(p));
                                     break;
 
                                 case 1:
@@ -992,8 +992,8 @@ namespace LR35902
         private void Add(Register16 value)
         {
             this.Intermediate.Assign(this.HL);
-            var result = this.HL.Word + value.Word;
-            this.HL.Word = (ushort)result;
+            var result = this.HL.Joined + value.Joined;
+            this.HL.Joined = (ushort)result;
             this.ClearBit(StatusBits.NF);
             this.SetBit(StatusBits.CF, result & (int)Bits.Bit16);
             this.AdjustHalfCarryAdd(this.Intermediate.High, value.High, this.HL.High);
@@ -1001,7 +1001,7 @@ namespace LR35902
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand + value + carry);
+            this.Intermediate.Joined = (ushort)(operand + value + carry);
             var result = this.Intermediate.Low;
 
             this.AdjustHalfCarryAdd(operand, value, result);
@@ -1017,7 +1017,7 @@ namespace LR35902
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand - value - carry);
+            this.Intermediate.Joined = (ushort)(operand - value - carry);
             var result = this.Intermediate.Low;
 
             this.AdjustHalfCarrySub(operand, value, result);

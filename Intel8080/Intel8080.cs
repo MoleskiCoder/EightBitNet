@@ -127,7 +127,7 @@ namespace Intel8080
         {
             base.HandleRESET();
             this.DisableInterrupts();
-            this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
+            this.SP.Joined = this.AF.Joined = (ushort)Mask.Sixteen;
         }
 
         private byte ReadDataUnderInterrupt()
@@ -340,8 +340,8 @@ namespace Intel8080
                                             this.WriteMemoryIndirect(this.DE, this.A);
                                             break;
                                         case 2: // LD (nn),HL
-                                            this.FetchWordAddress();
-                                            this.SetWord(this.HL);
+                                            this.FetchShortAddress();
+                                            this.SetShort(this.HL);
                                             break;
                                         case 3: // LD (nn),A
                                             this.FetchInto(this.MEMPTR);
@@ -362,7 +362,7 @@ namespace Intel8080
                                             this.A = this.ReadMemoryIndirect(this.DE);
                                             break;
                                         case 2: // LD HL,(nn)
-                                            this.FetchWordAddress();
+                                            this.FetchShortAddress();
                                             this.GetInto(this.HL);
                                             break;
                                         case 3: // LD A,(nn)
@@ -566,7 +566,7 @@ namespace Intel8080
                             {
                                 case 0: // PUSH rp2[p]
                                     this.Tick();
-                                    this.PushWord(this.RP2(p));
+                                    this.PushShort(this.RP2(p));
                                     break;
                                 case 1:
                                     switch (p)
@@ -677,8 +677,8 @@ namespace Intel8080
 
         private Register16 Add(Register16 operand, Register16 value)
         {
-            var addition = operand.Word + value.Word;
-            this.Intermediate.Word = (ushort)addition;
+            var addition = operand.Joined + value.Joined;
+            this.Intermediate.Joined = (ushort)addition;
 
             SetBit(StatusBits.CF, addition & (int)Bits.Bit16);
 
@@ -687,7 +687,7 @@ namespace Intel8080
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand + value + carry);
+            this.Intermediate.Joined = (ushort)(operand + value + carry);
             var result = this.Intermediate.Low;
 
             AdjustAuxiliaryCarryAdd(operand, value, result);
@@ -702,10 +702,10 @@ namespace Intel8080
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand - value - carry);
+            this.Intermediate.Joined = (ushort)(operand - value - carry);
             var result = this.Intermediate.Low;
 
-            AdjustAuxiliaryCarrySub(operand, value, this.Intermediate.Word);
+            AdjustAuxiliaryCarrySub(operand, value, this.Intermediate.Joined);
 
             SetBit(StatusBits.CF, CarryTest(this.Intermediate.High));
             AdjustSZP(result);

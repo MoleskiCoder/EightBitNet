@@ -15,10 +15,7 @@ namespace EightBit
             this.High = high;
         }
 
-        public Register16(ushort value)
-        {
-            this.Word = value;
-        }
+        public Register16(ushort value) => this.Joined = value;
 
         public Register16()
         {
@@ -46,9 +43,9 @@ namespace EightBit
             this.High = rhs.High;
         }
 
-        public ushort Word
+        public ushort Joined
         {
-            get => Chip.MakeWord(this._low, this._high);
+            get => Chip.MakeShort(this._low, this._high);
             set
             {
                 this._low = Chip.LowByte(value);
@@ -66,9 +63,13 @@ namespace EightBit
             return left.Equals(right);
         }
 
+        public bool Zero => this.Joined == 0;
+
+        public bool NonZero => !this.Zero;
+
         public static bool operator !=(Register16 left, Register16 right) => !(left == right);
 
-        public override int GetHashCode() => this.Word;
+        public override int GetHashCode() => this.Joined;
 
         public override bool Equals(object? obj) => this.Equals(obj as Register16);
 
@@ -87,8 +88,8 @@ namespace EightBit
             this.High = from.High;
         }
 
-        public void Increment() => ++this.Word;
+        public void Increment() => ++this.Joined;
 
-        public void Decrement() => --this.Word;
+        public void Decrement() => --this.Joined;
     }
 }

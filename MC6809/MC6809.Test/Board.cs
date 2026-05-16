@@ -79,7 +79,7 @@ namespace MC6809.Test
             this.CPU.RaiseHALT();
 
             // Get the ACIA ready for action
-            Address.Word = 0b1010000000000000;
+            Address.Joined = 0b1010000000000000;
             Data = (byte)(MC6850.ControlRegister.CR0 | MC6850.ControlRegister.CR1);  // Master reset
             this.ACIA.CTS.Lower();
             this.ACIA.RW.Lower();
@@ -181,7 +181,7 @@ namespace MC6809.Test
 
         private void CPU_ExecutingInstruction(object? sender, EventArgs e)
         {
-            this._disassembleAt = this.CPU.PC.Word;
+            this._disassembleAt = this.CPU.PC.Joined;
             this._ignoreDisassembly = this._disassembler.Ignore || this._disassembler.Pause;
         }
 
@@ -215,10 +215,10 @@ namespace MC6809.Test
         private void UpdateAciaPins()
         {
             this.ACIA.DATA = this.Data;
-            this.ACIA.RS.Match(this.Address.Word & (ushort)Bits.Bit0);
-            this.ACIA.CS0.Match(this.Address.Word & (ushort)Bits.Bit15);
-            this.ACIA.CS1.Match(this.Address.Word & (ushort)Bits.Bit13);
-            this.ACIA.CS2.Match(this.Address.Word & (ushort)Bits.Bit14);
+            this.ACIA.RS.Match(this.Address.Joined & (ushort)Bits.Bit0);
+            this.ACIA.CS0.Match(this.Address.Joined & (ushort)Bits.Bit15);
+            this.ACIA.CS1.Match(this.Address.Joined & (ushort)Bits.Bit13);
+            this.ACIA.CS2.Match(this.Address.Joined & (ushort)Bits.Bit14);
         }
 
         private bool AccessAcia()

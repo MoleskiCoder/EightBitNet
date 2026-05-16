@@ -27,7 +27,7 @@ namespace EightBit
         public byte Peek(Register16 absolute)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            return this.Peek(absolute.Word);
+            return this.Peek(absolute.Joined);
         }
 
         public void Poke(byte value) => this.Reference() = value;
@@ -37,7 +37,7 @@ namespace EightBit
         public void Poke(Register16 absolute, byte value)
         {
             ArgumentNullException.ThrowIfNull(absolute);
-            this.Poke(absolute.Word, value);
+            this.Poke(absolute.Joined, value);
         }
 
         public byte Read()
@@ -80,7 +80,7 @@ namespace EightBit
             return ref mapped.Memory.Reference(offset);
         }
 
-        protected ref byte Reference() => ref this.Reference(this.Address.Word);
+        protected ref byte Reference() => ref this.Reference(this.Address.Joined);
 
         protected void LoadHexFile(string path)
         {

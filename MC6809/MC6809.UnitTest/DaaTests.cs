@@ -35,7 +35,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x19);
             this.cpu.CC = 0;
             this.cpu.A = 0x7f;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 

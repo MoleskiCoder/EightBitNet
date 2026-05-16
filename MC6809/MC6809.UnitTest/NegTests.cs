@@ -28,7 +28,7 @@ namespace MC6809.UnitTest
         {
             this.board.Poke(0xb00, 0x40);
             this.cpu.A = 0;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -41,7 +41,7 @@ namespace MC6809.UnitTest
         {
             this.board.Poke(0xb00, 0x40);
             this.cpu.A = 1;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -54,7 +54,7 @@ namespace MC6809.UnitTest
         {
             this.board.Poke(0xb00, 0x40);
             this.cpu.A = 2;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -68,7 +68,7 @@ namespace MC6809.UnitTest
         {
             this.board.Poke(0xb00, 0x40);
             this.cpu.A = 0x80;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 

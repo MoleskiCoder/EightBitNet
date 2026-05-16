@@ -168,7 +168,7 @@
 
         private void Processor_RaisingSYNC(object? sender, EventArgs e)
         {
-            this.executingAddress = this.processor.Bus.Address.Word;
+            this.executingAddress = this.processor.Bus.Address.Joined;
             ++this.instructionCounts[this.executingInstruction = this.processor.Bus.Data];
         }
 

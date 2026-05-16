@@ -118,12 +118,12 @@ namespace EightBit
 
         protected void ResetRegisterSet()
         {
-            this.AF.Word = this.BC.Word = this.DE.Word = this.HL.Word = (ushort)Mask.Sixteen;
+            this.AF.Joined = this.BC.Joined = this.DE.Joined = this.HL.Joined = (ushort)Mask.Sixteen;
         }
 
         private void IntelProcessor_RaisedPOWER(object? sender, EventArgs e)
         {
-            this.PC.Word = this.SP.Word = (ushort)Mask.Sixteen;
+            this.PC.Joined = this.SP.Joined = (ushort)Mask.Sixteen;
             this.ResetRegisterSet();
             this.RaiseHALT();
         }
@@ -155,15 +155,15 @@ namespace EightBit
             return this.Bus.Data;
         }
 
-        protected sealed override void GetWord()
+        protected sealed override void GetShort()
         {
-            base.GetWord();
+            base.GetShort();
             this.MEMPTR.Assign(this.Bus.Address);
         }
 
-        protected sealed override void SetWord(Register16 value)
+        protected sealed override void SetShort(Register16 value)
         {
-            base.SetWord(value);
+            base.SetShort(value);
             this.MEMPTR.Assign(this.Bus.Address);
         }
 
@@ -263,7 +263,7 @@ namespace EightBit
 
         protected virtual void JumpRelative(sbyte offset)
         {
-            this.MEMPTR.Word = (ushort)(this.PC.Word + offset);
+            this.MEMPTR.Joined = (ushort)(this.PC.Joined + offset);
             this.Jump();
         }
 

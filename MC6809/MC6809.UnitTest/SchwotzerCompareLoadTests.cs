@@ -95,9 +95,9 @@ namespace MC6809.UnitTest
             this.board.Poke(2, (byte)(data >> 8));
             this.board.Poke(3, (byte)(data & 0xFF));
             this.cpu.CC = 0;
-            this.cpu.D.Word = (ushort)operand;
+            this.cpu.D.Joined = (ushort)operand;
             this.cpu.Step();
-            Assert.AreEqual((ushort)operand, this.cpu.D.Word);  // D must not be modified
+            Assert.AreEqual((ushort)operand, this.cpu.D.Joined);  // D must not be modified
             Assert.AreEqual((byte)flags, (byte)(this.cpu.CC & 0x0F));
         }
 
@@ -138,9 +138,9 @@ namespace MC6809.UnitTest
             this.board.Poke(1, (byte)(data >> 8));
             this.board.Poke(2, (byte)(data & 0xFF));
             this.cpu.CC = 0;
-            this.cpu.D.Word = 0x1234;  // pre-load a different value
+            this.cpu.D.Joined = 0x1234;  // pre-load a different value
             this.cpu.Step();
-            Assert.AreEqual((ushort)data, this.cpu.D.Word);
+            Assert.AreEqual((ushort)data, this.cpu.D.Joined);
             Assert.AreEqual((byte)flags, (byte)(this.cpu.CC & 0x0E));
         }
 
@@ -184,7 +184,7 @@ namespace MC6809.UnitTest
             this.board.Poke(1, 0x01);
             this.board.Poke(2, 0x00);
             this.cpu.CC = 0;
-            this.cpu.D.Word = (ushort)data;
+            this.cpu.D.Joined = (ushort)data;
             this.cpu.Step();
             var stored = (ushort)((this.board.Peek(0x0100) << 8) | this.board.Peek(0x0101));
             Assert.AreEqual((ushort)data, stored);
@@ -205,9 +205,9 @@ namespace MC6809.UnitTest
             this.board.Poke(0, 0x31);
             this.board.Poke(1, 0xA4);  // ,Y (no offset, indirect=0)
             this.cpu.CC = 0;
-            this.cpu.Y.Word = (ushort)yValue;
+            this.cpu.Y.Joined = (ushort)yValue;
             this.cpu.Step();
-            Assert.AreEqual((ushort)yValue, this.cpu.Y.Word);
+            Assert.AreEqual((ushort)yValue, this.cpu.Y.Joined);
             Assert.AreEqual((byte)flags, (byte)(this.cpu.CC & 0x04));
         }
 

@@ -548,7 +548,7 @@ namespace M6502
 
         private byte GetByte(ushort absolute) => this.bus.Peek(absolute);
 
-        private ushort GetWord(ushort absolute) => this.processor.PeekWord(absolute).Word;
+        private ushort GetWord(ushort absolute) => this.processor.PeekShort(absolute).Joined;
 
         private string Dump_Byte(ushort absolute) => DumpByteValue(this.GetByte(absolute));
 

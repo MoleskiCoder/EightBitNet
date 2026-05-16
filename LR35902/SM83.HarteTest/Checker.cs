@@ -38,7 +38,7 @@
 
             this.Runner.RaisePOWER();
             this.InitialiseState(test);
-            var pc = cpu.PC.Word;
+            var pc = cpu.PC.Joined;
 
             this.Cycles = cpu.Step();
             this.Runner.LowerPOWER();
@@ -58,8 +58,8 @@
 
                 var final = test.Final ?? throw new InvalidOperationException("Final test state cannot be null");
 
-                this.Raise("PC", final.PC, cpu.PC.Word);
-                this.Raise("SP", final.SP, cpu.SP.Word);
+                this.Raise("PC", final.PC, cpu.PC.Joined);
+                this.Raise("SP", final.SP, cpu.SP.Joined);
                 this.Raise("A", final.A, cpu.A);
                 this.Raise("F", final.F, cpu.F);
                 this.Raise("B", final.B, cpu.B);
@@ -205,8 +205,8 @@
             }
 
             var final = test.Final ?? throw new InvalidOperationException("Final state cannot be null");
-            var pc_good = this.Check("PC", final.PC, cpu.PC.Word);
-            var sp_good = this.Check("SP", final.SP, cpu.SP.Word);
+            var pc_good = this.Check("PC", final.PC, cpu.PC.Joined);
+            var sp_good = this.Check("SP", final.SP, cpu.SP.Joined);
             var a_good = this.Check("A", final.A, cpu.A);
             var f_good = this.Check("F", final.F, cpu.F);
             var b_good = this.Check("B", final.B, cpu.B);
@@ -298,8 +298,8 @@
             var runner = this.Runner;
             var cpu = runner.CPU;
 
-            cpu.PC.Word = state.PC;
-            cpu.SP.Word = state.SP;
+            cpu.PC.Joined = state.PC;
+            cpu.SP.Joined = state.SP;
             cpu.A = state.A;
             cpu.F = state.F;
             cpu.B = state.B;
@@ -335,7 +335,7 @@
 
         private void Runner_WrittenByte(object? sender, EventArgs e) => this.AddActualCycle(this.Runner.Address, this.Runner.Data, "-wm");
 
-        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Word, value, action);
+        private void AddActualCycle(EightBit.Register16 address, byte value, string action) => this.AddActualCycle(address.Joined, value, action);
 
         private void AddActualCycle(ushort address, byte value, string action) => this.ActualCycles.Add(new Cycle(address, value, action));
 

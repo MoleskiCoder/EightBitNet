@@ -72,8 +72,8 @@ namespace LR35902.BlarggTest
             var e = this.CPU.E;
             var h = this.CPU.H;
             var l = this.CPU.L;
-            var sp = this.CPU.SP.Word;
-            var pc = this.CPU.PC.Word;
+            var sp = this.CPU.SP.Joined;
+            var pc = this.CPU.PC.Joined;
             var aa = this.Peek(pc);
             var bb = this.Peek((ushort)(pc + 1));
             var cc = this.Peek((ushort)(pc + 2));

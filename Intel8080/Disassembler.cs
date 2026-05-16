@@ -27,8 +27,8 @@ namespace Intel8080
         {
             ArgumentNullException.ThrowIfNull(cpu);
 
-            var pc = cpu.PC.Word;
-            var sp = cpu.SP.Word;
+            var pc = cpu.PC.Joined;
+            var sp = cpu.SP.Joined;
 
             var a = cpu.A;
             var f = cpu.F;
@@ -53,7 +53,7 @@ namespace Intel8080
         public string Disassemble(Intel8080 cpu)
         {
             ArgumentNullException.ThrowIfNull(cpu);
-            return this.Disassemble(cpu, cpu.PC.Word);
+            return this.Disassemble(cpu, cpu.PC.Joined);
         }
 
         private static string CC(int flag) => flag switch
@@ -426,7 +426,7 @@ namespace Intel8080
             var q = decoded.Q;
 
             var immediate = this.Bus.Peek((ushort)(pc + 1));
-            var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
+            var absolute = cpu.PeekShort((ushort)(pc + 1)).Joined;
             var displacement = (sbyte)immediate;
             var relative = pc + displacement + 2;
             var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));

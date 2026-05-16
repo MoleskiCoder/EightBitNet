@@ -130,7 +130,7 @@ namespace LR35902
         {
             this.Poke(NR52, 0xf1);
             this.Poke(LCDC, (byte)(LcdcControls.BG_EN | LcdcControls.TILE_SEL | LcdcControls.LCD_EN));
-            this.divCounter.Word = 0xabcc;
+            this.divCounter.Joined = 0xabcc;
             this.timerCounter = 0;
         }
 
@@ -309,7 +309,7 @@ namespace LR35902
 
                     case DIV: // R/W
                         this.Poke(port, 0);
-                        this.timerCounter = this.divCounter.Word = 0;
+                        this.timerCounter = this.divCounter.Joined = 0;
                         break;
                     case TIMA: // R/W
                         break;
@@ -328,7 +328,7 @@ namespace LR35902
                     case SCX:
                         break;
                     case DMA:
-                        this.dmaAddress.Word = Chip.PromoteByte(value);
+                        this.dmaAddress.Joined = Chip.PromoteByte(value);
                         this.dmaTransferActive = true;
                         break;
                     case LY: // R/O

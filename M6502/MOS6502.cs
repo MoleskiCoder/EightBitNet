@@ -173,7 +173,7 @@ namespace M6502
 
         protected override void FixupBranch(sbyte relative)
         {
-            this.NoteFixedAddress(this.PC.Word + relative);
+            this.NoteFixedAddress(this.PC.Joined + relative);
             this.MaybeFixup();
         }
 

@@ -71,7 +71,7 @@ namespace LR35902
             var masked = cpu.MaskedInterrupts;
 
             return
-                  $"PC={pc.Word:x4} SP={sp.Word:x4} "
+                  $"PC={pc.Joined:x4} SP={sp.Joined:x4} "
                 + $"A={a:x2} F={AsFlags(f)} "
                 + $"B={b:x2} C={c:x2} "
                 + $"D={d:x2} E={e:x2} "
@@ -83,7 +83,7 @@ namespace LR35902
         {
             ArgumentNullException.ThrowIfNull(cpu);
             this.prefixCB = false;
-            return this.Disassemble(cpu, cpu.PC.Word);
+            return this.Disassemble(cpu, cpu.PC.Joined);
         }
 
         private static string RP(int rp) => rp switch
@@ -279,7 +279,7 @@ namespace LR35902
             var q = decoded.Q;
 
             var immediate = this.Bus.Peek((ushort)(pc + 1));
-            var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
+            var absolute = cpu.PeekShort((ushort)(pc + 1)).Joined;
             var displacement = (sbyte)immediate;
             var relative = pc + displacement + 2;
             var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));

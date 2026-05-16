@@ -32,17 +32,17 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestRts()
         {
-            this.cpu.S.Word = 0x300;
+            this.cpu.S.Joined = 0x300;
 
-            this.cpu.PokeWord(0x300, 0x102C); // Write return address
+            this.cpu.PokeShort(0x300, 0x102C); // Write return address
             this.board.Poke(0xB00, 0x39); // RTS
 
-            this.cpu.PC.Word = 0xB00;
+            this.cpu.PC.Joined = 0xB00;
 
             this.cpu.Step();
 
-            Assert.AreEqual(0x102C, this.cpu.PC.Word);
-            Assert.AreEqual(0x302, this.cpu.S.Word);
+            Assert.AreEqual(0x102C, this.cpu.PC.Joined);
+            Assert.AreEqual(0x302, this.cpu.S.Joined);
             Assert.AreEqual(5, this.cpu.Cycles);
         }
     }

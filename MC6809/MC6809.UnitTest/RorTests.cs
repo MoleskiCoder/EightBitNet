@@ -31,7 +31,7 @@ namespace MC6809.UnitTest
             this.cpu.B = 0x89;
             this.cpu.CC = 0;
             this.cpu.CC |= (byte)StatusBits.CF;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -48,7 +48,7 @@ namespace MC6809.UnitTest
             this.cpu.B = 0x89;
             this.cpu.CC = 0;
             this.cpu.CC = Chip.ClearBit(this.cpu.CC, (byte)StatusBits.CF);
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 

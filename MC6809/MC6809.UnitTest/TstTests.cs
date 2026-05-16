@@ -29,7 +29,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x4D);
             this.cpu.CC = 0;
             this.cpu.A = 0xff;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -46,7 +46,7 @@ namespace MC6809.UnitTest
             this.cpu.CC = 0;
             this.cpu.CC |= (byte)StatusBits.VF;
             this.cpu.A = 0x01;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -60,7 +60,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x4D);
             this.cpu.CC = 0;
             this.cpu.A = 0;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -73,10 +73,10 @@ namespace MC6809.UnitTest
         public void TestTSTA_indirect()
         {
             this.board.Poke(0x205, 0xff);
-            this.cpu.Y.Word = 0x205;
+            this.cpu.Y.Joined = 0x205;
             this.board.Poke(0xb00, 0x6d);
             this.board.Poke(0xb01, 0xa4);
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -92,7 +92,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x4D);
             this.cpu.CC = (byte)StatusBits.CF;
             this.cpu.A = 0x01;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -108,7 +108,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x4D);
             this.cpu.CC = (byte)StatusBits.VF; // V set, C clear
             this.cpu.A = 0x01;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -122,7 +122,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb00, 0x5D);
             this.cpu.CC = (byte)StatusBits.CF;
             this.cpu.B = 0x80;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 
@@ -140,7 +140,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xb01, 0x03);
             this.board.Poke(0xb02, 0x00);
             this.cpu.CC = (byte)StatusBits.CF;
-            this.cpu.PC.Word = 0xb00;
+            this.cpu.PC.Joined = 0xb00;
 
             this.cpu.Step();
 

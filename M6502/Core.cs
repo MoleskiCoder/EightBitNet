@@ -211,7 +211,7 @@ namespace M6502
             }
             else
             {
-                this.PushWord(this.PC);
+                this.PushShort(this.PC);
                 this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
             }
             this.SEI();   // Disable IRQ
@@ -654,18 +654,18 @@ namespace M6502
         protected void NoteFixedAddress(ushort address)
         {
             this.UnfixedPage = this.Bus.Address.High;
-            this.Intermediate.Word = address;
+            this.Intermediate.Joined = address;
             this.FixedPage = this.Intermediate.High;
             this.Bus.Address.Low = this.Intermediate.Low;
         }
 
         protected void GetAddressPaged()
         {
-            this.GetWordPaged();
+            this.GetShortPaged();
             this.Bus.Address.Assign(this.Intermediate);
         }
 
-        protected void AbsoluteAddress() => this.FetchWordAddress();
+        protected void AbsoluteAddress() => this.FetchShortAddress();
 
         protected void ZeroPageAddress() => this.Bus.Address.Assign(this.FetchByte());
 
@@ -690,7 +690,7 @@ namespace M6502
         private void AbsoluteWithIndexAddress(byte index)
         {
             this.AbsoluteAddress();
-            this.NoteFixedAddress(this.Bus.Address.Word + index);
+            this.NoteFixedAddress(this.Bus.Address.Joined + index);
         }
 
         protected void AbsoluteXAddress() => this.AbsoluteWithIndexAddress(this.X);
@@ -706,7 +706,7 @@ namespace M6502
         protected void IndirectIndexedYAddress()
         {
             this.ZeroPageIndirectAddress();
-            this.NoteFixedAddress(this.Bus.Address.Word + this.Y);
+            this.NoteFixedAddress(this.Bus.Address.Joined + this.Y);
         }
 
         #endregion
@@ -928,7 +928,7 @@ namespace M6502
         protected virtual byte BinarySUB(byte operand, int borrow = 0)
         {
             var data = this.Bus.Data;
-            this.Intermediate.Word = (ushort)(operand - data - borrow);
+            this.Intermediate.Joined = (ushort)(operand - data - borrow);
             return this.Intermediate.Low;
         }
 
@@ -978,7 +978,7 @@ namespace M6502
         protected virtual byte BinaryADC(byte data)
         {
             var operand = this.A;
-            this.Intermediate.Word = (ushort)(operand + data + this.Carry);
+            this.Intermediate.Joined = (ushort)(operand + data + this.Carry);
 
             this.AdjustOverflowAdd(operand);
             this.SetFlag(StatusBits.CF, CarryTest(this.Intermediate.High));
@@ -991,22 +991,22 @@ namespace M6502
             var operand = this.A;
 
             var low = (ushort)(LowerNibble(operand) + LowerNibble(data) + this.Carry);
-            this.Intermediate.Word = (ushort)(HigherNibble(operand) + HigherNibble(data));
+            this.Intermediate.Joined = (ushort)(HigherNibble(operand) + HigherNibble(data));
 
-            this.AdjustZero(LowByte((ushort)(low + this.Intermediate.Word)));
+            this.AdjustZero(LowByte((ushort)(low + this.Intermediate.Joined)));
 
             if (low > 0x09)
             {
-                this.Intermediate.Word += 0x10;
+                this.Intermediate.Joined += 0x10;
                 low += 0x06;
             }
 
             this.AdjustNegative(this.Intermediate.Low);
             this.AdjustOverflowAdd(operand);
 
-            if (this.Intermediate.Word > 0x90)
+            if (this.Intermediate.Joined > 0x90)
             {
-                this.Intermediate.Word += 0x60;
+                this.Intermediate.Joined += 0x60;
             }
 
             this.SetFlag(StatusBits.CF, this.Intermediate.High);
@@ -1056,7 +1056,7 @@ namespace M6502
 
         protected void CMP(byte first, byte second)
         {
-            this.Intermediate.Word = (ushort)(first - second);
+            this.Intermediate.Joined = (ushort)(first - second);
             this.AdjustNZ(this.Intermediate.Low);
             this.ResetFlag(StatusBits.CF, this.Intermediate.High);
         }
@@ -1089,7 +1089,7 @@ namespace M6502
         {
             var low = this.FetchByte();
             this.SwallowPop();
-            this.PushWord(this.PC);
+            this.PushShort(this.PC);
             var high = this.FetchByte();
             this.PC.Assign(low, high);
         }

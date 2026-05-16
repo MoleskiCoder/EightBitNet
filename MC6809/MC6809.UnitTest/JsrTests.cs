@@ -35,16 +35,16 @@ namespace MC6809.UnitTest
         public void TestJsr()
         {
             // Set up a word to test at address 0x205
-            this.cpu.PokeWord(0x205, 0x03ff);
+            this.cpu.PokeShort(0x205, 0x03ff);
 
             // Set register D
-            this.cpu.D.Word = 0x105;
+            this.cpu.D.Joined = 0x105;
 
             // Set register Y to point to that location minus 5
-            this.cpu.Y.Word = 0x200;
+            this.cpu.Y.Joined = 0x200;
 
             // Set register S to point to 0x915
-            this.cpu.S.Word = 0x915;
+            this.cpu.S.Joined = 0x915;
 
             // Two bytes of instruction
             this.board.Poke(0xB00, 0xAD);
@@ -52,7 +52,7 @@ namespace MC6809.UnitTest
             this.board.Poke(0xB02, 0x11); // Junk
             this.board.Poke(0xB03, 0x22); // Junk
 
-            this.cpu.PC.Word = 0xB00;
+            this.cpu.PC.Joined = 0xB00;
             this.cpu.CC = 0;
 
             this.cpu.Step();
@@ -61,12 +61,12 @@ namespace MC6809.UnitTest
             Assert.AreEqual(0x01, this.cpu.A);
             Assert.AreEqual(0x05, this.cpu.B);
             Assert.AreEqual(0, this.cpu.DP);
-            Assert.AreEqual(0, this.cpu.X.Word);
-            Assert.AreEqual(0x200, this.cpu.Y.Word);
-            Assert.AreEqual(0x105, this.cpu.D.Word);
-            Assert.AreEqual(0x913, this.cpu.S.Word);
-            Assert.AreEqual(0, this.cpu.U.Word);
-            Assert.AreEqual(0x305, this.cpu.PC.Word);
+            Assert.AreEqual(0, this.cpu.X.Joined);
+            Assert.AreEqual(0x200, this.cpu.Y.Joined);
+            Assert.AreEqual(0x105, this.cpu.D.Joined);
+            Assert.AreEqual(0x913, this.cpu.S.Joined);
+            Assert.AreEqual(0, this.cpu.U.Joined);
+            Assert.AreEqual(0x305, this.cpu.PC.Joined);
 
             Assert.AreEqual(2, this.board.Peek(0x914));
             Assert.AreEqual(0xb, this.board.Peek(0x913));

@@ -73,7 +73,7 @@ namespace MC6809
             }
         }
 
-        private void Processor_ExecutingInstruction(object? sender, EventArgs e) => this.address = this.processor.PC.Word;
+        private void Processor_ExecutingInstruction(object? sender, EventArgs e) => this.address = this.processor.PC.Joined;
 
         private void Processor_ExecutedInstruction(object? sender, EventArgs e)
         {

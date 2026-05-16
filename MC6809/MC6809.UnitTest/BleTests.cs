@@ -38,7 +38,7 @@ namespace MC6809.UnitTest
         [TestMethod]
         public void TestBLE1()
         {
-            Assert.AreEqual(0, this.cpu.PC.Word);
+            Assert.AreEqual(0, this.cpu.PC.Joined);
             this.cpu.CC = (byte)StatusBits.ZF;
             this.cpu.Step();
             this.cpu.Step();

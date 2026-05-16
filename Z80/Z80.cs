@@ -88,8 +88,8 @@ namespace Z80
 
         private void DisplaceAddress()
         {
-            var displacement = (this._prefixDD ? this.IX : this.IY).Word + this._displacement;
-            this.MEMPTR.Word = (ushort)displacement;
+            var displacement = (this._prefixDD ? this.IX : this.IY).Joined + this._displacement;
+            this.MEMPTR.Joined = (ushort)displacement;
             this.Bus.Address.Assign(this.MEMPTR);
         }
 
@@ -183,7 +183,7 @@ namespace Z80
             this.REFRESH = 0;
             this.IV = (byte)Mask.Eight;
 
-            this.IX.Word = this.IY.Word = (ushort)Mask.Sixteen;
+            this.IX.Joined = this.IY.Joined = (ushort)Mask.Sixteen;
 
             // One of the register sets has been initialised
             // (by the IntelProcessor base class)
@@ -543,7 +543,7 @@ namespace Z80
             this.DisableInterrupts();
             this.IM = 0;
             this.IV = this.REFRESH = 0;
-            this.SP.Word = this.AF.Word = (ushort)Mask.Sixteen;
+            this.SP.Joined = this.AF.Joined = (ushort)Mask.Sixteen;
         }
 
         private byte ReadDataUnderInterrupt()
@@ -956,14 +956,14 @@ namespace Z80
                             this.Tick(7);
                             break;
                         case 3: // Retrieve/store register pair from/to immediate address
-                            this.FetchWordAddress();
+                            this.FetchShortAddress();
                             switch (q)
                             {
                                 case 0: // LD (nn), rp[p]
-                                    this.SetWord(this.RP(p));
+                                    this.SetShort(this.RP(p));
                                     break;
                                 case 1: // LD rp[p], (nn)
-                                    this.GetWord();
+                                    this.GetShort();
                                     this.RP(p).Assign(this.Intermediate);
                                     break;
                                 default:
@@ -1193,8 +1193,8 @@ namespace Z80
                                             WriteMemoryIndirect(this.DE, this.A);
                                             break;
                                         case 2: // LD (nn),HL
-                                            this.FetchWordAddress();
-                                            this.SetWord(this.HL2());
+                                            this.FetchShortAddress();
+                                            this.SetShort(this.HL2());
                                             break;
                                         case 3: // LD (nn),A
                                             this.FetchInto(this.MEMPTR);
@@ -1215,8 +1215,8 @@ namespace Z80
                                             this.A = this.ReadMemoryIndirect(this.DE);
                                             break;
                                         case 2: // LD HL,(nn)
-                                            this.FetchWordAddress();
-                                            this.GetWord();
+                                            this.FetchShortAddress();
+                                            this.GetShort();
                                             this.HL2().Assign(this.Intermediate);
                                             break;
                                         case 3: // LD A,(nn)
@@ -1595,7 +1595,7 @@ namespace Z80
         private void PushRegisterPair(int p)
         {
             this.Tick();
-            this.PushWord(this.RP2(p));
+            this.PushShort(this.RP2(p));
         }
 
         private void PopRegisterPair(int p)
@@ -1675,7 +1675,7 @@ namespace Z80
 
         private byte Subtract(byte operand, byte value, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand - value - carry);
+            this.Intermediate.Joined = (ushort)(operand - value - carry);
             var result = this.Intermediate.Low;
 
             this.AdjustHalfCarrySub(operand, value, result);
@@ -1737,11 +1737,11 @@ namespace Z80
 
         private Register16 SBC(Register16 operand, Register16 value)
         {
-            var subtraction = operand.Word - value.Word - this.Carry();
-            this.Intermediate.Word = (ushort)subtraction;
+            var subtraction = operand.Joined - value.Joined - this.Carry();
+            this.Intermediate.Joined = (ushort)subtraction;
 
             this.SetBit(StatusBits.NF);
-            this.ClearBit(StatusBits.ZF, this.Intermediate.Word);
+            this.ClearBit(StatusBits.ZF, this.Intermediate.Joined);
             this.SetBit(StatusBits.CF, subtraction & (int)Bits.Bit16);
             this.AdjustHalfCarrySub(operand.High, value.High, this.Intermediate.High);
             this.AdjustXY(this.Intermediate.High);
@@ -1753,7 +1753,7 @@ namespace Z80
             this.SetBit(StatusBits.SF, afterNegative);
             this.AdjustOverflowSub(beforeNegative, valueNegative, afterNegative);
 
-            this.MEMPTR.Word = (ushort)(operand.Word + 1);
+            this.MEMPTR.Joined = (ushort)(operand.Joined + 1);
 
             return this.Intermediate;
         }
@@ -1761,7 +1761,7 @@ namespace Z80
         private Register16 ADC(Register16 operand, Register16 value)
         {
             this.Add(operand, value, this.Carry());
-            this.ClearBit(StatusBits.ZF, this.Intermediate.Word);
+            this.ClearBit(StatusBits.ZF, this.Intermediate.Joined);
 
             var beforeNegative = SignTest(operand.High);
             var valueNegative = SignTest(value.High);
@@ -1775,22 +1775,22 @@ namespace Z80
 
         private Register16 Add(Register16 operand, Register16 value, int carry = 0)
         {
-            var addition = operand.Word + value.Word + carry;
-            this.Intermediate.Word = (ushort)addition;
+            var addition = operand.Joined + value.Joined + carry;
+            this.Intermediate.Joined = (ushort)addition;
 
             this.ClearBit(StatusBits.NF);
             this.SetBit(StatusBits.CF, addition & (int)Bits.Bit16);
             this.AdjustHalfCarryAdd(operand.High, value.High, this.Intermediate.High);
             this.AdjustXY(this.Intermediate.High);
 
-            this.MEMPTR.Word = (ushort)(operand.Word + 1);
+            this.MEMPTR.Joined = (ushort)(operand.Joined + 1);
 
             return this.Intermediate;
         }
 
         private byte Add(byte operand, byte value, int carry = 0)
         {
-            this.Intermediate.Word = (ushort)(operand + value + carry);
+            this.Intermediate.Joined = (ushort)(operand + value + carry);
             var result = this.Intermediate.Low;
 
             this.AdjustHalfCarryAdd(operand, value, result);
@@ -2017,7 +2017,7 @@ namespace Z80
             this.MemoryRead(this.HL);
             var result = (byte)(this.A - this.Bus.Data);
 
-            this.SetBit(StatusBits.PF, --this.BC.Word);
+            this.SetBit(StatusBits.PF, --this.BC.Joined);
 
             this.AdjustSZ(result);
             this.AdjustHalfCarrySub(this.A, this.Bus.Data, result);
@@ -2071,7 +2071,7 @@ namespace Z80
             }
             else
             {
-                this.MEMPTR.Word = (ushort)(this.PC.Word - 2);
+                this.MEMPTR.Joined = (ushort)(this.PC.Joined - 2);
                 this.Tick(2);
             }
         }
@@ -2092,7 +2092,7 @@ namespace Z80
             this.SetBit(StatusBits.XF, xy & (int)Bits.Bit3);
             this.SetBit(StatusBits.YF, xy & (int)Bits.Bit1);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
-            this.SetBit(StatusBits.PF, --this.BC.Word);
+            this.SetBit(StatusBits.PF, --this.BC.Joined);
         }
 
         #region Block load single

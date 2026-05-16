@@ -53,13 +53,13 @@ namespace Z80
             var im = cpu.IM;
 
             return
-                  $"PC={pc.Word:x4} SP={sp.Word:x4} "
+                  $"PC={pc.Joined:x4} SP={sp.Joined:x4} "
                 + $"A={a:x2} F={AsFlags(f)} "
                 + $"B={b:x2} C={c:x2} "
                 + $"D={d:x2} E={e:x2} "
                 + $"H={h:x2} L={l:x2} "
-                + $"IX={cpu.IX.Word:x4} "
-                + $"IY={cpu.IY.Word:x4} "
+                + $"IX={cpu.IX.Joined:x4} "
+                + $"IY={cpu.IY.Joined:x4} "
                 + $"I={i:x2} R={(byte)r:x2} "
                 + $"IM={im} "
                 + $"IFF1={(cpu.IFF1 ? 1 : 0)} "
@@ -73,7 +73,7 @@ namespace Z80
         {
             ArgumentNullException.ThrowIfNull(cpu);
             this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
-            return this.Disassemble(cpu, cpu.PC.Word);
+            return this.Disassemble(cpu, cpu.PC.Joined);
         }
 
         private static string CC(int flag) => flag switch
@@ -118,7 +118,7 @@ namespace Z80
             var q = decoded.Q;
 
             var immediate = this.Bus.Peek((ushort)(pc + 1));
-            var absolute = cpu.PeekWord((ushort)(pc + 1)).Word;
+            var absolute = cpu.PeekShort((ushort)(pc + 1)).Joined;
             var displacement = (sbyte)immediate;
             var relative = pc + displacement + 2;
             var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));

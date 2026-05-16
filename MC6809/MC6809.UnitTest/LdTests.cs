@@ -30,7 +30,7 @@ namespace MC6809.UnitTest
             this.board.Poke(1, 0x86);
             this.cpu.A = 0x2b;
             this.cpu.B = 0x00;
-            this.cpu.X.Word = 0xc300;
+            this.cpu.X.Joined = 0xc300;
             this.board.Poke(0xc32b, 0x4e);
             this.cpu.Step();
             Assert.AreEqual(0x4e, this.cpu.B);
@@ -43,7 +43,7 @@ namespace MC6809.UnitTest
             this.board.Poke(1, 0x85);
             this.cpu.A = 0x00;
             this.cpu.B = 0x2b;
-            this.cpu.X.Word = 0xc300;
+            this.cpu.X.Joined = 0xc300;
             this.board.Poke(0xc32b, 0x4e);
             this.cpu.Step();
             Assert.AreEqual(0x4e, this.cpu.A);
@@ -56,8 +56,8 @@ namespace MC6809.UnitTest
             this.board.Poke(1, 0x95);
             this.cpu.A = 0x00;
             this.cpu.B = 0x2b;
-            this.cpu.X.Word = 0xc300;
-            this.cpu.PokeWord(0xc32b, 0x1234);
+            this.cpu.X.Joined = 0xc300;
+            this.cpu.PokeShort(0xc32b, 0x1234);
             this.board.Poke(0x1234, 0x56);
             this.cpu.Step();
             Assert.AreEqual(0x56, this.cpu.A);

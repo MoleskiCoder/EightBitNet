@@ -220,7 +220,7 @@ namespace M6502
         // Not used by BBR/BBS, but used by other branch instructions
         protected override void FixupBranch(sbyte relative)
         {
-            this.NoteFixedAddress(this.PC.Word + relative);
+            this.NoteFixedAddress(this.PC.Joined + relative);
             this.lastFetchAddress.Assign(this.Bus.Address);    // Effectively negate the use of "lastFetchAddress" for branch fixup usages
             this.MaybeFixup();
         }
@@ -231,7 +231,7 @@ namespace M6502
 
         protected void GetAddress()
         {
-            this.GetWordPaged();
+            this.GetShortPaged();
 
             if (this.Bus.Address.Low == 0)
             {
@@ -249,9 +249,9 @@ namespace M6502
 
         private void AbsoluteXIndirectAddress()
         {
-            var current = this.PC.Word;
+            var current = this.PC.Joined;
             this.AbsoluteXAddress();
-            this.Bus.Address.Word = current;
+            this.Bus.Address.Joined = current;
             this.SwallowSpin();
             this.Bus.Address.Assign(this.Intermediate);
             this.GetInto(this.Intermediate);
@@ -425,7 +425,7 @@ namespace M6502
             {
                 var relative = (sbyte)this.Bus.Data;
                 this.SwallowRead();
-                this.NoteFixedAddress(this.PC.Word + relative);
+                this.NoteFixedAddress(this.PC.Joined + relative);
                 if (this.Bus.Address.High != this.FixedPage)
                 {
                     this.SwallowRead();

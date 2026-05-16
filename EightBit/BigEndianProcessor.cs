@@ -5,14 +5,14 @@ namespace EightBit
 {
     public abstract class BigEndianProcessor(Bus memory) : Processor(memory)
     {
-        public override Register16 PeekWord(ushort address)
+        public override Register16 PeekShort(ushort address)
         {
             this.Intermediate.High = this.Bus.Peek(address);
             this.Intermediate.Low = this.Bus.Peek(++address);
             return this.Intermediate;
         }
 
-        public override void PokeWord(ushort address, Register16 value)
+        public override void PokeShort(ushort address, Register16 value)
         {
             //ArgumentNullException.ThrowIfNull(value);
             this.Bus.Poke(address, value.High);
@@ -49,14 +49,14 @@ namespace EightBit
             into.Low = this.Pop();
         }
 
-        protected override void PushWord(Register16 value)
+        protected override void PushShort(Register16 value)
         {
             //ArgumentNullException.ThrowIfNull(value);
             this.Push(value.Low);
             this.Push(value.High);
         }
 
-        protected override void SetWord(Register16 value)
+        protected override void SetShort(Register16 value)
         {
             //ArgumentNullException.ThrowIfNull(value);
             this.MemoryWrite(value.High);
