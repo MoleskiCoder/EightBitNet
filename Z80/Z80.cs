@@ -579,9 +579,8 @@ namespace Z80
                     Debug.Assert(this.Cycles == 13);
                     break;
                 case 2:
-                    this.Tick();
-                    this.GetPagedInto(data, this.IV, this.MEMPTR);
-                    base.Call();
+                    this.GetPagedInto(this.IV, data, this.MEMPTR);
+                    this.Call();
                     Debug.Assert(this.Cycles == 19);
                     break;
                 default:
