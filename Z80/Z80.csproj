@@ -22,12 +22,15 @@
     <Compile Remove="Z80.FuseTest\**" />
     <Compile Remove="Z80.HarteTest\**" />
     <Compile Remove="Z80.Test\**" />
+    <Compile Remove="Z80.UnitTests\**" />
     <EmbeddedResource Remove="Z80.FuseTest\**" />
     <EmbeddedResource Remove="Z80.HarteTest\**" />
     <EmbeddedResource Remove="Z80.Test\**" />
+    <EmbeddedResource Remove="Z80.UnitTests\**" />
     <None Remove="Z80.FuseTest\**" />
     <None Remove="Z80.HarteTest\**" />
     <None Remove="Z80.Test\**" />
+    <None Remove="Z80.UnitTests\**" />
   </ItemGroup>
 
   <ItemGroup>
