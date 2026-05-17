@@ -5,6 +5,7 @@
 namespace LR35902
 {
     using EightBit;
+    using System.Diagnostics;
 
     public abstract class Bus : EightBit.Bus
     {
@@ -15,33 +16,56 @@ namespace LR35902
         public const int CyclesPerLine = CyclesPerFrame / TotalLineCount;
         public const int RomPageSize = 0x4000;
 
-        private readonly Rom bootRom = new(0x100);                          // 0x0000 - 0x00ff
-        private readonly List<Rom> gameRomBanks = [];                       // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
-        private readonly List<Ram> ramBanks = [];                           // 0xa000 - 0xbfff (switchable)
-        private readonly UnusedMemory unmapped2000 = new(0x2000, 0xff);     // 0xa000 - 0xbfff
-        private readonly Ram lowInternalRam = new(0x2000);                  // 0xc000 - 0xdfff (mirrored at 0xe000)
-        private readonly UnusedMemory unmapped60 = new(0x60, 0xff);         // 0xfea0 - 0xfeff
-        private readonly Ram highInternalRam = new(0x80);                   // 0xff80 - 0xffff
+        private readonly Rom _bootRom = new(0x100);                          // 0x0000 - 0x00ff
+        private readonly List<Rom> _gameRomBanks = [];                       // 0x0000 - 0x3fff, 0x4000 - 0x7fff (switchable)
+        private readonly List<Ram> _ramBanks = [];                           // 0xa000 - 0xbfff (switchable)
+        private readonly UnusedMemory _unmapped2000 = new(0x2000, 0xff);     // 0xa000 - 0xbfff
+        private readonly Ram _lowInternalRam = new(0x2000);                  // 0xc000 - 0xdfff (mirrored at 0xe000)
+        private readonly UnusedMemory _unmapped60 = new(0x60, 0xff);         // 0xfea0 - 0xfeff
+        private readonly Ram _highInternalRam = new(0x80);                   // 0xff80 - 0xffff
 
-        private bool enabledLCD;
-        private bool rom;
-        private bool banked;
-        private bool ram;
-        private bool battery;
+        private bool _enabledLCD;
+        private bool _rom;
+        private bool _banked;
+        private bool _ram;
+        private bool _battery;
 
-        private bool higherRomBank = true;
-        private bool ramBankSwitching = false;
+        private bool _higherRomBank = true;
+        private bool _ramBankSwitching = false;
 
-        private int romBank = 1;
-        private int ramBank = 0;
+        private int _romBank = 1;
+        private int _ramBank = 0;
 
-        private int allowed = 0;
+        private int _allowed = 0;
+
+        private readonly MemoryMapping _bootRomMapping;
+        private readonly MemoryMapping _vRamMapping;
+        private readonly MemoryMapping _lowInternalRamMapping;
+        private readonly MemoryMapping _lowInternalRamMirrorMapping;
+        private readonly MemoryMapping _oamRamMapping;
+        private readonly MemoryMapping _unmapped2000Mapping;
+        private readonly MemoryMapping _unmapped60Mapping;
+        private readonly MemoryMapping _ioMapping;
+        private readonly MemoryMapping _highInternalRamMapping;
+        private readonly List<MemoryMapping> _gameRomBankMappings = [];
+        private readonly List<MemoryMapping> _ramBankMappings = [];
 
         protected Bus(bool ioTriggers = true)
         {
             this.IO = new IoRegisters(this, ioTriggers);
             this.CPU = new LR35902(this);
             this.CPU.MachineTicked += this.CPU_MachineTicked;
+
+            this._bootRomMapping = new(this._bootRom, 0x0000, Mask.Sixteen, AccessLevel.ReadOnly);
+            this._vRamMapping = new(this.VRAM, 0x8000, 0xffff, AccessLevel.ReadWrite);
+            this._lowInternalRamMapping = new(this._lowInternalRam, 0xc000, 0xffff, AccessLevel.ReadWrite);
+            this._lowInternalRamMirrorMapping = new(this._lowInternalRam, 0xe000, 0xffff, AccessLevel.ReadWrite);
+            this._oamRamMapping = new(this.OAMRAM, 0xfe00, 0xffff, AccessLevel.ReadWrite);
+            this._unmapped2000Mapping = new(this._unmapped2000, 0xa000, 0xffff, AccessLevel.ReadOnly);
+            this._unmapped60Mapping = new(this._unmapped60, 0xfea0, 0xffff, AccessLevel.ReadOnly);
+            this._ioMapping = new(this.IO, IoRegisters.BASE, 0xffff, AccessLevel.ReadWrite);
+            this._highInternalRamMapping = new(this._highInternalRam, 0xff80, 0xffff, AccessLevel.ReadWrite);
+
             this.WrittenByte += this.Bus_WrittenByte;
         }
 
@@ -81,32 +105,39 @@ namespace LR35902
 
         public void EnableGameRom() => this.GameRomDisabled = false;
 
-        public void LoadBootRom(string path) => this.bootRom.Load(path);
+        public void LoadBootRom(string path) => this._bootRom.Load(path);
 
         public void LoadGameRom(string path)
         {
-            this.gameRomBanks.Clear();
+            this._gameRomBanks.Clear();
+            this._gameRomBankMappings.Clear();
 
             const int bankSize = 0x4000;
 
             var rom = new Rom();
             var size = rom.Load(path, 0, 0, bankSize);
-            this.gameRomBanks.Add(rom);
+            this._gameRomBanks.Add(rom);
 
             var banks = size / bankSize;
+            this._gameRomBankMappings.Add(new(rom, 0x0000, 0xffff, AccessLevel.ReadOnly));
+            Debug.Assert(_gameRomBankMappings.Count == 1);
+
             for (var bank = 1; bank < banks; ++bank)
             {
                 var bankedROM = new Rom();
                 bankedROM.Load(path, 0, bankSize * bank, bankSize);
-                this.gameRomBanks.Add(bankedROM);
+                this._gameRomBanks.Add(bankedROM);
+                this._gameRomBankMappings.Add(new(bankedROM, 0x4000, 0xffff, AccessLevel.ReadOnly));
             }
+
+            Debug.Assert(_gameRomBankMappings.Count == banks);
 
             this.ValidateCartridgeType();
         }
 
         public void RunRasterLines()
         {
-            this.enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControls.LCD_EN) != 0;
+            this._enabledLCD = (this.IO.Peek(IoRegisters.LCDC) & (byte)LcdcControls.LCD_EN) != 0;
             this.IO.ResetLY();
             this.RunRasterLines(DisplayCharacteristics.RasterHeight);
         }
@@ -120,58 +151,36 @@ namespace LR35902
         public override MemoryMapping Mapping(ushort absolute)
         {
             if (absolute < 0x100 && this.IO.BootRomEnabled)
-            {
-                return new MemoryMapping(this.bootRom, 0x0000, Mask.Sixteen, AccessLevel.ReadOnly);
-            }
+                return this._bootRomMapping;
 
             if (absolute < 0x4000 && this.GameRomEnabled)
-            {
-                return new MemoryMapping(this.gameRomBanks[0], 0x0000, 0xffff, AccessLevel.ReadOnly);
-            }
+                return this._gameRomBankMappings[0];
 
             if (absolute < 0x8000 && this.GameRomEnabled)
-            {
-                return new MemoryMapping(this.gameRomBanks[this.romBank], 0x4000, 0xffff, AccessLevel.ReadOnly);
-            }
+                return this._gameRomBankMappings[this._romBank];
 
             if (absolute < 0xa000)
-            {
-                return new MemoryMapping(this.VRAM, 0x8000, 0xffff, AccessLevel.ReadWrite);
-            }
+                return this._vRamMapping;
 
             if (absolute < 0xc000)
-            {
-                return this.ramBanks.Count == 0
-                    ? new MemoryMapping(this.unmapped2000, 0xa000, 0xffff, AccessLevel.ReadOnly)
-                    : new MemoryMapping(this.ramBanks[this.ramBank], 0xa000, 0xffff, AccessLevel.ReadWrite);
-            }
+                return this._ramBankMappings.Count == 0 ? this._unmapped2000Mapping : this._ramBankMappings[this._ramBank];
 
             if (absolute < 0xe000)
-            {
-                return new MemoryMapping(this.lowInternalRam, 0xc000, 0xffff, AccessLevel.ReadWrite);
-            }
+                return this._lowInternalRamMapping;
 
             if (absolute < 0xfe00)
-            {
-                return new MemoryMapping(this.lowInternalRam, 0xe000, 0xffff, AccessLevel.ReadWrite); // Low internal RAM mirror
-            }
+                return this._lowInternalRamMirrorMapping;
 
             if (absolute < 0xfea0)
-            {
-                return new MemoryMapping(this.OAMRAM, 0xfe00, 0xffff, AccessLevel.ReadWrite);
-            }
+                return this._oamRamMapping;
 
             if (absolute < IoRegisters.BASE)
-            {
-                return new MemoryMapping(this.unmapped60, 0xfea0, 0xffff, AccessLevel.ReadOnly);
-            }
+                return this._unmapped60Mapping;
 
             if (absolute < 0xff80)
-            {
-                return new MemoryMapping(this.IO, IoRegisters.BASE, 0xffff, AccessLevel.ReadWrite);
-            }
+                return this._ioMapping;
 
-            return new MemoryMapping(this.highInternalRam, 0xff80, 0xffff, AccessLevel.ReadWrite);
+            return this._highInternalRamMapping;
         }
 
         private void Bus_WrittenByte(object? sender, EventArgs e)
@@ -183,7 +192,7 @@ namespace LR35902
             {
                 case 0x0000:
                     // Register 0: RAMCS gate data
-                    if (this.ram)
+                    if (this._ram)
                     {
                         throw new InvalidOperationException("Register 0: RAMCS gate data: Not handled!");
                     }
@@ -191,17 +200,17 @@ namespace LR35902
                     break;
                 case 0x2000:
                     // Register 1: ROM bank code
-                    if (this.banked && this.higherRomBank)
+                    if (this._banked && this._higherRomBank)
                     {
                         // assert((absolute >= 0x2000) && (absolute < 0x4000));
                         // assert((value > 0) && (value < 0x20));
-                        this.romBank = value & (byte)Mask.Five;
+                        this._romBank = value & (byte)Mask.Five;
                     }
 
                     break;
                 case 0x4000:
                     // Register 2: ROM bank selection
-                    if (this.banked)
+                    if (this._banked)
                     {
                         throw new InvalidOperationException("Register 2: ROM bank selection: Not handled!");
                     }
@@ -209,17 +218,17 @@ namespace LR35902
                     break;
                 case 0x6000:
                     // Register 3: ROM/RAM change
-                    if (this.banked)
+                    if (this._banked)
                     {
                         switch (value & (byte)Mask.One)
                         {
                             case 0:
-                                this.higherRomBank = true;
-                                this.ramBankSwitching = false;
+                                this._higherRomBank = true;
+                                this._ramBankSwitching = false;
                                 break;
                             case 1:
-                                this.higherRomBank = false;
-                                this.ramBankSwitching = true;
+                                this._higherRomBank = false;
+                                this._ramBankSwitching = true;
                                 break;
                             default:
                                 throw new InvalidOperationException("Unreachable");
@@ -240,15 +249,15 @@ namespace LR35902
 
         private void ValidateCartridgeType()
         {
-            this.rom = this.banked = this.ram = this.battery = false;
+            this._rom = this._banked = this._ram = this._battery = false;
 
             // ROM type
-            this.rom = this.gameRomBanks[0].Peek(0x147) switch
+            this._rom = this._gameRomBanks[0].Peek(0x147) switch
             {
                 (byte)CartridgeType.ROM => true,
-                (byte)CartridgeType.ROM_MBC1 => this.banked = true,
-                (byte)CartridgeType.ROM_MBC1_RAM => this.banked = this.ram = true,
-                (byte)CartridgeType.ROM_MBC1_RAM_BATTERY => this.banked = this.ram = this.battery = true,
+                (byte)CartridgeType.ROM_MBC1 => this._banked = true,
+                (byte)CartridgeType.ROM_MBC1_RAM => this._banked = this._ram = true,
+                (byte)CartridgeType.ROM_MBC1_RAM_BATTERY => this._banked = this._ram = this._battery = true,
                 _ => throw new InvalidOperationException("Unhandled cartridge ROM type"),
             };
 
@@ -274,7 +283,7 @@ namespace LR35902
                         }
 
                         gameRomBanks = 1 << romSizeSpecification + 1;
-                        if (gameRomBanks != this.gameRomBanks.Count)
+                        if (gameRomBanks != this._gameRomBanks.Count)
                         {
                             throw new InvalidOperationException("ROM size specification mismatch");
                         }
@@ -284,37 +293,43 @@ namespace LR35902
 
                 // RAM size
                 {
-                    var ramSizeSpecification = this.gameRomBanks[0].Peek(0x149);
+                    var ramSizeSpecification = this._gameRomBanks[0].Peek(0x149);
                     switch (ramSizeSpecification)
                     {
                         case 0:
                             break;
                         case 1:
-                            this.ramBanks.Clear();
-                            this.ramBanks.Add(new Ram(2 * 1024));
+                            this._ramBanks.Clear();
+                            this._ramBanks.Add(new Ram(2 * 1024));
                             break;
                         case 2:
-                            this.ramBanks.Clear();
-                            this.ramBanks.Add(new Ram(8 * 1024));
+                            this._ramBanks.Clear();
+                            this._ramBanks.Add(new Ram(8 * 1024));
                             break;
                         case 3:
-                            this.ramBanks.Clear();
+                            this._ramBanks.Clear();
                             for (var i = 0; i < 4; ++i)
                             {
-                                this.ramBanks.Add(new Ram(8 * 1024));
+                                this._ramBanks.Add(new Ram(8 * 1024));
                             }
 
                             break;
                         case 4:
-                            this.ramBanks.Clear();
+                            this._ramBanks.Clear();
                             for (var i = 0; i < 16; ++i)
                             {
-                                this.ramBanks.Add(new Ram(8 * 1024));
+                                this._ramBanks.Add(new Ram(8 * 1024));
                             }
 
                             break;
                         default:
                             throw new InvalidOperationException("Invalid RAM size specification");
+                    }
+
+                    this._ramBankMappings.Clear();
+                    foreach (var bank in this._ramBanks)
+                    {
+                        this._ramBankMappings.Add(new MemoryMapping(bank, 0xa000, 0xffff, AccessLevel.ReadWrite));
                     }
                 }
             }
@@ -346,7 +361,7 @@ namespace LR35902
             powered off or on, even when it was on VBL mode.
             It's only triggered when the VBL period starts.
             */
-            if (this.enabledLCD)
+            if (this._enabledLCD)
             {
                 this.IO.UpdateLcdStatusMode(LcdStatusMode.VBlank);
                 if ((this.IO.Peek(IoRegisters.STAT) & (byte)Bits.Bit4) != 0)
@@ -385,8 +400,8 @@ namespace LR35902
             The rest of the clocks of line 153 are spent in line 0 in mode 1!
             */
 
-            this.allowed += suggested;
-            if (this.enabledLCD)
+            this._allowed += suggested;
+            if (this._enabledLCD)
             {
                 if ((this.IO.Peek(IoRegisters.STAT) & (byte)Bits.Bit6) != 0 && this.IO.Peek(IoRegisters.LYC) == this.IO.Peek(IoRegisters.LY))
                 {
@@ -400,11 +415,11 @@ namespace LR35902
                     this.IO.TriggerInterrupt(Interrupts.DisplayControlStatus);
                 }
 
-                this.allowed -= this.CPU.Run(80); // ~19us
+                this._allowed -= this.CPU.Run(80); // ~19us
 
                 // Mode 3, OAM/VRAM unavailable
                 this.IO.UpdateLcdStatusMode(LcdStatusMode.TransferringDataToLcd);
-                this.allowed -= this.CPU.Run(170);    // ~41us
+                this._allowed -= this.CPU.Run(170);    // ~41us
 
                 // Mode 0
                 this.IO.UpdateLcdStatusMode(LcdStatusMode.HBlank);
@@ -413,13 +428,13 @@ namespace LR35902
                     this.IO.TriggerInterrupt(Interrupts.DisplayControlStatus);
                 }
 
-                this.allowed -= this.CPU.Run(this.allowed);  // ~48.6us
+                this._allowed -= this.CPU.Run(this._allowed);  // ~48.6us
 
                 this.IO.IncrementLY();
             }
             else
             {
-                this.allowed -= this.CPU.Run(CyclesPerLine);
+                this._allowed -= this.CPU.Run(CyclesPerLine);
             }
         }
     }

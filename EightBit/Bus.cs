@@ -2,10 +2,15 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
+
 namespace EightBit
 {
     public abstract class Bus : IMapper
     {
+        private bool _reading;
+        private bool _writing;
+
         private byte _data;
 
         public event EventHandler<EventArgs>? WritingByte;
@@ -42,17 +47,29 @@ namespace EightBit
 
         public byte Read()
         {
+            Debug.Assert(!this._writing, "Writing flag is in an invalid state");
+            Debug.Assert(!this._reading, "Reading flag is in an invalid state");
             this.ReadingByte?.Invoke(this, EventArgs.Empty);
+            this._reading = true;
             this.Data = this.Reference();
+            this._reading = false;
             ReadByte?.Invoke(this, EventArgs.Empty);
+            Debug.Assert(!this._writing, "Writing flag is in an invalid state");
+            Debug.Assert(!this._reading, "Reading flag is in an invalid state");
             return this.Data;
         }
 
         public void Write()
         {
+            Debug.Assert(!this._writing, "Writing flag is in an invalid state");
+            Debug.Assert(!this._reading, "Reading flag is in an invalid state");
             this.WritingByte?.Invoke(this, EventArgs.Empty);
+            this._writing = true;
             this.Reference() = this.Data;
+            this._writing = false;
             this.WrittenByte?.Invoke(this, EventArgs.Empty);
+            Debug.Assert(!this._writing, "Writing flag is in an invalid state");
+            Debug.Assert(!this._reading, "Reading flag is in an invalid state");
         }
 
 
@@ -73,7 +90,10 @@ namespace EightBit
             var offset = (ushort)mapped.Offset(absolute);
             if (mapped.Access == AccessLevel.ReadOnly)
             {
-                this.Data = mapped.Memory.Peek(offset);
+                if (!this._writing)
+                {
+                    this.Data = mapped.Memory.Peek(offset);
+                }
                 return ref this._data;
             }
 
