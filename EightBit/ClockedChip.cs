@@ -2,6 +2,8 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
+using System.Runtime.CompilerServices;
+
 namespace EightBit
 {
     public class ClockedChip : Chip
@@ -22,6 +24,7 @@ namespace EightBit
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Tick()
         {
             ++this.Cycles;
