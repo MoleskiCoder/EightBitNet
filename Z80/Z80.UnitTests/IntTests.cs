@@ -115,7 +115,10 @@ namespace Z80.UnitTests
         [TestMethod]
         public void Int_IM0_Executes_Instruction_From_Data_Bus()
         {
-            // RST 7 (0xFF) placed on data bus by interrupt device → jumps to 0x0038
+            // RST 7 (0xFF) placed on data bus by interrupt device → jumps to 0x0038.
+            // In practice IM 0 is always used with RST n (single-byte). The Zilog
+            // spec technically allows multi-byte instructions inherited from the 8080,
+            // but no real Z80 peripheral (PIO, SIO, CTC) ever used that capability.
             this.cpu.PC.Joined = 0x0200;
             this.cpu.IM = 0;
             this.board.Data = 0xFF; // RST 7
@@ -142,6 +145,31 @@ namespace Z80.UnitTests
 
             this.cpu.Step(); // executes RETI
             Assert.AreEqual(0x0200, this.cpu.PC.Joined, "RETI must restore PC from stack");
+        }
+
+        [TestMethod]
+        public void Reti_Restores_IFF1_From_IFF2()
+        {
+            // On real Z80 silicon RETI and RETN are electrically identical — both
+            // copy IFF2 → IFF1. The Zilog manual omits this for RETI (describing
+            // only its peripheral daisy-chain signalling role), but hardware
+            // measurement confirms the behaviour. RetI() is implemented as RetN().
+            this.board.Poke(0x0038, 0xED);
+            this.board.Poke(0x0039, 0x4D); // RETI
+
+            this.cpu.IFF2 = true; // pre-load IFF2 with the state to restore
+            this.cpu.IM = 1;
+            this.cpu.LowerINT();
+            this.cpu.Step(); // INT clears IFF1 and IFF2, jumps to 0x0038
+
+            Assert.IsFalse(this.cpu.IFF1, "INT must clear IFF1 before RETI");
+            Assert.IsFalse(this.cpu.IFF2, "INT must clear IFF2 before RETI");
+
+            // Manually set IFF2 to simulate what a real ISR would have saved
+            this.cpu.IFF2 = true;
+
+            this.cpu.Step(); // executes RETI — must copy IFF2 → IFF1
+            Assert.IsTrue(this.cpu.IFF1, "RETI must copy IFF2 into IFF1");
         }
     }
 }
