@@ -1676,9 +1676,9 @@ namespace Z80
         protected override byte FetchInstruction()
         {
             this.LowerM1();
-                base.FetchInstruction();
+                var returned = base.FetchInstruction();
             this.RaiseM1();
-            return this.Bus.Data;
+            return returned;
         }
 
         private byte Subtract(byte operand, byte value, int carry = 0)

@@ -45,6 +45,20 @@ namespace Z80.UnitTests
         }
 
         [TestMethod]
+        public void Halt_State_Forces_Nop_Regardless_Of_Memory_Contents()
+        {
+            // The Z80 manual states: "the data received from the memory is ignored
+            // and an NOP instruction is forced internally to the CPU."
+            // INC A (0x3C) at the looping address must not execute — A must be unchanged.
+            this.board.Poke(0x0000, 0x76); // HALT
+            this.board.Poke(0x0001, 0x3C); // INC A — must be suppressed while halted
+            this.cpu.A = 0x42;
+            this.cpu.Step(); // execute HALT — enters halt state, PC moves to 0x0001
+            this.cpu.Step(); // looping — memory byte (INC A) must be ignored, NOP forced
+            Assert.AreEqual(0x42, this.cpu.A, "Memory contents must be ignored during HALT; NOP must be forced");
+        }
+
+        [TestMethod]
         public void Halt_Nmi_Raises_Halt_Pin()
         {
             this.board.Poke(0x0000, 0x76); // HALT
