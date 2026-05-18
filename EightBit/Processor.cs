@@ -267,7 +267,7 @@ namespace EightBit
 
         protected abstract void Push(byte value);
 
-        protected abstract byte Pop();
+        protected abstract void Pop();
 
         protected abstract void PushShort(Register16 value);
 

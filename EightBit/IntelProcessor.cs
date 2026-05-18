@@ -148,11 +148,10 @@ namespace EightBit
             this.MemoryWrite(this.SP, value);
         }
 
-        protected sealed override byte Pop()
+        protected sealed override void Pop()
         {
             this.MemoryRead(this.SP);
             this.SP.Increment();
-            return this.Bus.Data;
         }
 
         protected sealed override void GetShort()

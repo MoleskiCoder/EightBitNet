@@ -22,12 +22,14 @@ namespace LR35902.FuseTest
         private readonly Test<T> test = test;
         private readonly Result<T> result = result;
         private readonly EightBit.Ram ram = new(0x10000);
+        private EightBit.MemoryMapping? mapping;
 
         public bool Failed { get; private set; } = false;
 
         public bool Unimplemented { get; private set; } = false;
 
-        public override EightBit.MemoryMapping Mapping(ushort address) => new(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
+        public override EightBit.MemoryMapping Mapping(ushort address) =>
+            this.mapping ??= new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
 
         public void Run()
         {

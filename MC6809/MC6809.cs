@@ -593,7 +593,7 @@ namespace MC6809
 
         #region Push/Pop
 
-        protected override byte Pop() => this.PopS();
+        protected override void Pop() => this.PopS();
 
         protected override void Push(byte value) => this.PushS(value);
 
@@ -611,19 +611,20 @@ namespace MC6809
             this.Push(stack, value.High);
         }
 
-        protected byte Pop(Register16 stack)
+        protected void Pop(Register16 stack)
         {
             this.MemoryRead(stack);
             stack.Increment();
-            return this.Bus.Data;
         }
 
-        private byte PopS() => this.Pop(this.S);
+        private void PopS() => this.Pop(this.S);
 
         protected Register16 PopWord(Register16 stack)
         {
-            this.Intermediate.High = this.Pop(stack);
-            this.Intermediate.Low = this.Pop(stack);
+            this.Pop(stack);
+            this.Intermediate.High = this.Bus.Data;
+            this.Pop(stack);
+            this.Intermediate.Low = this.Bus.Data;
             return this.Intermediate;
         }
 
@@ -1054,22 +1055,26 @@ namespace MC6809
 
             if ((control & (byte)Bits.Bit0) != 0)
             {
-                this.CC = this.Pop(stack);
+                this.Pop(stack);
+                this.CC = this.Bus.Data;
             }
 
             if ((control & (byte)Bits.Bit1) != 0)
             {
-                this.A = this.Pop(stack);
+                this.Pop(stack);
+                this.A = this.Bus.Data;
             }
 
             if ((control & (byte)Bits.Bit2) != 0)
             {
-                this.B = this.Pop(stack);
+                this.Pop(stack);
+                this.B = this.Bus.Data;
             }
 
             if ((control & (byte)Bits.Bit3) != 0)
             {
-                this.DP = this.Pop(stack);
+                this.Pop(stack);
+                this.DP = this.Bus.Data;
             }
 
             // Sixteen-bit registers

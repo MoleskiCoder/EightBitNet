@@ -586,11 +586,10 @@ namespace M6502
 
         #region Stack access
 
-        protected override byte Pop()
+        protected override void Pop()
         {
             this.RaiseStack();
             this.MemoryRead();
-            return this.Bus.Data;
         }
 
         protected override void Push(byte value)
@@ -861,7 +860,7 @@ namespace M6502
 
         private void STX() => this.MemoryWrite(this.X);
 
-        private void LDY() => this.Y = this.Through();
+        protected void LDY() => this.Y = this.Through();
 
         private void STY() => this.MemoryWrite(this.Y);
 
@@ -1105,7 +1104,8 @@ namespace M6502
         private void PLA()
         {
             this.SwallowPop();
-            this.A = this.Through(this.Pop());
+            this.Pop();
+            this.LDA();
         }
 
         private void PHP() => this.Push(SetBit(this.P, StatusBits.BF));
@@ -1113,7 +1113,8 @@ namespace M6502
         private void PLP()
         {
             this.SwallowPop();
-            this.P = ClearBit(SetBit(this.Pop(), StatusBits.RF), StatusBits.BF);
+            this.Pop();
+            this.P = ClearBit(SetBit(this.Bus.Data, StatusBits.RF), StatusBits.BF);
         }
 
         private void RTI()

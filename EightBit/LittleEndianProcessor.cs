@@ -52,8 +52,10 @@ namespace EightBit
         protected override void PopInto(Register16 into)
         {
             //ArgumentNullException.ThrowIfNull(into);
-            into.Low = this.Pop();
-            into.High = this.Pop();
+            this.Pop();
+            into.Low = this.Bus.Data;
+            this.Pop();
+            into.High = this.Bus.Data;
         }
 
         protected override void PushShort(Register16 value)

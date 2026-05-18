@@ -353,7 +353,8 @@ namespace M6502
         private void PLX()
         {
             this.SwallowPop();
-            this.X = this.Through(this.Pop());
+            this.Pop();
+            this.LDX();
         }
 
         private void PHY() => this.Push(this.Y);
@@ -361,7 +362,8 @@ namespace M6502
         private void PLY()
         {
             this.SwallowPop();
-            this.Y = this.Through(this.Pop());
+            this.Pop();
+            this.LDY();
         }
 
         private void BRA() => this.Branch(true);

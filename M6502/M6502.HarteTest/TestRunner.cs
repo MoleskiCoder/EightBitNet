@@ -6,8 +6,8 @@
     {
         public Ram RAM { get; } = new(0x10000);
 
-        public MOS6502 CPU { get; }
-        //public WDC65C02 CPU { get; }
+        //public MOS6502 CPU { get; }
+        public WDC65C02 CPU { get; }
 
         private readonly MemoryMapping _mapping;
 
