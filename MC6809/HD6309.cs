@@ -287,70 +287,80 @@ namespace MC6809
 
         private void OIM_Direct()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.DirectByte();
             this.MemoryWrite(this.EA, this.Or(mask));
         }
 
         private void OIM_Indexed()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.IndexedByte();
             this.MemoryWrite(this.EA, this.Or(mask));
         }
 
         private void OIM_Extended()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.ExtendedByte();
             this.MemoryWrite(this.EA, this.Or(mask));
         }
 
         private void AIM_Direct()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.DirectByte();
             this.MemoryWrite(this.EA, this.And(mask));
         }
 
         private void AIM_Indexed()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.IndexedByte();
             this.MemoryWrite(this.EA, this.And(mask));
         }
 
         private void AIM_Extended()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.ExtendedByte();
             this.MemoryWrite(this.EA, this.And(mask));
         }
 
         private void EIM_Direct()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.DirectByte();
             this.MemoryWrite(this.EA, this.ExclusiveOr(mask));
         }
 
         private void EIM_Indexed()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.IndexedByte();
             this.MemoryWrite(this.EA, this.ExclusiveOr(mask));
         }
 
         private void EIM_Extended()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.ExtendedByte();
             this.MemoryWrite(this.EA, this.ExclusiveOr(mask));
         }
 
         private void TIM_Direct()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.DirectByte();
             this.And(mask);
             this.SwallowRead(2);
@@ -358,7 +368,8 @@ namespace MC6809
 
         private void TIM_Indexed()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.IndexedByte();
             this.And(mask);
             this.SwallowRead(2);
@@ -366,7 +377,8 @@ namespace MC6809
 
         private void TIM_Extended()
         {
-            var mask = this.FetchByte();
+            this.FetchByte();
+            var mask = this.Bus.Data;
             this.ExtendedByte();
             this.And(mask);
             this.SwallowRead(2);

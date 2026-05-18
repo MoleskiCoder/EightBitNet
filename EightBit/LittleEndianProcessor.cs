@@ -23,24 +23,30 @@ namespace EightBit
         protected override void FetchInto(Register16 into)
         {
             //ArgumentNullException.ThrowIfNull(into);
-            into.Low = this.FetchByte();
-            into.High = this.FetchByte();
+            this.FetchByte();
+            into.Low = this.Bus.Data;
+            this.FetchByte();
+            into.High = this.Bus.Data;
         }
 
         protected override void GetInto(Register16 into)
         {
             //ArgumentNullException.ThrowIfNull(into);
-            into.Low = this.MemoryRead();
+            this.MemoryRead();
+            into.Low = this.Bus.Data;
             this.Bus.Address.Increment();
-            into.High = this.MemoryRead();
+            this.MemoryRead();
+            into.High = this.Bus.Data;
         }
 
         protected override void GetPagedInto(Register16 into)
         {
             //ArgumentNullException.ThrowIfNull(into);
-            into.Low = this.MemoryRead();
+            this.MemoryRead();
+            into.Low = this.Bus.Data;
             ++this.Bus.Address.Low;
-            into.High = this.MemoryRead();
+            this.MemoryRead();
+            into.High = this.Bus.Data;
         }
 
         protected override void PopInto(Register16 into)

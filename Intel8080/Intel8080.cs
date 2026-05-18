@@ -112,7 +112,7 @@ namespace Intel8080
             this.MemoryUpdate();
         }
 
-        protected override byte MemoryRead()
+        protected override void MemoryRead()
         {
             this.OnReadingMemory();
             this.Tick(2);
@@ -120,7 +120,6 @@ namespace Intel8080
             this.Tick();
             this.OnReadMemory();
             this.Tick();
-            return this.Bus.Data;
         }
 
         protected override void HandleRESET()
@@ -356,10 +355,12 @@ namespace Intel8080
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.A = this.ReadMemoryIndirect(this.BC);
+                                            this.ReadMemoryIndirect(this.BC);
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 1: // LD A,(DE)
-                                            this.A = this.ReadMemoryIndirect(this.DE);
+                                            this.ReadMemoryIndirect(this.DE);
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.FetchShortAddress();
@@ -367,7 +368,8 @@ namespace Intel8080
                                             break;
                                         case 3: // LD A,(nn)
                                             this.FetchInto(this.MEMPTR);
-                                            this.A = this.ReadMemoryIndirect();
+                                            this.ReadMemoryIndirect();
+                                            this.A = this.Bus.Data;
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -404,7 +406,8 @@ namespace Intel8080
                             this.Tick();
                             break;
                         case 6: // 8-bit load immediate
-                            this.R(y, this.FetchByte(), 2);// LD r,n
+                            this.FetchByte();// LD r,n
+                            this.R(y, this.Bus.Data, 2);
                             break;
                         case 7: // Assorted operations on accumulator/flags
                             switch (y)
@@ -533,10 +536,12 @@ namespace Intel8080
                                     this.JumpIndirect();
                                     break;
                                 case 2: // OUT (n),A
-                                    this.WritePort(this.FetchByte());
+                                    this.FetchByte();
+                                    this.WritePort(this.Bus.Data);
                                     break;
                                 case 3: // IN A,(n)
-                                    this.ReadPort(this.FetchByte());
+                                    this.FetchByte();
+                                    this.ReadPort(this.Bus.Data);
                                     this.A = this.Bus.Data;
                                     break;
                                 case 4: // EX (SP),HL
@@ -586,7 +591,8 @@ namespace Intel8080
                             break;
                         case 6:
                             { // Operate on accumulator and immediate operand: alu[y] n
-                                var operand = this.FetchByte();
+                                this.FetchByte();
+                                var operand = this.Bus.Data;
                                 switch (y)
                                 {
                                     case 0: // ADD A,n

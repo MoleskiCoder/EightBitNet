@@ -45,7 +45,7 @@ namespace EightBit
             this.Poke(absolute.Joined, value);
         }
 
-        public byte Read()
+        public void Read()
         {
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
             Debug.Assert(!this._reading, "Reading flag is in an invalid state");
@@ -56,7 +56,6 @@ namespace EightBit
             ReadByte?.Invoke(this, EventArgs.Empty);
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
             Debug.Assert(!this._reading, "Reading flag is in an invalid state");
-            return this.Data;
         }
 
         public void Write()

@@ -560,19 +560,18 @@ namespace M6502
             this.OnWrittenMemory();
         }
 
-        protected sealed override byte BusRead()
+        protected sealed override void BusRead()
         {
             this.OnReadingMemory();
                 this.Tick();
                 this.ReadFromBus();
             this.OnReadMemory();
-            return this.Bus.Data;
         }
 
-        private byte ReadFromBus()
+        private void ReadFromBus()
         {
             this.RaiseRW();
-            return base.BusRead();
+            base.BusRead();
         }
 
         private void WriteToBus()
@@ -590,7 +589,8 @@ namespace M6502
         protected override byte Pop()
         {
             this.RaiseStack();
-            return this.MemoryRead();
+            this.MemoryRead();
+            return this.Bus.Data;
         }
 
         protected override void Push(byte value)
@@ -633,16 +633,16 @@ namespace M6502
 
         protected abstract void Fixup();
 
-        protected byte MaybeFixupRead()
+        protected void MaybeFixupRead()
         {
             this.MaybeFixup();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte FixupRead()
+        protected void FixupRead()
         {
             this.Fixup();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
         #endregion
@@ -667,7 +667,11 @@ namespace M6502
 
         protected void AbsoluteAddress() => this.FetchShortAddress();
 
-        protected void ZeroPageAddress() => this.Bus.Address.Assign(this.FetchByte());
+        protected void ZeroPageAddress()
+        {
+            this.FetchByte();
+            this.Bus.Address.Assign(this.Bus.Data);
+        }
 
         protected void ZeroPageIndirectAddress()
         {
@@ -1087,10 +1091,12 @@ namespace M6502
 
         private void JSR()
         {
-            var low = this.FetchByte();
+            this.FetchByte();
+            var low = this.Bus.Data;
             this.SwallowPop();
             this.PushShort(this.PC);
-            var high = this.FetchByte();
+            this.FetchByte();
+            var high = this.Bus.Data;
             this.PC.Assign(low, high);
         }
 

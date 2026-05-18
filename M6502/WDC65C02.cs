@@ -204,10 +204,10 @@ namespace M6502
 
         private readonly Register16 lastFetchAddress = new();
 
-        protected override byte FetchByte()
+        protected override void FetchByte()
         {
             this.lastFetchAddress.Assign(this.PC);
-            return base.FetchByte();
+            base.FetchByte();
         }
 
         protected override void Fixup()
@@ -238,7 +238,8 @@ namespace M6502
                 this.Bus.Address.High++;
             }
 
-            this.Bus.Address.Assign(this.Intermediate.Low, this.MemoryRead());
+            this.MemoryRead();
+            this.Bus.Address.Assign(this.Intermediate.Low, this.Bus.Data);
         }
 
         protected override void IndirectAddress()
@@ -262,10 +263,10 @@ namespace M6502
 
         #region Address and read
 
-        private byte ZeroPageIndirect()
+        private void ZeroPageIndirect()
         {
             this.ZeroPageIndirectAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
         #endregion

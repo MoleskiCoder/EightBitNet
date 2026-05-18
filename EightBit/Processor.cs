@@ -92,7 +92,11 @@ namespace EightBit
             return current;
         }
 
-        protected virtual byte FetchInstruction() => this.FetchByte();
+        protected virtual byte FetchInstruction()
+        {
+            this.FetchByte();
+            return this.Bus.Data;
+        }
 
         public void Execute(byte value)
         {
@@ -182,21 +186,21 @@ namespace EightBit
 
         protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
-        protected byte MemoryRead(byte low, byte high)
+        protected void MemoryRead(byte low, byte high)
         {
             this.Bus.Address.Assign(low, high);
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected byte MemoryRead(Register16 address)
+        protected void MemoryRead(Register16 address)
         {
             this.Bus.Address.Assign(address);
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
-        protected virtual byte MemoryRead() => this.BusRead();
+        protected virtual void MemoryRead() => this.BusRead();
 
-        protected virtual byte BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
+        protected virtual void BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
         protected virtual void IncrementPC() => this.PC.Increment();
 
@@ -208,10 +212,10 @@ namespace EightBit
             this.IncrementPC();
         }
 
-        protected virtual byte FetchByte()
+        protected virtual void FetchByte()
         {
             this.ImmediateAddress();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
         protected abstract void GetInto(Register16 into);

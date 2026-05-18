@@ -109,7 +109,7 @@ namespace M6502
                 case 0xb2: this.SwallowRead(); this.JAM(); break;                                           // *JAM
                 case 0xb3: this.IndirectIndexedY(); this.LAX(); break;                                      // *LAX (indirect indexed Y)
                 case 0xb7: this.ZeroPageY(); this.LAX(); break;                                             // *LAX (zero page, Y)
-                case 0xbb: this.AbsoluteYAddress(); this.MaybeFixup(); this.LAS(); break;                   // *LAS (absolute, Y)
+                case 0xbb: this.AbsoluteYAddress(); this.MaybeFixupRead(); this.LAS(); break;               // *LAS (absolute, Y)
                 case 0xbf: this.AbsoluteY(); this.LAX(); break;                                             // *LAX (absolute, Y)
 
                 case 0xc3: this.IndexedIndirectX(); this.DCP(); break;                                      // *DCP (indexed indirect X)
@@ -289,7 +289,7 @@ namespace M6502
             this.SHA();
         }
 
-        private void LAS() => this.A = this.X = this.S = this.Through(this.MemoryRead() & this.S);
+        private void LAS() => this.A = this.X = this.S = this.Through(this.Bus.Data & this.S);
 
         private void ANE() => this.A = this.Through((this.A | 0xee) & this.X & this.Bus.Data);
 

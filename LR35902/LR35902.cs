@@ -355,7 +355,7 @@ namespace LR35902
             this.MemoryUpdate();
         }
 
-        protected override byte MemoryRead()
+        protected override void MemoryRead()
         {
             this.OnReadingMemory();
             this.LowerMWR();
@@ -365,7 +365,6 @@ namespace LR35902
                 this.RaiseRD();
             this.RaiseMWR();
             this.OnReadMemory();
-            return this.Bus.Data;
         }
 
         protected override void PushShort(Register16 value)
@@ -542,7 +541,8 @@ namespace LR35902
                                     this.TickMachine(2);
                                     break;
                                 case 3: // JR d
-                                    this.JumpRelative(this.FetchByte());
+                                    this.FetchByte();
+                                    this.JumpRelative(this.Bus.Data);
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
@@ -609,20 +609,24 @@ namespace LR35902
                                     switch(p)
                                     {
                                         case 0:   // LD A,(BC)
-                                            this.A = this.ReadMemoryIndirect(this.BC);
+                                            this.ReadMemoryIndirect(this.BC);
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 1:   // LD A,(DE)
-                                            this.A = this.ReadMemoryIndirect(this.DE);
+                                            this.ReadMemoryIndirect(this.DE);
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 2:   // GB: LDI A,(HL)
                                             this.Bus.Address.Assign(this.HL);
                                             this.HL.Increment();
-                                            this.A = this.MemoryRead();
+                                            this.MemoryRead();
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 3:   // GB: LDD A,(HL)
                                             this.Bus.Address.Assign(this.HL);
                                             this.HL.Decrement();
-                                            this.A = this.MemoryRead();
+                                            this.MemoryRead();
+                                            this.A = this.Bus.Data;
                                             break;
                                         default:
                                             throw new InvalidOperationException("Invalid operation mode");
@@ -660,7 +664,8 @@ namespace LR35902
                             break;
 
                         case 6: // 8-bit load immediate
-                            this.R(y, this.FetchByte());
+                            this.FetchByte();
+                            this.R(y, this.Bus.Data);
                             break;
 
                         case 7: // Assorted operations on accumulator/flags
@@ -761,13 +766,15 @@ namespace LR35902
                                     break;
 
                                 case 4: // GB: LD (FF00 + n),A
-                                    this.MemoryWrite(this.FetchByte(), IoRegisters.BasePage, this.A);
+                                    this.FetchByte();
+                                    this.MemoryWrite(this.Bus.Data, IoRegisters.BasePage, this.A);
                                     break;
 
                                 case 5:
                                     { // GB: ADD SP,dd
                                         var before = this.SP.Joined;
-                                        var value = (sbyte)this.FetchByte();
+                                        this.FetchByte();
+                                        var value = (sbyte)this.Bus.Data;
                                         this.TickMachine(2);
                                         var result = before + value;
                                         this.SP.Joined = (ushort)result;
@@ -779,13 +786,16 @@ namespace LR35902
                                     break;
 
                                 case 6: // GB: LD A,(FF00 + n)
-                                    this.A = this.MemoryRead(this.FetchByte(), IoRegisters.BasePage);
+                                    this.FetchByte();
+                                    this.MemoryRead(this.Bus.Data, IoRegisters.BasePage);
+                                    this.A = this.Bus.Data;
                                     break;
 
                                 case 7:
                                     { // GB: LD HL,SP + dd
                                         var before = this.SP.Joined;
-                                        var value = (sbyte)this.FetchByte();
+                                        this.FetchByte();
+                                        var value = (sbyte)this.Bus.Data;
                                         this.TickMachine();
                                         var result = before + value;
                                         this.HL.Joined = (ushort)result;
@@ -851,11 +861,13 @@ namespace LR35902
                                     this.MemoryWrite(this.MEMPTR, this.A);
                                     break;
                                 case 6: // GB: LD A,(FF00 + C)
-                                    this.A = this.MemoryRead(this.C, IoRegisters.BasePage);
+                                    this.MemoryRead(this.C, IoRegisters.BasePage);
+                                    this.A = this.Bus.Data;
                                     break;
                                 case 7: // GB: LD A,(nn)
-                                    this.FetchInto(this.MEMPTR);                                   
-                                    this.A = this.MemoryRead(this.MEMPTR);
+                                    this.FetchInto(this.MEMPTR);
+                                    this.MemoryRead(this.MEMPTR);
+                                    this.A = this.Bus.Data;
                                     break;
                                 default:
                                     throw new InvalidOperationException("Invalid operation mode");
@@ -915,7 +927,8 @@ namespace LR35902
 
                         case 6:
                             { // Operate on accumulator and immediate operand: alu[y] n
-                                var operand = this.FetchByte();
+                                this.FetchByte();
+                                var operand = this.Bus.Data;
                                 switch (y)
                                 {
                                     case 0: // ADD A,n

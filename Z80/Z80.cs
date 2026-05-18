@@ -508,7 +508,7 @@ namespace Z80
             this.RaiseRFSH();
         }
 
-        protected override byte MemoryRead()
+        protected override void MemoryRead()
         {
             this.OnReadingMemory();
             this.Tick();
@@ -524,7 +524,6 @@ namespace Z80
             }
             this.Tick();
             this.OnReadMemory();
-            return this.Bus.Data;
         }
 
         // From Zilog Z80 manual
@@ -861,7 +860,8 @@ namespace Z80
             {
                 this.Tick(2);
                 this.DisplaceAddress();
-                operand = this.MemoryRead();
+                this.MemoryRead();
+                operand = this.Bus.Data;
             }
             else
             {
@@ -1151,7 +1151,8 @@ namespace Z80
                                     this.JumpRelativeConditional(--this.B != 0);
                                     break;
                                 case 3: // JR d
-                                    this.JumpRelative(this.FetchByte());
+                                    this.FetchByte();
+                                    this.JumpRelative(this.Bus.Data);
                                     break;
                                 case 4: // JR cc,d
                                 case 5:
@@ -1208,10 +1209,12 @@ namespace Z80
                                     switch (p)
                                     {
                                         case 0: // LD A,(BC)
-                                            this.A = this.ReadMemoryIndirect(this.BC);
+                                            this.ReadMemoryIndirect(this.BC);
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 1: // LD A,(DE)
-                                            this.A = this.ReadMemoryIndirect(this.DE);
+                                            this.ReadMemoryIndirect(this.DE);
+                                            this.A = this.Bus.Data;
                                             break;
                                         case 2: // LD HL,(nn)
                                             this.FetchShortAddress();
@@ -1220,7 +1223,8 @@ namespace Z80
                                             break;
                                         case 3: // LD A,(nn)
                                             this.FetchInto(this.MEMPTR);
-                                            this.A = this.ReadMemoryIndirect();
+                                            this.ReadMemoryIndirect();
+                                            this.A = this.Bus.Data;
                                             break;
                                         default:
                                             throw new NotSupportedException("Invalid operation mode");
@@ -1399,10 +1403,12 @@ namespace Z80
                                     this.PrefixCB();
                                     break;
                                 case 2: // OUT (n),A
-                                    this.WritePort(this.FetchByte());
+                                    this.FetchByte();
+                                    this.WritePort(this.Bus.Data);
                                     break;
                                 case 3: // IN A,(n)
-                                    this.ReadPort(this.FetchByte());
+                                    this.FetchByte();
+                                    this.ReadPort(this.Bus.Data);
                                     this.A = this.Bus.Data;
                                     break;
                                 case 4: // EX (SP),HL
@@ -1459,7 +1465,8 @@ namespace Z80
                             break;
                         case 6:
                             { // Operate on accumulator and immediate operand: alu[y] n
-                                var operand = this.FetchByte();
+                                this.FetchByte();
+                                var operand = this.Bus.Data;
                                 switch (y)
                                 {
                                     case 0: // ADD A,n
@@ -1608,7 +1615,8 @@ namespace Z80
             if (this._displaced)
             {
                 this.FetchDisplacement();
-                this.Execute(this.FetchByte());
+                this.FetchByte();
+                this.Execute(this.Bus.Data);
             }
             else
             {
@@ -1649,7 +1657,8 @@ namespace Z80
         private void FetchDisplacement()
         {
             Debug.Assert(this.M1.Raised(), "Displacement cannot be fetched during an M1 cycle");
-            this._displacement = (sbyte)this.FetchByte();
+            this.FetchByte();
+            this._displacement = (sbyte)this.Bus.Data;
         }
 
         // ** From the Z80 CPU User Manual
@@ -2317,7 +2326,8 @@ namespace Z80
 
         private void RRD()
         {
-            var memory = ReadMemoryIndirect(this.HL);
+            ReadMemoryIndirect(this.HL);
+            var memory = this.Bus.Data;
             this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
             this.MemoryUpdate(5);
             this.A = (byte)(HigherNibble(this.A) | LowerNibble(memory));
@@ -2327,7 +2337,8 @@ namespace Z80
 
         private void RLD()
         {
-            var memory = ReadMemoryIndirect(this.HL);
+            ReadMemoryIndirect(this.HL);
+            var memory = this.Bus.Data;
             this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
             this.MemoryUpdate(5);
             this.A = (byte)(HigherNibble(this.A) | HighNibble(memory));

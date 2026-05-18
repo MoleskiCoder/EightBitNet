@@ -169,17 +169,17 @@ namespace EightBit
 
         ////
 
-        protected byte ReadMemoryIndirect(Register16 via)
+        protected void ReadMemoryIndirect(Register16 via)
         {
             this.MEMPTR.Assign(via);
-            return this.ReadMemoryIndirect();
+            this.ReadMemoryIndirect();
         }
 
-        protected byte ReadMemoryIndirect()
+        protected void ReadMemoryIndirect()
         {
             this.Bus.Address.Assign(this.MEMPTR);
             this.MEMPTR.Increment();
-            return this.MemoryRead();
+            this.MemoryRead();
         }
 
         protected void WriteMemoryIndirect(Register16 via, byte data)
@@ -224,10 +224,10 @@ namespace EightBit
 
         protected virtual void JumpRelativeConditional(bool condition)
         {
-            var offset = this.FetchByte();
+            this.FetchByte();
             if (condition)
             {
-                this.JumpRelative(offset);
+                this.JumpRelative(this.Bus.Data);
             }
         }
 

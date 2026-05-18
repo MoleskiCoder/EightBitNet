@@ -580,14 +580,13 @@ namespace MC6809
             this.OnWrittenMemory();
         }
 
-        protected override byte BusRead()
+        protected override void BusRead()
         {
             this.OnReadingMemory();
                 this.Tick();
                 this.RaiseRW();
                 base.BusRead();
             this.OnReadMemory();
-            return this.Bus.Data;
         }
 
         #endregion
@@ -640,7 +639,8 @@ namespace MC6809
 
         protected void RelativeByteAddress()
         {
-            var offset = (sbyte)this.FetchByte();
+            this.FetchByte();
+            var offset = (sbyte)this.Bus.Data;
             this.EA.Joined = (ushort)(this.PC.Joined + offset);
         }
 
@@ -653,7 +653,8 @@ namespace MC6809
 
         protected void DirectAddress()
         {
-            this.EA.Assign(this.FetchByte(), this.DP);
+            this.FetchByte();
+            this.EA.Assign(this.Bus.Data, this.DP);
             this.SwallowRead();
         }
 
@@ -678,7 +679,8 @@ namespace MC6809
 
         protected void IndexedAddress()
         {
-            var type = this.FetchByte();
+            this.FetchByte();
+            var type = this.Bus.Data;
             var r = this.RR((type & (byte)(Bits.Bit6 | Bits.Bit5)) >> 5);
 
             if ((type & (byte)Bits.Bit7) != 0)
@@ -781,10 +783,9 @@ namespace MC6809
             this.MemoryRead(this.EA);
         }
 
-        protected override byte FetchByte()
+        protected override void FetchByte()
         {
             this.ImmediateByte();
-            return this.Bus.Data;
         }
 
         protected void DirectByte()
