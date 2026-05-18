@@ -116,10 +116,7 @@ namespace EightBit
             return HalfCarryTableSub[index & (int)Mask.Three];
         }
 
-        protected void ResetRegisterSet()
-        {
-            this.AF.Joined = this.BC.Joined = this.DE.Joined = this.HL.Joined = (ushort)Mask.Sixteen;
-        }
+        protected void ResetRegisterSet() => this.AF.Joined = this.BC.Joined = this.DE.Joined = this.HL.Joined = (ushort)Mask.Sixteen;
 
         private void IntelProcessor_RaisedPOWER(object? sender, EventArgs e)
         {
@@ -244,10 +241,7 @@ namespace EightBit
             this.Jump();
         }
 
-        protected void Jump()
-        {
-            this.Jump(this.MEMPTR);
-        }
+        protected void Jump() => this.Jump(this.MEMPTR);
 
         protected void CallIndirect()
         {
@@ -255,10 +249,7 @@ namespace EightBit
             this.Call();
         }
 
-        protected void Call()
-        {
-            this.Call(this.MEMPTR);
-        }
+        protected void Call() => this.Call(this.MEMPTR);
 
         protected virtual void JumpRelative(sbyte offset)
         {

@@ -193,20 +193,11 @@ namespace Z80
             this.ResetRegisterSet();
         }
 
-        private void Z80_LoweredINT(object? sender, EventArgs e)
-        {
-            this._interruptPending = true;
-        }
+        private void Z80_LoweredINT(object? sender, EventArgs e) => this._interruptPending = true;
 
-        private void Z80_LoweredNMI(object? sender, EventArgs e)
-        {
-            this._nonMaskableInterruptPending = true;
-        }
+        private void Z80_LoweredNMI(object? sender, EventArgs e) => this._nonMaskableInterruptPending = true;
 
-        private void Z80_LoweredRESET(object? sender, EventArgs e)
-        {
-            this._resetPending = true;
-        }
+        private void Z80_LoweredRESET(object? sender, EventArgs e) => this._resetPending = true;
 
         #region Z80 specific pins
 
@@ -492,10 +483,7 @@ namespace Z80
             this.OnWrittenMemory();
         }
 
-        protected override void MemoryWrite()
-        {
-            this.MemoryUpdate();
-        }
+        protected override void MemoryWrite() => this.MemoryUpdate();
 
         private void RefreshMemory()
         {
@@ -737,15 +725,9 @@ namespace Z80
 
         private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
 
-        protected override void DisableInterrupts()
-        {
-            this.IFF1 = this.IFF2 = false;
-        }
+        protected override void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
 
-        protected override void EnableInterrupts()
-        {
-            this.IFF1 = this.IFF2 = true;
-        }
+        protected override void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
 
         private Register16 HL2() => this._prefixDD ? this.IX : this._prefixFD ? this.IY : this.HL;
 
@@ -1604,10 +1586,7 @@ namespace Z80
             this.PushShort(this.RP2(p));
         }
 
-        private void PopRegisterPair(int p)
-        {
-            this.PopInto(this.RP2(p));
-        }
+        private void PopRegisterPair(int p) => this.PopInto(this.RP2(p));
 
         private void PrefixCB()
         {
