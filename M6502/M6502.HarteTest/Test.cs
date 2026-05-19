@@ -1,5 +1,6 @@
 ﻿namespace M6502.HarteTest
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserializer")]
     internal sealed class Test
     {
         public string? Name { get; set; }
