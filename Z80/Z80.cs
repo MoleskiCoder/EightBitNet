@@ -88,8 +88,8 @@ namespace Z80
 
         private void DisplaceAddress()
         {
-            var displacement = (this._prefixDD ? this.IX : this.IY).Joined + this._displacement;
-            this.MEMPTR.Joined = (ushort)displacement;
+            this.MEMPTR.Assign(this._prefixDD ? this.IX : this.IY);
+            this.MEMPTR.Joined += (ushort)this._displacement;
             this.Bus.Address.Assign(this.MEMPTR);
         }
 
@@ -1740,7 +1740,8 @@ namespace Z80
             this.SetBit(StatusBits.SF, afterNegative);
             this.AdjustOverflowSub(beforeNegative, valueNegative, afterNegative);
 
-            this.MEMPTR.Joined = (ushort)(operand.Joined + 1);
+            this.MEMPTR.Assign(operand);
+            this.MEMPTR.Increment();
 
             return this.Intermediate;
         }
@@ -1770,7 +1771,8 @@ namespace Z80
             this.AdjustHalfCarryAdd(operand.High, value.High, this.Intermediate.High);
             this.AdjustXY(this.Intermediate.High);
 
-            this.MEMPTR.Joined = (ushort)(operand.Joined + 1);
+            this.MEMPTR.Assign(operand);
+            this.MEMPTR.Increment();
 
             return this.Intermediate;
         }
@@ -1995,6 +1997,7 @@ namespace Z80
             this.MEMPTR.Assign(this.PC);
             this.DecrementPC();
             this.AdjustXY(this.PC.High);
+            this.Tick(5);
         }
 
         #region Block compare
@@ -2004,7 +2007,8 @@ namespace Z80
             this.MemoryRead(this.HL);
             var result = (byte)(this.A - this.Bus.Data);
 
-            this.SetBit(StatusBits.PF, --this.BC.Joined);
+            this.BC.Decrement();
+            this.SetBit(StatusBits.PF, this.BC.Joined);
 
             this.AdjustSZ(result);
             this.AdjustHalfCarrySub(this.A, this.Bus.Data, result);
@@ -2044,7 +2048,6 @@ namespace Z80
             if (this.Parity() != 0 && this.Zero() == 0)
             {
                 this.RepeatBlockInstruction();
-                this.Tick(5);
             }
         }
 
@@ -2054,11 +2057,12 @@ namespace Z80
             if (this.Parity() != 0 && this.Zero() == 0)
             {
                 this.RepeatBlockInstruction();
-                this.Tick(5);
             }
             else
             {
-                this.MEMPTR.Joined = (ushort)(this.PC.Joined - 2);
+                this.MEMPTR.Assign(this.PC);
+                this.MEMPTR.Decrement();
+                this.MEMPTR.Decrement();
                 this.Tick(2);
             }
         }
@@ -2079,7 +2083,8 @@ namespace Z80
             this.SetBit(StatusBits.XF, xy & (int)Bits.Bit3);
             this.SetBit(StatusBits.YF, xy & (int)Bits.Bit1);
             this.ClearBit(StatusBits.NF | StatusBits.HC);
-            this.SetBit(StatusBits.PF, --this.BC.Joined);
+            this.BC.Decrement();
+            this.SetBit(StatusBits.PF, this.BC.Joined);
         }
 
         #region Block load single
@@ -2102,24 +2107,28 @@ namespace Z80
 
         #region Block load repeated
 
-        private void LDIR()
+        private void LoadRepeat()
         {
-            this.LDI();
             if (this.Parity() != 0)
             {
                 this.RepeatBlockInstruction();
             }
-            this.Tick(5);
+            else
+            {
+                this.Tick(5);
+            }
+        }
+
+        private void LDIR()
+        {
+            this.LDI();
+            this.LoadRepeat();
         }
 
         private void LDDR()
         {
             this.LDD();
-            if (this.Parity() != 0)
-            {
-                this.RepeatBlockInstruction();
-            }
-            this.Tick(5);
+            this.LoadRepeat();
         }
 
         #endregion
@@ -2206,7 +2215,6 @@ namespace Z80
             {
                 this.RepeatBlockInstruction();
                 this.AdjustBlockRepeatFlagsIO();
-                this.Tick(5);
             }
         }
 
@@ -2217,7 +2225,6 @@ namespace Z80
             {
                 this.RepeatBlockInstruction();
                 this.AdjustBlockRepeatFlagsIO();
-                this.Tick(5);
             }
         }
 
@@ -2264,7 +2271,6 @@ namespace Z80
             {
                 this.RepeatBlockInstruction();
                 this.AdjustBlockRepeatFlagsIO();
-                this.Tick(5);
             }
         }
 
@@ -2275,7 +2281,6 @@ namespace Z80
             {
                 this.RepeatBlockInstruction();
                 this.AdjustBlockRepeatFlagsIO();
-                this.Tick(5);
             }
         }
 
