@@ -1,12 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <SignAssembly>False</SignAssembly>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-	<AnalysisLevel>latest-all</AnalysisLevel>
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -17,9 +23,21 @@
     <WarningLevel>9999</WarningLevel>
   </PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\EightBit\EightBit.csproj" />
-		<ProjectReference Include="..\LR35902.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.12.6" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.4.3" />
+    <PackageReference Include="MSTest" Version="3.6.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EightBit\EightBit.csproj" />
+    <ProjectReference Include="..\LR35902.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="EightBit" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
 
 </Project>
