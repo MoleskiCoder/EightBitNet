@@ -187,7 +187,7 @@ namespace M6502
 
         #region Undocumented instructions with BCD effects
 
-        private void ARR()
+        protected virtual void ARR()
         {
             var value = this.Bus.Data;
             if (this.Denary != 0)
@@ -215,7 +215,7 @@ namespace M6502
                 this.A += 0x60;
         }
 
-        private void ARR_b(byte value)
+        protected void ARR_b(byte value)
         {
             this.A &= value;
             this.A = this.Through(this.A >> 1 | this.Carry << 7);
