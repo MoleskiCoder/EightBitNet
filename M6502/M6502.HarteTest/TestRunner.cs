@@ -1,4 +1,4 @@
-﻿namespace M6502.HarteTest
+namespace M6502.HarteTest
 {
     using EightBit;
 
@@ -6,14 +6,13 @@
     {
         public Ram RAM { get; } = new(0x10000);
 
-        public MOS6502 CPU { get; }
-        //public WDC65C02 CPU { get; }
+        public Core CPU { get; }
 
         private readonly MemoryMapping _mapping;
 
-        public TestRunner()
+        public TestRunner(Func<TestRunner, Core> cpuFactory)
         {
-            this.CPU = new(this);
+            this.CPU = cpuFactory(this);
             this._mapping = new(this.RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
         }
 

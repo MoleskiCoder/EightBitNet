@@ -5,42 +5,32 @@ namespace M6502.HarteTest
 {
     using System.Reflection;
 
-    [TestClass]
-    public class SingleStepTests
+    internal static class HarteTestHelper
     {
-        private const string TestDataDirectory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\6502\v1";
-        //private const string TestDataDirectory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\wdc65c02\v1";
-
-        public static IEnumerable<object[]> OpcodeFiles
+        internal static IEnumerable<object[]> GetOpcodeFiles(string directory)
         {
-            get
+            if (!Directory.Exists(directory))
             {
-                if (!Directory.Exists(TestDataDirectory))
-                {
-                    yield break;
-                }
+                yield break;
+            }
 
-                foreach (var file in Directory.EnumerateFiles(TestDataDirectory, "*.json").OrderBy(f => f))
+            foreach (var file in Directory.EnumerateFiles(directory, "*.json").OrderBy(f => f))
+            {
+                if (new FileInfo(file).Length > 0)
                 {
-                    if (new FileInfo(file).Length > 0)
-                    {
-                        yield return [file];
-                    }
+                    yield return [file];
                 }
             }
         }
 
-        public static string GetDisplayName(MethodInfo _, object[] data)
+        internal static string GetDisplayName(MethodInfo _, object[] data)
         {
             ArgumentNullException.ThrowIfNull(data);
             return System.IO.Path.GetFileNameWithoutExtension((string)data[0]);
         }
 
-        [TestMethod]
-        [DynamicData(nameof(OpcodeFiles), DynamicDataSourceType.Property, DynamicDataDisplayName = nameof(GetDisplayName))]
-        public async Task Opcode_SingleStep(string filePath)
+        internal static async Task RunOpcodeAsync(string filePath, TestRunner runner)
         {
-            var runner = new TestRunner();
             runner.Initialize();
             var checker = new Checker(runner);
             checker.Initialise();
@@ -68,5 +58,37 @@ namespace M6502.HarteTest
                 }
             }
         }
+    }
+
+    [TestClass]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "Test class needs to be externally visible")]
+    public class Mos6502SingleStepTests
+    {
+        private const string TestDataDirectory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\6502\v1";
+
+        public static IEnumerable<object[]> OpcodeFiles => HarteTestHelper.GetOpcodeFiles(TestDataDirectory);
+
+        public static string GetDisplayName(MethodInfo m, object[] data) => HarteTestHelper.GetDisplayName(m, data);
+
+        [TestMethod]
+        [DynamicData(nameof(OpcodeFiles), DynamicDataSourceType.Property, DynamicDataDisplayName = nameof(GetDisplayName))]
+        public async Task OpcodeSingleStep(string filePath)
+            => await HarteTestHelper.RunOpcodeAsync(filePath, new TestRunner(r => new MOS6502(r))).ConfigureAwait(false);
+    }
+
+    [TestClass]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "Test class needs to be externally visible")]
+    public class Wdc65c02SingleStepTests
+    {
+        private const string TestDataDirectory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\wdc65c02\v1";
+
+        public static IEnumerable<object[]> OpcodeFiles => HarteTestHelper.GetOpcodeFiles(TestDataDirectory);
+
+        public static string GetDisplayName(MethodInfo m, object[] data) => HarteTestHelper.GetDisplayName(m, data);
+
+        [TestMethod]
+        [DynamicData(nameof(OpcodeFiles), DynamicDataSourceType.Property, DynamicDataDisplayName = nameof(GetDisplayName))]
+        public async Task OpcodeSingleStep(string filePath)
+            => await HarteTestHelper.RunOpcodeAsync(filePath, new TestRunner(r => new WDC65C02(r))).ConfigureAwait(false);
     }
 }
