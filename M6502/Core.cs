@@ -193,29 +193,43 @@ namespace M6502
 
         #region Interrupts
 
-        private const byte IRQ_vector = 0xfe;  // IRQ vector
-        private const byte RST_vector = 0xfc;  // RST vector
-        private const byte NMI_vector = 0xfa;  // NMI vector
+        private const byte _vectorIRQ = 0xfe;  // IRQ vector
+        private const byte _vectorRST = 0xfc;  // RST vector
+        private const byte _vectorNMI = 0xfa;  // NMI vector
 
-        protected enum InterruptSource { hardware, software };
+        protected virtual void AdjustInterruptFlags() => this.SEI();   // Disable IRQ
 
-        protected enum InterruptType { reset, nonReset };
-
-        protected virtual void Interrupt(byte vector, InterruptSource source = InterruptSource.hardware, InterruptType type = InterruptType.nonReset)
+        protected void Reset()
         {
-            if (type == InterruptType.reset)
-            {
-                this.DummyPush();
-                this.DummyPush();
-                this.DummyPush();
-            }
-            else
-            {
-                this.PushShort(this.PC);
-                this.Push((byte)(this.P | (source == InterruptSource.hardware ? 0 : (byte)StatusBits.BF)));
-            }
-            this.SEI();   // Disable IRQ
-            this.GetPagedInto(0xff, vector, this.PC);
+            this.DummyPush();
+            this.DummyPush();
+            this.DummyPush();
+            this.GetPagedInto(0xff, _vectorRST, this.PC);
+            this.AdjustInterruptFlags();
+        }
+
+        protected void InterruptMaskable()
+        {
+            this.PushShort(this.PC);
+            this.Push(this.P);
+            this.GetPagedInto(0xff, _vectorIRQ, this.PC);
+            this.AdjustInterruptFlags();
+        }
+
+        protected void InterruptNonMaskable()
+        {
+            this.PushShort(this.PC);
+            this.Push(this.P);
+            this.GetPagedInto(0xff, _vectorNMI, this.PC);
+            this.AdjustInterruptFlags();
+        }
+
+        protected void Break()
+        {
+            this.PushShort(this.PC);
+            this.Push((byte)(this.P | (byte)StatusBits.BF));
+            this.GetPagedInto(0xff, _vectorIRQ, this.PC);
+            this.AdjustInterruptFlags();
         }
 
         #region Interrupt etc. handlers
@@ -223,19 +237,19 @@ namespace M6502
         protected sealed override void HandleRESET()
         {
             this.RaiseRESET();
-            this.Interrupt(RST_vector, InterruptSource.hardware, InterruptType.reset);
+            this.Reset();
         }
 
         protected sealed override void HandleINT()
         {
             this.RaiseINT();
-            this.Interrupt(IRQ_vector);
+            this.InterruptMaskable();
         }
 
         private void HandleNMI()
         {
             this.RaiseNMI();
-            this.Interrupt(NMI_vector);
+            this.InterruptNonMaskable();
         }
 
         private void HandleSO()
@@ -830,7 +844,7 @@ namespace M6502
 
         protected void JMP() => this.Jump(this.Bus.Address);
 
-        private void BRK() => this.Interrupt(IRQ_vector, InterruptSource.software);
+        private void BRK() => this.Break();
 
         #endregion
 

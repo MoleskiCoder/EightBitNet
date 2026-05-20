@@ -33,9 +33,9 @@ namespace M6502
 
         #region Interrupts
 
-        protected override void Interrupt(byte vector, InterruptSource source, InterruptType type)
+        protected override void AdjustInterruptFlags()
         {
-            base.Interrupt(vector, source, type);
+            base.AdjustInterruptFlags();
             this.CLD();  // Disable decimal mode (Change from MOS6502)
         }
 
