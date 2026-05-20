@@ -91,4 +91,20 @@ namespace M6502.HarteTest
         public async Task OpcodeSingleStep(string filePath)
             => await HarteTestHelper.RunOpcodeAsync(filePath, new TestRunner(r => new WDC65C02(r))).ConfigureAwait(false);
     }
+
+    [TestClass]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "Test class needs to be externally visible")]
+    public class Ricoh2A03SingleStepTests
+    {
+        private const string TestDataDirectory = @"C:\github\spectrum\libraries\EightBit\modules\65x02\nes6502\v1";
+
+        public static IEnumerable<object[]> OpcodeFiles => HarteTestHelper.GetOpcodeFiles(TestDataDirectory);
+
+        public static string GetDisplayName(MethodInfo m, object[] data) => HarteTestHelper.GetDisplayName(m, data);
+
+        [TestMethod]
+        [DynamicData(nameof(OpcodeFiles), DynamicDataSourceType.Property, DynamicDataDisplayName = nameof(GetDisplayName))]
+        public async Task OpcodeSingleStep(string filePath)
+            => await HarteTestHelper.RunOpcodeAsync(filePath, new TestRunner(r => new Ricoh2A03(r))).ConfigureAwait(false);
+    }
 }
