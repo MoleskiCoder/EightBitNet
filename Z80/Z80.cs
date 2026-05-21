@@ -468,18 +468,18 @@ namespace Z80
 
         #endregion
 
-        private void MemoryUpdate(int ticks = 1)
+        protected override void MemoryUpdate(int ticks = 1)
         {
             Debug.Assert(ticks > 0, "Ticks must be greater than zero");
             this.OnWritingMemory();
-            this.Tick(ticks);
-            this.LowerMREQ();
-                this.LowerWR();
-                    this.Tick();
-                    base.MemoryWrite();
-                this.RaiseWR();
-            this.RaiseMREQ();
-            this.Tick();
+                this.Tick(ticks);
+                this.LowerMREQ();
+                    this.LowerWR();
+                        this.Tick();
+                        base.MemoryWrite();
+                    this.RaiseWR();
+                this.RaiseMREQ();
+                this.Tick();
             this.OnWrittenMemory();
         }
 
@@ -499,18 +499,18 @@ namespace Z80
         protected override void MemoryRead()
         {
             this.OnReadingMemory();
-            this.Tick();
-            this.LowerMREQ();
-                this.LowerRD();
-                    this.Tick();
-                    base.MemoryRead();
-                this.RaiseRD();
-            this.RaiseMREQ();
-            if (this.M1.Lowered())
-            {
-                this.RefreshMemory();
-            }
-            this.Tick();
+                this.Tick();
+                this.LowerMREQ();
+                    this.LowerRD();
+                        this.Tick();
+                        base.MemoryRead();
+                    this.RaiseRD();
+                this.RaiseMREQ();
+                if (this.M1.Lowered())
+                {
+                    this.RefreshMemory();
+                }
+                this.Tick();
             this.OnReadMemory();
         }
 
@@ -749,7 +749,7 @@ namespace Z80
             _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
-        private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
+        protected override ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
             switch (r)
             {
@@ -792,15 +792,6 @@ namespace Z80
                     return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
-            }
-        }
-
-        private void R(int r, byte value, int ticks = 1)
-        {
-            this.R(r, AccessLevel.WriteOnly) = value;
-            if (r == 6)
-            {
-                this.MemoryUpdate(ticks);
             }
         }
 

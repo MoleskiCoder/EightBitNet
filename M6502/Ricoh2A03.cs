@@ -10,14 +10,8 @@ namespace M6502
     {
         protected override void ARR() => this.ARR_b(this.Bus.Data);
 
-        protected override byte DecimalSUB(byte operand, int borrow)
-        {
-            return base.BinarySUB(operand, borrow);
-        }
+        protected override byte DecimalSUB(byte operand, int borrow) => base.BinarySUB(operand, borrow);
 
-        protected override byte DecimalADC(byte data)
-        {
-            return base.BinaryADC(data);
-        }
+        protected override byte DecimalADC(byte data) => base.BinaryADC(data);
     }
 }

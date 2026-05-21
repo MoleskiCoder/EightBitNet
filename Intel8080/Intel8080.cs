@@ -9,7 +9,7 @@ namespace Intel8080
     using System;
     using System.Diagnostics;
 
-    public class Intel8080 : IntelProcessor
+    public sealed class Intel8080 : IntelProcessor
     {
         public Intel8080(Bus bus, InputOutput ports)
         : base(bus)
@@ -97,27 +97,24 @@ namespace Intel8080
             this._resetPending = true;
         }
 
-        private void MemoryUpdate(int ticks = 1)
+        protected override void MemoryUpdate(int ticks = 1)
         {
             Debug.Assert(ticks > 0, "Ticks must be greater than zero");
             this.OnWritingMemory();
-            this.Tick(ticks + 1);
-            base.MemoryWrite();
-            this.Tick();
+                this.Tick(ticks + 1);
+                base.MemoryWrite();
+                this.Tick();
             this.OnWrittenMemory();
         }
 
-        protected override void MemoryWrite()
-        {
-            this.MemoryUpdate();
-        }
+        protected override void MemoryWrite() => this.MemoryUpdate();
 
         protected override void MemoryRead()
         {
             this.OnReadingMemory();
-            this.Tick(2);
-            base.MemoryRead();
-            this.Tick();
+                this.Tick(2);
+                base.MemoryRead();
+                this.Tick();
             this.OnReadMemory();
             this.Tick();
         }
@@ -245,7 +242,7 @@ namespace Intel8080
             _ => throw new ArgumentOutOfRangeException(nameof(rp)),
         };
 
-        private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
+        protected override ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
             switch (r)
             {
@@ -280,15 +277,6 @@ namespace Intel8080
                     return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
-            }
-        }
-
-        private void R(int r, byte value, int ticks = 1)
-        {
-            this.R(r, AccessLevel.WriteOnly) = value;
-            if (r == 6)
-            {
-                this.MemoryUpdate(ticks);
             }
         }
 

@@ -27,13 +27,13 @@ namespace MC6809
 
     public class MC6809 : BigEndianProcessor
     {
-        private const byte RESET_vector = 0xfe; // RESET vector
-        private const byte NMI_vector = 0xfc;   // NMI vector
-        private const byte SWI_vector = 0xfa;   // SWI vector
-        private const byte IRQ_vector = 0xf8;   // IRQ vector
-        private const byte FIRQ_vector = 0xf6;  // FIRQ vector
-        private const byte SWI2_vector = 0xf4;  // SWI2 vector
-        private const byte SWI3_vector = 0xf2;  // SWI3 vector
+        private const byte _vectorRESET = 0xfe; // RESET vector
+        private const byte _vectorNMI = 0xfc;   // NMI vector
+        private const byte _vectorSWI = 0xfa;   // SWI vector
+        private const byte _vectorIRQ = 0xf8;   // IRQ vector
+        private const byte _vectorFIRQ = 0xf6;  // FIRQ vector
+        private const byte _vectorSWI2 = 0xf4;  // SWI2 vector
+        private const byte _vectorSWI3 = 0xf2;  // SWI3 vector
 
         private byte _cc;
         private byte _dp;
@@ -514,7 +514,7 @@ namespace MC6809
             this.DP = 0;
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
-            this.Bus.Address.Assign(RESET_vector, 0xff);
+            this.Bus.Address.Assign(_vectorRESET, 0xff);
             this.SwallowSpin(3);
             this.GetPagedInto(this.PC);
             this.SwallowRead();
@@ -529,7 +529,7 @@ namespace MC6809
             this.SaveEntireRegisterState();
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.SwallowRead();
-            this.GetPagedInto(0xff, IRQ_vector, this.PC);
+            this.GetPagedInto(0xff, _vectorIRQ, this.PC);
             this.SwallowRead();
         }
 
@@ -549,7 +549,7 @@ namespace MC6809
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
             this.SwallowRead();
-            this.GetPagedInto(0xff, NMI_vector, this.PC);
+            this.GetPagedInto(0xff, _vectorNMI, this.PC);
             this.SwallowRead();
         }
 
@@ -563,7 +563,7 @@ namespace MC6809
             this.CC = SetBit(this.CC, StatusBits.IF);  // Disable IRQ
             this.CC = SetBit(this.CC, StatusBits.FF);  // Disable FIRQ
             this.SwallowRead();
-            this.GetPagedInto(0xff, FIRQ_vector, this.PC);
+            this.GetPagedInto(0xff, _vectorFIRQ, this.PC);
             this.SwallowRead();
         }
 
@@ -2174,7 +2174,7 @@ namespace MC6809
             this.CC = SetBit(this.CC, StatusBits.IF | StatusBits.FF);  // Disable IRQ / FIRQ
             Debug.Assert(this.FastInterruptMasked && this.InterruptMasked);
             this.SwallowRead();
-            this.GetPagedInto(0xff, SWI_vector, this.EA);
+            this.GetPagedInto(0xff, _vectorSWI, this.EA);
             this.Jump(this.EA);
             this.SwallowRead();
         }
@@ -2184,7 +2184,7 @@ namespace MC6809
             
             this.SaveEntireRegisterState();
             this.SwallowRead();
-            this.GetPagedInto(0xff, SWI2_vector, this.EA);
+            this.GetPagedInto(0xff, _vectorSWI2, this.EA);
             this.Jump(this.EA);
             this.SwallowRead();
         }
@@ -2193,7 +2193,7 @@ namespace MC6809
         {
             this.SaveEntireRegisterState();
             this.SwallowRead();
-            this.GetPagedInto(0xff, SWI3_vector, this.EA);
+            this.GetPagedInto(0xff, _vectorSWI3, this.EA);
             this.Jump(this.EA);
             this.SwallowRead();
         }

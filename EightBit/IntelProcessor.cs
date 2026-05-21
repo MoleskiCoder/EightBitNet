@@ -194,6 +194,21 @@ namespace EightBit
 
         ////
 
+        protected abstract void MemoryUpdate(int ticks);
+
+        protected abstract ref byte R(int r, AccessLevel access);
+
+        protected void R(int r, byte value, int ticks = 1)
+        {
+            this.R(r, AccessLevel.WriteOnly) = value;
+            if (r == 6)
+            {
+                this.MemoryUpdate(ticks);
+            }
+        }
+
+        ////
+
         protected void Restart(byte address)
         {
             this.MEMPTR.Assign(address);

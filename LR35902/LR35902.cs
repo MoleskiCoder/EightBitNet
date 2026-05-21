@@ -337,7 +337,7 @@ namespace LR35902
 
         private void Start() => this.Stopped = false;
 
-        private void MemoryUpdate(int ticks = 1)
+        protected override void MemoryUpdate(int ticks = 1)
         {
             Debug.Assert(ticks > 0, "Ticks must be greater than zero");
             this.OnWritingMemory();
@@ -350,10 +350,7 @@ namespace LR35902
             this.OnWrittenMemory();
         }
 
-        protected override void MemoryWrite()
-        {
-            this.MemoryUpdate();
-        }
+        protected override void MemoryWrite() => this.MemoryUpdate();
 
         protected override void MemoryRead()
         {
@@ -406,7 +403,7 @@ namespace LR35902
             this.TickMachine();
         }
 
-        private ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
+        protected override ref byte R(int r, AccessLevel access = AccessLevel.ReadOnly)
         {
             switch (r)
             {
@@ -441,15 +438,6 @@ namespace LR35902
                     return ref this.A;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(r));
-            }
-        }
-
-        private void R(int r, byte value, int ticks = 1)
-        {
-            this.R(r, AccessLevel.WriteOnly) = value;
-            if (r == 6)
-            {
-                this.MemoryUpdate(ticks);
             }
         }
 
