@@ -113,8 +113,8 @@
 
         private bool Check(string what, string? expected, string? actual)
         {
-            ArgumentNullException.ThrowIfNull(expected);
-            ArgumentNullException.ThrowIfNull(actual);
+            Debug.Assert(expected is not null, "expected cannot be null");
+            Debug.Assert(actual is not null, "actual cannot be null");
             var success = actual == expected;
             if (!success)
             {
@@ -292,7 +292,7 @@
 
         private void DumpCycle(ushort address, byte value, string? action)
         {
-            ArgumentNullException.ThrowIfNull(action);
+            Debug.Assert(action is not null, "action cannot be null");
             this.Messages.Add($"Address: {address:X4}, value: {value:X2}, action: {action}");
         }
 
@@ -300,7 +300,7 @@
 
         private void DumpCycles(IEnumerable<Cycle>? cycles)
         {
-            ArgumentNullException.ThrowIfNull(cycles);
+            Debug.Assert(cycles is not null, "cycles cannot be null");
             foreach (var cycle in cycles)
             {
                 this.DumpCycle(cycle);

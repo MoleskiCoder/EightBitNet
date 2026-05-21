@@ -5,6 +5,7 @@
 namespace LR35902
 {
     using EightBit;
+    using System.Diagnostics;
 
     public class ObjectAttribute
     {
@@ -14,7 +15,7 @@ namespace LR35902
 
         public ObjectAttribute(Ram ram, ushort address)
         {
-            ArgumentNullException.ThrowIfNull(ram);
+            Debug.Assert(ram is not null, "ram cannot be null");
             this.PositionY = ram.Peek(address);
             this.PositionX = ram.Peek(++address);
             this.Pattern = ram.Peek(++address);

@@ -1,6 +1,9 @@
 ﻿// <copyright file="BigEndianProcessor.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
+
+using System.Diagnostics;
+
 namespace EightBit
 {
     public abstract class BigEndianProcessor(Bus memory) : Processor(memory)
@@ -14,14 +17,14 @@ namespace EightBit
 
         public override void PokeShort(ushort address, Register16 value)
         {
-            //ArgumentNullException.ThrowIfNull(value);
+            Debug.Assert(value is not null, "value cannot be null");
             this.Bus.Poke(address, value.High);
             this.Bus.Poke(++address, value.Low);
         }
 
         protected override void FetchInto(Register16 into)
         {
-            //ArgumentNullException.ThrowIfNull(into);
+            Debug.Assert(into is not null, "into cannot be null");
             this.FetchByte();
             into.High = this.Bus.Data;
             this.FetchByte();
@@ -30,7 +33,7 @@ namespace EightBit
 
         protected override void GetInto(Register16 into)
         {
-            //ArgumentNullException.ThrowIfNull(into);
+            Debug.Assert(into is not null, "into cannot be null");
             this.MemoryRead();
             into.High = this.Bus.Data;
             this.Bus.Address.Increment();
@@ -40,7 +43,7 @@ namespace EightBit
 
         protected override void GetPagedInto(Register16 into)
         {
-            //ArgumentNullException.ThrowIfNull(into);
+            Debug.Assert(into is not null, "into cannot be null");
             this.MemoryRead();
             into.High = this.Bus.Data;
             ++this.Bus.Address.Low;
@@ -50,7 +53,7 @@ namespace EightBit
 
         protected override void PopInto(Register16 into)
         {
-            //ArgumentNullException.ThrowIfNull(into);
+            Debug.Assert(into is not null, "into cannot be null");
             this.Pop();
             into.High = this.Bus.Data;
             this.Pop();
@@ -59,14 +62,14 @@ namespace EightBit
 
         protected override void PushShort(Register16 value)
         {
-            //ArgumentNullException.ThrowIfNull(value);
+            Debug.Assert(value is not null, "value cannot be null");
             this.Push(value.Low);
             this.Push(value.High);
         }
 
         protected override void SetShort(Register16 value)
         {
-            //ArgumentNullException.ThrowIfNull(value);
+            Debug.Assert(value is not null, "value cannot be null");
             this.MemoryWrite(value.High);
             this.Bus.Address.Increment();
             this.MemoryWrite(value.Low);
@@ -74,7 +77,7 @@ namespace EightBit
 
         protected override void SetPaged(Register16 value)
         {
-            //ArgumentNullException.ThrowIfNull(value);
+            Debug.Assert(value is not null, "value cannot be null");
             this.MemoryWrite(value.High);
             ++this.Bus.Address.Low;
             this.MemoryWrite(value.Low);

@@ -22,7 +22,7 @@
 
         public Cycle(List<object> input)
         {
-            ArgumentNullException.ThrowIfNull(input);
+            Debug.Assert(input is not null, "input cannot be null");
 
             if (input.Count != 3)
             {

@@ -1,4 +1,6 @@
-﻿namespace Z80.HarteTest
+﻿using System.Diagnostics;
+
+namespace Z80.HarteTest
 {
     // Cycle-by-cycle breakdown of bus activity
     internal sealed class Port
@@ -19,7 +21,7 @@
 
         public Port(List<object> input)
         {
-            ArgumentNullException.ThrowIfNull(input);
+            Debug.Assert(input is not null, "input cannot be null");
 
             if (input.Count != 3)
             {

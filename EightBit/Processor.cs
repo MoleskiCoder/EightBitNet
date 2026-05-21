@@ -2,6 +2,8 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
+
 namespace EightBit
 {
     public abstract class Processor(Bus memory) : ClockedChip
@@ -236,7 +238,7 @@ namespace EightBit
 
         protected void GetPagedInto(byte page, byte offset, Register16 into)
         {
-            ArgumentNullException.ThrowIfNull(into);
+            Debug.Assert(into is not null, "into cannot be null");
             this.Bus.Address.Assign(offset, page);
             this.GetPagedInto(into);
         }

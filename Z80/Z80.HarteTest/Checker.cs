@@ -142,8 +142,8 @@
 
         private bool Check(string what, string? expected, string? actual)
         {
-            ArgumentNullException.ThrowIfNull(expected);
-            ArgumentNullException.ThrowIfNull(actual);
+            Debug.Assert(expected is not null, "expected cannot be null");
+            Debug.Assert(actual is not null, "actual cannot be null");
             var success = actual == expected;
             if (!success)
             {
@@ -414,7 +414,7 @@
 
         private static string ExpandCycle(string prefix, ushort address, byte? value, string? action)
         {
-            ArgumentNullException.ThrowIfNull(action);
+            Debug.Assert(action is not null, "action cannot be null");
             return value is null
                 ? $"{prefix}: Address: {address:X4},            action: {action}"
                 : $"{prefix}: Address: {address:X4}, value: {value:X2}, action: {action}";

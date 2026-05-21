@@ -2,6 +2,8 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
+
 namespace EightBit
 {
     public sealed class InputOutput
@@ -22,7 +24,7 @@ namespace EightBit
 
         public byte ReadInputPort(Register16 port)
         {
-            ArgumentNullException.ThrowIfNull(port);
+            Debug.Assert(port is not null, "port cannot be null");
             ReadingPort?.Invoke(this, new PortEventArgs(port));
             var value = this._input[port.Joined];
             ReadPort?.Invoke(this, new PortEventArgs(port));
@@ -33,7 +35,7 @@ namespace EightBit
 
         public void WriteInputPort(Register16 port, byte value)
         {
-            ArgumentNullException.ThrowIfNull(port);
+            Debug.Assert(port is not null, "port cannot be null");
             this.WriteInputPort(port.Joined, value);
         }
 
@@ -41,7 +43,7 @@ namespace EightBit
 
         public void WriteOutputPort(Register16 port, byte value)
         {
-            ArgumentNullException.ThrowIfNull(port);
+            Debug.Assert(port is not null, "port cannot be null");
             WritingPort?.Invoke(this, new PortEventArgs(port));
             this._output[port.Joined] = value;
             WrittenPort?.Invoke(this, new PortEventArgs(port));
@@ -51,7 +53,7 @@ namespace EightBit
 
         public byte ReadOutputPort(Register16 port)
         {
-            ArgumentNullException.ThrowIfNull(port);
+            Debug.Assert(port is not null, "port cannot be null");
             return this.ReadOutputPort(port.Joined);
         }
     }

@@ -31,7 +31,7 @@ namespace EightBit
 
         public byte Peek(Register16 absolute)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
+            Debug.Assert(absolute is not null, "absolute cannot be null");
             return this.Peek(absolute.Joined);
         }
 
@@ -41,7 +41,7 @@ namespace EightBit
 
         public void Poke(Register16 absolute, byte value)
         {
-            ArgumentNullException.ThrowIfNull(absolute);
+            Debug.Assert(absolute is not null, "absolute cannot be null");
             this.Poke(absolute.Joined, value);
         }
 

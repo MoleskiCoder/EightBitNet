@@ -2,6 +2,8 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
+
 namespace EightBit
 {
     public sealed class Register16
@@ -38,7 +40,7 @@ namespace EightBit
 
         public Register16(Register16 rhs)
         {
-            //ArgumentNullException.ThrowIfNull(rhs);
+            Debug.Assert(rhs is not null, "rhs cannot be null");
             this.Low = rhs.Low;
             this.High = rhs.High;
         }
@@ -59,7 +61,7 @@ namespace EightBit
 
         public static bool operator ==(Register16 left, Register16 right)
         {
-            //ArgumentNullException.ThrowIfNull(left);
+            Debug.Assert(left is not null, "left cannot be null");
             return left.Equals(right);
         }
 
@@ -83,7 +85,7 @@ namespace EightBit
 
         public void Assign(Register16 from)
         {
-            //ArgumentNullException.ThrowIfNull(from);
+            Debug.Assert(from is not null, "from cannot be null");
             this.Low = from.Low;
             this.High = from.High;
         }
