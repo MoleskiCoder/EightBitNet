@@ -635,7 +635,7 @@ namespace MC6809
         protected override void ImmediateAddress()
         {
             this.EA.Assign(this.PC);
-            this.IncrementPC();
+            this.PC.Increment();
         }
 
         protected void RelativeByteAddress()

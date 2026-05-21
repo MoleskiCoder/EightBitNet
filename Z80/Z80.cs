@@ -1984,9 +1984,9 @@ namespace Z80
 
         private void RepeatBlockInstruction()
         {
-            this.DecrementPC();
+            this.PC.Decrement();
             this.MEMPTR.Assign(this.PC);
-            this.DecrementPC();
+            this.PC.Decrement();
             this.AdjustXY(this.PC.High);
             this.Tick(5);
         }

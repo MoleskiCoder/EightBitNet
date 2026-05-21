@@ -206,8 +206,6 @@ namespace EightBit
 
         protected virtual void IncrementPC() => this.PC.Increment();
 
-        protected virtual void DecrementPC() => this.PC.Decrement();
-
         protected virtual void ImmediateAddress()
         {
             this.Bus.Address.Assign(this.PC);
