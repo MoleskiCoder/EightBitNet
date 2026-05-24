@@ -554,7 +554,7 @@ namespace M6502
 
             // Can't use "FetchByte", since that would add an extra tick.
             this.ImmediateAddress();
-            this.ReadFromBus();
+            this.ReadFromMemory();
 
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
             this.RaiseSYNC();
@@ -566,32 +566,32 @@ namespace M6502
 
         #region Bus/Memory access
 
-        protected sealed override void BusWrite()
+        protected sealed override void MemoryWrite()
         {
             this.OnWritingMemory();
                 this.Tick();
-                this.WriteToBus();
+                this.WriteToMemory();
             this.OnWrittenMemory();
         }
 
-        protected sealed override void BusRead()
+        protected sealed override void MemoryRead()
         {
             this.OnReadingMemory();
                 this.Tick();
-                this.ReadFromBus();
+                this.ReadFromMemory();
             this.OnReadMemory();
         }
 
-        private void ReadFromBus()
+        private void ReadFromMemory()
         {
             this.RaiseRW();
-            base.BusRead();
+            base.MemoryRead();
         }
 
-        private void WriteToBus()
+        private void WriteToMemory()
         {
             this.LowerRW();
-            base.BusWrite();
+            base.MemoryWrite();
         }
 
         protected abstract void ModifyWrite(byte data);

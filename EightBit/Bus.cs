@@ -87,16 +87,15 @@ namespace EightBit
         {
             var mapped = this.Mapping(absolute);
             var offset = (ushort)mapped.Offset(absolute);
-            if (mapped.Access == AccessLevel.ReadOnly)
+            if (mapped.Access != AccessLevel.ReadOnly)
             {
-                if (!this._writing)
-                {
-                    this.Data = mapped.Memory.Peek(offset);
-                }
-                return ref this._data;
+                return ref mapped.Memory.Reference(offset);
             }
-
-            return ref mapped.Memory.Reference(offset);
+            if (!this._writing)
+            {
+                this.Data = mapped.Memory.Peek(offset);
+            }
+            return ref this._data;
         }
 
         protected ref byte Reference() => ref this.Reference(this.Address.Joined);

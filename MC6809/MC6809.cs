@@ -571,21 +571,21 @@ namespace MC6809
 
         #region Bus control
 
-        protected override void BusWrite()
+        protected override void MemoryWrite()
         {
             this.OnWritingMemory();
                 this.Tick();
                 this.LowerRW();
-                base.BusWrite();
+                base.MemoryWrite();
             this.OnWrittenMemory();
         }
 
-        protected override void BusRead()
+        protected override void MemoryRead()
         {
             this.OnReadingMemory();
                 this.Tick();
                 this.RaiseRW();
-                base.BusRead();
+                base.MemoryRead();
             this.OnReadMemory();
         }
 
@@ -772,7 +772,7 @@ namespace MC6809
             else
             {
                 // EA = ,R + 5-bit offset
-                this.EA.Joined = (ushort)(r.Joined + SignExtend(5, (byte)(type & (byte)Mask.Five)));
+                this.EA.Joined = (ushort)(r.Joined + SignExtend(5, type & (byte)Mask.Five));
                 this.SwallowCurrent();
                 this.SwallowRead();
             }

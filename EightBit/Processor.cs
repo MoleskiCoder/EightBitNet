@@ -186,7 +186,7 @@ namespace EightBit
 
         protected virtual void MemoryWrite() => this.BusWrite();
 
-        protected virtual void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
+        protected void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
         protected void MemoryRead(byte low, byte high)
         {
@@ -202,7 +202,7 @@ namespace EightBit
 
         protected virtual void MemoryRead() => this.BusRead();
 
-        protected virtual void BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
+        protected void BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
         protected virtual void IncrementPC() => this.PC.Increment();
 

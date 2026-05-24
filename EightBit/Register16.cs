@@ -75,7 +75,11 @@ namespace EightBit
 
         public override bool Equals(object? obj) => this.Equals(obj as Register16);
 
-        public bool Equals(Register16? rhs) => ReferenceEquals(this, rhs) || (rhs is not null && rhs.Low == this.Low && rhs.High == this.High);
+        public bool Equals(Register16? rhs)
+        {
+            Debug.Assert(rhs is not null, "rhs cannot be null");
+            return this.Joined == rhs.Joined;
+        }
 
         public void Assign(byte low, byte high = 0)
         {
