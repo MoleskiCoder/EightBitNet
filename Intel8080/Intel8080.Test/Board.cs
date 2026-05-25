@@ -82,6 +82,10 @@ namespace Intel8080.Test
 
         private void CPU_ExecutingInstruction_CPM(object? sender, System.EventArgs e)
         {
+            if (this.CPU.PC.High != 0)
+            {
+                return;
+            }
             switch (this.CPU.PC.Joined)
             {
                 case 0x0: // CP/M warm start
