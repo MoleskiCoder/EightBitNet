@@ -43,7 +43,7 @@ namespace M6502
 
         #region Cycle wastage
 
-        private void SwallowFixup() => this.MemoryRead(this.lastFetchAddress);
+        private void SwallowFixup() => this.MemoryRead(this._lastFetchAddress);
 
         private void SwallowSpin(int ticks = 1)
         {
@@ -202,11 +202,11 @@ namespace M6502
 
         #region Address page fixup
 
-        private readonly Register16 lastFetchAddress = new();
+        private readonly Register16 _lastFetchAddress = new();
 
         protected override void FetchByte()
         {
-            this.lastFetchAddress.Assign(this.PC);
+            this._lastFetchAddress.Assign(this.PC);
             base.FetchByte();
         }
 
@@ -221,7 +221,7 @@ namespace M6502
         protected override void FixupBranch(sbyte relative)
         {
             this.NoteFixedAddress(this.PC.Joined + relative);
-            this.lastFetchAddress.Assign(this.Bus.Address);    // Effectively negate the use of "lastFetchAddress" for branch fixup usages
+            this._lastFetchAddress.Assign(this.Bus.Address);    // Effectively negate the use of "lastFetchAddress" for branch fixup usages
             this.MaybeFixup();
         }
 
