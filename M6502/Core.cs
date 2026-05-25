@@ -1186,7 +1186,7 @@ namespace M6502
             return this.Through(this.ASL(value) | carryIn);
         }
 
-        private void RORA() => this.A = this.ROR(this.A);
+        protected void RORA() => this.A = this.ROR(this.A);
 
         protected void ROR() => this.ModifyWrite(this.ROR(this.Bus.Data));
 

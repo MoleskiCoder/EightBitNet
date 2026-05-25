@@ -189,38 +189,37 @@ namespace M6502
 
         protected virtual void ARR()
         {
-            var value = this.Bus.Data;
             if (this.Denary != 0)
-                this.ARR_d(value);
+                this.DecimalARR();
             else
-                this.ARR_b(value);
+                this.BinaryARR();
         }
 
-        private void ARR_d(byte value)
+        private byte CoreARR()
+        {
+            this.A &= this.Bus.Data;
+            var unshiftedA = this.A;
+            this.RORA();
+            this.SetFlag(StatusBits.VF, OverflowTest((byte)(this.A ^ this.A << 1)));
+            return unshiftedA;
+        }
+
+        private void DecimalARR()
         {
             // With thanks to https://github.com/TomHarte/CLK
             // What a very strange instruction ARR is...
-
-            this.A &= value;
-            var unshiftedA = this.A;
-            this.A = this.Through(this.A >> 1 | this.Carry << 7);
-            this.SetFlag(StatusBits.VF, OverflowTest((byte)(this.A ^ this.A << 1)));
-
+            var unshiftedA = this.CoreARR();
             if (LowerNibble(unshiftedA) + (unshiftedA & 0x1) > 5)
                 this.A = (byte)(LowerNibble((byte)(this.A + 6)) | HigherNibble(this.A));
-
             this.SetFlag(StatusBits.CF, HigherNibble(unshiftedA) + (unshiftedA & 0x10) > 0x50);
-
             if (this.Carry != 0)
                 this.A += 0x60;
         }
 
-        protected void ARR_b(byte value)
+        protected void BinaryARR()
         {
-            this.A &= value;
-            this.A = this.Through(this.A >> 1 | this.Carry << 7);
+            this.CoreARR();
             this.SetFlag(StatusBits.CF, OverflowTest(this.A));
-            this.SetFlag(StatusBits.VF, OverflowTest((byte)(this.A ^ this.A << 1)));
         }
 
         #endregion
