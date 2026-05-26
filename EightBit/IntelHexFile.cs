@@ -34,11 +34,7 @@ namespace EightBit
             ArgumentNullException.ThrowIfNullOrEmpty(line);
 
             var requiredLength = 9 + 2 + (count * 2);
-            if (line.Length != requiredLength)
-            {
-                throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line is not the required length");
-            }
-
+            ArgumentOutOfRangeException.ThrowIfNotEqual(line.Length, requiredLength, nameof(line));
             var data = new byte[count];
             for (var i = 0; i < count; ++i)
             {
@@ -55,10 +51,7 @@ namespace EightBit
             ArgumentNullException.ThrowIfNullOrEmpty(line);
 
             var colon = line[..1];
-            if (colon != ":")
-            {
-                throw new ArgumentOutOfRangeException(nameof(line), "Invalid hex file: line does not begin with a colon");
-            }
+            ArgumentOutOfRangeException.ThrowIfNotEqual(colon, ":", nameof(line));
 
             var countString = line.Substring(1, 2);
             var count = Convert.ToByte(countString, 16);

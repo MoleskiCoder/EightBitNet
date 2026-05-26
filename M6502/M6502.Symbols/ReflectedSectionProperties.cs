@@ -43,10 +43,7 @@
         public string GetPropertyNameFromEntryName(string name)
         {
             var found = this._entriesToProperties.TryGetValue(name, out var propertyName);
-            if (!found)
-            {
-                throw new ArgumentOutOfRangeException(nameof(name), name, "Missing property mapping");
-            }
+            ArgumentOutOfRangeException.ThrowIfEqual(found, false, nameof(name));
             Debug.Assert(propertyName is not null);
             return propertyName;
         }

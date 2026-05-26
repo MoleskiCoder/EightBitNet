@@ -23,12 +23,7 @@
         public Cycle(List<object> input)
         {
             Debug.Assert(input is not null, "input cannot be null");
-
-            if (input.Count != 3)
-            {
-                throw new ArgumentOutOfRangeException(nameof(input), input, "Cycles can only have three elements");
-            }
-
+            ArgumentOutOfRangeException.ThrowIfNotEqual(input.Count, 3, nameof(input));
             this.Address = AsElement(input[0]).GetUInt16();
             if (input[1] is not null)
             {
