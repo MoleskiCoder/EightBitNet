@@ -321,7 +321,7 @@ namespace Intel8080
                                     switch (p)
                                     {
                                         case 0: // LD (BC),A
-                                            this.WriteMemoryIndirect(this.BC, this.A);  //xxxx
+                                            this.WriteMemoryIndirect(this.BC, this.A);
                                             break;
                                         case 1: // LD (DE),A
                                             this.WriteMemoryIndirect(this.DE, this.A);
