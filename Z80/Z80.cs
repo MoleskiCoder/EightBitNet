@@ -548,6 +548,18 @@ namespace Z80
             return this.Bus.Data;
         }
 
+        private void HandleNMI()
+        {
+            this.RaiseNMI();
+            this.RaiseHALT();
+            this.IFF2 = this.IFF1;
+            this.IFF1 = false;
+            this.LowerM1();
+                _ = this.Bus.Data;
+            this.RaiseM1();
+            this.Restart(0x66);
+        }
+
         protected override void HandleINT()
         {
             base.HandleINT();
@@ -574,6 +586,11 @@ namespace Z80
                     throw new NotSupportedException("Invalid interrupt mode");
             }
         }
+
+        protected override void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
+
+        protected override void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
+
 
         protected override void Call(Register16 destination)
         {
@@ -724,10 +741,6 @@ namespace Z80
         private static byte RES(int n, byte operand) => ClearBit(operand, Bit(n));
 
         private static byte SET(int n, byte operand) => SetBit(operand, Bit(n));
-
-        protected override void DisableInterrupts() => this.IFF1 = this.IFF2 = false;
-
-        protected override void EnableInterrupts() => this.IFF1 = this.IFF2 = true;
 
         private Register16 HL2() => this._prefixDD ? this.IX : this._prefixFD ? this.IY : this.HL;
 
@@ -1610,18 +1623,6 @@ namespace Z80
         {
             this._displaced = this._prefixDD = true;
             this.Execute(this.FetchInstruction());
-        }
-
-        private void HandleNMI()
-        {
-            this.RaiseNMI();
-            this.RaiseHALT();
-            this.IFF2 = this.IFF1;
-            this.IFF1 = false;
-            this.LowerM1();
-                _ = this.Bus.Data;
-            this.RaiseM1();
-            this.Restart(0x66);
         }
 
         private void FetchDisplacement()

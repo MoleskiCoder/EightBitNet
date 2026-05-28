@@ -25,9 +25,9 @@ namespace EightBit
         public byte ReadInputPort(Register16 port)
         {
             Debug.Assert(port is not null, "port cannot be null");
-            ReadingPort?.Invoke(this, new PortEventArgs(port));
+            this.ReadingPort?.Invoke(this, new PortEventArgs(port));
             var value = this._input[port.Joined];
-            ReadPort?.Invoke(this, new PortEventArgs(port));
+            this.ReadPort?.Invoke(this, new PortEventArgs(port));
             return value;
         }
 
@@ -44,9 +44,9 @@ namespace EightBit
         public void WriteOutputPort(Register16 port, byte value)
         {
             Debug.Assert(port is not null, "port cannot be null");
-            WritingPort?.Invoke(this, new PortEventArgs(port));
+            this.WritingPort?.Invoke(this, new PortEventArgs(port));
             this._output[port.Joined] = value;
-            WrittenPort?.Invoke(this, new PortEventArgs(port));
+            this.WrittenPort?.Invoke(this, new PortEventArgs(port));
         }
 
         public byte ReadOutputPort(ushort port) => this._output[port];

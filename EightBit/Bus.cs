@@ -48,7 +48,7 @@ namespace EightBit
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
             this.ReadingByte?.Invoke(this, EventArgs.Empty);
             this.Data = this.Reference();
-            ReadByte?.Invoke(this, EventArgs.Empty);
+            this.ReadByte?.Invoke(this, EventArgs.Empty);
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
         }
 

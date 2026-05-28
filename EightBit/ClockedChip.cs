@@ -16,19 +16,14 @@ namespace EightBit
 
         public int Cycles { get; protected set; }
 
-        public void Tick(int extra)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Tick(int extra = 1)
         {
             for (var i = 0; i < extra; ++i)
             {
-                this.Tick();
+                ++this.Cycles;
+                this.Ticked?.Invoke(this, EventArgs.Empty);
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Tick()
-        {
-            ++this.Cycles;
-            Ticked?.Invoke(this, EventArgs.Empty);
         }
 
         protected void ResetCycles() => this.Cycles = 0;

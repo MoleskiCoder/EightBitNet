@@ -68,9 +68,9 @@ namespace EightBit
         {
             if (this.HALT.Lowered())
             {
-                RaisingHALT?.Invoke(this, EventArgs.Empty);
+                this.RaisingHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Raise();
-                RaisedHALT?.Invoke(this, EventArgs.Empty);
+                this.RaisedHALT?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -78,9 +78,9 @@ namespace EightBit
         {
             if (this.HALT.Raised())
             {
-                LoweringHALT?.Invoke(this, EventArgs.Empty);
+                this.LoweringHALT?.Invoke(this, EventArgs.Empty);
                 this.HALT.Lower();
-                LoweredHALT?.Invoke(this, EventArgs.Empty);
+                this.LoweredHALT?.Invoke(this, EventArgs.Empty);
             }
         }
 

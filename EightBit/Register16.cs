@@ -47,11 +47,11 @@ namespace EightBit
 
         public ushort Joined
         {
-            get => Chip.MakeShort(this._low, this._high);
+            get => Chip.MakeShort(this.Low, this.High);
             set
             {
-                this._low = Chip.LowByte(value);
-                this._high = Chip.HighByte(value);
+                this.Low = Chip.LowByte(value);
+                this.High = Chip.HighByte(value);
             }
         }
 

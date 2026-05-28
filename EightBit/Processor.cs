@@ -70,12 +70,12 @@ namespace EightBit
         public virtual int Step()
         {
             this.ResetCycles();
-            ExecutingInstruction?.Invoke(this, EventArgs.Empty);
+            this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
             if (this.Powered)
             {
                 this.PoweredStep();
             }
-            ExecutedInstruction?.Invoke(this, EventArgs.Empty);
+            this.ExecutedInstruction?.Invoke(this, EventArgs.Empty);
             return this.Cycles;
         }
 
@@ -117,9 +117,9 @@ namespace EightBit
         {
             if (this.RESET.Lowered())
             {
-                RaisingRESET?.Invoke(this, EventArgs.Empty);
+                this.RaisingRESET?.Invoke(this, EventArgs.Empty);
                 this.RESET.Raise();
-                RaisedRESET?.Invoke(this, EventArgs.Empty);
+                this.RaisedRESET?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -127,9 +127,9 @@ namespace EightBit
         {
             if (this.RESET.Raised())
             {
-                LoweringRESET?.Invoke(this, EventArgs.Empty);
+                this.LoweringRESET?.Invoke(this, EventArgs.Empty);
                 this.RESET.Lower();
-                LoweredRESET?.Invoke(this, EventArgs.Empty);
+                this.LoweredRESET?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -138,9 +138,9 @@ namespace EightBit
         {
             if (this.INT.Lowered())
             {
-                RaisingINT?.Invoke(this, EventArgs.Empty);
+                this.RaisingINT?.Invoke(this, EventArgs.Empty);
                 this.INT.Raise();
-                RaisedINT?.Invoke(this, EventArgs.Empty);
+                this.RaisedINT?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -148,9 +148,9 @@ namespace EightBit
         {
             if (this.INT.Raised())
             {
-                LoweringINT?.Invoke(this, EventArgs.Empty);
+                this.LoweringINT?.Invoke(this, EventArgs.Empty);
                 this.INT.Lower();
-                LoweredINT?.Invoke(this, EventArgs.Empty);
+                this.LoweredINT?.Invoke(this, EventArgs.Empty);
             }
         }
 
