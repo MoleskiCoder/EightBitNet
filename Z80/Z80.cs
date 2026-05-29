@@ -2151,19 +2151,19 @@ namespace Z80
 
         private void AdjustBlockInFlagsIncrement()
         {
-            AdjustBlockInputOutputFlags((byte)(this.C + 1) + this.Bus.Data);
+            this.AdjustBlockInputOutputFlags((byte)(this.C + 1) + this.Bus.Data);
         }
 
         private void AdjustBlockInFlagsDecrement()
         {
-            AdjustBlockInputOutputFlags((byte)(this.C - 1) + this.Bus.Data);
+            this.AdjustBlockInputOutputFlags((byte)(this.C - 1) + this.Bus.Data);
         }
 
         private void AdjustBlockOutFlags()
         {
             // HL needs to have been incremented or decremented prior to this call
             this.SetBit(StatusBits.NF, SignTest(this.Bus.Data));
-            AdjustBlockInputOutputFlags(this.L + this.Bus.Data);
+            this.AdjustBlockInputOutputFlags(this.L + this.Bus.Data);
         }
 
         #region Block input
@@ -2302,7 +2302,7 @@ namespace Z80
 
         private void RRD()
         {
-            ReadMemoryIndirect(this.HL);
+            this.ReadMemoryIndirect(this.HL);
             var memory = this.Bus.Data;
             this.Bus.Data = (byte)(PromoteNibble(this.A) | HighNibble(memory));
             this.MemoryUpdate(5);
@@ -2313,7 +2313,7 @@ namespace Z80
 
         private void RLD()
         {
-            ReadMemoryIndirect(this.HL);
+            this.ReadMemoryIndirect(this.HL);
             var memory = this.Bus.Data;
             this.Bus.Data = (byte)(PromoteNibble(memory) | LowNibble(this.A));
             this.MemoryUpdate(5);

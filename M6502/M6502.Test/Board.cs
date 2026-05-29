@@ -81,12 +81,12 @@ namespace M6502.Test
             if (this.configuration.AllowKeyRead)
             {
                 this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction_Polling;
-                this.ReadingByte += this.Bus_ReadingByte;
-                this.ReadByte += this.Bus_ReadByte;
+                this.CPU.ReadingMemory += this.Bus_ReadingByte;
+                this.CPU.ReadMemory += this.Bus_ReadByte;
             }
 
             this.CPU.ExecutedInstruction += this.CPU_ExecutedInstruction;
-            this.WrittenByte += this.Bus_WrittenByte;
+            this.CPU.WrittenMemory += this.Bus_WrittenByte;
 
             if (this.configuration.Profile)
             {

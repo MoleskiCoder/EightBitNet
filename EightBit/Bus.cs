@@ -11,14 +11,6 @@ namespace EightBit
         private bool _writing;
         private byte _data;
 
-        public event EventHandler<EventArgs>? WritingByte;
-
-        public event EventHandler<EventArgs>? WrittenByte;
-
-        public event EventHandler<EventArgs>? ReadingByte;
-
-        public event EventHandler<EventArgs>? ReadByte;
-
         public ref byte Data => ref this._data;
 
         public Register16 Address { get; } = new();
@@ -46,20 +38,16 @@ namespace EightBit
         public void Read()
         {
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
-            this.ReadingByte?.Invoke(this, EventArgs.Empty);
             this.Data = this.Reference();
-            this.ReadByte?.Invoke(this, EventArgs.Empty);
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
         }
 
         public void Write()
         {
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
-            this.WritingByte?.Invoke(this, EventArgs.Empty);
             this._writing = true;
             this.Reference() = this.Data;
             this._writing = false;
-            this.WrittenByte?.Invoke(this, EventArgs.Empty);
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
         }
 

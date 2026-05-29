@@ -66,7 +66,7 @@ namespace LR35902
             this._ioMapping = new(this.IO, IoRegisters.BASE, 0xffff, AccessLevel.ReadWrite);
             this._highInternalRamMapping = new(this._highInternalRam, 0xff80, 0xffff, AccessLevel.ReadWrite);
 
-            this.WrittenByte += this.Bus_WrittenByte;
+            this.CPU.WrittenMemory += Bus_WrittenByte;
         }
 
         public LR35902 CPU { get; }

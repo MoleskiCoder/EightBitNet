@@ -112,10 +112,10 @@ namespace MC6809.Test
             this.CPU.ExecutedInstruction += CPU_ExecutedInstruction;
 
             // Marshal data from ACIA -> memory
-            this.ReadingByte += Board_ReadingByte;
+            this.CPU.ReadingMemory += Board_ReadingByte;
 
             // Marshal data from memory -> ACIA
-            this.WrittenByte += Board_WrittenByte;
+            this.CPU.WrittenMemory += Board_WrittenByte;
 
             if (this._configuration.DebugMode)
             {

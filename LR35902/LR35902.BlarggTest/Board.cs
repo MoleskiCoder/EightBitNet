@@ -22,7 +22,7 @@ namespace LR35902.BlarggTest
 #if GAMEBOY_DOCTOR
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_Debug;
 #else
-            this.WrittenByte += this.Board_WrittenByte;
+            this.CPU.WrittenMemory += this.Board_WrittenByte;
             if (this.configuration.DebugMode)
             {
                 this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_Debug;

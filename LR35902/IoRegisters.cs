@@ -96,8 +96,8 @@ namespace LR35902
             this.bus = bus;
             if (triggered)
             {
-                this.bus.ReadingByte += this.Bus_ReadingByte;
-                this.bus.WrittenByte += this.Bus_WrittenByte;
+                this.bus.CPU.ReadMemory += this.Bus_ReadingByte;
+                this.bus.CPU.WrittenMemory += this.Bus_WrittenByte;
             }
         }
 

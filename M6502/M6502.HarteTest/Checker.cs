@@ -245,8 +245,8 @@
 
         public void Initialise()
         {
-            this.Runner.ReadByte += this.Runner_ReadByte;
-            this.Runner.WrittenByte += this.Runner_WrittenByte;
+            this.Runner.CPU.ReadMemory += this.Runner_ReadByte;
+            this.Runner.CPU.WrittenMemory += this.Runner_WrittenByte;
         }
 
         private void InitialiseState(Test test)

@@ -554,7 +554,10 @@ namespace M6502
 
             // Can't use "FetchByte", since that would add an extra tick.
             this.ImmediateAddress();
-            this.ReadFromMemory();
+
+            this.OnReadingMemory();
+                this.ReadFromMemory();
+            this.OnReadMemory();
 
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
             this.RaiseSYNC();
