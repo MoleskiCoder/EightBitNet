@@ -518,7 +518,9 @@ namespace M6502
 
         public override void PoweredStep()
         {
+            // A cycle is used, whether RDY is high or not
             this.Tick();
+
             if (this.SO.Lowered())
             {
                 this.HandleSO();
@@ -528,6 +530,8 @@ namespace M6502
             {
                 this.ImmediateInstruction = false;
                 this.OpCode = this.FetchInstruction();
+
+                // Priority: RESET > NMI > INT
                 if (this.RESET.Lowered())
                 {
                     this.HandleRESET();
@@ -560,6 +564,8 @@ namespace M6502
             this.OnReadMemory();
 
             System.Diagnostics.Debug.Assert(this.Cycles == 1, "BUS read has introduced stray cycles");
+
+            // Instruction fetch has now completed
             this.RaiseSYNC();
 
             return this.Bus.Data;
@@ -661,10 +667,6 @@ namespace M6502
             this.MemoryRead();
         }
 
-        #endregion
-
-        #region Address resolution
-
         protected void NoteFixedAddress(int address) => this.NoteFixedAddress((ushort)address);
 
         protected void NoteFixedAddress(ushort address)
@@ -674,6 +676,10 @@ namespace M6502
             this.FixedPage = this.Intermediate.High;
             this.Bus.Address.Low = this.Intermediate.Low;
         }
+
+        #endregion
+
+        #region Address resolution
 
         protected void GetAddressPaged()
         {
