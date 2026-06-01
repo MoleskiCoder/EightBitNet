@@ -25,7 +25,7 @@ namespace EightBit
         {
         }
 
-        private readonly int[] _offsets = new int[ushort.MaxValue + 1];
+        private readonly ushort[] _offsets = new ushort[ushort.MaxValue + 1];
         private readonly Memory _memory;
         private readonly ushort _begin;
         private readonly ushort _mask;
@@ -39,8 +39,8 @@ namespace EightBit
 
         public AccessLevel Access => this._access;
 
-        private int CalculateOffset(ushort absolute) => (absolute - this.Begin) & this.Mask;
+        private ushort CalculateOffset(ushort absolute) => (ushort)((absolute - this.Begin) & this.Mask);
 
-        public int Offset(ushort absolute) => this._offsets[absolute];
+        public ushort Offset(ushort absolute) => this._offsets[absolute];
     }
 }

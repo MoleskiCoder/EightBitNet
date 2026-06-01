@@ -66,7 +66,7 @@ namespace EightBit
         protected ref byte Reference(ushort absolute)
         {
             var mapped = this.Mapping(absolute);
-            var offset = (ushort)mapped.Offset(absolute);
+            var offset = mapped.Offset(absolute);
             if (mapped.Access != AccessLevel.ReadOnly)
             {
                 return ref mapped.Memory.Reference(offset);
