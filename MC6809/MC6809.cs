@@ -422,7 +422,11 @@ namespace MC6809
 
         protected byte AdjustZero(ushort datum) => ClearBit(this.CC, StatusBits.ZF, datum);
 
-        protected byte AdjustZero(Register16 datum) => this.AdjustZero(datum.Joined);
+        protected byte AdjustZero(Register16 datum)
+        {
+            Debug.Assert(datum is not null);
+            return this.AdjustZero(datum.Joined);
+        }
 
         protected byte AdjustNegative(byte datum) => SetBit(this.CC, StatusBits.NF, datum & (byte)Bits.Bit7);
 
@@ -440,16 +444,25 @@ namespace MC6809
             return this.AdjustNegative(datum);
         }
 
-        protected byte AdjustNZ(Register16 datum) => this.AdjustNZ(datum.Joined);
+        protected byte AdjustNZ(Register16 datum)
+        {
+            Debug.Assert(datum is not null);
+            return this.AdjustNZ(datum.Joined);
+        }
 
         protected byte AdjustCarry(ushort datum) => SetBit(this.CC, StatusBits.CF, datum & (ushort)Bits.Bit8);           // 8-bit addition
 
         protected byte AdjustCarry(uint datum) => SetBit(this.CC, StatusBits.CF, (int)(datum & (uint)Bits.Bit16));       // 16-bit addition
 
-        protected byte AdjustCarry(Register16 datum) => this.AdjustCarry(datum.Joined);
+        protected byte AdjustCarry(Register16 datum)
+        {
+            Debug.Assert(datum is not null);
+            return this.AdjustCarry(datum.Joined);
+        }
 
         protected byte AdjustOverflow(byte before, byte data, Register16 after)
         {
+            Debug.Assert(after is not null);
             var lowAfter = after.Low;
             var highAfter = after.High;
             return SetBit(this.CC, StatusBits.VF, (before ^ data ^ lowAfter ^ highAfter << 7) & (int)Bits.Bit7);
@@ -466,6 +479,7 @@ namespace MC6809
 
         protected byte AdjustAddition(byte before, byte data, Register16 after)
         {
+            Debug.Assert(after is not null);
             var result = after.Low;
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustCarry(after);
@@ -481,10 +495,16 @@ namespace MC6809
             return this.AdjustOverflow(before, data, after);
         }
 
-        protected byte AdjustAddition(Register16 before, Register16 data, uint after) => this.AdjustAddition(before.Joined, data.Joined, after);
+        protected byte AdjustAddition(Register16 before, Register16 data, uint after)
+        {
+            Debug.Assert(before is not null);
+            Debug.Assert(data is not null);
+            return this.AdjustAddition(before.Joined, data.Joined, after);
+        }
 
         protected byte AdjustSubtraction(byte before, byte data, Register16 after)
         {
+            Debug.Assert(after is not null);
             var result = after.Low;
             this.CC = this.AdjustNZ(result);
             this.CC = this.AdjustCarry(after);
@@ -499,7 +519,12 @@ namespace MC6809
             return this.AdjustOverflow(before, data, after);
         }
 
-        protected byte AdjustSubtraction(Register16 before, Register16 data, uint after) => this.AdjustSubtraction(before.Joined, data.Joined, after);
+        protected byte AdjustSubtraction(Register16 before, Register16 data, uint after)
+        {
+            Debug.Assert(before is not null);
+            Debug.Assert(data is not null);
+            return this.AdjustSubtraction(before.Joined, data.Joined, after);
+        }
 
         #endregion
 
@@ -599,6 +624,7 @@ namespace MC6809
 
         protected void Push(Register16 stack, byte value)
         {
+            Debug.Assert(stack is not null);
             stack.Decrement();
             this.MemoryWrite(stack, value);
         }
@@ -607,12 +633,15 @@ namespace MC6809
 
         protected void Push(Register16 stack, Register16 value)
         {
+            Debug.Assert(stack is not null);
+            Debug.Assert(value is not null);
             this.Push(stack, value.Low);
             this.Push(stack, value.High);
         }
 
         protected void Pop(Register16 stack)
         {
+            Debug.Assert(stack is not null);
             this.MemoryRead(stack);
             stack.Increment();
         }
@@ -860,6 +889,7 @@ namespace MC6809
 
         protected Register16 Through(Register16 data)
         {
+            Debug.Assert(data is not null);
             this.Through(data.Joined);
             return data;
         }
@@ -1794,6 +1824,9 @@ namespace MC6809
 
         protected void Add(Register16 operand, Register16 data, int carry, Register16 result)
         {
+            Debug.Assert(operand is not null);
+            Debug.Assert(data is not null);
+            Debug.Assert(result is not null);
             var addition = operand.Joined + data.Joined + carry;
             this.CC = this.AdjustAddition(operand, data, (uint)addition);
             result.Joined = (ushort)addition;
@@ -1813,7 +1846,13 @@ namespace MC6809
 
         protected ushort And(ushort operand, ushort data) => this.Through((ushort)(operand & data));
 
-        protected void And(Register16 operand, Register16 data, Register16 destination) => destination.Joined = this.And(operand.Joined, data.Joined);
+        protected void And(Register16 operand, Register16 data, Register16 destination)
+        {
+            Debug.Assert(operand is not null);
+            Debug.Assert(data is not null);
+            Debug.Assert(destination is not null);
+            destination.Joined = this.And(operand.Joined, data.Joined);
+        }
 
         protected byte And(byte operand, byte data) => this.Through((byte)(operand & data));
 
@@ -1886,7 +1925,12 @@ namespace MC6809
 
         protected void Compare(ushort operand, ushort data) => this.Subtract(operand, data);
 
-        protected void Compare(Register16 operand, Register16 data) => this.Compare(operand.Joined, data.Joined);
+        protected void Compare(Register16 operand, Register16 data)
+        {
+            Debug.Assert(operand is not null);
+            Debug.Assert(data is not null);
+            this.Compare(operand.Joined, data.Joined);
+        }
 
         protected void Compare(byte operand, byte data) => this.Subtract(operand, data);
 
@@ -1957,7 +2001,13 @@ namespace MC6809
 
         protected ushort ExclusiveOr(ushort operand, ushort data) => this.Through((ushort)(operand ^ data));
 
-        protected void ExclusiveOr(Register16 operand, Register16 data, Register16 destination) => destination.Joined = this.ExclusiveOr(operand.Joined, data.Joined);
+        protected void ExclusiveOr(Register16 operand, Register16 data, Register16 destination)
+        {
+            Debug.Assert(operand is not null);
+            Debug.Assert(data is not null);
+            Debug.Assert(destination is not null);
+            destination.Joined = this.ExclusiveOr(operand.Joined, data.Joined);
+        }
 
         protected byte ExclusiveOr(byte operand, byte data) => this.Through((byte)(operand ^ data));
 
@@ -2070,7 +2120,13 @@ namespace MC6809
 
         protected ushort Or(ushort operand, ushort data) => this.Through((ushort)(operand | data));
 
-        protected void Or(Register16 operand, Register16 data, Register16 destination) => destination.Joined = this.Or(operand.Joined, data.Joined);
+        protected void Or(Register16 operand, Register16 data, Register16 destination)
+        {
+            Debug.Assert(operand is not null);
+            Debug.Assert(data is not null);
+            Debug.Assert(destination is not null);
+            destination.Joined = this.Or(operand.Joined, data.Joined);
+        }
 
         protected byte Or(byte operand, byte data) => this.Through((byte)(operand | data));
 
@@ -2156,7 +2212,13 @@ namespace MC6809
             return (ushort)subtraction;
         }
 
-        protected void Subtract(Register16 operand, Register16 data, int carry, Register16 result) => result.Joined = this.Subtract(operand.Joined, data.Joined, carry);
+        protected void Subtract(Register16 operand, Register16 data, int carry, Register16 result)
+        {
+            Debug.Assert(operand is not null);
+            Debug.Assert(data is not null);
+            Debug.Assert(result is not null);
+            result.Joined = this.Subtract(operand.Joined, data.Joined, carry);
+        }
 
         protected void Subtract(Register16 operand, Register16 data, Register16 result) => this.Subtract(operand, data, 0, result);
 
@@ -2236,7 +2298,11 @@ namespace MC6809
             this.SwallowRead();
         }
 
-        protected void LEA(Register16 register) => register.Assign(this.EA);
+        protected void LEA(Register16 register)
+        {
+            Debug.Assert(register is not null);
+            register.Assign(this.EA);
+        }
 
         private void ABX()
         {
