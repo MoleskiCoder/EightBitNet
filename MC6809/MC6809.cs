@@ -519,13 +519,6 @@ namespace MC6809
             return this.AdjustOverflow(before, data, after);
         }
 
-        private byte AdjustSubtraction(Register16 before, Register16 data, uint after)
-        {
-            Debug.Assert(before is not null);
-            Debug.Assert(data is not null);
-            return this.AdjustSubtraction(before.Joined, data.Joined, after);
-        }
-
         #endregion
 
         #region Interrupt etc. handlers
@@ -1882,16 +1875,6 @@ namespace MC6809
         private void ANDA() => this.A = this.And(this.A);
         private void ANDB() => this.B = this.And(this.B);
 
-        private ushort And(ushort operand, ushort data) => this.Through((ushort)(operand & data));
-
-        private void And(Register16 operand, Register16 data, Register16 destination)
-        {
-            Debug.Assert(operand is not null);
-            Debug.Assert(data is not null);
-            Debug.Assert(destination is not null);
-            destination.Joined = this.And(operand.Joined, data.Joined);
-        }
-
         private byte And(byte operand, byte data) => this.Through((byte)(operand & data));
 
         private byte And(byte operand) => this.And(operand, this.Bus.Data);
@@ -1961,17 +1944,6 @@ namespace MC6809
         private void CMPA() => this.Compare(this.A);
         private void CMPB() => this.Compare(this.B);
 
-        private void Compare(ushort operand, ushort data) => this.Subtract(operand, data);
-
-        private void Compare(Register16 operand, Register16 data)
-        {
-            Debug.Assert(operand is not null);
-            Debug.Assert(data is not null);
-            this.Compare(operand.Joined, data.Joined);
-        }
-
-        private void Compare(byte operand, byte data) => this.Subtract(operand, data);
-
         private void Compare(byte operand) => this.Subtract(operand, this.Bus.Data);
 
         private void CMPU() => this.Compare(this.U);
@@ -2038,16 +2010,6 @@ namespace MC6809
 
         private void EORA() => this.A = this.ExclusiveOr(this.A);
         private void EORB() => this.B = this.ExclusiveOr(this.B);
-
-        private ushort ExclusiveOr(ushort operand, ushort data) => this.Through((ushort)(operand ^ data));
-
-        private void ExclusiveOr(Register16 operand, Register16 data, Register16 destination)
-        {
-            Debug.Assert(operand is not null);
-            Debug.Assert(data is not null);
-            Debug.Assert(destination is not null);
-            destination.Joined = this.ExclusiveOr(operand.Joined, data.Joined);
-        }
 
         private byte ExclusiveOr(byte operand, byte data) => this.Through((byte)(operand ^ data));
 
@@ -2157,16 +2119,6 @@ namespace MC6809
 
         private void ORA() => this.A = this.Or(this.A);
         private void ORB() => this.B = this.Or(this.B);
-
-        private ushort Or(ushort operand, ushort data) => this.Through((ushort)(operand | data));
-
-        private void Or(Register16 operand, Register16 data, Register16 destination)
-        {
-            Debug.Assert(operand is not null);
-            Debug.Assert(data is not null);
-            Debug.Assert(destination is not null);
-            destination.Joined = this.Or(operand.Joined, data.Joined);
-        }
 
         private byte Or(byte operand, byte data) => this.Through((byte)(operand | data));
 
