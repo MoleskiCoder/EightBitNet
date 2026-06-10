@@ -13,6 +13,8 @@ namespace Z80
         : base(bus)
         {
             this._ports = ports;
+            this.UpdateRegisterBank();
+            this.UpdateAFBank();
             this.RaisedPOWER += this.Z80_RaisedPOWER;
             this.LoweredRESET += this.Z80_LoweredRESET;
             this.LoweredNMI += this.Z80_LoweredNMI;
@@ -33,6 +35,11 @@ namespace Z80
             [new Register16(), new Register16(), new Register16()],
             [new Register16(), new Register16(), new Register16()]
         ];
+
+        private Register16? _af;
+        private Register16? _bc;
+        private Register16? _de;
+        private Register16? _hl;
 
         private RefreshRegister _refresh = new(0x7f);
 
@@ -59,15 +66,41 @@ namespace Z80
 
         private byte _modifiedF;        // In-flight status register.  Used to build "Q"
 
-        public override Register16 AF => this._accumulatorFlags[this._accumulatorFlagsSet];
+        public override Register16 AF
+        {
+            get
+            {
+                Debug.Assert(this._af is not null);
+                return this._af;
+            }
+        }
 
-        private Register16[] CurrentRegisterSet => this._registers[this._registerSet];
+        public override Register16 BC
+        {
+            get
+            {
+                Debug.Assert(this._bc is not null);
+                return this._bc;
+            }
+        }
 
-        public override Register16 BC => this.CurrentRegisterSet[(int)RegisterIndex.IndexBC];
+        public override Register16 DE
+        {
+            get
+            {
+                Debug.Assert(this._de is not null);
+                return this._de;
+            }
+        }
 
-        public override Register16 DE => this.CurrentRegisterSet[(int)RegisterIndex.IndexDE];
-
-        public override Register16 HL => this.CurrentRegisterSet[(int)RegisterIndex.IndexHL];
+        public override Register16 HL
+        {
+            get
+            {
+                Debug.Assert(this._hl is not null);
+                return this._hl;
+            }
+        }
 
         public Register16 IX { get; } = new(0xffff);
 
@@ -93,9 +126,30 @@ namespace Z80
             this.Bus.Address.Assign(this.MEMPTR);
         }
 
-        public void Exx() => this._registerSet ^= 1;
+        public void Exx()
+        {
+            this._registerSet ^= 1;
+            this.UpdateRegisterBank();
+        }
 
-        public void ExxAF() => this._accumulatorFlagsSet ^= 1;
+        public void ExxAF()
+        {
+            this._accumulatorFlagsSet ^= 1;
+            this.UpdateAFBank();
+        }
+
+        private void UpdateRegisterBank()
+        {
+            var bank = this._registers[this._registerSet];
+            this._bc = bank[(int)RegisterIndex.IndexBC];
+            this._de = bank[(int)RegisterIndex.IndexDE];
+            this._hl = bank[(int)RegisterIndex.IndexHL];
+        }
+
+        private void UpdateAFBank()
+        {
+            this._af = this._accumulatorFlags[this._accumulatorFlagsSet];
+        }
 
         public override void Execute()
         {

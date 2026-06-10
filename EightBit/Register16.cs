@@ -3,13 +3,27 @@
 // </copyright>
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace EightBit
 {
+    [StructLayout(LayoutKind.Sequential)]
     public sealed class Register16
     {
+        // _low and _high must remain adjacent and in this order
         private byte _low;
         private byte _high;
+
+        // Whole overlays low/high as a single little-endian ushort.
+        private ref ushort Whole
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return ref Unsafe.As<byte, ushort>(ref this._low);
+            }
+        }
 
         public Register16(byte low, byte high)
         {
@@ -47,11 +61,31 @@ namespace EightBit
 
         public ushort Joined
         {
-            get => Chip.MakeShort(this.Low, this.High);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                if (BitConverter.IsLittleEndian)
+                {
+                    return this.Whole;
+                }
+                else
+                {
+                    return Chip.MakeShort(this.Low, this.High);
+                }
+            }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                this.Low = Chip.LowByte(value);
-                this.High = Chip.HighByte(value);
+                if (BitConverter.IsLittleEndian)
+                {
+                    this.Whole = value;
+                }
+                else
+                {
+                    this.Low = Chip.LowByte(value);
+                    this.High = Chip.HighByte(value);
+                }
             }
         }
 
@@ -87,15 +121,25 @@ namespace EightBit
             this.High = high;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Assign(Register16 from)
         {
             Debug.Assert(from is not null, "from cannot be null");
-            this.Low = from.Low;
-            this.High = from.High;
+            if (BitConverter.IsLittleEndian)
+            {
+                this.Whole = from.Whole;
+            }
+            else
+            {
+                this.Low = from.Low;
+                this.High = from.High;
+            }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Increment() => ++this.Joined;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Decrement() => --this.Joined;
     }
 }
