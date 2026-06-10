@@ -19,14 +19,16 @@ namespace EightBit
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Tick(int extra = 1)
         {
-            this.Cycles += extra;
             var ticked = this.Ticked;
-            if (ticked is not null)
+            if (ticked is null)
             {
-                for (var i = 0; i < extra; ++i)
-                {
-                    ticked.Invoke(this, EventArgs.Empty);
-                }
+                this.Cycles += extra;
+                return;
+            }
+            for (var i = 0; i < extra; ++i)
+            {
+                ++this.Cycles;
+                ticked.Invoke(this, EventArgs.Empty);
             }
         }
 
