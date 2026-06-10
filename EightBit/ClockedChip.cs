@@ -20,9 +20,13 @@ namespace EightBit
         public void Tick(int extra = 1)
         {
             this.Cycles += extra;
-            for (var i = 0; i < extra; ++i)
+            var ticked = this.Ticked;
+            if (ticked is not null)
             {
-                this.Ticked?.Invoke(this, EventArgs.Empty);
+                for (var i = 0; i < extra; ++i)
+                {
+                    ticked.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 

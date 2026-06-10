@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace EightBit
 {
@@ -35,6 +36,7 @@ namespace EightBit
             this.Poke(absolute.Joined, value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Read()
         {
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
@@ -42,6 +44,7 @@ namespace EightBit
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write()
         {
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
@@ -63,6 +66,7 @@ namespace EightBit
 
         public abstract void Initialize();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected ref byte Reference(ushort absolute)
         {
             var mapped = this.Mapping(absolute);
@@ -78,6 +82,7 @@ namespace EightBit
             return ref this._data;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected ref byte Reference() => ref this.Reference(this.Address.Joined);
 
         protected void LoadHexFile(string path)

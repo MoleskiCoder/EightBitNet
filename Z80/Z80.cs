@@ -6,6 +6,7 @@ namespace Z80
 {
     using EightBit;
     using System.Diagnostics;
+    using System.Runtime.CompilerServices;
 
     public sealed class Z80 : IntelProcessor
     {
@@ -307,6 +308,7 @@ namespace Z80
         public ref PinLevel M1 => ref this._m1Line;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseM1()
         {
             if (this.M1.Lowered())
@@ -317,6 +319,7 @@ namespace Z80
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LowerM1()
         {
             if (this.M1.Raised())
@@ -349,6 +352,7 @@ namespace Z80
         public ref PinLevel RFSH => ref this._refreshLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseRFSH()
         {
             if (this.RFSH.Lowered())
@@ -360,6 +364,7 @@ namespace Z80
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LowerRFSH()
         {
             if (this.RFSH.Raised())
@@ -387,6 +392,7 @@ namespace Z80
         public ref PinLevel MREQ => ref this._memoryRequestLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseMREQ()
         {
             if (this.MREQ.Lowered())
@@ -397,6 +403,7 @@ namespace Z80
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LowerMREQ()
         {
             if (this.MREQ.Raised())
@@ -424,6 +431,7 @@ namespace Z80
         public ref PinLevel IORQ => ref this._ioRequestLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseIORQ()
         {
             if (this.IORQ.Lowered())
@@ -434,6 +442,7 @@ namespace Z80
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LowerIORQ()
         {
             if (this.IORQ.Raised())
@@ -461,6 +470,7 @@ namespace Z80
         public ref PinLevel RD => ref this._rdLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseRD()
         {
             if (this.RD.Lowered())
@@ -471,6 +481,7 @@ namespace Z80
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LowerRD()
         {
             if (this.RD.Raised())
@@ -498,6 +509,7 @@ namespace Z80
         public ref PinLevel WR => ref this._wrLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RaiseWR()
         {
             if (this.WR.Lowered())
@@ -508,6 +520,7 @@ namespace Z80
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LowerWR()
         {
             if (this.WR.Raised())

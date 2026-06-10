@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace EightBit
 {
@@ -158,12 +159,16 @@ namespace EightBit
 
         protected virtual void HandleINT() => this.RaiseINT();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void OnReadingMemory() => this.ReadingMemory?.Invoke(this, EventArgs.Empty);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void OnReadMemory() => this.ReadMemory?.Invoke(this, EventArgs.Empty);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void OnWritingMemory() => this.WritingMemory?.Invoke(this, EventArgs.Empty);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void OnWrittenMemory() => this.WrittenMemory?.Invoke(this, EventArgs.Empty);
 
         protected void MemoryWrite(byte low, byte high, byte data)
@@ -186,6 +191,7 @@ namespace EightBit
 
         protected virtual void MemoryWrite() => this.BusWrite();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void BusWrite() => this.Bus.Write();   // N.B. Should be the only real call into the "Bus.Write" code.
 
         protected void MemoryRead(byte low, byte high)
@@ -202,6 +208,7 @@ namespace EightBit
 
         protected virtual void MemoryRead() => this.BusRead();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void BusRead() => this.Bus.Read();   // N.B. Should be the only real call into the "Bus.Read" code.
 
         protected virtual void IncrementPC() => this.PC.Increment();
