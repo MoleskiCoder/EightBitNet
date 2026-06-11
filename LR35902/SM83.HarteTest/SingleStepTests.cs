@@ -56,7 +56,7 @@ namespace SM83.HarteTest
 
                 if (checker.Unimplemented)
                 {
-                    Assert.Inconclusive($"Opcode not implemented: {test.Name}");
+                    Assert.Fail($"Opcode not implemented: {test.Name}");
                     return;
                 }
 
