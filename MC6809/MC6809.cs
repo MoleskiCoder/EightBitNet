@@ -362,39 +362,49 @@ namespace MC6809
 
         #region Status (etc.) bit twiddling
 
+        #region Status bits
+
+        public int CarryFlag => this.CC & (byte)StatusBits.CF;
+
+        public int OverflowFlag => this.CC & (byte)StatusBits.VF;
+
+        public int ZeroFlag => this.CC & (byte)StatusBits.ZF;
+
+        public int NegativeFlag => this.CC & (byte)StatusBits.NF;
+
+        public int InterruptMaskedFlag => this.CC & (byte)StatusBits.IF;
+
+        public int HalfCarryFlag => this.CC & (byte)StatusBits.HF;
+
+        public int FastInterruptMaskedFlag => this.CC & (byte)StatusBits.FF;
+
         public int EntireRegisterSetFlag => this.CC & (byte)StatusBits.EF;
+
+        #endregion
+
+        #region Status bits as booleans
+
+        public bool Carry => this.CarryFlag != 0;
+
+        public bool Overflow => this.OverflowFlag != 0;
+
+        public bool Zero => this.ZeroFlag != 0;
+
+        public bool Negative => this.NegativeFlag != 0;
+
+        public bool InterruptMasked => this.InterruptMaskedFlag != 0;
+
+        public bool HalfCarry => this.HalfCarryFlag != 0;
+
+        public bool FastInterruptMasked => this.FastInterruptMaskedFlag != 0;
 
         public bool EntireRegisterSet => this.EntireRegisterSetFlag != 0;
 
         public bool EntireFlag => this.EntireRegisterSet;
 
-        public int FastInterruptMaskedFlag => this.CC & (byte)StatusBits.FF;
+        #endregion
 
-        public bool FastInterruptMasked => this.FastInterruptMaskedFlag != 0;
-
-        public int HalfCarryFlag => this.CC & (byte)StatusBits.HF;
-
-        public bool HalfCarry => this.HalfCarryFlag != 0;
-
-        public int InterruptMaskedFlag => this.CC & (byte)StatusBits.IF;
-
-        public bool InterruptMasked => this.InterruptMaskedFlag != 0;
-
-        public int NegativeFlag => this.CC & (byte)StatusBits.NF;
-
-        public bool Negative => this.NegativeFlag != 0;
-
-        public int ZeroFlag => this.CC & (byte)StatusBits.ZF;
-
-        public bool Zero => this.ZeroFlag != 0;
-
-        public int OverflowFlag => this.CC & (byte)StatusBits.VF;
-
-        public bool Overflow => this.OverflowFlag != 0;
-
-        public int CarryFlag => this.CC & (byte)StatusBits.CF;
-
-        public bool Carry => this.CarryFlag != 0;
+        #region Branch flag synthesis
 
         private bool LS => this.Carry || this.Zero;                                 // (C OR Z)
 
@@ -408,6 +418,10 @@ namespace MC6809
 
         private bool GT => !this.LE;                                                // !(Z OR (N XOR V))
 
+        #endregion
+
+        #region Status bits to int overloads
+
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
         private static byte SetBit(byte f, StatusBits flag, int condition) => SetBit(f, (byte)flag, condition);
@@ -417,6 +431,10 @@ namespace MC6809
         private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
 
         private static byte ClearBit(byte f, StatusBits flag, int condition) => ClearBit(f, (byte)flag, condition);
+
+        #endregion
+
+        #region Higher-level status bit adjustments
 
         private byte AdjustZero(byte datum) => ClearBit(this.CC, StatusBits.ZF, datum);
 
@@ -518,6 +536,8 @@ namespace MC6809
             this.CC = this.AdjustCarry(after);
             return this.AdjustOverflow(before, data, after);
         }
+
+        #endregion
 
         #endregion
 
