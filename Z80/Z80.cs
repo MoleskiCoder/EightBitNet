@@ -671,17 +671,17 @@ namespace Z80
             this.Tick(5);
         }
 
-        private int Zero() => ZeroTest(this.F);
+        public int Zero() => ZeroTest(this.F);
 
-        private int Carry() => CarryTest(this.F);
+        public int Carry() => CarryTest(this.F);
 
-        private int Parity() => ParityTest(this.F);
+        public int Parity() => ParityTest(this.F);
 
-        private int Sign() => SignTest(this.F);
+        public int Sign() => SignTest(this.F);
 
-        private int HalfCarry() => HalfCarryTest(this.F);
+        public int HalfCarry() => HalfCarryTest(this.F);
 
-        private int Subtracting() => SubtractingTest(this.F);
+        public int Subtracting() => SubtractingTest(this.F);
 
         private static int ZeroTest(byte data) => data & (byte)StatusBits.ZF;
 
@@ -701,7 +701,7 @@ namespace Z80
 
         private void AdjustStatusFlags(byte value) => this._modifiedF = this.F = value;
 
-        private void SetBit(StatusBits flag) => this.AdjustStatusFlags(SetBit(this.F, flag));
+        public void SetBit(StatusBits flag) => this.AdjustStatusFlags(SetBit(this.F, flag));
 
         private static byte SetBit(byte f, StatusBits flag) => SetBit(f, (byte)flag);
 
@@ -713,7 +713,7 @@ namespace Z80
 
         private static byte SetBit(byte f, StatusBits flag, bool condition) => SetBit(f, (byte)flag, condition);
 
-        private void ClearBit(StatusBits flag) => this.AdjustStatusFlags(ClearBit(this.F, flag));
+        public void ClearBit(StatusBits flag) => this.AdjustStatusFlags(ClearBit(this.F, flag));
 
         private static byte ClearBit(byte f, StatusBits flag) => ClearBit(f, (byte)flag);
 
