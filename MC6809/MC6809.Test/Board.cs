@@ -23,8 +23,9 @@ namespace MC6809.Test
         private readonly Disassembler _disassembler;
         private readonly Profiler _profiler;
 
-        private ulong _totalCycleCount;
         private long _frameCycleCount;
+
+        private readonly Register16 _oldPC = new((ushort)Mask.Sixteen);
 
         // The _disassembleAt and _ignoreDisassembly are used to skip pin events
         private ushort _disassembleAt;
@@ -101,9 +102,13 @@ namespace MC6809.Test
         {
             Console.TreatControlCAsInput = true;
 
-            // Load our BASIC interpreter
             var directory = this._configuration.RomDirectory + "\\";
-            LoadHexFile(directory + "ExBasROM.hex");
+
+            // Load our BASIC interpreter
+            LoadHexFile(directory + "searle\\ExBasROM.hex");
+
+            // Load our Sudoku solver
+            //LoadHexFile(directory + "6809_sudoku\\sudoku.hex");
 
             // Catch a byte being transmitted
             this.ACIA.Transmitting += ACIA_Transmitting;
@@ -163,8 +168,11 @@ namespace MC6809.Test
 
         private void CPU_ExecutedInstruction_Termination(object? sender, EventArgs e)
         {
-            this._totalCycleCount += (ulong)this.CPU.Cycles;
-            if (this._totalCycleCount > Configuration.TerminationCycles)
+            if (this._oldPC != this.CPU.PC)
+            {
+                this._oldPC.Assign(this.CPU.PC);
+            }
+            else
             {
                 this.LowerPOWER();
             }
