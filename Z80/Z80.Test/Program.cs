@@ -17,7 +17,7 @@ namespace Z80.Test
 #endif
 
             var board = new Board(configuration);
-            var harness = new TestHarness<Board, Z80>(board, board.CPU);
+            var harness = new TestHarness<Board, Z80>(board, board.CPU, 4_000_000);
             harness.Run();
         }
     }
