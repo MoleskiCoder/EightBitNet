@@ -91,7 +91,7 @@ namespace MC6809.Test
 
         public override void LowerPOWER()
         {
-            ////this.profiler.Generate();
+            ////this._profiler.Generate();
 
             this.ACIA.LowerPOWER();
             this.CPU.LowerPOWER();
@@ -135,8 +135,8 @@ namespace MC6809.Test
                 this.CPU.ExecutedInstruction += CPU_ExecutedInstruction_Termination;
             }
 
-            ////this.profiler.Enable();
-            ////this.profiler.EmitLine += this.Profiler_EmitLine;
+            ////this._profiler.Enable();
+            ////this._profiler.EmitLine += this.Profiler_EmitLine;
         }
 
         private void Board_ReadingByte(object? sender, EventArgs e)
@@ -163,7 +163,10 @@ namespace MC6809.Test
         {
             var cycles = e.Cycles;
             var disassembled = e.Source;
-            Console.Error.WriteLine(disassembled);
+
+            var proportion = (double)cycles / this._profiler.TotalCycles;
+
+            Console.Error.WriteLine($"[{proportion:P2}]:{disassembled}");
         }
 
         private void CPU_ExecutedInstruction_Termination(object? sender, EventArgs e)

@@ -3,19 +3,25 @@
 // </copyright>
 namespace MC6809
 {
+    using System.Diagnostics;
+
     using EightBit;
 
     public sealed class Profiler(Bus board, MC6809 processor, Disassembler disassembler)
     {
-        private readonly ulong[] instructionCounts = new ulong[0x10000];
-        private readonly ulong[] addressProfiles = new ulong[0x10000];
-        private readonly ulong[] addressCounts = new ulong[0x10000];
+        private readonly long[] instructionCounts = new long[0x10000];
+        private readonly long[] addressProfiles = new long[0x10000];
+        private readonly long[] addressCounts = new long[0x10000];
 
         private readonly Bus board = board;
         private readonly MC6809 processor = processor;
         private readonly Disassembler disassembler = disassembler;
 
-        private ushort address;
+        private ushort _executingAddress;
+
+        private long _totalCycles = -1;
+        private bool _totalCyclesValid;
+
 
         public event EventHandler<EventArgs>? StartingOutput;
 
@@ -26,6 +32,21 @@ namespace MC6809
         public event EventHandler<EventArgs>? FinishedLineOutput;
 
         public event EventHandler<ProfileLineEventArgs>? EmitLine;
+
+        public long TotalCycles
+        {
+            get
+            {
+                Debug.Assert(this._totalCyclesValid);
+                return this._totalCycles;
+            }
+            private set
+            {
+                Debug.Assert(!this._totalCyclesValid);
+                this._totalCycles = value;
+                this._totalCyclesValid = true;
+            }
+        }
 
         public void Enable()
         {
@@ -48,6 +69,8 @@ namespace MC6809
 
         private void EmitProfileInformation()
         {
+            this.TotalCycles = addressProfiles.Sum();
+
             this.OnStartingLineOutput();
             try
             {
@@ -73,21 +96,21 @@ namespace MC6809
             }
         }
 
-        private void Processor_ExecutingInstruction(object? sender, EventArgs e) => this.address = this.processor.PC.Joined;
+        private void Processor_ExecutingInstruction(object? sender, EventArgs e) => this._executingAddress = this.processor.PC.Joined;
 
         private void Processor_ExecutedInstruction(object? sender, EventArgs e)
         {
-            ushort opcode = this.board.Peek(this.address);
+            ushort opcode = this.board.Peek(this._executingAddress);
             if (opcode == 0x10 || opcode == 0x11)
             {
                 opcode *= 0x100;
-                opcode += this.board.Peek((ushort)(this.address + 1));
+                opcode += this.board.Peek((ushort)(this._executingAddress + 1));
             }
 
-            this.addressCounts[this.address]++;
+            this.addressCounts[this._executingAddress]++;
             this.instructionCounts[opcode]++;
 
-            this.addressProfiles[this.address] += (ulong)this.processor.Cycles;
+            this.addressProfiles[this._executingAddress] += this.processor.Cycles;
         }
 
         private void OnStartingOutput() => this.StartingOutput?.Invoke(this, EventArgs.Empty);
@@ -98,6 +121,6 @@ namespace MC6809
 
         private void OnFinishedLineOutput() => this.FinishedLineOutput?.Invoke(this, EventArgs.Empty);
 
-        private void OnEmitLine(string source, ulong cycles) => this.EmitLine?.Invoke(this, new ProfileLineEventArgs(source, cycles));
+        private void OnEmitLine(string source, long cycles) => this.EmitLine?.Invoke(this, new ProfileLineEventArgs(source, cycles));
     }
 }
