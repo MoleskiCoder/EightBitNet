@@ -32,23 +32,21 @@ namespace EightBit
 
         public void Run()
         {
-            this._timer.Start();
-
             this._board.Initialize();
             this._board.RaisePOWER();
 
+            this._timer.Start();
             while (this._cpu.Powered)
             {
                 this._totalCycles += this._cpu.Step();
             }
-
             this._timer.Stop();
 
             Console.Out.WriteLine();
 
             Console.Out.WriteLine($"Guest cycles = {this._totalCycles:N0}");
             Console.Out.WriteLine($"Elapsed time (at {this.ActualClockSpeed:g3}MHz actual) = {this.ActualElapsed}");
-            Console.Out.WriteLine($"Elapsed time (at {(this.TargetClockSpeed):g3}MHz target) = {this.TargetElapsed}");
+            Console.Out.WriteLine($"Elapsed time (at {this.TargetClockSpeed:g3}MHz target) = {this.TargetElapsed}");
         }
     }
 }
