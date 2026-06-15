@@ -13,7 +13,7 @@ namespace EightBit
             var configuration = new Configuration();
 
 #if DEBUG
-            configuration.DebugMode = true;
+            configuration.Debug = true;
 #endif
 
             var board = new Board(configuration);
