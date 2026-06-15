@@ -9,7 +9,9 @@ namespace EightBit
         public static readonly ulong CyclesPerSecond = 2 * 1024 * 1024;
         public static readonly ulong FrameCycleInterval = CyclesPerSecond / 60;
        
-        public bool DebugMode { get; set;  } = false;
+        public bool Debug { get; set;  } = false;
+
+        public bool Profile { get; set; } = false;
 
         public bool TerminatesEarly { get; } = true;
 

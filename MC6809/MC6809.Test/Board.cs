@@ -91,7 +91,8 @@ namespace MC6809.Test
 
         public override void LowerPOWER()
         {
-            ////this._profiler.Generate();
+            if (this._configuration.Profile)
+                this._profiler.Generate();
 
             this.ACIA.LowerPOWER();
             this.CPU.LowerPOWER();
@@ -122,7 +123,7 @@ namespace MC6809.Test
             // Marshal data from memory -> ACIA
             this.CPU.WrittenMemory += Board_WrittenByte;
 
-            if (this._configuration.DebugMode)
+            if (this._configuration.Debug)
             {
                 // MC6809 disassembly wiring
                 this.CPU.ExecutingInstruction += CPU_ExecutingInstruction;
@@ -135,8 +136,11 @@ namespace MC6809.Test
                 this.CPU.ExecutedInstruction += CPU_ExecutedInstruction_Termination;
             }
 
-            ////this._profiler.Enable();
-            ////this._profiler.EmitLine += this.Profiler_EmitLine;
+            if (this._configuration.Profile)
+            {
+                this._profiler.Enable();
+                this._profiler.EmitLine += this.Profiler_EmitLine;
+            }
         }
 
         private void Board_ReadingByte(object? sender, EventArgs e)
