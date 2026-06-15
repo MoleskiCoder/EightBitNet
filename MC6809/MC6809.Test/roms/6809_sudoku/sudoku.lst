@@ -1,0 +1,958 @@
+                      (       sudoku.asm):00001         ; ============================================================================
+                      (       sudoku.asm):00002         ; 6809_sudoku - Sudoku solver in Motorola 6809 assembler (lwtools: lwasm)
+                      (       sudoku.asm):00003         ;
+                      (       sudoku.asm):00004         ; A port of the 6502 version to the 6809. Recursive backtracking solver, same
+                      (       sudoku.asm):00005         ; algorithm and same console output.
+                      (       sudoku.asm):00006         ;
+                      (       sudoku.asm):00007         ; Console I/O matches the 6502 build (write a byte to CONOUT to print it).
+                      (       sudoku.asm):00008         ; ROM at $F000-$FFFF, 6809 vectors at $FFF0-$FFFF, working RAM from $0200.
+                      (       sudoku.asm):00009         ; ============================================================================
+                      (       sudoku.asm):00010         
+                      (       sudoku.asm):00011         ; ---- constants -------------------------------------------------------------
+                      (       sudoku.asm):00012         
+     0000             (       sudoku.asm):00013         UNASSIGNED  equ 0
+     0009             (       sudoku.asm):00014         BOARD_SIZE  equ 9
+     0051             (       sudoku.asm):00015         CELL_COUNT  equ BOARD_SIZE*BOARD_SIZE   ; 81
+     4000             (       sudoku.asm):00016         STACKTOP    equ $4000                   ; hardware stack top (RAM $0200-$3FFF)
+                      (       sudoku.asm):00017         
+                      (       sudoku.asm):00018         ; ---- working RAM (uninitialised) -------------------------------------------
+     0200             (       sudoku.asm):00019         puzzle      equ   $0200                 ; live 9x9 board in RAM ($0200..$0250)
+                      (       sudoku.asm):00020         
+                      (       sudoku.asm):00021         ; ---- code ------------------------------------------------------------------
+                      (       sudoku.asm):00022                     org   $F000
+                      (       sudoku.asm):00023                     include "io.inc"
+                      (           io.inc):00001         ; io.inc - console I/O for the 6809 sudoku port
+                      (           io.inc):00002         ;
+                      (           io.inc):00003         ; Memory-mapped console, matching the 6502 build: writing a byte to 6850 ACIA
+                      (           io.inc):00004         ; emits a character.
+                      (           io.inc):00005         
+     A000             (           io.inc):00006         UART        equ $A000
+     A001             (           io.inc):00007         RECEV       equ UART+1
+     A001             (           io.inc):00008         TRANS       equ UART+1
+     A000             (           io.inc):00009         USTAT       equ UART
+     A000             (           io.inc):00010         UCTRL       equ UART
+                      (           io.inc):00011         
+     0003             (           io.inc):00012         ACIA_RESET  equ $03             ; master reset (CR1:CR0 = 11)
+     0015             (           io.inc):00013         ACIA_CFG    equ $15             ; div-16, 8 data / no parity / 1 stop, no interrupts
+                      (           io.inc):00014         
+                      (           io.inc):00015         
+F000                  (           io.inc):00016         io_initialise_acia:
+F000 8603             (           io.inc):00017                     lda #ACIA_RESET    ; master reset must precede configuration
+F002 B7A000           (           io.inc):00018                     sta UCTRL
+F005 8615             (           io.inc):00019                     lda #ACIA_CFG      ; DIV16 CLOCK -> 7372800 / 4 / 16 = 115200 baud
+F007 B7A000           (           io.inc):00020                     sta UCTRL
+F00A 39               (           io.inc):00021                     rts
+                      (           io.inc):00022         
+                      (           io.inc):00023         ; io_waitacia - wait for the ACIA to become ready
+F00B                  (           io.inc):00024         io_waitacia:
+F00B 3402             (           io.inc):00025                     pshs a
+F00D B6A000           (           io.inc):00026         io_wrwait:  lda  USTAT
+F010 8502             (           io.inc):00027                     bita #2
+F012 27F9             (           io.inc):00028                     beq  io_wrwait
+F014 3502             (           io.inc):00029                     puls a
+F016 39               (           io.inc):00030                     rts
+                      (           io.inc):00031         
+                      (           io.inc):00032         ; io_outchr - print the character held in A
+F017                  (           io.inc):00033         io_outchr:
+F017 8DF2             (           io.inc):00034                     bsr  io_waitacia        
+F019 B7A001           (           io.inc):00035                     sta  TRANS           
+F01C 39               (           io.inc):00036                     rts                  
+                      (           io.inc):00037         
+                      (           io.inc):00038         ; io_outstr - print the nul-terminated string that immediately follows the
+                      (           io.inc):00039         ;             "jsr io_outstr" instruction, then resume just past the nul.
+                      (           io.inc):00040         ;             (Inline-string trick, as used in the 6502 original.)
+F01D                  (           io.inc):00041         io_outstr:
+F01D 3510             (           io.inc):00042                     puls  x                 ; X = return address = first byte of string
+F01F                  (           io.inc):00043         ios_loop:
+F01F A680             (           io.inc):00044                     lda   ,x+
+F021 2704             (           io.inc):00045                     beq   ios_done
+F023 8DF2             (           io.inc):00046                     bsr   io_outchr
+F025 20F8             (           io.inc):00047                     bra   ios_loop
+F027                  (           io.inc):00048         ios_done:
+F027 3410             (           io.inc):00049                     pshs  x                 ; resume after the terminating nul
+F029 39               (           io.inc):00050                     rts
+                      (       sudoku.asm):00024         
+                      (       sudoku.asm):00025         ; ----------------------------------------------------------------------------
+                      (       sudoku.asm):00026         ; reset - entry point
+                      (       sudoku.asm):00027         ; ----------------------------------------------------------------------------
+F02A                  (       sudoku.asm):00028         reset:
+F02A 1A50             (       sudoku.asm):00029                     orcc  #$50                  ; mask IRQ and FIRQ
+F02C 10CE4000         (       sudoku.asm):00030                     lds   #STACKTOP             ; set up the hardware stack
+F030 BDF000           (       sudoku.asm):00031                     jsr   io_initialise_acia
+                      (       sudoku.asm):00032         
+                      (       sudoku.asm):00033                     ; copy the clues from ROM into writable RAM
+F033 8EF1EE           (       sudoku.asm):00034                     ldx   #puzzle_init
+F036 108E0200         (       sudoku.asm):00035                     ldy   #puzzle
+F03A C651             (       sudoku.asm):00036                     ldb   #CELL_COUNT
+F03C                  (       sudoku.asm):00037         rinit:
+F03C A680             (       sudoku.asm):00038                     lda   ,x+
+F03E A7A0             (       sudoku.asm):00039                     sta   ,y+
+F040 5A               (       sudoku.asm):00040                     decb
+F041 26F9             (       sudoku.asm):00041                     bne   rinit
+                      (       sudoku.asm):00042         
+F043 BDF01D           (       sudoku.asm):00043                     jsr   io_outstr
+F046 536F6C76696E6720 (       sudoku.asm):00044                     fcc   "Solving puzzle: "
+     70757A7A6C653A20
+F056 00               (       sudoku.asm):00045                     fcb   0
+                      (       sudoku.asm):00046         
+F057 5F               (       sudoku.asm):00047                     clrb                        ; n = 0
+F058 BDF07A           (       sudoku.asm):00048                     jsr   solve
+F05B 4D               (       sudoku.asm):00049                     tsta
+F05C 260D             (       sudoku.asm):00050                     bne   rfail
+                      (       sudoku.asm):00051         
+F05E BDF01D           (       sudoku.asm):00052                     jsr   io_outstr
+F061 70617373         (       sudoku.asm):00053                     fcc   "pass"
+F065 00               (       sudoku.asm):00054                     fcb   0
+F066 BDF1AE           (       sudoku.asm):00055                     jsr   print_board
+F069 2008             (       sudoku.asm):00056                     bra   rdone
+F06B                  (       sudoku.asm):00057         rfail:
+F06B BDF01D           (       sudoku.asm):00058                     jsr   io_outstr
+F06E 6661696C         (       sudoku.asm):00059                     fcc   "fail"
+F072 00               (       sudoku.asm):00060                     fcb   0
+F073                  (       sudoku.asm):00061         rdone:
+F073 860A             (       sudoku.asm):00062                     lda   #$0a                  ; trailing newline
+F075 BDF017           (       sudoku.asm):00063                     jsr   io_outchr
+F078                  (       sudoku.asm):00064         halt:
+F078 20FE             (       sudoku.asm):00065                     bra   halt
+                      (       sudoku.asm):00066         
+                      (       sudoku.asm):00067         ; ----------------------------------------------------------------------------
+                      (       sudoku.asm):00068         ; Inlined availability checks (macros). The row/column/box base pointers are
+                      (       sudoku.asm):00069         ; precomputed once per cell and held on the stack (see solve), so each check
+                      (       sudoku.asm):00070         ; is a single "ldx n,s" plus the nine comparisons. A = candidate digit.
+                      (       sudoku.asm):00071         ; A conflict branches to _loop_continue; no conflict falls through.  The row
+                      (       sudoku.asm):00072         ; check keeps a local 'used@' trampoline (its early compares sit >127 bytes
+                      (       sudoku.asm):00073         ; from _loop_continue); column and box branch to _loop_continue directly.
+                      (       sudoku.asm):00074         ;     0,s = row pointer   2,s = column pointer   4,s = box pointer
+                      (       sudoku.asm):00075         ; ----------------------------------------------------------------------------
+F07A                  (       sudoku.asm):00076         is_used_in_row macro
+                      (       sudoku.asm):00077                     ldx   ,s                    ; puzzle + row start
+                      (       sudoku.asm):00078                     cmpa  ,x
+                      (       sudoku.asm):00079                     beq   used@
+                      (       sudoku.asm):00080                     cmpa  1,x
+                      (       sudoku.asm):00081                     beq   used@
+                      (       sudoku.asm):00082                     cmpa  2,x
+                      (       sudoku.asm):00083                     beq   used@
+                      (       sudoku.asm):00084                     cmpa  3,x
+                      (       sudoku.asm):00085                     beq   used@
+                      (       sudoku.asm):00086                     cmpa  4,x
+                      (       sudoku.asm):00087                     beq   used@
+                      (       sudoku.asm):00088                     cmpa  5,x
+                      (       sudoku.asm):00089                     beq   used@
+                      (       sudoku.asm):00090                     cmpa  6,x
+                      (       sudoku.asm):00091                     beq   used@
+                      (       sudoku.asm):00092                     cmpa  7,x
+                      (       sudoku.asm):00093                     beq   used@
+                      (       sudoku.asm):00094                     cmpa  8,x
+                      (       sudoku.asm):00095                     beq   used@
+                      (       sudoku.asm):00096                     bra   pass@
+F07A                  (       sudoku.asm):00097         used@       bra   _loop_continue   ; in range: _loop_continue is < 127 bytes ahead
+F07A                  (       sudoku.asm):00098         pass@
+                      (       sudoku.asm):00099                     endm
+                      (       sudoku.asm):00100         
+F07A                  (       sudoku.asm):00101         is_used_in_column macro
+                      (       sudoku.asm):00102                     ldx   2,s                   ; puzzle + column
+                      (       sudoku.asm):00103                     cmpa  ,x
+                      (       sudoku.asm):00104                     beq   _loop_continue
+                      (       sudoku.asm):00105                     cmpa  (BOARD_SIZE*1),x
+                      (       sudoku.asm):00106                     beq   _loop_continue
+                      (       sudoku.asm):00107                     cmpa  (BOARD_SIZE*2),x
+                      (       sudoku.asm):00108                     beq   _loop_continue
+                      (       sudoku.asm):00109                     cmpa  (BOARD_SIZE*3),x
+                      (       sudoku.asm):00110                     beq   _loop_continue
+                      (       sudoku.asm):00111                     cmpa  (BOARD_SIZE*4),x
+                      (       sudoku.asm):00112                     beq   _loop_continue
+                      (       sudoku.asm):00113                     cmpa  (BOARD_SIZE*5),x
+                      (       sudoku.asm):00114                     beq   _loop_continue
+                      (       sudoku.asm):00115                     cmpa  (BOARD_SIZE*6),x
+                      (       sudoku.asm):00116                     beq   _loop_continue
+                      (       sudoku.asm):00117                     cmpa  (BOARD_SIZE*7),x
+                      (       sudoku.asm):00118                     beq   _loop_continue
+                      (       sudoku.asm):00119                     cmpa  (BOARD_SIZE*8),x
+                      (       sudoku.asm):00120                     beq   _loop_continue
+                      (       sudoku.asm):00121                     endm
+                      (       sudoku.asm):00122         
+F07A                  (       sudoku.asm):00123         is_used_in_box macro
+                      (       sudoku.asm):00124                     ldx   4,s                   ; puzzle + box start
+                      (       sudoku.asm):00125                     cmpa  ,x
+                      (       sudoku.asm):00126                     beq   _loop_continue
+                      (       sudoku.asm):00127                     cmpa  1,x
+                      (       sudoku.asm):00128                     beq   _loop_continue
+                      (       sudoku.asm):00129                     cmpa  2,x
+                      (       sudoku.asm):00130                     beq   _loop_continue
+                      (       sudoku.asm):00131                     cmpa  BOARD_SIZE,x
+                      (       sudoku.asm):00132                     beq   _loop_continue
+                      (       sudoku.asm):00133                     cmpa  BOARD_SIZE+1,x
+                      (       sudoku.asm):00134                     beq   _loop_continue
+                      (       sudoku.asm):00135                     cmpa  BOARD_SIZE+2,x
+                      (       sudoku.asm):00136                     beq   _loop_continue
+                      (       sudoku.asm):00137                     cmpa  (BOARD_SIZE*2),x
+                      (       sudoku.asm):00138                     beq   _loop_continue
+                      (       sudoku.asm):00139                     cmpa  (BOARD_SIZE*2)+1,x
+                      (       sudoku.asm):00140                     beq   _loop_continue
+                      (       sudoku.asm):00141                     cmpa  (BOARD_SIZE*2)+2,x
+                      (       sudoku.asm):00142                     beq   _loop_continue
+                      (       sudoku.asm):00143                     endm
+                      (       sudoku.asm):00144         
+F07A                  (       sudoku.asm):00145         is_available macro
+                      (       sudoku.asm):00146                     is_used_in_row
+                      (       sudoku.asm):00147                     is_used_in_column
+                      (       sudoku.asm):00148                     is_used_in_box
+                      (       sudoku.asm):00149                     endm
+                      (       sudoku.asm):00150         
+                      (       sudoku.asm):00151         ; ----------------------------------------------------------------------------
+                      (       sudoku.asm):00152         ; solve - recursive backtracking
+                      (       sudoku.asm):00153         ;   entry: B = cell index n (0..81)
+                      (       sudoku.asm):00154         ;   exit : A = 0 on success, A <> 0 on failure
+                      (       sudoku.asm):00155         ;
+                      (       sudoku.asm):00156         ; For each empty cell the row/column/box base pointers are computed ONCE and
+                      (       sudoku.asm):00157         ; held on the stack; they do not depend on the candidate digit, so the inner
+                      (       sudoku.asm):00158         ; digit loop avoids recomputing them. Per-cell stack frame:
+                      (       sudoku.asm):00159         ;     0,s  row pointer    (puzzle + row start)
+                      (       sudoku.asm):00160         ;     2,s  column pointer (puzzle + column)
+                      (       sudoku.asm):00161         ;     4,s  box pointer    (puzzle + box start)
+                      (       sudoku.asm):00162         ;     6,s  n              (cell index)
+                      (       sudoku.asm):00163         ; ----------------------------------------------------------------------------
+F07A                  (       sudoku.asm):00164         solve:
+F07A C151             (       sudoku.asm):00165                     cmpb  #CELL_COUNT
+F07C 2602             (       sudoku.asm):00166                     bne   _not_finished
+F07E 4F               (       sudoku.asm):00167                     clra
+F07F 39               (       sudoku.asm):00168                     rts                         ; success!
+                      (       sudoku.asm):00169         
+F080                  (       sudoku.asm):00170         _not_finished:
+F080 8E0200           (       sudoku.asm):00171                     ldx   #puzzle
+F083 A685             (       sudoku.asm):00172                     lda   b,x                   ; A = puzzle[n]
+F085 2703             (       sudoku.asm):00173                     beq   sv_empty              ; empty cell -> try to fill it
+F087 5C               (       sudoku.asm):00174                     incb                        ; already assigned -> skip
+F088 20F0             (       sudoku.asm):00175                     bra   solve                 ; tail recursion
+                      (       sudoku.asm):00176         
+F08A                  (       sudoku.asm):00177         sv_empty:
+F08A 3404             (       sudoku.asm):00178                     pshs  b                     ; 0,s = n
+F08C 8EF3D7           (       sudoku.asm):00179                     ldx   #table_move2box_start
+F08F E685             (       sudoku.asm):00180                     ldb   b,x                   ; B = box start  (B still = n)
+F091 8E0200           (       sudoku.asm):00181                     ldx   #puzzle
+F094 3A               (       sudoku.asm):00182                     abx
+F095 3410             (       sudoku.asm):00183                     pshs  x                     ; push box pointer
+F097 E662             (       sudoku.asm):00184                     ldb   2,s                   ; B = n
+F099 8EF23F           (       sudoku.asm):00185                     ldx   #table_move2x
+F09C E685             (       sudoku.asm):00186                     ldb   b,x                   ; B = column
+F09E 8E0200           (       sudoku.asm):00187                     ldx   #puzzle
+F0A1 3A               (       sudoku.asm):00188                     abx
+F0A2 3410             (       sudoku.asm):00189                     pshs  x                     ; push column pointer
+F0A4 E664             (       sudoku.asm):00190                     ldb   4,s                   ; B = n
+F0A6 8EF386           (       sudoku.asm):00191                     ldx   #table_move2row_start
+F0A9 E685             (       sudoku.asm):00192                     ldb   b,x                   ; B = row start
+F0AB 8E0200           (       sudoku.asm):00193                     ldx   #puzzle
+F0AE 3A               (       sudoku.asm):00194                     abx
+F0AF 3410             (       sudoku.asm):00195                     pshs  x                     ; push row pointer
+F0B1 8601             (       sudoku.asm):00196                     lda   #1                    ; first candidate digit
+                      (       sudoku.asm):00197         
+F0B3                  (       sudoku.asm):00198         _loop:
+                      (       sudoku.asm):00199                     is_available                ; A = digit; conflict -> _loop_continue
+                      (     is_available):00001                     is_used_in_row
+F0B3 AEE4             (   is_used_in_row):00001                     ldx   ,s                    ; puzzle + row start
+F0B5 A184             (   is_used_in_row):00002                     cmpa  ,x
+F0B7 2722             (   is_used_in_row):00003                     beq   used@
+F0B9 A101             (   is_used_in_row):00004                     cmpa  1,x
+F0BB 271E             (   is_used_in_row):00005                     beq   used@
+F0BD A102             (   is_used_in_row):00006                     cmpa  2,x
+F0BF 271A             (   is_used_in_row):00007                     beq   used@
+F0C1 A103             (   is_used_in_row):00008                     cmpa  3,x
+F0C3 2716             (   is_used_in_row):00009                     beq   used@
+F0C5 A104             (   is_used_in_row):00010                     cmpa  4,x
+F0C7 2712             (   is_used_in_row):00011                     beq   used@
+F0C9 A105             (   is_used_in_row):00012                     cmpa  5,x
+F0CB 270E             (   is_used_in_row):00013                     beq   used@
+F0CD A106             (   is_used_in_row):00014                     cmpa  6,x
+F0CF 270A             (   is_used_in_row):00015                     beq   used@
+F0D1 A107             (   is_used_in_row):00016                     cmpa  7,x
+F0D3 2706             (   is_used_in_row):00017                     beq   used@
+F0D5 A108             (   is_used_in_row):00018                     cmpa  8,x
+F0D7 2702             (   is_used_in_row):00019                     beq   used@
+F0D9 2002             (   is_used_in_row):00020                     bra   pass@
+F0DB 206A             (   is_used_in_row):00021         used@       bra   _loop_continue   ; in range: _loop_continue is < 127 bytes ahead
+F0DD                  (   is_used_in_row):00022         pass@
+                      (     is_available):00002                     is_used_in_column
+F0DD AE62             (is_used_in_column):00001                     ldx   2,s                   ; puzzle + column
+F0DF A184             (is_used_in_column):00002                     cmpa  ,x
+F0E1 2764             (is_used_in_column):00003                     beq   _loop_continue
+F0E3 A109             (is_used_in_column):00004                     cmpa  (BOARD_SIZE*1),x
+F0E5 2760             (is_used_in_column):00005                     beq   _loop_continue
+F0E7 A18812           (is_used_in_column):00006                     cmpa  (BOARD_SIZE*2),x
+F0EA 275B             (is_used_in_column):00007                     beq   _loop_continue
+F0EC A1881B           (is_used_in_column):00008                     cmpa  (BOARD_SIZE*3),x
+F0EF 2756             (is_used_in_column):00009                     beq   _loop_continue
+F0F1 A18824           (is_used_in_column):00010                     cmpa  (BOARD_SIZE*4),x
+F0F4 2751             (is_used_in_column):00011                     beq   _loop_continue
+F0F6 A1882D           (is_used_in_column):00012                     cmpa  (BOARD_SIZE*5),x
+F0F9 274C             (is_used_in_column):00013                     beq   _loop_continue
+F0FB A18836           (is_used_in_column):00014                     cmpa  (BOARD_SIZE*6),x
+F0FE 2747             (is_used_in_column):00015                     beq   _loop_continue
+F100 A1883F           (is_used_in_column):00016                     cmpa  (BOARD_SIZE*7),x
+F103 2742             (is_used_in_column):00017                     beq   _loop_continue
+F105 A18848           (is_used_in_column):00018                     cmpa  (BOARD_SIZE*8),x
+F108 273D             (is_used_in_column):00019                     beq   _loop_continue
+                      (     is_available):00003                     is_used_in_box
+F10A AE64             (   is_used_in_box):00001                     ldx   4,s                   ; puzzle + box start
+F10C A184             (   is_used_in_box):00002                     cmpa  ,x
+F10E 2737             (   is_used_in_box):00003                     beq   _loop_continue
+F110 A101             (   is_used_in_box):00004                     cmpa  1,x
+F112 2733             (   is_used_in_box):00005                     beq   _loop_continue
+F114 A102             (   is_used_in_box):00006                     cmpa  2,x
+F116 272F             (   is_used_in_box):00007                     beq   _loop_continue
+F118 A109             (   is_used_in_box):00008                     cmpa  BOARD_SIZE,x
+F11A 272B             (   is_used_in_box):00009                     beq   _loop_continue
+F11C A10A             (   is_used_in_box):00010                     cmpa  BOARD_SIZE+1,x
+F11E 2727             (   is_used_in_box):00011                     beq   _loop_continue
+F120 A10B             (   is_used_in_box):00012                     cmpa  BOARD_SIZE+2,x
+F122 2723             (   is_used_in_box):00013                     beq   _loop_continue
+F124 A18812           (   is_used_in_box):00014                     cmpa  (BOARD_SIZE*2),x
+F127 271E             (   is_used_in_box):00015                     beq   _loop_continue
+F129 A18813           (   is_used_in_box):00016                     cmpa  (BOARD_SIZE*2)+1,x
+F12C 2719             (   is_used_in_box):00017                     beq   _loop_continue
+F12E A18814           (   is_used_in_box):00018                     cmpa  (BOARD_SIZE*2)+2,x
+F131 2714             (   is_used_in_box):00019                     beq   _loop_continue
+                      (       sudoku.asm):00200         
+                      (       sudoku.asm):00201                     ; available: place the digit and recurse
+F133 E666             (       sudoku.asm):00202                     ldb   6,s                   ; B = n
+F135 8E0200           (       sudoku.asm):00203                     ldx   #puzzle
+F138 A785             (       sudoku.asm):00204                     sta   b,x                   ; puzzle[n] = digit
+F13A 3402             (       sudoku.asm):00205                     pshs  a                     ; 0,s = digit ; n now at 7,s
+F13C E667             (       sudoku.asm):00206                     ldb   7,s                   ; B = n
+F13E 5C               (       sudoku.asm):00207                     incb                        ; recurse on n+1
+                      (       sudoku.asm):00208         
+F13F BDF07A           (       sudoku.asm):00209                     jsr   solve
+                      (       sudoku.asm):00210         
+F142 4D               (       sudoku.asm):00211                     tsta
+F143 2715             (       sudoku.asm):00212                     beq   _return_true
+                      (       sudoku.asm):00213         
+F145 3502             (       sudoku.asm):00214                     puls  a                     ; A = digit ; frame restored
+                      (       sudoku.asm):00215                     ; fall through to try the next digit
+F147                  (       sudoku.asm):00216         _loop_continue:
+F147 4C               (       sudoku.asm):00217                     inca
+F148 810A             (       sudoku.asm):00218                     cmpa  #BOARD_SIZE+1
+F14A 1026FF65         (       sudoku.asm):00219                     lbne  _loop                ; _loop is > 127 bytes back
+                      (       sudoku.asm):00220         
+                      (       sudoku.asm):00221                                                ; failure, unmake & try again
+F14E E666             (       sudoku.asm):00222                     ldb   6,s
+F150 8E0200           (       sudoku.asm):00223                     ldx   #puzzle
+F153 6F85             (       sudoku.asm):00224                     clr   b,x                   ; puzzle[n] = UNASSIGNED
+                      (       sudoku.asm):00225         
+F155                  (       sudoku.asm):00226         _return_false:
+F155 3267             (       sudoku.asm):00227                     leas  7,s                   ; drop the per-cell frame (row,col,box,n)
+F157 8601             (       sudoku.asm):00228                     lda   #1                    ; non-zero -> failure
+F159 39               (       sudoku.asm):00229                     rts
+                      (       sudoku.asm):00230         
+F15A                  (       sudoku.asm):00231         _return_true:
+F15A 3268             (       sudoku.asm):00232                     leas  8,s                   ; drop saved digit + per-cell frame
+F15C 4F               (       sudoku.asm):00233                     clra                        ; success
+F15D 39               (       sudoku.asm):00234                     rts
+                      (       sudoku.asm):00235         
+                      (       sudoku.asm):00236         ; ----------------------------------------------------------------------------
+                      (       sudoku.asm):00237         ; Board printing
+                      (       sudoku.asm):00238         ; ----------------------------------------------------------------------------
+F15E                  (       sudoku.asm):00239         print_board_element:                    ; entry: B = cell index
+F15E 8620             (       sudoku.asm):00240                     lda   #$20                  ; space
+F160 BDF017           (       sudoku.asm):00241                     jsr   io_outchr
+F163 8E0200           (       sudoku.asm):00242                     ldx   #puzzle
+F166 A685             (       sudoku.asm):00243                     lda   b,x                   ; A = puzzle[index]
+F168 2707             (       sudoku.asm):00244                     beq   pbe_blank
+F16A 8B30             (       sudoku.asm):00245                     adda  #$30                  ; digit -> ASCII
+F16C BDF017           (       sudoku.asm):00246                     jsr   io_outchr
+F16F 2005             (       sudoku.asm):00247                     bra   pbe_done
+F171                  (       sudoku.asm):00248         pbe_blank:
+F171 862D             (       sudoku.asm):00249                     lda   #$2d                  ; '-'
+F173 BDF017           (       sudoku.asm):00250                     jsr   io_outchr
+F176                  (       sudoku.asm):00251         pbe_done:
+F176 8620             (       sudoku.asm):00252                     lda   #$20                  ; space
+F178 BDF017           (       sudoku.asm):00253                     jsr   io_outchr
+F17B 39               (       sudoku.asm):00254                     rts
+                      (       sudoku.asm):00255         
+F17C                  (       sudoku.asm):00256         print_box_break_vertical:
+F17C 867C             (       sudoku.asm):00257                     lda   #$7c                  ; '|'
+F17E BDF017           (       sudoku.asm):00258                     jsr   io_outchr
+F181 39               (       sudoku.asm):00259                     rts
+                      (       sudoku.asm):00260         
+F182                  (       sudoku.asm):00261         print_box_break_horizontal:
+F182 BDF01D           (       sudoku.asm):00262                     jsr   io_outstr
+F185 202D2D2D2D2D2D2D (       sudoku.asm):00263                     fcc   " --------+---------+--------"
+     2D2B2D2D2D2D2D2D
+     2D2D2D2B2D2D2D2D
+     2D2D2D2D
+F1A1 00               (       sudoku.asm):00264                     fcb   0
+F1A2 39               (       sudoku.asm):00265                     rts
+                      (       sudoku.asm):00266         
+F1A3                  (       sudoku.asm):00267         print_newline:
+F1A3 860D             (       sudoku.asm):00268                     lda   #$0d                  ; CR
+F1A5 BDF017           (       sudoku.asm):00269                     jsr   io_outchr
+F1A8 860A             (       sudoku.asm):00270                     lda   #$0a                  ; LF
+F1AA BDF017           (       sudoku.asm):00271                     jsr   io_outchr
+F1AD 39               (       sudoku.asm):00272                     rts
+                      (       sudoku.asm):00273         
+F1AE                  (       sudoku.asm):00274         print_board:
+F1AE BDF1A3           (       sudoku.asm):00275                     jsr   print_newline
+F1B1 BDF1A3           (       sudoku.asm):00276                     jsr   print_newline
+F1B4 BDF182           (       sudoku.asm):00277                     jsr   print_box_break_horizontal
+F1B7 BDF1A3           (       sudoku.asm):00278                     jsr   print_newline
+                      (       sudoku.asm):00279         
+F1BA 5F               (       sudoku.asm):00280                     clrb                        ; index = 0
+F1BB                  (       sudoku.asm):00281         pb_loop:
+F1BB BDF15E           (       sudoku.asm):00282                     jsr   print_board_element   ; B = index
+F1BE 5C               (       sudoku.asm):00283                     incb                        ; advance to next index
+                      (       sudoku.asm):00284         
+F1BF 8EF334           (       sudoku.asm):00285                     ldx   #table_move2box_y
+F1C2 A685             (       sudoku.asm):00286                     lda   b,x
+F1C4 260D             (       sudoku.asm):00287                     bne   pb_boxh
+F1C6 8EF23F           (       sudoku.asm):00288                     ldx   #table_move2x
+F1C9 A685             (       sudoku.asm):00289                     lda   b,x
+F1CB 2606             (       sudoku.asm):00290                     bne   pb_boxh
+F1CD BDF1A3           (       sudoku.asm):00291                     jsr   print_newline
+F1D0 BDF182           (       sudoku.asm):00292                     jsr   print_box_break_horizontal
+F1D3                  (       sudoku.asm):00293         pb_boxh:
+F1D3 8EF23F           (       sudoku.asm):00294                     ldx   #table_move2x
+F1D6 A685             (       sudoku.asm):00295                     lda   b,x
+F1D8 2605             (       sudoku.asm):00296                     bne   pb_newl
+F1DA BDF1A3           (       sudoku.asm):00297                     jsr   print_newline
+F1DD 200A             (       sudoku.asm):00298                     bra   pb_cont
+F1DF                  (       sudoku.asm):00299         pb_newl:
+F1DF 8EF2E2           (       sudoku.asm):00300                     ldx   #table_move2box_x
+F1E2 A685             (       sudoku.asm):00301                     lda   b,x
+F1E4 2603             (       sudoku.asm):00302                     bne   pb_cont
+F1E6 BDF17C           (       sudoku.asm):00303                     jsr   print_box_break_vertical
+F1E9                  (       sudoku.asm):00304         pb_cont:
+F1E9 C151             (       sudoku.asm):00305                     cmpb  #CELL_COUNT
+F1EB 26CE             (       sudoku.asm):00306                     bne   pb_loop
+F1ED 39               (       sudoku.asm):00307                     rts
+                      (       sudoku.asm):00308         
+                      (       sudoku.asm):00309         ; ----------------------------------------------------------------------------
+                      (       sudoku.asm):00310         ; Read-only data
+                      (       sudoku.asm):00311         ; ----------------------------------------------------------------------------
+                      (       sudoku.asm):00312         
+F1EE                  (       sudoku.asm):00313         puzzle_init:
+F1EE 0800000000000000 (       sudoku.asm):00314                     fcb   8,0,0,0,0,0,0,0,0
+     00
+F1F7 0000030600000000 (       sudoku.asm):00315                     fcb   0,0,3,6,0,0,0,0,0
+     00
+F200 0007000009000200 (       sudoku.asm):00316                     fcb   0,7,0,0,9,0,2,0,0
+     00
+F209 0005000000070000 (       sudoku.asm):00317                     fcb   0,5,0,0,0,7,0,0,0
+     00
+F212 0000000004050700 (       sudoku.asm):00318                     fcb   0,0,0,0,4,5,7,0,0
+     00
+F21B 0000000100000003 (       sudoku.asm):00319                     fcb   0,0,0,1,0,0,0,3,0
+     00
+F224 0000010000000006 (       sudoku.asm):00320                     fcb   0,0,1,0,0,0,0,6,8
+     08
+F22D 0000080500000001 (       sudoku.asm):00321                     fcb   0,0,8,5,0,0,0,1,0
+     00
+F236 0009000000000400 (       sudoku.asm):00322                     fcb   0,9,0,0,0,0,4,0,0
+     00
+                      (       sudoku.asm):00323         
+F23F                  (       sudoku.asm):00324         table_move2x:
+F23F 0001020304050607 (       sudoku.asm):00325                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F248 0001020304050607 (       sudoku.asm):00326                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F251 0001020304050607 (       sudoku.asm):00327                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F25A 0001020304050607 (       sudoku.asm):00328                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F263 0001020304050607 (       sudoku.asm):00329                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F26C 0001020304050607 (       sudoku.asm):00330                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F275 0001020304050607 (       sudoku.asm):00331                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F27E 0001020304050607 (       sudoku.asm):00332                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F287 0001020304050607 (       sudoku.asm):00333                     fcb   0,1,2,3,4,5,6,7,8
+     08
+F290 00               (       sudoku.asm):00334                     fcb   0
+                      (       sudoku.asm):00335         
+F291                  (       sudoku.asm):00336         table_move2y:
+F291 0000000000000000 (       sudoku.asm):00337                     fcb   0,0,0,0,0,0,0,0,0
+     00
+F29A 0101010101010101 (       sudoku.asm):00338                     fcb   1,1,1,1,1,1,1,1,1
+     01
+F2A3 0202020202020202 (       sudoku.asm):00339                     fcb   2,2,2,2,2,2,2,2,2
+     02
+F2AC 0303030303030303 (       sudoku.asm):00340                     fcb   3,3,3,3,3,3,3,3,3
+     03
+F2B5 0404040404040404 (       sudoku.asm):00341                     fcb   4,4,4,4,4,4,4,4,4
+     04
+F2BE 0505050505050505 (       sudoku.asm):00342                     fcb   5,5,5,5,5,5,5,5,5
+     05
+F2C7 0606060606060606 (       sudoku.asm):00343                     fcb   6,6,6,6,6,6,6,6,6
+     06
+F2D0 0707070707070707 (       sudoku.asm):00344                     fcb   7,7,7,7,7,7,7,7,7
+     07
+F2D9 0808080808080808 (       sudoku.asm):00345                     fcb   8,8,8,8,8,8,8,8,8
+     08
+                      (       sudoku.asm):00346         
+F2E2                  (       sudoku.asm):00347         table_move2box_x:
+F2E2 0001020001020001 (       sudoku.asm):00348                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F2EB 0001020001020001 (       sudoku.asm):00349                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F2F4 0001020001020001 (       sudoku.asm):00350                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F2FD 0001020001020001 (       sudoku.asm):00351                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F306 0001020001020001 (       sudoku.asm):00352                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F30F 0001020001020001 (       sudoku.asm):00353                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F318 0001020001020001 (       sudoku.asm):00354                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F321 0001020001020001 (       sudoku.asm):00355                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F32A 0001020001020001 (       sudoku.asm):00356                     fcb   0,1,2,0,1,2,0,1,2
+     02
+F333 00               (       sudoku.asm):00357                     fcb   0
+                      (       sudoku.asm):00358         
+F334                  (       sudoku.asm):00359         table_move2box_y:
+F334 0000000000000000 (       sudoku.asm):00360                     fcb   0,0,0,0,0,0,0,0,0
+     00
+F33D 0101010101010101 (       sudoku.asm):00361                     fcb   1,1,1,1,1,1,1,1,1
+     01
+F346 0202020202020202 (       sudoku.asm):00362                     fcb   2,2,2,2,2,2,2,2,2
+     02
+F34F 0000000000000000 (       sudoku.asm):00363                     fcb   0,0,0,0,0,0,0,0,0
+     00
+F358 0101010101010101 (       sudoku.asm):00364                     fcb   1,1,1,1,1,1,1,1,1
+     01
+F361 0202020202020202 (       sudoku.asm):00365                     fcb   2,2,2,2,2,2,2,2,2
+     02
+F36A 0000000000000000 (       sudoku.asm):00366                     fcb   0,0,0,0,0,0,0,0,0
+     00
+F373 0101010101010101 (       sudoku.asm):00367                     fcb   1,1,1,1,1,1,1,1,1
+     01
+F37C 0202020202020202 (       sudoku.asm):00368                     fcb   2,2,2,2,2,2,2,2,2
+     02
+F385 00               (       sudoku.asm):00369                     fcb   0
+                      (       sudoku.asm):00370         
+F386                  (       sudoku.asm):00371         table_move2row_start:
+F386 0000000000000000 (       sudoku.asm):00372                     fcb   0,0,0,0,0,0,0,0,0
+     00
+F38F 0909090909090909 (       sudoku.asm):00373                     fcb   9,9,9,9,9,9,9,9,9
+     09
+F398 1212121212121212 (       sudoku.asm):00374                     fcb   18,18,18,18,18,18,18,18,18
+     12
+F3A1 1B1B1B1B1B1B1B1B (       sudoku.asm):00375                     fcb   27,27,27,27,27,27,27,27,27
+     1B
+F3AA 2424242424242424 (       sudoku.asm):00376                     fcb   36,36,36,36,36,36,36,36,36
+     24
+F3B3 2D2D2D2D2D2D2D2D (       sudoku.asm):00377                     fcb   45,45,45,45,45,45,45,45,45
+     2D
+F3BC 3636363636363636 (       sudoku.asm):00378                     fcb   54,54,54,54,54,54,54,54,54
+     36
+F3C5 3F3F3F3F3F3F3F3F (       sudoku.asm):00379                     fcb   63,63,63,63,63,63,63,63,63
+     3F
+F3CE 4848484848484848 (       sudoku.asm):00380                     fcb   72,72,72,72,72,72,72,72,72
+     48
+                      (       sudoku.asm):00381         
+F3D7                  (       sudoku.asm):00382         table_move2box_start:
+F3D7 0000000303030606 (       sudoku.asm):00383                     fcb   0,0,0,3,3,3,6,6,6
+     06
+F3E0 0000000303030606 (       sudoku.asm):00384                     fcb   0,0,0,3,3,3,6,6,6
+     06
+F3E9 0000000303030606 (       sudoku.asm):00385                     fcb   0,0,0,3,3,3,6,6,6
+     06
+F3F2 1B1B1B1E1E1E2121 (       sudoku.asm):00386                     fcb   27,27,27,30,30,30,33,33,33
+     21
+F3FB 1B1B1B1E1E1E2121 (       sudoku.asm):00387                     fcb   27,27,27,30,30,30,33,33,33
+     21
+F404 1B1B1B1E1E1E2121 (       sudoku.asm):00388                     fcb   27,27,27,30,30,30,33,33,33
+     21
+F40D 3636363939393C3C (       sudoku.asm):00389                     fcb   54,54,54,57,57,57,60,60,60
+     3C
+F416 3636363939393C3C (       sudoku.asm):00390                     fcb   54,54,54,57,57,57,60,60,60
+     3C
+F41F 3636363939393C3C (       sudoku.asm):00391                     fcb   54,54,54,57,57,57,60,60,60
+     3C
+                      (       sudoku.asm):00392                     
+F428 0000000000000000 (       sudoku.asm):00393                     zmb   $FFF0-*           ; pad ROM up to the vector table
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+     0000000000000000
+                      (       sudoku.asm):00394                     
+FFF0 F078             (       sudoku.asm):00395                     fdb   halt          ; $FFF0 reserved
+FFF2 F078             (       sudoku.asm):00396                     fdb   halt          ; $FFF2 SWI3
+FFF4 F078             (       sudoku.asm):00397                     fdb   halt          ; $FFF4 SWI2
+FFF6 F078             (       sudoku.asm):00398                     fdb   halt          ; $FFF6 FIRQ
+FFF8 F078             (       sudoku.asm):00399                     fdb   halt          ; $FFF8 IRQ
+FFFA F078             (       sudoku.asm):00400                     fdb   halt          ; $FFFA SWI
+FFFC F078             (       sudoku.asm):00401                     fdb   halt          ; $FFFC NMI
+FFFE F02A             (       sudoku.asm):00402                     fdb   reset         ; $FFFE RESET
