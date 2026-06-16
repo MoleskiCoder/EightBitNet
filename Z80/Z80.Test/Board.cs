@@ -70,7 +70,7 @@ namespace Z80.Test
             switch (this.CPU.C)
             {
                 case 0x2:
-                    System.Console.Out.Write(this.CPU.E.ToString(CultureInfo.InvariantCulture));
+                    System.Console.Out.Write((char)this.CPU.E);
                     break;
                 case 0x9:
                     for (var i = this.CPU.DE.Joined; this.Peek(i) != '$'; ++i)
