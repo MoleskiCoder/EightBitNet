@@ -14,7 +14,7 @@ namespace EightBit
         private ushort _extendedLinearAddressHigh;
         private uint _startLinearAddress;
 
-        public bool EOF => this._eof;
+        private bool EOF => this._eof;
 
         public ushort ExtendedSegmentAddress => this._extendedSegmentAddress;
 
@@ -40,18 +40,23 @@ namespace EightBit
                 }
             }
 
-            if (!this._eof)
+            if (!this.EOF)
             {
                 throw new InvalidDataException("File is missing an EOF record");
             }
         }
 
-        private static void VerifyChecksum(byte desired, byte[] data)
+        private static byte CalculateChecksum(byte[] data)
         {
             ushort sum = 0;
             foreach (var datum in data)
                 sum += datum;
-            var calculated = (byte)-Chip.LowByte(sum);
+            return (byte)-Chip.LowByte(sum);
+        }
+
+        private static void VerifyChecksum(byte desired, byte[] data)
+        {
+            var calculated = CalculateChecksum(data);
             if (calculated != desired)
                 throw new InvalidDataException("Checksum failure");
         }
@@ -94,7 +99,7 @@ namespace EightBit
             if (count != data.Length)
                 throw new InvalidDataException("Record count does not match data length");
 
-            VerifyChecksum(checksum, bytes[..lastIndex]);
+            VerifyChecksum(checksum, bytes[..lastIndex]); // All data, except the desired checksum (obviously!)
 
             switch (type)
             {
@@ -104,6 +109,8 @@ namespace EightBit
 
                 // End-of-file
                 case 0x01:
+                    if (this.EOF)
+                        throw new InvalidDataException("HEX file contains multiple EOF markers");
                     this._eof = true;
                     return null;
 
@@ -141,7 +148,7 @@ namespace EightBit
                     return null;
 
                 default:
-                    throw new InvalidOperationException("Unhandled hex file record.");
+                    throw new InvalidOperationException("Unhandled HEX file record.");
             }
         }
     }
