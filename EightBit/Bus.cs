@@ -90,6 +90,16 @@ namespace EightBit
             var file = new IntelHexFile(path);
             foreach (var (address, content) in file.Parse())
             {
+                if (file.ExtendedSegmentAddress != 0)
+                    throw new InvalidDataException("ExtendedSegmentAddress must be zero");
+                if (file.CodeSegment != 0)
+                    throw new InvalidDataException("CodeSegment must be zero");
+                if (file.ProgramCounter != 0)
+                    throw new InvalidDataException("ProgramCounter must be zero");
+                if (file.ExtendedLinearAddressHigh != 0)
+                    throw new InvalidDataException("ExtendedLinearAddressHigh must be zero");
+                if (file.StartLinearAddress != 0)
+                    throw new InvalidDataException("StartLinearAddress must be zero");
                 var mapped = this.Mapping(address);
                 var offset = address - mapped.Begin;
                 mapped.Memory.Load(content, offset);
