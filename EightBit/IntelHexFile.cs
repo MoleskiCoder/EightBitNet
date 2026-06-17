@@ -14,7 +14,9 @@ namespace EightBit
         private ushort _extendedLinearAddressHigh;
         private uint _startLinearAddress;
 
-        public bool Debug { get; set; }
+        public enum LogLevel { Debugging, Information, Warning, Critical, }
+
+        public LogLevel Verbosity { get; set; } = LogLevel.Critical;
 
         public bool Strict { get; set; }
 
@@ -30,17 +32,25 @@ namespace EightBit
 
         public uint StartLinearAddress => this._startLinearAddress;
 
-        private void Log(string message)
+        private void Log(string message, LogLevel level)
         {
-            if (this.Debug)
-                Console.WriteLine($"Intel Hex File: {message}");
+            if (level >= this.Verbosity)
+                Console.WriteLine($"Intel Hex File: {level}: {message}");
         }
+
+        private void Debug(string message) => this.Log(message, level: LogLevel.Debugging);
+
+        private void Inform(string message) => this.Log(message, level: LogLevel.Information);
+
+        private void Warn(string message) => this.Log(message, level: LogLevel.Warning);
+
+        private void Scream(string message) => this.Log(message, level: LogLevel.Critical);
 
         private void MaybeThrow(string message)
         {
             if (this.Strict)
                 throw new InvalidDataException(message);
-            Log(message);
+            Warn(message);
         }
 
         private bool Check(bool failure, string message)
@@ -54,10 +64,10 @@ namespace EightBit
         {
             this._eof = false;
 
-            this.Log($"Opening: {this._path}");
+            this.Debug($"Opening: {this._path}");
             using var reader = File.OpenText(this._path);
 
-            this.Log("Reading");
+            this.Debug("Reading");
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine() ?? throw new InvalidDataException("Early EOF detected");
@@ -66,7 +76,7 @@ namespace EightBit
                     yield return parsed;
             }
             this.Check(!this.EOF, "File is missing an EOF record");
-            this.Log("Finished");
+            this.Debug("Finished");
         }
 
         private static byte CalculateChecksum(byte[] data)
@@ -129,14 +139,14 @@ namespace EightBit
             {
                 // Data
                 case 0x00:
-                    this.Log($"Type: {type:x2}, Address: {address:x4}, Count: {count}");
+                    this.Inform($"Type: {type:x2}, Address: {address:x4}, Count: {count}");
                     return new Tuple<ushort, byte[]>(address, data);
 
                 // End-of-file
                 case 0x01:
                     this.Check(this.EOF, "HEX file contains multiple EOF markers");
                     this._eof = true;
-                    this.Log($"Type: {type:x2}, EOF");
+                    this.Inform($"Type: {type:x2}, EOF");
                     return null;
 
                 // Extended segment address
@@ -144,7 +154,7 @@ namespace EightBit
                     if (this.Check(count != 2, "Byte count is invalid for field type 2 (Extended Segment Address)"))
                         return null;
                     this._extendedSegmentAddress = Chip.MakeShort(data[1], bytes[0]);
-                    this.Log($"Type: {type:x2}, Extended segment address: {this.ExtendedSegmentAddress:x4}");
+                    this.Inform($"Type: {type:x2}, Extended segment address: {this.ExtendedSegmentAddress:x4}");
                     return null;
 
                 // Start segment address
@@ -153,7 +163,7 @@ namespace EightBit
                         return null;
                     this._codeSegment = Chip.MakeShort(data[1], bytes[0]);
                     this._programCounter = Chip.MakeShort(data[2], bytes[3]);
-                    this.Log($"Type: {type:x2}, CS: {this.CodeSegment:x4}, PC: {this.ProgramCounter:x4}");
+                    this.Inform($"Type: {type:x2}, CS: {this.CodeSegment:x4}, PC: {this.ProgramCounter:x4}");
                     return null;
 
                 // Extended linear address
@@ -161,7 +171,7 @@ namespace EightBit
                     if (this.Check(count != 2, "Byte count is invalid for field type 4 (Extended Linear Address)"))
                         return null;
                     this._extendedLinearAddressHigh = Chip.MakeShort(data[1], bytes[0]);
-                    this.Log($"Type: {type:x2}, Extended linear address high: {this.ExtendedLinearAddressHigh:x4}");
+                    this.Inform($"Type: {type:x2}, Extended linear address high: {this.ExtendedLinearAddressHigh:x4}");
                     return null;
 
                 // Start linear address
@@ -173,7 +183,7 @@ namespace EightBit
                         var low = Chip.MakeShort(data[2], bytes[3]);
                         this._startLinearAddress = Chip.MakeInteger(low, high);
                     }
-                    this.Log($"Type: {type:x2}, Start linear address: {this.StartLinearAddress:x8}");
+                    this.Inform($"Type: {type:x2}, Start linear address: {this.StartLinearAddress:x8}");
                     return null;
 
                 default:
