@@ -88,6 +88,8 @@ namespace EightBit
         protected void LoadHexFile(string path)
         {
             var file = new IntelHexFile(path);
+            //file.Debug = true;
+            //file.Strict = true;
             foreach (var (address, content) in file.Parse())
             {
                 if (file.ExtendedSegmentAddress != 0)
