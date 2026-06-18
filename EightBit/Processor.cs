@@ -304,6 +304,6 @@ namespace EightBit
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
-        protected virtual void Return() => this.PopInto(this.PC);
+        public virtual void Return() => this.PopInto(this.PC);
     }
 }

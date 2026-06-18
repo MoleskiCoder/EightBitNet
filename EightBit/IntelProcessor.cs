@@ -274,7 +274,7 @@ namespace EightBit
 
         protected void JumpRelative(byte offset) => this.JumpRelative((sbyte)offset);
 
-        protected override void Return()
+        public override void Return()
         {
             base.Return();
             this.MEMPTR.Assign(this.PC);
