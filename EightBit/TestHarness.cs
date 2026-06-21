@@ -13,12 +13,15 @@ namespace EightBit
         private readonly TProcessor _cpu = cpu;
         private readonly int _targetClocksPerSecond = targetClocksPerSecond;
         private long _totalCycles;
+        private long _totalInstructions;
 
         public long ElapsedMilliseconds => this._timer.ElapsedMilliseconds;
 
         public TimeSpan ActualElapsed => TimeSpan.FromMilliseconds(this.ElapsedMilliseconds);
 
-        public double CyclesPerSecond => this._totalCycles / this.ActualElapsed.TotalSeconds;
+        public double CyclesPerSecond => this.TotalCycles / this.ActualElapsed.TotalSeconds;
+
+        public double InstructionsPerSecond => this.TotalInstructions / this.ActualElapsed.TotalSeconds;
 
         public double ActualClockSpeed => this.CyclesPerSecond / 1_000_000;
 
@@ -28,6 +31,8 @@ namespace EightBit
 
         public long TotalCycles => this._totalCycles;
 
+        public long TotalInstructions => this._totalInstructions;
+
         public TimeSpan TargetElapsed => TimeSpan.FromSeconds(this.TotalCycles / (double)this.TargetClocksPerSecond);
 
         public void Run()
@@ -35,16 +40,21 @@ namespace EightBit
             this._board.Initialize();
             this._board.RaisePOWER();
 
+            this._totalCycles = 0;
+            this._totalInstructions = 0;
+
             this._timer.Start();
             while (this._cpu.Powered)
             {
                 this._totalCycles += this._cpu.Step();
+                ++this._totalInstructions;
             }
             this._timer.Stop();
 
             Console.Out.WriteLine();
 
-            Console.Out.WriteLine($"Guest cycles = {this._totalCycles:N0}");
+            Console.Out.WriteLine($"Guest cycles = {this.TotalCycles:N0}");
+            Console.Out.WriteLine($"Instructions executed = {this.TotalInstructions:N0} ({this.InstructionsPerSecond:N0} instructions per second)");
             Console.Out.WriteLine($"Elapsed time (at {this.ActualClockSpeed:g3}MHz actual) = {this.ActualElapsed}");
             Console.Out.WriteLine($"Elapsed time (at {this.TargetClockSpeed:g3}MHz target) = {this.TargetElapsed}");
         }

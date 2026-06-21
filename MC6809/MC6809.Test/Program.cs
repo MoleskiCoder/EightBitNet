@@ -8,6 +8,13 @@ namespace EightBit
 
     internal static class Program
     {
+        private static void Run(Configuration configuration)
+        {
+            var board = new Board(configuration);
+            var harness = new EightBit.TestHarness<Board, MC6809.MC6809>(board, board.CPU);
+            harness.Run();
+        }
+
         public static void Main(string[] args)
         {
             var configuration = new Configuration();
@@ -16,9 +23,7 @@ namespace EightBit
             configuration.Debug = true;
 #endif
 
-            var board = new Board(configuration);
-            var harness = new EightBit.TestHarness<Board, MC6809.MC6809>(board, board.CPU);
-            harness.Run();
+            Run(configuration);
         }
     }
 }

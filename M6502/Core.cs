@@ -1148,7 +1148,7 @@ namespace M6502
 
         protected void RTS() => this.Return();
 
-        protected override void Return()
+        public override void Return()
         {
             this.SwallowPop();
             base.Return();

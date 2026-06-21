@@ -19,10 +19,7 @@ namespace EightBit
         private ref ushort Whole
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return ref Unsafe.As<byte, ushort>(ref this._low);
-            }
+            get => ref Unsafe.As<byte, ushort>(ref this._low);
         }
 
         public Register16(byte low, byte high)
