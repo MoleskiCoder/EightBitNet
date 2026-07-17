@@ -20,6 +20,8 @@ namespace Z80.Test
 
         public string RomDirectory { get; } = "roms";
 
-        public string Program { get; } = "zexall.com";
+        //public string Program { get; } = "zexall.com";
+
+        public string Program { get; } = "z80_sudoku/sudoku.com";
     }
 }
