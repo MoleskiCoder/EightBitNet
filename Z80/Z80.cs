@@ -1622,7 +1622,7 @@ namespace Z80
             }
 
             this.FetchByte();  // LD r,n
-            if (memoryY)
+            if (memoryY && this._displaced)
             {
                 this.Tick(2);
             }
@@ -2013,6 +2013,8 @@ namespace Z80
 
         private void SCF()
         {
+            if (this._displaced)
+                this.Q = 0;
             this.SetBit(StatusBits.CF);
             this.ClearBit(StatusBits.HC | StatusBits.NF);
             this.AdjustXY((byte)((this.Q ^ this.F) | this.A));
@@ -2020,6 +2022,8 @@ namespace Z80
 
         private void CCF()
         {
+            if (this._displaced)
+                this.Q = 0;
             this.ClearBit(StatusBits.NF);
             var carry = this.Carry();
             this.SetBit(StatusBits.HC, carry);
