@@ -1,9 +1,10 @@
 ﻿namespace Gaming
 {
     using System;
+    using System.Diagnostics;
     using System.Runtime.InteropServices;
 
-    public class ScopedHandle(IntPtr invalidHandleValue, Action<IntPtr> deleter) : SafeHandle(invalidHandleValue, true)
+    public class ScopedHandle(Action<IntPtr> deleter) : SafeHandle(IntPtr.Zero, true)
     {
         private readonly Action<IntPtr> _deleter = deleter ?? throw new ArgumentNullException(nameof(deleter));
 
@@ -22,6 +23,12 @@
             return true;
         }
 
-        public static implicit operator IntPtr(ScopedHandle h) => h.DangerousGetHandle();
+        public static nint FromScopedHandle(ScopedHandle h)
+        {
+            Debug.Assert(h is not null);
+            return h.DangerousGetHandle();
+        }
+
+        public static implicit operator IntPtr(ScopedHandle h) => FromScopedHandle(h);
     }
 }

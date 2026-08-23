@@ -9,8 +9,7 @@
 
         public static void ThrowException(string failure)
         {
-            var error = SDL.GetError();
-            throw new InvalidOperationException("SDL: " + failure + ": " + error);
+            throw new InvalidOperationException($"SDL: {failure}: {SDL.GetError()}");
         }
 
         public static void MaybeThrowException(bool success, string failure)

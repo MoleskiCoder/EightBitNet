@@ -12,10 +12,6 @@
     public abstract class Game(bool verbose = false) : Device, IDisposable
     {
         private readonly Wrapper _wrapper = new(verbose);
-        private readonly ScopedHandle _window = new(IntPtr.Zero, h => SDL.DestroyWindow(h));
-        private readonly ScopedHandle _renderer = new(IntPtr.Zero, h => SDL.DestroyRenderer(h));
-        private readonly ScopedHandle _bitmapTexture = new(IntPtr.Zero, h => SDL.DestroyTexture(h));
-        private IntPtr _pixelFormat = IntPtr.Zero;
         private readonly SDL.PixelFormat _pixelType = SDL.PixelFormat.ARGB8888;
         private bool _vsync;
         private ulong _performanceFrequency;
@@ -26,15 +22,13 @@
         private readonly Dictionary<uint, uint> _mappedControllers = [];
         private bool _disposed;
 
-        protected ScopedHandle Window => this._window;
+        protected ScopedHandle Window { get; } = new(SDL.DestroyWindow);
 
-        protected ScopedHandle Renderer => this._renderer;
+        protected ScopedHandle Renderer { get; } = new(SDL.DestroyRenderer);
 
-        protected ScopedHandle BitmapTexture => this._bitmapTexture;
+        protected ScopedHandle BitmapTexture { get; } = new(SDL.DestroyTexture);
 
-        protected IntPtr PixelFormat => this._pixelFormat;
-
-        protected abstract uint[] Pixels { get; }
+        protected IntPtr PixelFormat { get; private set; } = IntPtr.Zero;
 
         public abstract float FramesPerSecond { get; }
 
@@ -56,16 +50,20 @@
 
         public abstract string Title { get; }
 
+        protected abstract uint[] Pixels();
+
         public override void RaisePOWER()
         {
             base.RaisePOWER();
 
-            this._window.Handle = SDL.CreateWindow(this.Title, this.WindowWidth, this.WindowHeight, 0L);
-            Wrapper.MaybeThrowException(this._window, "Unable to create window");
-            SDL.DisplayMode? currentDisplayMode = SDL.GetCurrentDisplayMode(SDL.GetDisplayForWindow(this._window));
+            this.Window.Handle = SDL.CreateWindow(this.Title, this.WindowWidth, this.WindowHeight, 0L);
+            Wrapper.MaybeThrowException(this.Window, "Unable to create window");
+            var displayId = SDL.GetDisplayForWindow(this.Window);
+            Wrapper.MaybeThrowException(displayId != 0, "Unable to obtain display ID for window");
+            var currentDisplayMode = SDL.GetCurrentDisplayMode(displayId);
             Wrapper.MaybeThrowException(currentDisplayMode.HasValue, "Unable to obtain window mode");
-            this._renderer.Handle = SDL.CreateRenderer(this._window, null);
-            Wrapper.MaybeThrowException(this._renderer, "Unable to create renderer: ");
+            this.Renderer.Handle = SDL.CreateRenderer(this.Window, null);
+            Wrapper.MaybeThrowException(this.Renderer, "Unable to create renderer: ");
 
             this._vsync = this.UseVSYNC;
             if (this._vsync)
@@ -77,7 +75,7 @@
                 if (this._vsync)
                 {
                     SDL.LogInfo(SDL.LogCategory.Render, "Attempting to configure renderer VSYNC");
-                    this._vsync = SDL.SetRenderVSync(this._renderer, 1);
+                    this._vsync = SDL.SetRenderVSync(this.Renderer, 1);
                     if (!this._vsync)
                         SDL.LogWarn(SDL.LogCategory.Render, $"Unable to set render VSYNC ({SDL.GetError()})");
                 }
@@ -87,24 +85,26 @@
                 }
             }
 
-            this._pixelFormat = SDL.GetPixelFormatDetails(this._pixelType);
-            Wrapper.MaybeThrowException(this._pixelFormat, "Unable to obtain pixel format details");
+            this.PixelFormat = SDL.GetPixelFormatDetails(this._pixelType);
+            Wrapper.MaybeThrowException(this.PixelFormat, "Unable to obtain pixel format details");
+
             this.ConfigureBackground();
             this.CreateBitmapTexture();
+
             this._performanceFrequency = SDL.GetPerformanceFrequency();
             this._targetFrameTime = 1.0 / (double) this.FramesPerSecond;
         }
 
         private void ConfigureBackground()
         {
-            var success = SDL.SetRenderDrawColor(this._renderer, 0, 0, 0, byte.MaxValue);
+            var success = SDL.SetRenderDrawColor(this.Renderer, 0, 0, 0, byte.MaxValue);
             Wrapper.MaybeThrowException(success, "Unable to set render draw colour");
         }
 
         private void CreateBitmapTexture()
         {
-            this._bitmapTexture.Handle = SDL.CreateTexture(this._renderer, this._pixelType, SDL.TextureAccess.Streaming, this.RasterWidth, this.RasterHeight);
-            Wrapper.MaybeThrowException(this._bitmapTexture, "Unable to create bitmap texture");
+            BitmapTexture.Handle = SDL.CreateTexture(this.Renderer, this._pixelType, SDL.TextureAccess.Streaming, this.RasterWidth, this.RasterHeight);
+            Wrapper.MaybeThrowException(BitmapTexture, "Unable to create bitmap texture");
         }
 
         public virtual void RunLoop()
@@ -179,7 +179,7 @@
 
         protected bool MaybeSynchronise()
         {
-            bool synchronise = !this._vsync;
+            var synchronise = !this._vsync;
             if (synchronise)
                 this.Synchronise();
             return synchronise;
@@ -276,27 +276,27 @@
 
         protected void UpdateTexture()
         {
-            var span = MemoryMarshal.Cast<uint, byte>(this.Pixels.AsSpan<uint>());
-            var success = SDL.UpdateTexture(this._bitmapTexture, IntPtr.Zero, span, this.DisplayWidth * sizeof(uint));
+            var span = MemoryMarshal.Cast<uint, byte>(this.Pixels().AsSpan<uint>());
+            var success = SDL.UpdateTexture(this.BitmapTexture, IntPtr.Zero, span, this.DisplayWidth * sizeof(uint));
             Wrapper.MaybeThrowException(success, "Unable to update texture");
         }
 
         protected void RenderTexture()
         {
-            var success = SDL.RenderTexture(this._renderer, this._bitmapTexture, IntPtr.Zero, IntPtr.Zero);
+            var success = SDL.RenderTexture(this.Renderer, this.BitmapTexture, IntPtr.Zero, IntPtr.Zero);
             Wrapper.MaybeThrowException(success, "Unable to render texture");
         }
 
         protected void DisplayTexture()
         {
-            var success = SDL.RenderPresent(this._renderer);
+            var success = SDL.RenderPresent(this.Renderer);
             Wrapper.MaybeThrowException(success, "Unable to present render to screen");
         }
 
         protected void ToggleFullscreen()
         {
-            var fullscren = (SDL.GetWindowFlags(this._window) & SDL.WindowFlags.Fullscreen) > 0L;
-            var success = SDL.SetWindowFullscreen(this._window, !fullscren);
+            var fullscreen = (SDL.GetWindowFlags(this.Window) & SDL.WindowFlags.Fullscreen) > 0L;
+            var success = SDL.SetWindowFullscreen(this.Window, !fullscreen);
             Wrapper.MaybeThrowException(success, "Failed to toggle window full screen setting");
             Wrapper.MaybeThrowException(success ? SDL.ShowCursor() : SDL.HideCursor(), "Failed to toggle cursor show/hide");
         }
@@ -331,9 +331,9 @@
             {
                 if (disposing)
                 {
-                    this._bitmapTexture.Dispose();
-                    this._renderer.Dispose();
-                    this._window.Dispose();
+                    this.BitmapTexture.Dispose();
+                    this.Renderer.Dispose();
+                    this.Window.Dispose();
                     this._wrapper.Dispose();
                 }
             }

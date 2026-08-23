@@ -7,8 +7,8 @@
     public class GameController : IDisposable
     {
         private readonly uint _index;
-        private readonly ScopedHandle _gamepad = new(IntPtr.Zero, h => SDL.CloseGamepad(h));
-        private readonly ScopedHandle _haptic = new(IntPtr.Zero, h => SDL.CloseHaptic(h));
+        private readonly ScopedHandle _gamepad = new(SDL.CloseGamepad);
+        private readonly ScopedHandle _haptic = new(SDL.CloseHaptic);
         private bool _hapticRumbleSupported;
         private bool _disposed;
 
@@ -20,7 +20,8 @@
 
         private void Open()
         {
-            Wrapper.MaybeThrowException(SDL.GetJoysticks(out var count) != null, "Unable to obtain joystick information");
+            var joysticks = SDL.GetJoysticks(out var count);
+            Wrapper.MaybeThrowException(joysticks != null, "Unable to obtain joystick information");
             Debug.Assert(count > 0, "count > 0");
             Debug.Assert(this._index < count, "this._index < count");
             if (SDL.IsGamepad(this._index))
