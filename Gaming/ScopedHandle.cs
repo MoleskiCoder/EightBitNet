@@ -9,6 +9,7 @@
         private readonly Action<IntPtr> _deleter = deleter ?? throw new ArgumentNullException(nameof(deleter));
 
         public override bool IsInvalid => this.handle == IntPtr.Zero;
+        public bool IsValid => !this.IsInvalid;
 
         public IntPtr Handle
         {
@@ -18,13 +19,14 @@
 
         protected override bool ReleaseHandle()
         {
-            if (!this.IsInvalid)
+            if (this.IsValid)
                 this._deleter(this.handle);
             return true;
         }
 
         public static nint FromScopedHandle(ScopedHandle h)
         {
+            // But it can still be invalid (i.e. h.IsInvalid == true)
             Debug.Assert(h is not null);
             return h.DangerousGetHandle();
         }

@@ -6,7 +6,6 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
 
     public abstract class Game(bool verbose = false) : Device, IDisposable
@@ -19,7 +18,6 @@
         private ulong _frameStartTime;
         private ulong _frameEndTime;
         private readonly SortedDictionary<uint, GameController> _gameControllers = [];
-        private readonly Dictionary<uint, uint> _mappedControllers = [];
         private bool _disposed;
 
         protected ScopedHandle Window { get; } = new(SDL.DestroyWindow);
@@ -68,8 +66,8 @@
             this._vsync = this.UseVSYNC;
             if (this._vsync)
             {
-                float framesPerSecond = this.FramesPerSecond;
-                float? refreshRate = currentDisplayMode?.RefreshRate;
+                var framesPerSecond = this.FramesPerSecond;
+                var refreshRate = currentDisplayMode?.RefreshRate;
                 Debug.Assert(refreshRate.HasValue, "refresh rate is unavailable");
                 this._vsync = Math.Abs(framesPerSecond - refreshRate.Value) < 0.001;
                 if (this._vsync)
@@ -160,11 +158,11 @@
                     case SDL.EventType.GamepadButtonUp:
                         _ = this.HandleGamepadButtonUp(e.GButton);
                         break;
-                    case SDL.EventType.JoystickAdded:
-                        this.AddJoystick(e);
+                    case SDL.EventType.GamepadAdded:
+                        this.AddGampad(e);
                         break;
-                    case SDL.EventType.JoystickRemoved:
-                        this.RemoveJoystick(e);
+                    case SDL.EventType.GamepadRemoved:
+                        this.RemoveGamepad(e);
                         break;
                 }
             }
@@ -208,26 +206,23 @@
                 SDL.LogWarn(SDL.LogCategory.Render, "Running slowly");
         }
 
-        protected virtual void RemoveJoystick(SDL.Event e)
+        protected virtual void RemoveGamepad(SDL.Event e)
         {
             var which = e.JDevice.Which;
             var found = this._gameControllers.TryGetValue(which, out var gameController);
             Debug.Assert(found);
             Debug.Assert(gameController != null, "controller is not null");
-            _ = this._mappedControllers.Remove(gameController.GetJoystickId());
             _ = this._gameControllers.Remove(which);
             SDL.LogInfo(SDL.LogCategory.Input, $"Joystick device {which} removed ({this._gameControllers.Count} controllers available)");
         }
 
-        protected virtual void AddJoystick(SDL.Event e)
+        protected virtual void AddGampad(SDL.Event e)
         {
             var which = e.JDevice.Which;
             var found = this._gameControllers.ContainsKey(which);
             Debug.Assert(!found);
             GameController gameController = new(which);
-            uint joystickId = gameController.GetJoystickId();
             this._gameControllers[which] = gameController;
-            this._mappedControllers[joystickId] = which;
             SDL.LogInfo(SDL.LogCategory.Input, $"Joystick device {which} address ({this._gameControllers.Count} controllers available)");
         }
 
@@ -237,13 +232,6 @@
             Wrapper.MaybeThrowException(success, "Unknown controller");
             Debug.Assert(gameController != null, "controller is not null");
             return gameController;
-        }
-
-        public uint MappedController(uint which)
-        {
-            var success = this._mappedControllers.TryGetValue(which, out var id);
-            Wrapper.MaybeThrowException(success, "Unknown joystick");
-            return id;
         }
 
         public uint ChooseControllerIndex(int who)
