@@ -79,7 +79,7 @@
                 }
                 else
                 {
-                    SDL.LogWarn(SDL.LogCategory.Render, $"Display refresh rate is incompatible with required rate (this.FramesPerSecond)");
+                    SDL.LogWarn(SDL.LogCategory.Render, $"Display refresh rate is incompatible with required rate ({this.FramesPerSecond})");
                 }
             }
 
