@@ -8,7 +8,7 @@
     using System.Linq;
     using System.Runtime.InteropServices;
 
-    public abstract class Game(bool verbose = false) : Device, IDisposable
+    public abstract class Game(bool verbose = false) : Device
     {
         private readonly Wrapper _wrapper = new(verbose);
         private readonly SDL.PixelFormat _pixelType = SDL.PixelFormat.ARGB8888;
@@ -18,7 +18,6 @@
         private ulong _frameStartTime;
         private ulong _frameEndTime;
         private readonly SortedDictionary<uint, GameController> _gameControllers = [];
-        private bool _disposed;
 
         protected ScopedHandle Window { get; } = new(SDL.DestroyWindow);
 
@@ -53,7 +52,19 @@
         public override void RaisePOWER()
         {
             base.RaisePOWER();
+            this._wrapper.RaisePOWER();
+            this.Initialise();
+        }
 
+        public override void LowerPOWER()
+        {
+            this.Terminate();
+            this._wrapper.LowerPOWER();
+            base.LowerPOWER();
+        }
+
+        public virtual void Initialise()
+        {
             this.Window.Handle = SDL.CreateWindow(this.Title, this.WindowWidth, this.WindowHeight, 0L);
             Wrapper.MaybeThrowException(this.Window, "Unable to create window");
             var displayId = SDL.GetDisplayForWindow(this.Window);
@@ -90,7 +101,14 @@
             this.CreateBitmapTexture();
 
             this._performanceFrequency = SDL.GetPerformanceFrequency();
-            this._targetFrameTime = 1.0 / (double) this.FramesPerSecond;
+            this._targetFrameTime = 1.0 / (double)this.FramesPerSecond;
+        }
+
+        public virtual void Terminate()
+        {
+            this.BitmapTexture.Dispose();
+            this.Renderer.Dispose();
+            this.Window.Dispose();
         }
 
         private void ConfigureBackground()
@@ -109,7 +127,16 @@
         {
             while (this.Powered)
             {
-                this.Update();
+                this.RunFrame();
+            }
+        }
+
+        public virtual void RunFrame()
+        {
+            this.Update();
+            this.HandleEvents();
+            if (this.Powered)
+            {
                 this.Draw();
                 _ = this.MaybeSynchronise();
             }
@@ -118,7 +145,6 @@
         protected virtual void Update()
         {
             this._frameStartTime = SDL.GetPerformanceCounter();
-            this.HandleEvents();
             this.RunVerticalBlank();
             this.RunRasterLines();
         }
@@ -135,36 +161,41 @@
         {
             while (SDL.PollEvent(out var e))
             {
-                switch ((SDL.EventType)e.Type)
-                {
-                    case SDL.EventType.Quit:
-                        this.LowerPOWER();
-                        break;
-                    case SDL.EventType.KeyDown:
-                        _ = this.HandleKeyDown(e.Key.Key);
-                        break;
-                    case SDL.EventType.KeyUp:
-                        _ = this.HandleKeyUp(e.Key.Key);
-                        break;
-                    case SDL.EventType.JoystickButtonDown:
-                        _ = this.HandleJoyButtonDown(e.JButton);
-                        break;
-                    case SDL.EventType.JoystickButtonUp:
-                        _ = this.HandleJoyButtonUp(e.JButton);
-                        break;
-                    case SDL.EventType.GamepadButtonDown:
-                        _ = this.HandleGamepadButtonDown(e.GButton);
-                        break;
-                    case SDL.EventType.GamepadButtonUp:
-                        _ = this.HandleGamepadButtonUp(e.GButton);
-                        break;
-                    case SDL.EventType.GamepadAdded:
-                        this.AddGampad(e);
-                        break;
-                    case SDL.EventType.GamepadRemoved:
-                        this.RemoveGamepad(e);
-                        break;
-                }
+                this.HandleEvent(e);
+            }
+        }
+
+        protected virtual void HandleEvent(SDL.Event e)
+        {
+            switch ((SDL.EventType)e.Type)
+            {
+                case SDL.EventType.Quit:
+                    this.LowerPOWER();
+                    break;
+                case SDL.EventType.KeyDown:
+                    _ = this.HandleKeyDown(e.Key.Key);
+                    break;
+                case SDL.EventType.KeyUp:
+                    _ = this.HandleKeyUp(e.Key.Key);
+                    break;
+                case SDL.EventType.JoystickButtonDown:
+                    _ = this.HandleJoyButtonDown(e.JButton);
+                    break;
+                case SDL.EventType.JoystickButtonUp:
+                    _ = this.HandleJoyButtonUp(e.JButton);
+                    break;
+                case SDL.EventType.GamepadButtonDown:
+                    _ = this.HandleGamepadButtonDown(e.GButton);
+                    break;
+                case SDL.EventType.GamepadButtonUp:
+                    _ = this.HandleGamepadButtonUp(e.GButton);
+                    break;
+                case SDL.EventType.GamepadAdded:
+                    this.AddGampad(e);
+                    break;
+                case SDL.EventType.GamepadRemoved:
+                    this.RemoveGamepad(e);
+                    break;
             }
         }
 
@@ -306,26 +337,5 @@
         protected virtual bool HandleGamepadButtonDown(SDL.GamepadButtonEvent e) => false;
 
         protected virtual bool HandleGamepadButtonUp(SDL.GamepadButtonEvent e) => false;
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this._disposed)
-            {
-                if (disposing)
-                {
-                    this.BitmapTexture.Dispose();
-                    this.Renderer.Dispose();
-                    this.Window.Dispose();
-                    this._wrapper.Dispose();
-                }
-            }
-            this._disposed = true;
-        }
     }
 }
