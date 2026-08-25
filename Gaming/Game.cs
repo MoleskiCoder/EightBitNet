@@ -9,9 +9,9 @@
     using System.Linq;
     using System.Runtime.InteropServices;
 
-    public abstract class Game(bool verbose = false) : Device
+    public abstract class Game(SDL.LogPriority logging) : Device
     {
-        private readonly Wrapper _wrapper = new(verbose);
+        private readonly Wrapper _wrapper = new(logging);
         private readonly SDL.PixelFormat _pixelType = SDL.PixelFormat.ARGB8888;
         private bool _vsync;
 

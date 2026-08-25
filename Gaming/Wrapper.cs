@@ -4,7 +4,7 @@
     using EightBit;
     using System;
 
-    public class Wrapper(bool verbose) : Device
+    public class Wrapper(SDL.LogPriority logging = SDL.LogPriority.Warn) : Device
     {
         public override void RaisePOWER()
         {
@@ -22,7 +22,7 @@
         {
             var success = SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Audio | SDL.InitFlags.Gamepad | SDL.InitFlags.Haptic);
             Wrapper.MaybeThrowException(success, "Unable to initialise SDL library");
-            SDL.SetLogPriorities(verbose ? SDL.LogPriority.Trace : SDL.LogPriority.Warn);
+            SDL.SetLogPriorities(logging);
             SDL.LogInfo(SDL.LogCategory.Application, "SDL library initialised");
         }
 
