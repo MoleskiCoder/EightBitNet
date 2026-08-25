@@ -5,6 +5,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
     using System.Runtime.InteropServices;
 
@@ -13,10 +14,7 @@
         private readonly Wrapper _wrapper = new(verbose);
         private readonly SDL.PixelFormat _pixelType = SDL.PixelFormat.ARGB8888;
         private bool _vsync;
-        private ulong _performanceFrequency;
-        private double _targetFrameTime;
-        private ulong _frameStartTime;
-        private ulong _frameEndTime;
+
         private readonly SortedDictionary<uint, GameController> _gameControllers = [];
 
         protected ScopedHandle Window { get; } = new(SDL.DestroyWindow);
@@ -52,19 +50,19 @@
         public override void RaisePOWER()
         {
             base.RaisePOWER();
-            this._wrapper.RaisePOWER();
             this.Initialise();
         }
 
         public override void LowerPOWER()
         {
             this.Terminate();
-            this._wrapper.LowerPOWER();
             base.LowerPOWER();
         }
 
         public virtual void Initialise()
         {
+            this._wrapper.RaisePOWER();
+
             this.Window.Handle = SDL.CreateWindow(this.Title, this.WindowWidth, this.WindowHeight, 0L);
             Wrapper.MaybeThrowException(this.Window, "Unable to create window");
             var displayId = SDL.GetDisplayForWindow(this.Window);
@@ -94,14 +92,18 @@
                 }
             }
 
+            if (!this._vsync)
+            {
+                SDL.LogInfo(SDL.LogCategory.Render, "Setting callback rate hint");
+                var success = SDL.SetHint("SDL_MAIN_CALLBACK_RATE", this.FramesPerSecond.ToString(CultureInfo.InvariantCulture));
+                Wrapper.MaybeThrowException(success, "Unable to set event loop callback rate hint");
+            }
+
             this.PixelFormat = SDL.GetPixelFormatDetails(this._pixelType);
             Wrapper.MaybeThrowException(this.PixelFormat, "Unable to obtain pixel format details");
 
             this.ConfigureBackground();
             this.CreateBitmapTexture();
-
-            this._performanceFrequency = SDL.GetPerformanceFrequency();
-            this._targetFrameTime = 1.0 / (double)this.FramesPerSecond;
         }
 
         public virtual void Terminate()
@@ -109,6 +111,7 @@
             this.BitmapTexture.Dispose();
             this.Renderer.Dispose();
             this.Window.Dispose();
+            this._wrapper.LowerPOWER();
         }
 
         private void ConfigureBackground()
@@ -123,28 +126,15 @@
             Wrapper.MaybeThrowException(BitmapTexture, "Unable to create bitmap texture");
         }
 
-        public virtual void RunLoop()
-        {
-            while (this.Powered)
-            {
-                this.RunFrame();
-            }
-        }
-
-        public virtual void RunFrame()
+        public virtual SDL.AppResult RunFrame()
         {
             this.Update();
-            this.HandleEvents();
-            if (this.Powered)
-            {
-                this.Draw();
-                _ = this.MaybeSynchronise();
-            }
+            this.Draw();
+            return SDL.AppResult.Continue;
         }
 
         protected virtual void Update()
         {
-            this._frameStartTime = SDL.GetPerformanceCounter();
             this.RunVerticalBlank();
             this.RunRasterLines();
         }
@@ -157,21 +147,12 @@
         {
         }
 
-        protected virtual void HandleEvents()
-        {
-            while (SDL.PollEvent(out var e))
-            {
-                this.HandleEvent(e);
-            }
-        }
-
-        protected virtual void HandleEvent(SDL.Event e)
+        public virtual SDL.AppResult HandleEvent(SDL.Event e)
         {
             switch ((SDL.EventType)e.Type)
             {
                 case SDL.EventType.Quit:
-                    this.LowerPOWER();
-                    break;
+                    return SDL.AppResult.Success;
                 case SDL.EventType.KeyDown:
                     _ = this.HandleKeyDown(e.Key.Key);
                     break;
@@ -197,6 +178,7 @@
                     this.RemoveGamepad(e);
                     break;
             }
+            return SDL.AppResult.Continue;
         }
 
         protected virtual void Draw()
@@ -204,37 +186,6 @@
             this.UpdateTexture();
             this.RenderTexture();
             this.DisplayTexture();
-        }
-
-        protected bool MaybeSynchronise()
-        {
-            var synchronise = !this._vsync;
-            if (synchronise)
-                this.Synchronise();
-            return synchronise;
-        }
-
-        protected void Synchronise()
-        {
-            this._frameEndTime = SDL.GetPerformanceCounter();
-            double frameTimeTicks = this._frameEndTime - this._frameStartTime;
-            SDL.LogDebug(SDL.LogCategory.Render, $"Frame time (ticks): {frameTimeTicks}");
-
-            var frameTime = frameTimeTicks / this._performanceFrequency;
-            SDL.LogDebug(SDL.LogCategory.Render, $"Frame time (seconds): {frameTime}");
-
-            var gap = this._targetFrameTime - frameTime;
-            SDL.LogDebug(SDL.LogCategory.Render, $"Timing gap (seconds): {gap}");
-
-            if (gap > 0.0)
-            {
-                var delay = (uint)(gap * 1000.0);
-                SDL.LogDebug(SDL.LogCategory.Render, $"Delay (ticks): {delay}");
-                SDL.Delay(delay);
-            }
-    
-            if (gap < 0.0)
-                SDL.LogWarn(SDL.LogCategory.Render, "Running slowly");
         }
 
         protected virtual void RemoveGamepad(SDL.Event e)
