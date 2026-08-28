@@ -12,7 +12,6 @@
     public abstract class Game(SDL.LogPriority logging) : Device
     {
         private readonly Wrapper _wrapper = new(logging);
-        private readonly SDL.PixelFormat _pixelType = SDL.PixelFormat.ARGB8888;
         private bool _vsync;
 
         private readonly SortedDictionary<uint, GameController> _gameControllers = [];
@@ -23,7 +22,7 @@
 
         protected ScopedHandle BitmapTexture { get; } = new(SDL.DestroyTexture);
 
-        protected IntPtr PixelFormat { get; private set; } = IntPtr.Zero;
+        protected abstract SDL.PixelFormat PixelFormat { get; }
 
         public abstract float FramesPerSecond { get; }
 
@@ -99,9 +98,6 @@
                 Wrapper.MaybeThrowException(success, "Unable to set event loop callback rate hint");
             }
 
-            this.PixelFormat = SDL.GetPixelFormatDetails(this._pixelType);
-            Wrapper.MaybeThrowException(this.PixelFormat, "Unable to obtain pixel format details");
-
             this.ConfigureBackground();
             this.CreateBitmapTexture();
         }
@@ -122,7 +118,7 @@
 
         private void CreateBitmapTexture()
         {
-            BitmapTexture.Handle = SDL.CreateTexture(this.Renderer, this._pixelType, SDL.TextureAccess.Streaming, this.RasterWidth, this.RasterHeight);
+            BitmapTexture.Handle = SDL.CreateTexture(this.Renderer, this.PixelFormat, SDL.TextureAccess.Streaming, this.RasterWidth, this.RasterHeight);
             Wrapper.MaybeThrowException(BitmapTexture, "Unable to create bitmap texture");
         }
 
