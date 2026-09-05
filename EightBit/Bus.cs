@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace EightBit
 {
-    public abstract class Bus : IMapper
+    public abstract class Bus : Device, IMapper
     {
         private bool _writing;
         private byte _data;
@@ -52,16 +52,6 @@ namespace EightBit
             this.Reference() = this.Data;
             this._writing = false;
             Debug.Assert(!this._writing, "Writing flag is in an invalid state");
-        }
-
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaisePOWER()
-        {
-        }
-
-        public virtual void LowerPOWER()
-        {
         }
 
         public abstract void Initialize();

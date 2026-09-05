@@ -55,7 +55,7 @@ namespace EightBit
 
         public Register16 Intermediate { get; } = new();
 
-        protected byte OpCode { get; set; }
+        public byte OpCode { get; protected set; }
 
         // http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
         public static sbyte SignExtend(int b, byte x)
