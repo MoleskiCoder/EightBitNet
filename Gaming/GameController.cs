@@ -6,12 +6,14 @@
 
     public class GameController : IDisposable
     {
+        private readonly EightBit.ILogger _logger;
         private readonly uint _index;
         private readonly ScopedHandle _gamepad = new(SDL.CloseGamepad);
         private bool _disposed;
 
-        public GameController(uint index)
+        public GameController(EightBit.ILogger logger, uint index)
         {
+            this._logger = logger;
             this._index = index;
             this.Open();
         }
@@ -23,7 +25,7 @@
             Wrapper.MaybeThrowException(this._gamepad, "Unable to open gamepad");
             var gamepadName = SDL.GetGamepadName(this._gamepad);
             Wrapper.MaybeThrowException(gamepadName != null, "Unable to obtain gamepad name");
-            SDL.LogInfo(SDL.LogCategory.Input, "Game controller name: " + gamepadName);
+            this._logger.Inform($"Game controller name: {gamepadName}");
         }
 
         public void StartRumble()

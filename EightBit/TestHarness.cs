@@ -8,6 +8,7 @@ namespace EightBit
 
     public class TestHarness<TBus, TProcessor>(TBus board, TProcessor cpu, int targetClocksPerSecond = 2_000_000) where TBus : Bus where TProcessor : Processor
     {
+        private readonly ILogger _logger = new ConsoleLogger("Test harness");
         private readonly Stopwatch _timer = new();
         private readonly TBus _board = board;
         private readonly TProcessor _cpu = cpu;
@@ -51,12 +52,10 @@ namespace EightBit
             }
             this._timer.Stop();
 
-            Console.Out.WriteLine();
-
-            Console.Out.WriteLine($"Guest cycles = {this.TotalCycles:N0}");
-            Console.Out.WriteLine($"Instructions executed = {this.TotalInstructions:N0} ({this.InstructionsPerSecond:N0} instructions per second)");
-            Console.Out.WriteLine($"Elapsed time (at {this.ActualClockSpeed:g3}MHz actual) = {this.ActualElapsed}");
-            Console.Out.WriteLine($"Elapsed time (at {this.TargetClockSpeed:g3}MHz target) = {this.TargetElapsed}");
+            this._logger.Inform($"Guest cycles = {this.TotalCycles:N0}");
+            this._logger.Inform($"Instructions executed = {this.TotalInstructions:N0} ({this.InstructionsPerSecond:N0} instructions per second)");
+            this._logger.Inform($"Elapsed time (at {this.ActualClockSpeed:g3}MHz actual) = {this.ActualElapsed}");
+            this._logger.Inform($"Elapsed time (at {this.TargetClockSpeed:g3}MHz target) = {this.TargetElapsed}");
         }
     }
 }

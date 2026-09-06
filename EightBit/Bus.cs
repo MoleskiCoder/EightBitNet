@@ -78,8 +78,7 @@ namespace EightBit
         protected void LoadHexFile(string path)
         {
             var file = new IntelHexFile(path);
-            //file.Verbosity = IntelHexFile.LogLevel.Debugging;
-            //file.Strict = true;
+            //file.Logger.Verbosity = ILogger.LogLevel.Debugging;
             foreach (var (address, content) in file.Parse())
             {
                 if (file.ExtendedSegmentAddress != 0)

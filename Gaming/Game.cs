@@ -9,12 +9,14 @@
     using System.Linq;
     using System.Runtime.InteropServices;
 
-    public abstract class Game(SDL.LogPriority logging) : Device
+    public abstract class Game(ILogger.LogLevel logging) : Device
     {
         private readonly Wrapper _wrapper = new(logging);
         private bool _vsync;
 
         private readonly SortedDictionary<uint, GameController> _gameControllers = [];
+
+        public ILogger Logger => this._wrapper.Logger;
 
         protected ScopedHandle Window { get; } = new(SDL.DestroyWindow);
 
@@ -60,6 +62,9 @@
 
         public virtual void Initialise()
         {
+            this.Logger.Context = this.Title;
+            this.Logger.Verbosity = this._wrapper.Verbosity;
+
             this._wrapper.RaisePOWER();
 
             this.Window.Handle = SDL.CreateWindow(this.Title, this.WindowWidth, this.WindowHeight, 0L);
@@ -80,20 +85,20 @@
                 this._vsync = Math.Abs(framesPerSecond - refreshRate.Value) < 0.001;
                 if (this._vsync)
                 {
-                    SDL.LogInfo(SDL.LogCategory.Render, "Attempting to configure renderer VSYNC");
+                    this.Logger.Inform("Attempting to configure renderer VSYNC");
                     this._vsync = SDL.SetRenderVSync(this.Renderer, 1);
                     if (!this._vsync)
-                        SDL.LogWarn(SDL.LogCategory.Render, $"Unable to set render VSYNC ({SDL.GetError()})");
+                        this.Logger.Warn($"Unable to set render VSYNC ({SDL.GetError()})");
                 }
                 else
                 {
-                    SDL.LogWarn(SDL.LogCategory.Render, $"Display refresh rate is incompatible with required rate ({this.FramesPerSecond})");
+                    this.Logger.Warn($"Display refresh rate is incompatible with required rate ({this.FramesPerSecond})");
                 }
             }
 
             if (!this._vsync)
             {
-                SDL.LogInfo(SDL.LogCategory.Render, "Setting callback rate hint");
+                this.Logger.Inform("Setting callback rate hint");
                 var success = SDL.SetHint("SDL_MAIN_CALLBACK_RATE", this.FramesPerSecond.ToString(CultureInfo.InvariantCulture));
                 Wrapper.MaybeThrowException(success, "Unable to set event loop callback rate hint");
             }
@@ -191,7 +196,7 @@
             Debug.Assert(found);
             Debug.Assert(gameController != null, "controller is not null");
             _ = this._gameControllers.Remove(which);
-            SDL.LogInfo(SDL.LogCategory.Input, $"Joystick device {which} removed ({this._gameControllers.Count} controllers available)");
+            this.Logger.Inform($"Joystick device {which} removed ({this._gameControllers.Count} controllers available)");
         }
 
         protected virtual void AddGampad(SDL.Event e)
@@ -199,9 +204,9 @@
             var which = e.JDevice.Which;
             var found = this._gameControllers.ContainsKey(which);
             Debug.Assert(!found);
-            GameController gameController = new(which);
+            GameController gameController = new(this.Logger, which);
             this._gameControllers[which] = gameController;
-            SDL.LogInfo(SDL.LogCategory.Input, $"Joystick device {which} address ({this._gameControllers.Count} controllers available)");
+            this.Logger.Inform($"Joystick device {which} address ({this._gameControllers.Count} controllers available)");
         }
 
         public GameController Gamepad(uint which)
