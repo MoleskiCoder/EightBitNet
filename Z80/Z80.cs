@@ -617,7 +617,6 @@ namespace Z80
 
         private void HandleNMI()
         {
-            this.RaiseNMI();
             this.RaiseHALT();
             this.IFF2 = this.IFF1;
             this.IFF1 = false;
