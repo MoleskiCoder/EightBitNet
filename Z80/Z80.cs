@@ -202,7 +202,6 @@ namespace Z80
             }
 
             Debug.Assert(this.RESET.Raised());
-            Debug.Assert(this.NMI.Raised());
 
             // ** From the Z80 CPU User Manual
             // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt

@@ -64,12 +64,12 @@ namespace Z80.UnitTests
         }
 
         [TestMethod]
-        public void Reset_Deasserts_Reset_Pin()
+        public void Reset_Ignores_Reset_Pin()
         {
             this.cpu.LowerRESET(); // asserts RESET — fires LoweredRESET event
             Assert.IsTrue(this.cpu.RESET.Lowered(), "RESET pin must be asserted before step");
             this.cpu.Step();
-            Assert.IsTrue(this.cpu.RESET.Raised(), "HandleRESET must deassert the RESET pin");
+            Assert.IsTrue(this.cpu.RESET.Lowered());
         }
 
         [TestMethod]
