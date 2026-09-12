@@ -63,10 +63,10 @@ namespace Z80
                 + $"I={i:x2} R={(byte)r:x2} "
                 + $"IM={im} "
                 + $"IFF1={(cpu.IFF1 ? 1 : 0)} "
-                + $"{(cpu.RESET.Lowered() ? "R" : "-")}"
-                + $"{(cpu.INT.Lowered() ? "I" : "-")}"
                 + $"{(cpu.HALT.Lowered() ? "H" : "-")}"
-                + $"{(cpu.NMI.Lowered() ? "N" : "-")}";
+                + $"{(cpu.RESET.Lowered() ? "R" : "-")}"
+                + $"{(cpu.NMI.Lowered() ? "N" : "-")}"
+                + $"{(cpu.INT.Lowered() ? "I" : "-")}";
         }
 
         public string Disassemble(Z80 cpu)

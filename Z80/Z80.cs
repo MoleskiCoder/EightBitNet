@@ -17,14 +17,12 @@ namespace Z80
             this.UpdateRegisterBank();
             this.UpdateAFBank();
             this.RaisedPOWER += this.Z80_RaisedPOWER;
-            this.LoweredRESET += this.Z80_LoweredRESET;
             this.LoweredNMI += this.Z80_LoweredNMI;
             this.LoweredINT += this.Z80_LoweredINT;
         }
 
         private bool _interruptPending;
         private bool _nonMaskableInterruptPending;
-        private bool _resetPending;
 
         private readonly InputOutput _ports;
 
@@ -182,9 +180,8 @@ namespace Z80
             this._modifiedF = 0;
             this._displaced = this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
 
-            if (this._resetPending)
+            if (this.RESET.Lowered())
             {
-                this._resetPending = false;
                 this.HandleRESET();
                 return;
             }
@@ -203,6 +200,8 @@ namespace Z80
                     return;
                 }
             }
+
+            Debug.Assert(this.RESET.Raised());
 
             // ** From the Z80 CPU User Manual
             // When a software HALT instruction is executed, the CPU executes NOPs until an interrupt
@@ -251,8 +250,6 @@ namespace Z80
         private void Z80_LoweredINT(object? sender, EventArgs e) => this._interruptPending = true;
 
         private void Z80_LoweredNMI(object? sender, EventArgs e) => this._nonMaskableInterruptPending = true;
-
-        private void Z80_LoweredRESET(object? sender, EventArgs e) => this._resetPending = true;
 
         #region Z80 specific pins
 
@@ -594,10 +591,10 @@ namespace Z80
         protected override void HandleRESET()
         {
             base.HandleRESET();
-            this.DisableInterrupts();
             this.IM = 0;
             this.IV = this.REFRESH = 0;
             this.SP.Joined = this.AF.Joined = (ushort)Mask.Sixteen;
+            this.Tick();
         }
 
         private byte ReadDataUnderInterrupt()

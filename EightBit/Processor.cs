@@ -155,7 +155,9 @@ namespace EightBit
             }
         }
 
-        protected virtual void HandleRESET() => this.RaiseRESET();
+        protected virtual void HandleRESET()
+        {
+        }
 
         protected virtual void HandleINT() => this.RaiseINT();
 
