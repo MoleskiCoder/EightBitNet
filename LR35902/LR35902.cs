@@ -391,7 +391,7 @@ namespace LR35902
             base.ReturnConditional(condition);
         }
 
-        protected override void Return()
+        public override void Return()
         {
             base.Return();
             this.TickMachine();
