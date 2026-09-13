@@ -6,9 +6,12 @@ namespace Z80
 {
     using EightBit;
     using System.Globalization;
+    using System.Diagnostics;
 
-    public class Disassembler(Bus bus)
+    public class Disassembler(Bus bus, Labels labels)
     {
+        private readonly Labels _labels = labels;
+
         private bool _prefixCB;
         private bool _prefixDD;
         private bool _prefixED;
@@ -67,6 +70,11 @@ namespace Z80
                 + $"{(cpu.RESET.Lowered() ? "R" : "-")}"
                 + $"{(cpu.NMI.Lowered() ? "N" : "-")}"
                 + $"{(cpu.INT.Lowered() ? "I" : "-")}";
+        }
+
+        public Disassembler(Bus bus)
+        : this(bus, new Labels())
+        {
         }
 
         public string Disassemble(Z80 cpu)
@@ -158,6 +166,13 @@ namespace Z80
             if (outputFormatSpecification)
             {
                 output += '\t';
+
+                if (this._labels.Lookup(pc, out var label))
+                {
+                    Debug.Assert(label is not null);
+                    output += $"{label}: ";
+                }
+
                 output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
             }
 
