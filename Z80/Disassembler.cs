@@ -11,6 +11,10 @@ namespace Z80
     public class Disassembler(Bus bus, Labels labels)
     {
         private readonly Labels _labels = labels;
+        private ushort _absolute;
+        private string? _absoluteLabel;
+        private ushort _relative;
+        private string? _relativeLabel;
 
         private bool _prefixCB;
         private bool _prefixDD;
@@ -110,6 +114,10 @@ namespace Z80
             _ => throw new ArgumentOutOfRangeException(nameof(which)),
         };
 
+        private string TakeAbsolute() => this._absoluteLabel is null ? $"{this._absolute:X4}H" : this._absoluteLabel;
+
+        private string TakeRelative() => this._relativeLabel is null ? $"{this._relative:X4}H" : this._relativeLabel;
+
         public string Disassemble(Z80 cpu, ushort pc)
         {
             ArgumentNullException.ThrowIfNull(cpu);
@@ -126,10 +134,14 @@ namespace Z80
             var q = decoded.Q;
 
             var immediate = this.Bus.Peek((ushort)(pc + 1));
-            var absolute = cpu.PeekShort((ushort)(pc + 1)).Joined;
+            this._absolute = cpu.PeekShort((ushort)(pc + 1)).Joined;
             var displacement = (sbyte)immediate;
-            var relative = pc + displacement + 2;
+            this._relative = (ushort)(pc + displacement + 2);
             var indexedImmediate = this.Bus.Peek((ushort)(pc + 1));
+
+            this._absoluteLabel = this._relativeLabel = null;
+            _ = this._labels.Lookup(this._absolute, out this._absoluteLabel);
+            _ = this._labels.Lookup(this._relative, out this._relativeLabel);
 
             var dumpCount = 0;
 
@@ -173,7 +185,14 @@ namespace Z80
                     output += $"{label}: ";
                 }
 
-                output += string.Format(CultureInfo.InvariantCulture, specification, (int)immediate, (int)absolute, relative, (int)displacement, indexedImmediate);
+                output += string.Format(
+                    CultureInfo.InvariantCulture,
+                    specification, 
+                    (int)immediate,
+                    (int)this._absolute,
+                    (int)this._relative,
+                    (int)displacement,
+                    indexedImmediate);
             }
 
             return output;
@@ -270,10 +289,10 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // LD (nn),rp
-                                    specification = "LD ({1:X4}H)," + this.RP(p);
+                                    specification = $"LD ({this.TakeAbsolute()}),{this.RP(p)}";
                                     break;
                                 case 1: // LD rp,(nn)
-                                    specification = "LD " + this.RP(p) + ",(%2$04XH)";
+                                    specification = $"LD {this.RP(p)},({this.TakeAbsolute()})";
                                     break;
                                 default:
                                     break;
@@ -461,15 +480,15 @@ namespace Z80
                                     specification = "EX AF AF'";
                                     break;
                                 case 2: // DJNZ d
-                                    specification = "DJNZ {2:X4}H";
+                                    specification = $"DJNZ {this.TakeRelative()}";
                                     dumpCount += 2;
                                     break;
                                 case 3: // JR d
-                                    specification = "JR {2:X4}H";
+                                    specification = $"JR {this.TakeRelative()}";
                                     dumpCount++;
                                     break;
                                 default: // JR cc,d
-                                    specification = "JR " + CC(y - 4) + ",{2:X4}H";
+                                    specification = $"JR {CC(y - 4)},{this.TakeRelative()}";
                                     dumpCount++;
                                     break;
                             }
@@ -479,7 +498,7 @@ namespace Z80
                             switch (q)
                             {
                                 case 0: // LD rp,nn
-                                    specification = "LD " + this.RP(p) + ",{1:X4}H";
+                                    specification = $"LD {this.RP(p)},{this.TakeAbsolute()}";
                                     dumpCount += 2;
                                     break;
                                 case 1: // ADD HL,rp
@@ -503,11 +522,11 @@ namespace Z80
                                             specification = "LD (DE),A";
                                             break;
                                         case 2: // LD (nn),HL
-                                            specification = "LD ({1:X4}H),HL";
+                                            specification = $"LD ({this.TakeAbsolute()}),HL";
                                             dumpCount += 2;
                                             break;
                                         case 3: // LD (nn),A
-                                            specification = "LD ({1:X4}H),A";
+                                            specification = $"LD ({this.TakeAbsolute()}),A";
                                             dumpCount += 2;
                                             break;
                                         default:
@@ -525,11 +544,11 @@ namespace Z80
                                             specification = "LD A,(DE)";
                                             break;
                                         case 2: // LD HL,(nn)
-                                            specification = "LD HL,({1:X4}H)";
+                                            specification = $"LD HL,({this.TakeAbsolute()})";
                                             dumpCount += 2;
                                             break;
                                         case 3: // LD A,(nn)
-                                            specification = "LD A,({1:X4}H)";
+                                            specification = $"LD A,({this.TakeAbsolute()})";
                                             dumpCount += 2;
                                             break;
                                         default:
@@ -657,14 +676,14 @@ namespace Z80
 
                             break;
                         case 2: // Conditional jump
-                            specification = $"JP {CC(y)}" + ",{1:X4}H";
+                            specification = $"JP {CC(y)},{this.TakeAbsolute()}";
                             dumpCount += 2;
                             break;
                         case 3: // Assorted operations
                             switch (y)
                             {
                                 case 0: // JP nn
-                                    specification = "JP {1:X4}H";
+                                    specification = $"JP {this.TakeAbsolute()}";
                                     dumpCount += 2;
                                     break;
                                 case 1: // CB prefix
@@ -697,7 +716,7 @@ namespace Z80
 
                             break;
                         case 4: // Conditional call: CALL cc[y], nn
-                            specification = $"CALL {CC(y)}" + ",{1:X4}H";
+                            specification = $"CALL {CC(y)},{this.TakeAbsolute()}";
                             dumpCount += 2;
                             break;
                         case 5: // PUSH & various ops
@@ -710,7 +729,7 @@ namespace Z80
                                     switch (p)
                                     {
                                         case 0: // CALL nn
-                                            specification = "CALL {1:X4}H";
+                                            specification = $"CALL {this.TakeAbsolute()}";
                                             dumpCount += 2;
                                             break;
                                         case 1: // DD prefix
