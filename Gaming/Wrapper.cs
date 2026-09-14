@@ -6,7 +6,7 @@
 
     public class Wrapper(ILogger.LogLevel logging = ILogger.LogLevel.Warning) : Device
     {
-        private readonly ILogger _logger = new SdlLogger("Unnamed Game");
+        private readonly ILogger _logger = new ConsoleLogger("Unnamed Game");
 
         private ILogger.LogLevel _verbosity = logging;
 

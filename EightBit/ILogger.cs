@@ -2,7 +2,7 @@
 {
     public interface ILogger
     {
-        enum LogLevel { Debugging, Information, Warning, Critical, }
+        enum LogLevel { Critical, Warning, Information, Debugging }
 
         abstract string Context { get; set; }
 
@@ -10,13 +10,15 @@
 
         abstract bool Strict { get; set; }
 
+        abstract bool Debugging { get; set; }
+
         abstract void Log(string context, string message, LogLevel level);
 
         void Log(string message, LogLevel level) => this.Log(this.Context, message, level);
 
         void MaybeLog(string message, LogLevel level)
         {
-            if (level >= this.Verbosity)
+            if (level <= this.Verbosity)
                 this.Log(message, level);
         }
 
