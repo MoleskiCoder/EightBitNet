@@ -29,7 +29,6 @@ namespace MC6809.UnitTest
         public void Initialise()
         {
             this.board.RaisePOWER();
-            this.cpu.Step();
         }
 
         [TestCleanup]

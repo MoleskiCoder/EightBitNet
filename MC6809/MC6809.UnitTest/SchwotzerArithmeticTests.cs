@@ -16,7 +16,10 @@ namespace MC6809.UnitTest
         public SchwotzerArithmeticTests() => this.cpu = this.board.CPU;
 
         [TestInitialize]
-        public void Initialise() { this.board.RaisePOWER(); this.cpu.Step(); }
+        public void Initialise()
+        {
+            this.board.RaisePOWER();
+        }
 
         [TestCleanup]
         public void Cleanup() => this.board.LowerPOWER();

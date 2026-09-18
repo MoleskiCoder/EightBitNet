@@ -36,6 +36,16 @@ namespace MC6809.UnitTest
             this.CPU.RaiseNMI();
             this.CPU.RaiseFIRQ();
             this.CPU.RaiseHALT();
+
+            this.RunPowerOnReset();
+        }
+
+        private void RunPowerOnReset()
+        {
+            this.CPU.RaiseRESET();
+            this.CPU.LowerRESET();
+            this.CPU.Step();
+            this.CPU.RaiseRESET();
         }
 
         public override void LowerPOWER()
