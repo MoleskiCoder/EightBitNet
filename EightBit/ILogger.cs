@@ -8,9 +8,9 @@
 
         abstract LogLevel Verbosity { get; set; }
 
-        abstract bool Strict { get; set; }
+        bool Debugging => this.Verbosity > ILogger.LogLevel.Information;
 
-        abstract bool Debugging { get; set; }
+        bool Strict => this.Debugging;
 
         abstract void Log(string context, string message, LogLevel level);
 

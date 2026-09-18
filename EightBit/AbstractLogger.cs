@@ -17,18 +17,6 @@
             set => this._context = value;
         }
 
-        public bool Debugging
-        {
-            get => this.Verbosity > ILogger.LogLevel.Information;
-            set => throw new NotImplementedException("Derived from logging verbosity");
-        }
-
-        public bool Strict
-        {
-            get => this.Debugging;
-            set => throw new NotImplementedException("Derived from logging verbosity");
-        }
-
         public abstract void Log(string context, string message, ILogger.LogLevel level);
     }
 }

@@ -84,6 +84,7 @@ namespace Z80
         public string Disassemble(Z80 cpu)
         {
             ArgumentNullException.ThrowIfNull(cpu);
+            if (cpu.RESET.Lowered()) return string.Empty;
             this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
             return this.Disassemble(cpu, cpu.PC.Joined);
         }
