@@ -159,7 +159,9 @@ namespace EightBit
         {
         }
 
-        protected virtual void HandleINT() => this.RaiseINT();
+        protected virtual void HandleINT()
+        {
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void OnReadingMemory() => this.ReadingMemory?.Invoke(this, EventArgs.Empty);
