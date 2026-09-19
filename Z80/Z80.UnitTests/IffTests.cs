@@ -68,19 +68,21 @@ namespace Z80.UnitTests
             this.cpu.IFF1 = false;
             this.cpu.IM = 1;
 
-            this.cpu.LowerINT(); // pending=true, but IFF1=false
-            this.cpu.Step();     // pending cleared (IFF1=false), EI runs → IFF1=true
+            this.cpu.LowerINT(); // but IFF1=false
+            this.cpu.Step();     // IFF1=false, no interrupt, EI runs → IFF1=true
             Assert.IsTrue(this.cpu.IFF1, "IFF1 must be true after EI");
-            Assert.AreEqual(0x0001, this.cpu.PC.Joined, "No interrupt must fire during EI step");
+            Assert.AreEqual(0x0001, this.cpu.PC.Joined, "Normal execution, no interrupt");
 
-            this.cpu.Step();     // NOP at 0x0001 — still no interrupt (pending was cleared)
-            Assert.AreEqual(0x0002, this.cpu.PC.Joined, "No interrupt must fire on instruction after EI");
+            this.cpu.Step();     // IFF1 true, INT still low
+            Assert.AreEqual(0x0038, this.cpu.PC.Joined, "INT fires if INT is low");
 
             // Produce a new falling edge on INT (raise then lower) to retrigger
             this.cpu.RaiseINT();
             this.cpu.LowerINT();
+
+            Assert.IsFalse(this.cpu.IFF1, "IFF1 has been disabled by the INT handler");
             this.cpu.Step();
-            Assert.AreEqual(0x0038, this.cpu.PC.Joined, "INT must fire after new falling edge post-EI");
+            Assert.AreEqual(0x0038, this.cpu.PC.Joined - 1, "Inside INT handled at 0x38");
         }
 
         [TestMethod]

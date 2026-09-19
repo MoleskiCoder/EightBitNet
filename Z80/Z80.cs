@@ -17,12 +17,8 @@ namespace Z80
             this.UpdateRegisterBank();
             this.UpdateAFBank();
             this.RaisedPOWER += this.Z80_RaisedPOWER;
-            this.LoweredNMI += this.Z80_LoweredNMI;
-            this.LoweredINT += this.Z80_LoweredINT;
         }
 
-        private bool _interruptPending;
-        private bool _nonMaskableInterruptPending;
 
         private readonly InputOutput _ports;
 
@@ -185,15 +181,14 @@ namespace Z80
                 this.HandleRESET();
                 return;
             }
-            else if (this._nonMaskableInterruptPending)
+            else if (this._nonMaskableInterruptTriggered)
             {
-                this._nonMaskableInterruptPending = false;
+                this._nonMaskableInterruptTriggered = false;
                 this.HandleNMI();
                 return;
             }
-            else if (this._interruptPending)
+            else if (this.INT.Lowered())
             {
-                this._interruptPending = false;
                 if (this.IFF1)
                 {
                     this.HandleINT();
@@ -247,13 +242,15 @@ namespace Z80
             this.ResetRegisterSet();
         }
 
-        private void Z80_LoweredINT(object? sender, EventArgs e) => this._interruptPending = true;
+        //private void Z80_LoweredINT(object? sender, EventArgs e) => this._interruptPending = true;
 
-        private void Z80_LoweredNMI(object? sender, EventArgs e) => this._nonMaskableInterruptPending = true;
+        //private void Z80_LoweredNMI(object? sender, EventArgs e) => this._nonMaskableInterruptPending = true;
 
         #region Z80 specific pins
 
         #region NMI pin
+
+        private bool _nonMaskableInterruptTriggered;
 
         public event EventHandler<EventArgs>? RaisingNMI;
 
@@ -284,6 +281,7 @@ namespace Z80
             {
                 LoweringNMI?.Invoke(this, EventArgs.Empty);
                 this.NMI.Lower();
+                this._nonMaskableInterruptTriggered = true;
                 LoweredNMI?.Invoke(this, EventArgs.Empty);
             }
         }
