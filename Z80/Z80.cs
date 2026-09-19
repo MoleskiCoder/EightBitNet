@@ -242,10 +242,6 @@ namespace Z80
             this.ResetRegisterSet();
         }
 
-        //private void Z80_LoweredINT(object? sender, EventArgs e) => this._interruptPending = true;
-
-        //private void Z80_LoweredNMI(object? sender, EventArgs e) => this._nonMaskableInterruptPending = true;
-
         #region Z80 specific pins
 
         #region NMI pin
