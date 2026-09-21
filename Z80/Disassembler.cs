@@ -84,7 +84,9 @@ namespace Z80
         public string Disassemble(Z80 cpu)
         {
             ArgumentNullException.ThrowIfNull(cpu);
-            if (cpu.RESET.Lowered()) return string.Empty;
+            if (cpu.RESET.Lowered()) return "(RESET)";
+            if (cpu.TriggeredNMI) return "(NMI)";
+            if (cpu.INT.Lowered() && cpu.IFF1) return $"(INT IM-{cpu.IM})";
             this._prefixCB = this._prefixDD = this._prefixED = this._prefixFD = false;
             return this.Disassemble(cpu, cpu.PC.Joined);
         }
