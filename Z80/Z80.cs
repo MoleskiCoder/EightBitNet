@@ -49,6 +49,11 @@ namespace Z80
         private sbyte _displacement;
         private bool _displaced;
 
+        private bool _triggeredNMI;
+
+        public bool TriggeredNMI => this._triggeredNMI;
+
+
         public byte IV { get; set; } = 0xff;
 
         public int IM { get; set; }
@@ -181,19 +186,16 @@ namespace Z80
                 this.HandleRESET();
                 return;
             }
-            else if (this._nonMaskableInterruptTriggered)
+            else if (this.TriggeredNMI)
             {
-                this._nonMaskableInterruptTriggered = false;
+                this._triggeredNMI = false;
                 this.HandleNMI();
                 return;
             }
-            else if (this.INT.Lowered())
+            else if (this.INT.Lowered() && this.IFF1)
             {
-                if (this.IFF1)
-                {
-                    this.HandleINT();
-                    return;
-                }
+                this.HandleINT();
+                return;
             }
 
             Debug.Assert(this.RESET.Raised());
@@ -246,8 +248,6 @@ namespace Z80
 
         #region NMI pin
 
-        private bool _nonMaskableInterruptTriggered;
-
         public event EventHandler<EventArgs>? RaisingNMI;
 
         public event EventHandler<EventArgs>? RaisedNMI;
@@ -277,7 +277,7 @@ namespace Z80
             {
                 LoweringNMI?.Invoke(this, EventArgs.Empty);
                 this.NMI.Lower();
-                this._nonMaskableInterruptTriggered = true;
+                this._triggeredNMI = true;
                 LoweredNMI?.Invoke(this, EventArgs.Empty);
             }
         }
