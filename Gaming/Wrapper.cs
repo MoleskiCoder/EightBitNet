@@ -18,16 +18,16 @@
         {
             this._logger = new ConsoleLogger("Unnamed Game");
             this._verbosity = logging;
-            this.RaisedPOWER += this.Wrapper_RaisedPOWER;
-            this.LoweringPOWER += this.Wrapper_LoweringPOWER;
+            this.RaisingPOWER += this.Wrapper_RaisingPOWER;
+            this.LoweredPOWER += this.Wrapper_LoweredPOWER;
         }
 
-        private void Wrapper_RaisedPOWER(object? sender, EventArgs e)
+        private void Wrapper_RaisingPOWER(object? sender, EventArgs e)
         {
             this.Initialise();
         }
 
-        private void Wrapper_LoweringPOWER(object? sender, EventArgs e)
+        private void Wrapper_LoweredPOWER(object? sender, EventArgs e)
         {
             this.Terminate();
         }

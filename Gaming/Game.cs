@@ -51,16 +51,16 @@
         protected Game(ILogger.LogLevel logging)
         {
             this._wrapper = new(logging);
-            this.RaisedPOWER += this.Game_RaisedPOWER;
-            this.LoweringPOWER += this.Game_LoweringPOWER;
+            this.RaisingPOWER += this.Game_RaisingPOWER;
+            this.LoweredPOWER += this.Game_LoweredPOWER;
         }
 
-        private void Game_RaisedPOWER(object? sender, EventArgs e)
+        private void Game_RaisingPOWER(object? sender, EventArgs e)
         {
             this.Initialise();
         }
 
-        private void Game_LoweringPOWER(object? sender, EventArgs e)
+        private void Game_LoweredPOWER(object? sender, EventArgs e)
         {
             this.Terminate();
         }
