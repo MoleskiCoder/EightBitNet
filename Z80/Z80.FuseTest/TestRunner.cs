@@ -64,8 +64,8 @@ namespace Z80.FuseTest
 
         public void Run()
         {
-            this.RaisePOWER();
             this.Initialize();
+            this.RaisePOWER();
             var allowedCycles = this.test.RegisterState.TStates;
             try
             {
@@ -79,9 +79,8 @@ namespace Z80.FuseTest
             }
         }
 
-        public override void RaisePOWER()
+        private void TestRunner_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
             this.cpu.RaisePOWER();
             this.cpu.RaiseRESET();
             this.cpu.RaiseINT();
@@ -90,14 +89,15 @@ namespace Z80.FuseTest
             this.InitialiseMemory();
         }
 
-        public override void LowerPOWER()
+        private void TestRunner_LoweringPOWER(object? sender, EventArgs e)
         {
             this.cpu.LowerPOWER();
-            base.LowerPOWER();
         }
 
         public override void Initialize()
         {
+            this.RaisedPOWER += this.TestRunner_RaisedPOWER;
+            this.LoweringPOWER += this.TestRunner_LoweringPOWER;
             this.cpu.ReadMemory += this.Cpu_ReadMemory;
             this.cpu.WrittenMemory += this.Cpu_WrittenMemory;
             this.ports.ReadPort += this.Ports_ReadPort;

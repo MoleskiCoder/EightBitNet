@@ -15,6 +15,8 @@
         {
             this.CPU = new(this, this.ports);
             this._mapping = new(this.RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.RaisedPOWER += this.TestRunner_RaisedPOWER;
+            this.LoweringPOWER += this.TestRunner_LoweringPOWER;
         }
 
         public override MemoryMapping Mapping(ushort _) => this._mapping;
@@ -23,15 +25,13 @@
         {
         }
 
-        public override void LowerPOWER()
+        private void TestRunner_LoweringPOWER(object? sender, EventArgs e)
         {
             this.CPU.LowerPOWER();
-            base.LowerPOWER();
         }
 
-        public override void RaisePOWER()
+        private void TestRunner_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
             this.CPU.RaisePOWER();
             this.CPU.RaiseRESET();
             this.CPU.RaiseINT();

@@ -38,6 +38,8 @@ namespace EightBit
 
         public void Run()
         {
+            this._logger.Verbosity = ILogger.LogLevel.Information;
+
             this._board.Initialize();
             this._board.RaisePOWER();
 

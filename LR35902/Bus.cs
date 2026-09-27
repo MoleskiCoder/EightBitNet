@@ -55,6 +55,8 @@ namespace LR35902
             this.IO = new IoRegisters(this, ioTriggers);
             this.CPU = new LR35902(this);
             this.CPU.MachineTicked += this.CPU_MachineTicked;
+            this.RaisedPOWER += this.Bus_RaisedPOWER;
+            this.LoweringPOWER += this.Bus_LoweringPOWER;
 
             this._bootRomMapping = new(this._bootRom, 0x0000, Mask.Sixteen, AccessLevel.ReadOnly);
             this._vRamMapping = new(this.VRAM, 0x8000, 0xffff, AccessLevel.ReadWrite);
@@ -69,6 +71,18 @@ namespace LR35902
             this.CPU.WrittenMemory += Bus_WrittenByte;
         }
 
+        private void Bus_RaisedPOWER(object? sender, EventArgs e)
+        {
+            this.CPU.RaisePOWER();
+            this.CPU.RaiseINT();
+            this.Reset();
+        }
+
+        private void Bus_LoweringPOWER(object? sender, EventArgs e)
+        {
+            this.CPU.LowerPOWER();
+        }
+
         public LR35902 CPU { get; }
 
         public Ram VRAM { get; } = new Ram(0x2000);
@@ -80,20 +94,6 @@ namespace LR35902
         public bool GameRomDisabled { get; private set; }
 
         public bool GameRomEnabled => !this.GameRomDisabled;
-
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.CPU.RaisePOWER();
-            this.CPU.RaiseINT();
-            this.Reset();
-        }
-
-        public override void LowerPOWER()
-        {
-            this.CPU.LowerPOWER();
-            base.LowerPOWER();
-        }
 
         public void Reset()
         {

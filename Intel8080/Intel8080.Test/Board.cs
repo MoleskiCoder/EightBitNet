@@ -24,22 +24,22 @@ namespace Intel8080.Test
             this.CPU = new Intel8080(this, this.ports);
             this.disassembler = new Disassembler(this);
             this.mapping = new MemoryMapping(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.RaisedPOWER += this.Board_RaisedPOWER;
+            this.LoweringPOWER += this.Board_LoweringPOWER;
         }
 
         public Intel8080 CPU { get; }
 
-        public override void RaisePOWER()
+        private void Board_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
             this.CPU.RaisePOWER();
             this.CPU.RaiseRESET();
             this.CPU.RaiseINT();
         }
 
-        public override void LowerPOWER()
+        private void Board_LoweringPOWER(object? sender, EventArgs e)
         {
             this.CPU.LowerPOWER();
-            base.LowerPOWER();
         }
 
         public override void Initialize()

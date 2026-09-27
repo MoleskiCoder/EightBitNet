@@ -16,17 +16,38 @@ namespace LR35902.FuseTest
         PC,
     }
 
-    public class TestRunner<T>(Test<T> test, Result<T> result) : Bus
-        where T : IRegisterState, new()
+    public class TestRunner<T> : Bus where T : IRegisterState, new()
     {
-        private readonly Test<T> test = test;
-        private readonly Result<T> result = result;
+        private readonly Test<T> test;
+        private readonly Result<T> result;
         private readonly EightBit.Ram ram = new(0x10000);
         private EightBit.MemoryMapping? mapping;
 
-        public bool Failed { get; private set; } = false;
+        public bool Failed { get; private set; }
 
-        public bool Unimplemented { get; private set; } = false;
+        public bool Unimplemented { get; private set; }
+
+        public TestRunner(Test<T> test, Result<T> result)
+        {
+            this.test = test;
+            this.result = result;
+            this.RaisedPOWER += this.TestRunner_RaisedPOWER;
+            this.LoweringPOWER += this.TestRunner_LoweringPOWER;
+        }
+
+        private void TestRunner_RaisedPOWER(object? sender, EventArgs e)
+        {
+            this.CPU.RaisePOWER();
+            this.CPU.RaiseRESET();
+            this.CPU.RaiseINT();
+            this.InitialiseRegisters();
+            this.InitialiseMemory();
+        }
+
+        private void TestRunner_LoweringPOWER(object? sender, EventArgs e)
+        {
+            this.CPU.LowerPOWER();
+        }
 
         public override EightBit.MemoryMapping Mapping(ushort address) =>
             this.mapping ??= new EightBit.MemoryMapping(this.ram, 0, EightBit.Mask.Sixteen, EightBit.AccessLevel.ReadWrite);
@@ -46,22 +67,6 @@ namespace LR35902.FuseTest
                 this.Unimplemented = true;
                 Console.Error.WriteLine($"**** Error: {error.Message}");
             }
-        }
-
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
-            this.CPU.RaisePOWER();
-            this.CPU.RaiseRESET();
-            this.CPU.RaiseINT();
-            this.InitialiseRegisters();
-            this.InitialiseMemory();
-        }
-
-        public override void LowerPOWER()
-        {
-            this.CPU.LowerPOWER();
-            base.LowerPOWER();
         }
 
         public override void Initialize() => this.DisableGameRom();

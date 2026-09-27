@@ -41,6 +41,8 @@ namespace MC6809.Test
             this._unusedMapping = new MemoryMapping(this._unused2000, 0x8000, Mask.Sixteen, AccessLevel.ReadOnly);
             this._ioMapping = new MemoryMapping(this._io, 0xa000, Mask.Sixteen, AccessLevel.ReadWrite);
             this._romMapping = new MemoryMapping(this._rom, 0xc000, Mask.Sixteen, AccessLevel.ReadOnly);
+            this.RaisedPOWER += this.Board_RaisedPOWER;
+            this.LoweringPOWER += this.Board_LoweringPOWER;
         }
 
         public MC6809 CPU { get; }
@@ -67,10 +69,8 @@ namespace MC6809.Test
             return this._romMapping;
         }
 
-        public override void RaisePOWER()
+        private void Board_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
-
             // Get the CPU ready for action
             this.CPU.RaisePOWER();
             this.CPU.LowerRESET();
@@ -89,14 +89,13 @@ namespace MC6809.Test
             this.AccessAcia();
         }
 
-        public override void LowerPOWER()
+        private void Board_LoweringPOWER(object? sender, EventArgs e)
         {
             if (this._configuration.Profile)
                 this._profiler.Generate();
 
             this.ACIA.LowerPOWER();
             this.CPU.LowerPOWER();
-            base.LowerPOWER();
         }
 
         public override void Initialize()

@@ -14,6 +14,8 @@ namespace MC6809.UnitTest
         {
             this.CPU = new(this);
             this.mapping = new(this.ram, 0x0000, 0xffff, AccessLevel.ReadWrite);
+            this.RaisedPOWER += this.Board_RaisedPOWER;
+            this.LoweringPOWER += this.Board_LoweringPOWER;
         }
 
         public MC6809 CPU { get; }
@@ -24,10 +26,8 @@ namespace MC6809.UnitTest
 
         public override MemoryMapping Mapping(ushort absolute) => this.mapping;
 
-        public override void RaisePOWER()
+        private void Board_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
-
             this.CPU.RaisePOWER();
 
             this.CPU.LowerRESET();
@@ -40,18 +40,17 @@ namespace MC6809.UnitTest
             this.RunPowerOnReset();
         }
 
+        private void Board_LoweringPOWER(object? sender, EventArgs e)
+        {
+            this.CPU.LowerPOWER();
+        }
+
         private void RunPowerOnReset()
         {
             this.CPU.RaiseRESET();
             this.CPU.LowerRESET();
             this.CPU.Step();
             this.CPU.RaiseRESET();
-        }
-
-        public override void LowerPOWER()
-        {
-            this.CPU.LowerPOWER();
-            base.LowerPOWER();
         }
     }
 }

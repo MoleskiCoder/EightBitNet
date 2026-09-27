@@ -4,26 +4,32 @@
     using EightBit;
     using System;
 
-    public class Wrapper(ILogger.LogLevel logging = ILogger.LogLevel.Warning) : Device
+    public class Wrapper : Device
     {
-        private readonly ILogger _logger = new ConsoleLogger("Unnamed Game");
+        private readonly ILogger _logger;
 
-        private ILogger.LogLevel _verbosity = logging;
+        private readonly ILogger.LogLevel _verbosity;
 
         public ILogger Logger => this._logger;
 
         public ILogger.LogLevel Verbosity => this._verbosity;
 
-        public override void RaisePOWER()
+        public Wrapper(ILogger.LogLevel logging = ILogger.LogLevel.Warning)
         {
-            base.RaisePOWER();
+            this._logger = new ConsoleLogger("Unnamed Game");
+            this._verbosity = logging;
+            this.RaisedPOWER += this.Wrapper_RaisedPOWER;
+            this.LoweringPOWER += this.Wrapper_LoweringPOWER;
+        }
+
+        private void Wrapper_RaisedPOWER(object? sender, EventArgs e)
+        {
             this.Initialise();
         }
 
-        public override void LowerPOWER()
+        private void Wrapper_LoweringPOWER(object? sender, EventArgs e)
         {
             this.Terminate();
-            base.LowerPOWER();
         }
 
         public virtual void Initialise()

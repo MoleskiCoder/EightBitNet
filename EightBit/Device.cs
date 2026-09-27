@@ -21,7 +21,7 @@ namespace EightBit
         public ref PinLevel POWER => ref this._powerLine;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaisePOWER()
+        public void RaisePOWER()
         {
             if (this.POWER.Lowered())
             {
@@ -31,7 +31,7 @@ namespace EightBit
             }
         }
 
-        public virtual void LowerPOWER()
+        public void LowerPOWER()
         {
             if (this.POWER.Raised())
             {

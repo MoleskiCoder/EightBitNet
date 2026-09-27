@@ -14,23 +14,12 @@ namespace M6502.HarteTest
         {
             this.CPU = cpuFactory(this);
             this._mapping = new(this.RAM, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.RaisedPOWER += this.TestRunner_RaisedPOWER;
+            this.LoweringPOWER += this.TestRunner_LoweringPOWER;
         }
 
-        public override void Initialize()
+        private void TestRunner_RaisedPOWER(object? sender, EventArgs e)
         {
-        }
-
-        public override void LowerPOWER()
-        {
-            this.CPU.LowerPOWER();
-            base.LowerPOWER();
-        }
-
-        public override MemoryMapping Mapping(ushort _) => this._mapping;
-
-        public override void RaisePOWER()
-        {
-            base.RaisePOWER();
             this.CPU.RaisePOWER();
             this.CPU.RaiseRESET();
             this.CPU.RaiseINT();
@@ -38,5 +27,16 @@ namespace M6502.HarteTest
             this.CPU.RaiseSO();
             this.CPU.RaiseRDY();
         }
+
+        private void TestRunner_LoweringPOWER(object? sender, EventArgs e)
+        {
+            this.CPU.LowerPOWER();
+        }
+
+        public override void Initialize()
+        {
+        }
+
+        public override MemoryMapping Mapping(ushort _) => this._mapping;
     }
 }

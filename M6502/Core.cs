@@ -28,7 +28,7 @@ namespace M6502
         public event EventHandler<EventArgs>? LoweredNMI;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseNMI()
+        public void RaiseNMI()
         {
             if (this.NMI.Lowered())
             {
@@ -38,7 +38,7 @@ namespace M6502
             }
         }
 
-        public virtual void LowerNMI()
+        public void LowerNMI()
         {
             if (this.NMI.Raised())
             {
@@ -60,7 +60,7 @@ namespace M6502
         public event EventHandler<EventArgs>? LoweredSO;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseSO()
+        public void RaiseSO()
         {
             if (this.SO.Lowered())
             {
@@ -70,7 +70,7 @@ namespace M6502
             }
         }
 
-        public virtual void LowerSO()
+        public void LowerSO()
         {
             if (this.SO.Raised())
             {
@@ -92,7 +92,7 @@ namespace M6502
         public event EventHandler<EventArgs>? LoweredSYNC;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        protected virtual void RaiseSYNC()
+        protected void RaiseSYNC()
         {
             if (this.SYNC.Lowered())
             {
@@ -102,7 +102,7 @@ namespace M6502
             }
         }
 
-        protected virtual void LowerSYNC()
+        protected void LowerSYNC()
         {
             if (this.SYNC.Raised())
             {
@@ -124,7 +124,7 @@ namespace M6502
         public event EventHandler<EventArgs>? LoweredRDY;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRDY()
+        public void RaiseRDY()
         {
             if (this.RDY.Lowered())
             {
@@ -134,7 +134,7 @@ namespace M6502
             }
         }
 
-        public virtual void LowerRDY()
+        public void LowerRDY()
         {
             if (this.RDY.Raised())
             {
@@ -156,7 +156,7 @@ namespace M6502
         public event EventHandler<EventArgs>? LoweredRW;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRW()
+        public void RaiseRW()
         {
             if (this.RW.Lowered())
             {
@@ -166,7 +166,7 @@ namespace M6502
             }
         }
 
-        public virtual void LowerRW()
+        public void LowerRW()
         {
             if (this.RW.Raised())
             {

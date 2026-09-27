@@ -64,7 +64,7 @@ namespace EightBit
         public IntelOpCodeDecoded GetDecodedOpCode(byte opCode) => this._decodedOpCodes[opCode];
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseHALT()
+        public void RaiseHALT()
         {
             if (this.HALT.Lowered())
             {
@@ -74,7 +74,7 @@ namespace EightBit
             }
         }
 
-        public virtual void LowerHALT()
+        public void LowerHALT()
         {
             if (this.HALT.Raised())
             {

@@ -15,6 +15,8 @@ namespace Z80.UnitTests
         {
             this.CPU = new(this, this.ports);
             this.mapping = new(this.ram, 0x0000, (ushort)Mask.Sixteen, AccessLevel.ReadWrite);
+            this.RaisedPOWER += this.Board_RaisedPOWER;
+            this.LoweringPOWER += this.Board_LoweringPOWER;
         }
 
         public Z80 CPU { get; }
@@ -25,19 +27,17 @@ namespace Z80.UnitTests
 
         public override MemoryMapping Mapping(ushort absolute) => this.mapping;
 
-        public override void RaisePOWER()
+        private void Board_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
             this.CPU.RaisePOWER();
             this.CPU.RaiseRESET();
             this.CPU.RaiseINT();
             this.CPU.RaiseNMI();
         }
 
-        public override void LowerPOWER()
+        private void Board_LoweringPOWER(object? sender, EventArgs e)
         {
             this.CPU.LowerPOWER();
-            base.LowerPOWER();
         }
     }
 }

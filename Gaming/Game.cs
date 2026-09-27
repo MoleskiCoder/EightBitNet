@@ -9,9 +9,9 @@
     using System.Linq;
     using System.Runtime.InteropServices;
 
-    public abstract class Game(ILogger.LogLevel logging) : Device
+    public abstract class Game : Device
     {
-        private readonly Wrapper _wrapper = new(logging);
+        private readonly Wrapper _wrapper;
         private bool _vsync;
 
         private readonly SortedDictionary<uint, GameController> _gameControllers = [];
@@ -48,16 +48,21 @@
 
         protected abstract uint[] Pixels();
 
-        public override void RaisePOWER()
+        protected Game(ILogger.LogLevel logging)
         {
-            base.RaisePOWER();
+            this._wrapper = new(logging);
+            this.RaisedPOWER += this.Game_RaisedPOWER;
+            this.LoweringPOWER += this.Game_LoweringPOWER;
+        }
+
+        private void Game_RaisedPOWER(object? sender, EventArgs e)
+        {
             this.Initialise();
         }
 
-        public override void LowerPOWER()
+        private void Game_LoweringPOWER(object? sender, EventArgs e)
         {
             this.Terminate();
-            base.LowerPOWER();
         }
 
         public virtual void Initialise()

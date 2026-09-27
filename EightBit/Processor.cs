@@ -68,7 +68,7 @@ namespace EightBit
         public static sbyte SignExtend(int b, int x) => SignExtend(b, (byte)x);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Not using VB.NET")]
-        public virtual int Step()
+        public int Step()
         {
             this.ResetCycles();
             this.ExecutingInstruction?.Invoke(this, EventArgs.Empty);
@@ -114,7 +114,7 @@ namespace EightBit
         public void PokeShort(ushort address, ushort value) => this.PokeShort(address, new Register16(value));
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseRESET()
+        public void RaiseRESET()
         {
             if (this.RESET.Lowered())
             {
@@ -124,7 +124,7 @@ namespace EightBit
             }
         }
 
-        public virtual void LowerRESET()
+        public void LowerRESET()
         {
             if (this.RESET.Raised())
             {
@@ -135,7 +135,7 @@ namespace EightBit
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1030:Use events where appropriate", Justification = "The word 'raise' is used in an electrical sense")]
-        public virtual void RaiseINT()
+        public void RaiseINT()
         {
             if (this.INT.Lowered())
             {
@@ -145,7 +145,7 @@ namespace EightBit
             }
         }
 
-        public virtual void LowerINT()
+        public void LowerINT()
         {
             if (this.INT.Raised())
             {
