@@ -20,6 +20,7 @@ namespace LR35902.BlarggTest
         public override void Initialize()
         {
 #if GAMEBOY_DOCTOR
+            this.CPU.RaisedPOWER += this.CPU_RaisedPOWER;
             this.CPU.ExecutingInstruction += this.CPU_ExecutingInstruction_Debug;
 #else
             this.CPU.WrittenMemory += this.Board_WrittenByte;
@@ -33,9 +34,8 @@ namespace LR35902.BlarggTest
         }
 
 #if GAMEBOY_DOCTOR
-        public override void RaisePOWER()
+        private void CPU_RaisedPOWER(object? sender, EventArgs e)
         {
-            base.RaisePOWER();
             this.CPU.A = 0x01;
             this.CPU.F = 0xB0;
             this.CPU.B = 0x00;
