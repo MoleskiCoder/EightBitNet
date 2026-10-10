@@ -6,7 +6,7 @@ namespace EightBit
 {
     public sealed class MemoryMapping
     {
-        public MemoryMapping(Memory memory, ushort begin, ushort mask, AccessLevel access)
+        public MemoryMapping(IMemory memory, ushort begin, ushort mask, AccessLevel access)
         {
             this._memory = memory;
             this._begin = begin;
@@ -20,18 +20,18 @@ namespace EightBit
             }
         }
 
-        public MemoryMapping(Memory memory, ushort begin, Mask mask, AccessLevel access)
+        public MemoryMapping(IMemory memory, ushort begin, Mask mask, AccessLevel access)
         : this(memory, begin, (ushort)mask, access)
         {
         }
 
         private readonly ushort[] _offsets = new ushort[ushort.MaxValue + 1];
-        private readonly Memory _memory;
+        private readonly IMemory _memory;
         private readonly ushort _begin;
         private readonly ushort _mask;
         private readonly AccessLevel _access;
 
-        public Memory Memory => this._memory;
+        public IMemory Memory => this._memory;
 
         public ushort Begin => this._begin;
 

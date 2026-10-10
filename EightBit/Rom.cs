@@ -6,11 +6,11 @@ namespace EightBit
 {
     using System.Diagnostics;
 
-    public class Rom(int size = 0) : Memory
+    public class Rom(int size = 0) : IMemory
     {
         private byte[] _bytes = new byte[size];
 
-        public override int Size => this._bytes.Length;
+        public int Size => this._bytes.Length;
 
         public static int Load(Stream file, ref byte[] output, int writeOffset = 0, int readOffset = 0, int limit = -1, int maximumSize = -1)
         {
@@ -54,19 +54,19 @@ namespace EightBit
             return Load(file, ref output, writeOffset, readOffset, limit, maximumSize);
         }
 
-        public override int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1)
+        public int Load(FileStream file, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
             var maximumSize = this.Size - writeOffset;
             return Load(file, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
-        public override int Load(string path, int writeOffset = 0, int readOffset = 0, int limit = -1)
+        public int Load(string path, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
             var maximumSize = this.Size - writeOffset;
             return Load(path, ref this.Bytes(), writeOffset, readOffset, limit, maximumSize);
         }
 
-        public override int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1)
+        public int Load(byte[] from, int writeOffset = 0, int readOffset = 0, int limit = -1)
         {
             ArgumentNullException.ThrowIfNull(from);
 
@@ -88,10 +88,12 @@ namespace EightBit
             return limit;
         }
 
-        public override byte Peek(ushort address) => this.Bytes()[address];
+        public byte Peek(ushort address) => this.Bytes()[address];
+
+        public void Poke(ushort address, byte value) => this.Bytes()[address] = value;
+
+        public virtual ref byte Reference(ushort address) => throw new NotImplementedException();
 
         protected ref byte[] Bytes() => ref this._bytes;
-
-        protected override void Poke(ushort address, byte value) => this.Bytes()[address] = value;
     }
 }
