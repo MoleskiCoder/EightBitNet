@@ -1,4 +1,4 @@
-﻿namespace Z80.HarteTest
+﻿namespace Zilog.HarteTest
 {
     using System.Diagnostics;
 

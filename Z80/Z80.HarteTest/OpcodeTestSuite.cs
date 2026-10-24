@@ -1,4 +1,4 @@
-﻿namespace Z80.HarteTest
+﻿namespace Zilog.HarteTest
 {
     using System.Runtime.CompilerServices;
     using System.Text.Json;

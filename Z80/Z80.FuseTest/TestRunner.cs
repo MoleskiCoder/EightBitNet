@@ -2,11 +2,12 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Z80.FuseTest
+namespace Zilog.FuseTest
 {
     using Fuse;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using Zilog;
 
     internal enum Register
     {

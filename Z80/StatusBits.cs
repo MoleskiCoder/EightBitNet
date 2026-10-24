@@ -2,7 +2,7 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Z80
+namespace Zilog
 {
     using EightBit;
 

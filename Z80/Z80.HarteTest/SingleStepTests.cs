@@ -1,7 +1,7 @@
 ﻿// <copyright file="SingleStepTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Z80.HarteTest
+namespace Zilog.HarteTest
 {
     using System.Reflection;
 

@@ -1,8 +1,8 @@
-﻿// <copyright file="Z80.cs" company="Adrian Conlon">
+﻿// <copyright file="Zilog.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-namespace Z80
+namespace Zilog
 {
     using EightBit;
     using System.Diagnostics;

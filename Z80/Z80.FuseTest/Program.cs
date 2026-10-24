@@ -2,7 +2,7 @@
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
 
-using Z80.FuseTest;
+using Zilog.FuseTest;
 
 var suite = new TestSuite("fuse-tests\\tests");
 suite.Read();

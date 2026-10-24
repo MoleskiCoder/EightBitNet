@@ -1,9 +1,10 @@
 // <copyright file="Board.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Z80.UnitTests
+namespace Zilog.Z80.UnitTests
 {
     using EightBit;
+    using Zilog;
 
     public sealed class Board : Bus
     {

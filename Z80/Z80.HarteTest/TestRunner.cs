@@ -1,6 +1,7 @@
-﻿namespace Z80.HarteTest
+﻿namespace Zilog.HarteTest
 {
     using EightBit;
+    using Zilog;
 
     internal sealed class TestRunner : Bus
     {

@@ -1,9 +1,10 @@
 // <copyright file="ResetTests.cs" company="Adrian Conlon">
 // Copyright (c) Adrian Conlon. All rights reserved.
 // </copyright>
-namespace Z80.UnitTests
+namespace Zilog.Z80.UnitTests
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Zilog;
 
     [TestClass]
     public class ResetTests

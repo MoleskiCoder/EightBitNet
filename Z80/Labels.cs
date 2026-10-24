@@ -1,4 +1,4 @@
-﻿namespace Z80
+﻿namespace Zilog
 {
     using System.Diagnostics;
     using System.Globalization;

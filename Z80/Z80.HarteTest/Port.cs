@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Z80.HarteTest
+namespace Zilog.HarteTest
 {
     // Cycle-by-cycle breakdown of bus activity
     internal sealed class Port

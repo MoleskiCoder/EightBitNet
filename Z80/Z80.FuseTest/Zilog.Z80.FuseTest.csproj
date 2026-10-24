@@ -20,7 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Z80.csproj" />
+    <ProjectReference Include="..\..\Fuse\Fuse.csproj" />
+    <ProjectReference Include="..\Zilog.csproj" />
   </ItemGroup>
 
 </Project>
